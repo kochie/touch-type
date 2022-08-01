@@ -15,7 +15,8 @@
     "pack-app": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder -mlw",
     "type-check": "tsc -p ./renderer/tsconfig.json && tsc -p ./electron-src/tsconfig.json",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "publish": "electron-builder -mlw -p always"
   },
   "dependencies": {
     "electron-is-dev": "^2.0.0",
@@ -34,6 +35,9 @@
     "electron": "^19",
     "electron-acrylic-window": "^0.5.11",
     "electron-builder": "^23.1.0",
+    "electron-log": "^4.4.8",
+    "electron-notarize": "^1.2.1",
+    "electron-updater": "^5.2.1",
     "file-loader": "^6.2.0",
     "lodash.sample": "^4.2.1",
     "lodash.samplesize": "^4.2.0",
@@ -57,10 +61,27 @@
         ]
       }
     },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false
+    },
+    "linux": {
+      "category": "Utility",
+      "target": "AppImage"
+    },
     "asar": true,
     "files": [
       "main",
       "renderer/out"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "kochie",
+        "repo": "touch-type"
+      }
     ]
   }
 }

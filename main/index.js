@@ -19,8 +19,14 @@ var import_url = require("url");
 var import_electron = require("electron");
 var import_electron_is_dev = __toESM(require("electron-is-dev"));
 var import_electron_next = __toESM(require("electron-next"));
+var import_electron_updater = require("electron-updater");
+var import_electron_log = __toESM(require("electron-log"));
+import_electron_updater.autoUpdater.logger = import_electron_log.default;
+import_electron_updater.autoUpdater.logger.transports.file.level = "info";
+import_electron_log.default.info("App starting...");
 import_electron.app.on("ready", async () => {
   await (0, import_electron_next.default)("./renderer");
+  import_electron_updater.autoUpdater.checkForUpdatesAndNotify();
   const mainWindow = new import_electron.BrowserWindow({
     width: 1e3,
     height: 800,
