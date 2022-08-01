@@ -1,40 +1,40 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-// Native
-const path_1 = require("path");
-const url_1 = require("url");
-// Packages
-const electron_1 = require("electron");
-const electron_is_dev_1 = __importDefault(require("electron-is-dev"));
-const electron_next_1 = __importDefault(require("electron-next"));
-// Prepare the renderer once the app is ready
-electron_1.app.on("ready", async () => {
-    await (0, electron_next_1.default)("./renderer");
-    const mainWindow = new electron_1.BrowserWindow({
-        width: 1000,
-        height: 800,
-        webPreferences: {
-            nodeIntegration: false,
-            contextIsolation: false,
-            preload: (0, path_1.join)(__dirname, "preload.js"),
-        },
-    });
-    const url = electron_is_dev_1.default
-        ? "http://localhost:8000/"
-        : (0, url_1.format)({
-            pathname: (0, path_1.join)(__dirname, "../renderer/out/index.html"),
-            protocol: "file:",
-            slashes: true,
-        });
-    mainWindow.loadURL(url);
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
+var import_path = require("path");
+var import_url = require("url");
+var import_electron = require("electron");
+var import_electron_is_dev = __toESM(require("electron-is-dev"));
+var import_electron_next = __toESM(require("electron-next"));
+import_electron.app.on("ready", async () => {
+  await (0, import_electron_next.default)("./renderer");
+  const mainWindow = new import_electron.BrowserWindow({
+    width: 1e3,
+    height: 800,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: false,
+      preload: (0, import_path.join)(__dirname, "preload.js")
+    }
+  });
+  const url = import_electron_is_dev.default ? "http://localhost:8000/" : (0, import_url.format)({
+    pathname: (0, import_path.join)(__dirname, "../renderer/out/index.html"),
+    protocol: "file:",
+    slashes: true
+  });
+  mainWindow.loadURL(url);
 });
-// Quit the app once all windows are closed
-electron_1.app.on("window-all-closed", electron_1.app.quit);
-// listen the channel `message` and resend the received message to the renderer process
-electron_1.ipcMain.on("message", (event, message) => {
-    console.log(message);
-    setTimeout(() => event.sender.send("message", "hi from electron"), 500);
-});
+import_electron.app.on("window-all-closed", import_electron.app.quit);

@@ -1,15 +1,9 @@
 import { useEffect, useReducer, useRef, useState } from "react";
-import Link from "next/link";
-import Layout from "../components/Layout";
-// @ts-ignore
-import wordFile from "../assets/words.txt";
-import samplesize from "lodash.samplesize";
 import { DateTime, Interval } from "luxon";
-
-import useSWR from "swr";
-
-// import { readFile } from "fs/promises";
-// const { readFile } = promises;
+import samplesize from "lodash.samplesize";
+// @ts-ignore
+import wordBlob from "../assets/words.txt";
+import { keys, remove } from "lodash";
 
 const KEYS = [
   ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
@@ -19,14 +13,8 @@ const KEYS = [
   [" "],
 ];
 
-const OFFSETS = [0, 0, 60, 140, 500];
+const OFFSETS = [0, 0, 60, 140, 250];
 const GAP = 10;
-
-// const getWords = async () => {
-//   const words = await readFile(wordFile);
-//   console.log(words);
-//   return words.toString().split("\n");
-// };
 
 interface IndexProps {
   wordList: string[];
@@ -37,7 +25,7 @@ const resizer = (state, action) => {
     case "RESIZE":
       return {
         width: window.innerWidth,
-        height: window.innerHeight,
+        height: window.innerHeight - 192,
       };
     default:
       return state;
@@ -75,11 +63,15 @@ const statsReducer = (state, action) => {
         incorrect: state.incorrect + 1,
         time: Interval.fromDateTimes(state.start, DateTime.now()),
       };
+    case "START":
+      return {
+        ...state,
+        start: DateTime.now(),
+      };
     case "RESET":
       return {
         correct: 0,
         incorrect: 0,
-        start: DateTime.now(),
         time: Interval.after(DateTime.now(), 0),
       };
     case "TICK":
@@ -112,61 +104,34 @@ const IndexPage = ({ wordList }: IndexProps) => {
   );
 
   const [letters, dispatch] = useReducer(reducer, []);
-  // const [index, setIndex] = useState(0);
 
-  // const { data, error } = useSWR("/api/user", () => {});
-
-  // console.log(words);
-  // const [text, setText] = useState("");
-  // const text = words[0];
+  const ref = useRef(letters);
 
   useEffect(() => {
     const resize = () => {
-      // setWidth(window.innerWidth * 0.9);
-      // setHeight(window.innerHeight * 0.9);
       resizeDispatch({ type: "RESIZE" });
     };
     window.addEventListener("resize", resize);
     resize();
-    const interval = setInterval(() => {
-      statsDispatch({ type: "TICK" });
-    }, 1000);
 
     return () => {
       window.removeEventListener("resize", resize);
-      clearInterval(interval);
+      // clearInterval(interval);
     };
   }, []);
 
   useEffect(() => {
     setWords(samplesize(wordList, 15).join(" "));
   }, []);
+  const that = this;
+
+  // const getLetter = () => words[letters.length];
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
 
-    // ctx.scale(-10, 10);
-
-    const keyDown = (e: KeyboardEvent) => {
-      // console.log(e.key);
-      if (!KEYS.some((rows) => rows.includes(e.key.toUpperCase()))) return;
-      // e.preventDefault();
-      const [i, j] = findKey(e.key);
-      // console.log(i, j);
-      drawKey(ctx, i, j, e.key, "blue");
-    };
-
-    const keyUp = (e: KeyboardEvent) => {
-      if (!KEYS.some((rows) => rows.includes(e.key.toUpperCase()))) return;
-      const [i, j] = findKey(e.key);
-      drawKey(ctx, i, j, e.key, "white");
-    };
-
-    addEventListener("keydown", keyDown);
-    addEventListener("keyup", keyUp);
-
-    console.log(width, height);
+    // console.log(width, height);
 
     canvasRef.current.style.width = `${width}px`;
     canvasRef.current.style.height = `${height}px`;
@@ -182,31 +147,89 @@ const IndexPage = ({ wordList }: IndexProps) => {
     return () => {
       // console.log("cleanup");
       ctx.clearRect(0, 0, width, height);
-      removeEventListener("keydown", keyDown);
-      removeEventListener("keyup", keyUp);
+      // removeEventListener("keydown", keyDown);
+      // removeEventListener("keyup", keyUp);
     };
   }, [width, height]);
 
+  const keys = useRef([]);
   useEffect(() => {
+    if (!canvasRef.current) return;
+    const ctx = canvasRef.current.getContext("2d");
+    const interval = setInterval(() => {
+      // console.log("TICK");
+      if (letters.length > 0) statsDispatch({ type: "TICK" });
+    }, 1000);
+
+    // const keyDown = (e: KeyboardEvent) => {
+    //   // dispatch({ type: "CORRECT", key: e.key });
+    // };
+
+    let requestId: number;
+    const animate = (time: number) => {
+      // console.log("animate!");
+      // if (keys.current.length > 0) console.log(keys.current, time);
+      // keys.current.forEach((key) => {
+      //   console.log(key, time);
+      // })
+      const uniqueChars = keys.current.reverse().filter((c, index) => {
+        return keys.current.findIndex((i) => i.key === c.key) === index;
+      });
+
+      const keyz = uniqueChars.map((key) => {
+        const x = 255 - 1.5 * key.ttl;
+        if (key.correct)
+          drawKey(ctx, key.i, key.j, key.key, `rgb(${x}, 256, ${x})`);
+        else drawKey(ctx, key.i, key.j, key.key, `rgb(256, ${x}, ${x})`);
+        return { ...key, ttl: key.ttl - 1 };
+      });
+      keyz
+        .filter((key) => key.ttl == 0)
+        .forEach((key) => {
+          // console.log("time!");
+          drawKey(ctx, key.i, key.j, key.key, "white");
+        });
+
+      keys.current = keyz.filter((key) => key.ttl > 0);
+      requestId = window.requestAnimationFrame(animate);
+    };
+    requestId = window.requestAnimationFrame(animate);
+
+    const keyUp = (e: KeyboardEvent) => {
+      if (!KEYS.some((rows) => rows.includes(e.key.toUpperCase()))) return;
+      const [i, j] = findKey(e.key);
+      drawKey(ctx, i, j, e.key, "white");
+    };
+
     const keyDown = (e: KeyboardEvent) => {
       // console.log(e.key);
       if (e.key === "Backspace") dispatch({ type: "BACKSPACE" });
       if (e.key === "Escape") {
-        setWords(samplesize(wordList, 15).join(" "));
+        if (letters.length === 0) {
+          setWords(samplesize(wordList, 15).join(" "));
+        }
         dispatch({ type: "RESET" });
         statsDispatch({ type: "RESET" });
       }
       e.preventDefault();
 
       if (!KEYS.some((rows) => rows.includes(e.key.toUpperCase()))) return;
-      // console.log(letters.length);
 
+      if (letters.length === 0) {
+        statsDispatch({ type: "START" });
+        // console.log("START");
+      }
+
+      const [i, j] = findKey(e.key);
       if (e.key === words[letters.length]) {
+        // console.log(words[letters.length]);
         dispatch({ type: "CORRECT", key: words[letters.length] });
         statsDispatch({ type: "CORRECT" });
+        keys.current.push({ key: e.key, ttl: 128, i, j, correct: true });
       } else {
         dispatch({ type: "INCORRECT", key: words[letters.length] });
         statsDispatch({ type: "INCORRECT" });
+        keys.current.push({ key: e.key, ttl: 128, i, j, correct: false });
       }
 
       if (letters.length === words.length - 1) {
@@ -214,26 +237,40 @@ const IndexPage = ({ wordList }: IndexProps) => {
         dispatch({ type: "RESET" });
         statsDispatch({ type: "RESET" });
       }
+
+      if (!KEYS.some((rows) => rows.includes(e.key.toUpperCase()))) return;
+
+      if (e.key === words[letters.length]) {
+        drawKey(ctx, i, j, e.key, "green");
+        // keys.push;
+        // console.log("we");
+      } else {
+        drawKey(ctx, i, j, e.key, "red");
+      }
     };
 
     addEventListener("keydown", keyDown);
+    addEventListener("keyup", keyUp);
+    // addEventListener("keydown", keyDown);
     return () => {
+      removeEventListener("keyup", keyUp);
       removeEventListener("keydown", keyDown);
+      clearInterval(interval);
+      window.cancelAnimationFrame(requestId);
     };
-  }, [letters]);
+  }, [letters, words]);
 
   const d = (time as Interval).toDuration();
-  // console.log(d);
 
   return (
-    <div className="w-screen h-screen">
+    <div className="w-screen h-screen dark:text-white dark:bg-gray-400">
       <div className="">
         <div className="flex gap-10 justify-center pt-10 font-mono">
           <p>Correct: {correct}</p>
           <p>Incorrect: {incorrect}</p>
           <p>Time: {d.toFormat("mm:ss")}</p>
         </div>
-        <p className="font-mono text-center p-10">
+        <p className="font-mono text-center p-10 whitespace-pre-wrap">
           {letters.map((letter, i) => (
             <span
               key={i}
@@ -254,10 +291,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
 export async function getStaticProps(context) {
   return {
     props: {
-      wordList: wordFile
-        .toString()
-        .split("\n")
-        .map((word) => word.toLowerCase()),
+      wordList: wordBlob.split("\n"),
     }, // will be passed to the page component as props
   };
 }
@@ -344,20 +378,20 @@ const drawKey = (
   letter: string,
   color: string
 ) => {
-  const width = 175;
-  const height = 175;
+  const width = 80 * window.devicePixelRatio;
+  const height = 80 * window.devicePixelRatio;
 
   const keyboardLength = width * KEYS[0].length + (KEYS[0].length - 1) * GAP;
   const offset =
     (window.innerWidth * window.devicePixelRatio - keyboardLength) / 2;
-  console.log(keyboardLength, offset);
+  // console.log(keyboardLength, offset, window.devicePixelRatio);
 
   if (letter === " ") {
     makeKey(
       ctx,
-      j * (width + GAP) + OFFSETS[i],
+      j * (width + GAP) + OFFSETS[i] * window.devicePixelRatio,
       i * (height + GAP),
-      900,
+      400 * window.devicePixelRatio,
       height,
       "SPACE",
       color,
@@ -366,7 +400,7 @@ const drawKey = (
   } else {
     makeKey(
       ctx,
-      j * (width + GAP) + OFFSETS[i],
+      j * (width + GAP) + OFFSETS[i] * window.devicePixelRatio,
       i * (height + GAP),
       width,
       height,
