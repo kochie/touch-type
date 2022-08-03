@@ -37,6 +37,7 @@
     "electron": "^19",
     "electron-builder": "^23.1.0",
     "electron-builder-notarize": "^1.5.0",
+    "esbuild": "^0.14.53",
     "lodash.samplesize": "^4.2.0",
     "luxon": "^3.0.1",
     "postcss": "^8.4.14",
