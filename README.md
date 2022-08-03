@@ -1,4 +1,5 @@
 # Touch Typer 
+[![Build/release](https://github.com/kochie/touch-type/actions/workflows/build.yml/badge.svg)](https://github.com/kochie/touch-type/actions/workflows/build.yml)
 
 Do you suck at touch typing? Maybe you want to improve your words per minute? Touch Typer is here to help you out! With this simple app you can practice your typing and improve it over time.
 
