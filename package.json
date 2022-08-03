@@ -79,6 +79,12 @@
         "provider": "github",
         "owner": "kochie",
         "repo": "touch-type"
+      },
+      {
+        "provider": "snapStore",
+        "repo": "touch-typer",
+        "channels": "edge",
+        "publishAutoUpdate": true
       }
     ]
   }
