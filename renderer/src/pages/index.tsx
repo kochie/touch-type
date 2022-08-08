@@ -4,6 +4,9 @@ import samplesize from "lodash.samplesize";
 // @ts-ignore
 import wordBlob from "../assets/words.txt";
 import { keys, remove } from "lodash";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChartColumn, faGear } from "@fortawesome/free-solid-svg-icons";
+import Link from "next/link";
 
 const KEYS = [
   ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
@@ -234,6 +237,18 @@ const IndexPage = ({ wordList }: IndexProps) => {
 
       if (letters.length === words.length - 1) {
         setWords(samplesize(wordList, 15).join(" "));
+        const prevResults = JSON.parse(localStorage.getItem("results") ?? "[]");
+        localStorage.setItem(
+          "results",
+          JSON.stringify([
+            ...prevResults,
+            {
+              correct,
+              incorrect,
+              time: (time as Interval).toDuration().toISO(),
+            },
+          ])
+        );
         dispatch({ type: "RESET" });
         statsDispatch({ type: "RESET" });
       }
@@ -269,6 +284,23 @@ const IndexPage = ({ wordList }: IndexProps) => {
           <p>Correct: {correct}</p>
           <p>Incorrect: {incorrect}</p>
           <p>Time: {d.toFormat("mm:ss")}</p>
+        </div>
+        <div className="hover:animate-spin absolute top-8 right-8 ">
+          <FontAwesomeIcon
+            icon={faGear}
+            className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
+            size="lg"
+            // spin={}
+          />
+        </div>
+        <div className="hover:animate-pulse absolute top-8 left-8">
+          <Link href={"/stats"}>
+            <FontAwesomeIcon
+              icon={faChartColumn}
+              className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
+              size="lg"
+            />
+          </Link>
         </div>
         <p className="font-mono text-center p-10 whitespace-pre-wrap">
           {letters.map((letter, i) => (
