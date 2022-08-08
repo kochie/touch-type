@@ -1,7 +1,7 @@
 import "../styles/globals.css";
 
 function MyApp({ Component, pageProps }) {
-  console.log("Sweet");
+  // console.log("Sweet");
   return <Component {...pageProps} />;
 }
 

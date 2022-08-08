@@ -62,7 +62,7 @@ const StatsPage = () => {
 
     const data = [
       ...Array(50 - results.length).fill({ correct: 0, incorrect: 0 }),
-      ...results,
+      ...results.slice(Math.max(results.length - 50, 0), results.length),
     ];
 
     const X = map(data, (x, i) => i);
