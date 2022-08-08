@@ -30,7 +30,7 @@ interface Result {
 }
 
 const StatsPage = () => {
-  const results: Result[] = JSON.parse(localStorage.getItem("results") ?? "[]");
+  const [results, setResults] = useState<Result[]>([]);
 
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
 
@@ -46,6 +46,8 @@ const StatsPage = () => {
     };
     window.addEventListener("resize", resize);
     resize();
+
+    setResults(JSON.parse(localStorage.getItem("results") ?? "[]"));
 
     return () => {
       window.removeEventListener("resize", resize);
