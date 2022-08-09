@@ -24,6 +24,10 @@ var import_electron_is_dev = __toESM(require("electron-is-dev"));
 var import_electron_next = __toESM(require("electron-next"));
 var import_electron_updater = require("electron-updater");
 var import_electron_log = __toESM(require("electron-log"));
+var import_electron2 = require("@sentry/electron");
+(0, import_electron2.init)({
+  dsn: "https://b91033c73a0f46a287bfaa7959809d12@o157203.ingest.sentry.io/6633710"
+});
 import_electron_updater.autoUpdater.logger = import_electron_log.default;
 import_electron_updater.autoUpdater.logger.transports.file.level = "info";
 import_electron_log.default.info("App starting...");

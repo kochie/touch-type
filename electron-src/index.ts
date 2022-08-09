@@ -9,6 +9,11 @@ import isDev from "electron-is-dev";
 import prepareNext from "electron-next";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
+import { init } from "@sentry/electron";
+
+init({
+  dsn: "https://b91033c73a0f46a287bfaa7959809d12@o157203.ingest.sentry.io/6633710",
+});
 
 autoUpdater.logger = log;
 // @ts-ignore
