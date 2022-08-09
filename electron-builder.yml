@@ -12,7 +12,6 @@ win:
     - target: nsis
     - target: appx
 snap:
-  target: AppImage
   category: Utility
   publish:
     - provider: snapStore
