@@ -7,11 +7,12 @@ mac:
     target: default
     arch:
       - universal
+appx:
+  identityName: TouchTyper
 win:
   target:
     - target: nsis
     - target: appx
-      identityName: TouchTyper
 snap:
   category: Utility
   publish:
