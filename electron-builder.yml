@@ -8,12 +8,19 @@ mac:
     arch:
       - universal
 win:
-  target: nsis
+  target:
+    - target: nsis
+    - target: appx
+snap:
+  target: AppImage
+  category: Utility
+  publish:
+    - provider: snapStore
+      repo: touch-typer
+      channels: stable
+      publishAutoUpdate: true
 nsis:
   oneClick: false
-linux:
-  category: Utility
-  target: AppImage
 asar: true
 files:
   - main
@@ -22,7 +29,3 @@ publish:
   - provider: github
     owner: kochie
     repo: touch-type
-  - provider: snapStore
-    repo: touch-typer
-    channels: stable
-    publishAutoUpdate: true
