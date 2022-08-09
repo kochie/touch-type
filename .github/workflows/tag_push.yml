@@ -38,7 +38,7 @@ jobs:
           echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
 
       - run: |
-          echo '${{ github.ref == /^refs/tags/[0-9]+\.[0-9]+\.[0-9]+/ }}'
+          echo '${{ github.ref == ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+$ }}'
 
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1
