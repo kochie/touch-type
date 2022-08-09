@@ -1,23 +1,25 @@
-afterSign: electron-builder-notarize
-appId: io.kochie.touch-typer
-mac:
-  hardenedRuntime: true
-  category: public.app-category.productivity
-  target:
-    target: default
-    arch:
-      - universal
-win:
-  target:
-    - target: nsis
-    - target: appx
-snap:
-  category: Utility
-  publish:
-    - provider: snapStore
-      repo: touch-typer
-      channels: stable
-      publishAutoUpdate: true
+build:
+  afterSign: electron-builder-notarize
+  appId: io.kochie.touch-typer
+  mac:
+    hardenedRuntime: true
+    category: public.app-category.productivity
+    target:
+      target: default
+      arch:
+        - universal
+  win:
+    target:
+      - target: nsis
+      - target: appx
+        identityName: TouchTyper
+  snap:
+    category: Utility
+    publish:
+      - provider: snapStore
+        repo: touch-typer
+        channels: stable
+        publishAutoUpdate: true
 nsis:
   oneClick: false
 asar: true
