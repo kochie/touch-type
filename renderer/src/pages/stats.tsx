@@ -18,6 +18,7 @@ import {
 } from "d3";
 import { range } from "lodash";
 import styles from "./stats.module.css";
+import { Duration } from "luxon";
 
 const marginTop = 20; // the top margin, in pixels
 const marginRight = 40; // the right margin, in pixels
@@ -47,7 +48,14 @@ const StatsPage = () => {
     window.addEventListener("resize", resize);
     resize();
 
-    setResults(JSON.parse(localStorage.getItem("results") ?? "[]"));
+    const storedResults = JSON.parse(localStorage.getItem("results") ?? "[]");
+    const computed = storedResults.map((res) => ({
+      ...res,
+      cpm:
+        (res.correct + res.incorrect) /
+        (Duration.fromISO(res.time).toMillis() / 1000 / 60),
+    }));
+    setResults(computed);
 
     return () => {
       window.removeEventListener("resize", resize);
@@ -63,13 +71,15 @@ const StatsPage = () => {
     const svg = select(svgRef.current);
 
     const data = [
-      ...Array(50 - results.length).fill({ correct: 0, incorrect: 0 }),
+      ...Array(50 - results.length).fill({ correct: 0, incorrect: 0, cpm: 0 }),
       ...results.slice(Math.max(results.length - 50, 0), results.length),
     ];
 
     const X = map(data, (x, i) => i);
-    const Y = map(data, (y) => y.correct);
+    const Y = map(data, (y) => y.cpm);
     const Y2 = map(data, (y) => y.incorrect);
+
+    // console.log(Y);
 
     const xDomain = new InternSet(X);
     const yDomain = new InternSet([0, max(Y)]);
@@ -179,7 +189,7 @@ const StatsPage = () => {
         div.transition().duration(50).style("opacity", 1);
         // let num = Math.round((d.value / d.data.all) * 100).toString() + "%";
         div
-          .html(Y[i])
+          .html(Y[i].toFixed(0))
           .style("left", d.pageX + 10 + "px")
           .style("top", d.pageY - 15 + "px");
       })
@@ -212,7 +222,7 @@ const StatsPage = () => {
         div.transition().duration(50).style("opacity", 1);
         // let num = Math.round((d.value / d.data.all) * 100).toString() + "%";
         div
-          .html(Y2[i])
+          .html(Y2[i].toFixed(0))
           .style("left", d.pageX + 10 + "px")
           .style("top", d.pageY - 15 + "px");
       })

@@ -9,12 +9,13 @@ mac:
       - universal
 appx:
   identityName: TouchTyper
+linux:
+  category: Utility
 win:
   target:
     - target: nsis
     - target: appx
 snap:
-  category: Utility
   publish:
     - provider: snapStore
       repo: touch-typer
