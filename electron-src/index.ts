@@ -30,7 +30,7 @@ app.on("ready", async () => {
     height: 800,
     // transparent: true,
     // frame: false,
-    // vibrancy: "titlebar",
+    vibrancy: "under-window",
     // transparent: true,
     // backgroundColor: "#00000000",
     // vibrancy: "under-page",
@@ -38,11 +38,13 @@ app.on("ready", async () => {
     // visualEffectState: "followWindow",
     // roundedCorners: true,
     webPreferences: {
-      nodeIntegration: false,
+      nodeIntegration: true,
       contextIsolation: false,
       preload: join(__dirname, "preload.js"),
     },
   });
+
+  // mainWindow.setVibrancy("under-window");
 
   const url = isDev
     ? "http://localhost:8000/"

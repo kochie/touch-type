@@ -17,7 +17,7 @@ const KEYS = [
 ];
 
 const OFFSETS = [0, 0, 60, 140, 250];
-const GAP = 10;
+const GAP = 5;
 
 interface IndexProps {
   wordList: string[];
@@ -27,8 +27,14 @@ const resizer = (state, action) => {
   switch (action.type) {
     case "RESIZE":
       return {
+        ...state,
         width: window.innerWidth,
         height: window.innerHeight - 192,
+      };
+    case "PR":
+      return {
+        ...state,
+        pr: window.devicePixelRatio,
       };
     default:
       return state;
@@ -42,7 +48,6 @@ const reducer = (state, action) => {
     case "INCORRECT":
       return [...state, { key: action.key, correct: false }];
     case "BACKSPACE": {
-      // console.log("BB");
       return [...state.slice(0, -1)];
     }
     case "RESET":
@@ -89,9 +94,10 @@ const statsReducer = (state, action) => {
 
 const IndexPage = ({ wordList }: IndexProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [{ width, height }, resizeDispatch] = useReducer(resizer, {
+  const [{ width, height, pr }, resizeDispatch] = useReducer(resizer, {
     width: 0,
     height: 0,
+    pr: 1,
   });
 
   const [words, setWords] = useState("");
@@ -117,9 +123,19 @@ const IndexPage = ({ wordList }: IndexProps) => {
     window.addEventListener("resize", resize);
     resize();
 
+    const updatePixelRatio = () => {
+      let pr = window.devicePixelRatio;
+      resizeDispatch({ type: "PR" });
+      matchMedia(`(resolution: ${pr}dppx)`).addEventListener(
+        "change",
+        updatePixelRatio,
+        { once: true }
+      );
+    };
+    updatePixelRatio();
+
     return () => {
       window.removeEventListener("resize", resize);
-      // clearInterval(interval);
     };
   }, []);
 
@@ -128,18 +144,15 @@ const IndexPage = ({ wordList }: IndexProps) => {
   }, []);
   const that = this;
 
-  // const getLetter = () => words[letters.length];
-
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
 
-    // console.log(width, height);
-
     canvasRef.current.style.width = `${width}px`;
     canvasRef.current.style.height = `${height}px`;
-    canvasRef.current.width = width * window.devicePixelRatio;
-    canvasRef.current.height = height * window.devicePixelRatio;
+    canvasRef.current.width = width * pr;
+    canvasRef.current.height = height * pr;
+    // ctx.scale(pr, pr);
 
     KEYS.forEach((row, i) =>
       row.forEach((letter, j) => {
@@ -148,19 +161,16 @@ const IndexPage = ({ wordList }: IndexProps) => {
     );
 
     return () => {
-      // console.log("cleanup");
-      ctx.clearRect(0, 0, width, height);
-      // removeEventListener("keydown", keyDown);
-      // removeEventListener("keyup", keyUp);
+      ctx.clearRect(0, 0, width * pr, height * pr);
     };
-  }, [width, height]);
+  }, [width, height, pr]);
 
   const keys = useRef([]);
+
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
     const interval = setInterval(() => {
-      // console.log("TICK");
       if (letters.length > 0) statsDispatch({ type: "TICK" });
     }, 1000);
 
@@ -170,11 +180,6 @@ const IndexPage = ({ wordList }: IndexProps) => {
 
     let requestId: number;
     const animate = (time: number) => {
-      // console.log("animate!");
-      // if (keys.current.length > 0) console.log(keys.current, time);
-      // keys.current.forEach((key) => {
-      //   console.log(key, time);
-      // })
       const uniqueChars = keys.current.reverse().filter((c, index) => {
         return keys.current.findIndex((i) => i.key === c.key) === index;
       });
@@ -184,12 +189,11 @@ const IndexPage = ({ wordList }: IndexProps) => {
         if (key.correct)
           drawKey(ctx, key.i, key.j, key.key, `rgb(${x}, 256, ${x})`);
         else drawKey(ctx, key.i, key.j, key.key, `rgb(256, ${x}, ${x})`);
-        return { ...key, ttl: key.ttl - 1 };
+        return { ...key, ttl: key.ttl - 5 };
       });
       keyz
-        .filter((key) => key.ttl == 0)
+        .filter((key) => key.ttl <= 0)
         .forEach((key) => {
-          // console.log("time!");
           drawKey(ctx, key.i, key.j, key.key, "white");
         });
 
@@ -205,7 +209,6 @@ const IndexPage = ({ wordList }: IndexProps) => {
     };
 
     const keyDown = (e: KeyboardEvent) => {
-      // console.log(e.key);
       if (e.key === "Backspace") dispatch({ type: "BACKSPACE" });
       if (e.key === "Escape") {
         if (letters.length === 0) {
@@ -220,12 +223,10 @@ const IndexPage = ({ wordList }: IndexProps) => {
 
       if (letters.length === 0) {
         statsDispatch({ type: "START" });
-        // console.log("START");
       }
 
       const [i, j] = findKey(e.key);
       if (e.key === words[letters.length]) {
-        // console.log(words[letters.length]);
         dispatch({ type: "CORRECT", key: words[letters.length] });
         statsDispatch({ type: "CORRECT" });
         keys.current.push({ key: e.key, ttl: 128, i, j, correct: true });
@@ -255,30 +256,29 @@ const IndexPage = ({ wordList }: IndexProps) => {
 
       if (!KEYS.some((rows) => rows.includes(e.key.toUpperCase()))) return;
 
+      // ctx.scale(1, 1);
       if (e.key === words[letters.length]) {
         drawKey(ctx, i, j, e.key, "green");
-        // keys.push;
-        // console.log("we");
       } else {
         drawKey(ctx, i, j, e.key, "red");
       }
     };
 
     addEventListener("keydown", keyDown);
-    addEventListener("keyup", keyUp);
+    // addEventListener("keyup", keyUp);
     // addEventListener("keydown", keyDown);
     return () => {
-      removeEventListener("keyup", keyUp);
+      // removeEventListener("keyup", keyUp);
       removeEventListener("keydown", keyDown);
       clearInterval(interval);
       window.cancelAnimationFrame(requestId);
     };
-  }, [letters, words]);
+  }, [letters, words, pr]);
 
   const d = (time as Interval).toDuration();
 
   return (
-    <div className="w-screen h-screen dark:text-white dark:bg-gray-400">
+    <div className="w-screen h-screen dark:text-white ">
       <div className="">
         <div className="flex gap-10 justify-center pt-10 font-mono">
           <p>Correct: {correct}</p>
@@ -340,17 +340,20 @@ function makeKey(
   fillColor = "white",
   offset = 0
 ) {
-  x += offset;
+  const X = x + offset;
+  const Y = y + 20;
 
-  y += 20;
-
+  ctx.save();
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
   ctx.fillStyle = fillColor;
-  roundRect(ctx, x, y, width, height, 25, true, true);
+  roundRect(ctx, X, Y, width, height, 12.5, true, true);
   ctx.fillStyle = "black";
-  ctx.font = "60px monospace";
+  ctx.font = `20px Roboto Mono`;
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";
-  ctx.fillText(letter, x + width / 2, y + height / 2);
+  ctx.fillText(letter, X + width / 2, Y + height / 2 + 2);
+  ctx.restore();
+  // ctx.fillText(letter, x + width / 2, y + height);
 }
 
 function roundRect(
@@ -393,7 +396,6 @@ function roundRect(
 function findKey(key: string): [number, number] {
   for (let i = 0; i < KEYS.length; i++) {
     const row = KEYS[i];
-    // console.log(row);
     for (let j = 0; j < row.length; j++) {
       if (row[j] === key.toUpperCase()) {
         return [i, j];
@@ -410,20 +412,19 @@ const drawKey = (
   letter: string,
   color: string
 ) => {
-  const width = 80 * window.devicePixelRatio;
-  const height = 80 * window.devicePixelRatio;
+  const width = 80;
+  const height = 80;
+  const gap = GAP;
 
-  const keyboardLength = width * KEYS[0].length + (KEYS[0].length - 1) * GAP;
-  const offset =
-    (window.innerWidth * window.devicePixelRatio - keyboardLength) / 2;
-  // console.log(keyboardLength, offset, window.devicePixelRatio);
+  const keyboardLength = width * KEYS[0].length + (KEYS[0].length - 1) * gap;
+  const offset = (window.innerWidth - keyboardLength) / 2 + OFFSETS[i];
 
   if (letter === " ") {
     makeKey(
       ctx,
-      j * (width + GAP) + OFFSETS[i] * window.devicePixelRatio,
-      i * (height + GAP),
-      400 * window.devicePixelRatio,
+      j * (width + gap),
+      i * (height + gap),
+      400,
       height,
       "SPACE",
       color,
@@ -432,8 +433,8 @@ const drawKey = (
   } else {
     makeKey(
       ctx,
-      j * (width + GAP) + OFFSETS[i] * window.devicePixelRatio,
-      i * (height + GAP),
+      j * (width + gap),
+      i * (height + gap),
       width,
       height,
       letter.toUpperCase(),

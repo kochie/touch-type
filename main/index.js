@@ -37,8 +37,9 @@ import_electron.app.on("ready", async () => {
   const mainWindow = new import_electron.BrowserWindow({
     width: 1e3,
     height: 800,
+    vibrancy: "under-window",
     webPreferences: {
-      nodeIntegration: false,
+      nodeIntegration: true,
       contextIsolation: false,
       preload: (0, import_path.join)(__dirname, "preload.js")
     }
