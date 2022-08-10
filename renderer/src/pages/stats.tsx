@@ -238,7 +238,7 @@ const StatsPage = () => {
   }, [width, height]);
 
   return (
-    <div className="w-screen h-screen dark:text-white dark:bg-gray-400">
+    <div className="w-screen h-screen dark:text-white">
       <div className="">
         <div className="hover:animate-spin absolute top-8 right-8 ">
           <FontAwesomeIcon

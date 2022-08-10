@@ -47,6 +47,8 @@
     "electron-builder": "^23.3.3",
     "electron-builder-notarize": "^1.5.0",
     "esbuild": "^0.14.54",
+    "eslint": "8.21.0",
+    "eslint-config-next": "12.2.4",
     "lodash.samplesize": "^4.2.0",
     "luxon": "^3.0.1",
     "postcss": "^8.4.16",

@@ -1,5 +1,7 @@
 .tooltip {
   position: absolute;
+  top: 0;
+  left: 0;
   text-align: center;
   padding: .2rem;
   background: #FFFFFF;

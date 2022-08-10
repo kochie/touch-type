@@ -38,7 +38,7 @@ app.on("ready", async () => {
     // visualEffectState: "followWindow",
     // roundedCorners: true,
     webPreferences: {
-      nodeIntegration: true,
+      // nodeIntegration: true,
       contextIsolation: false,
       preload: join(__dirname, "preload.js"),
     },
