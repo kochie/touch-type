@@ -116,7 +116,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
       clearInterval(interval);
       window.cancelAnimationFrame(requestId);
     };
-  }, [letters, pr]);
+  }, [letters, pr, keyDown, intervalFn, keys]);
 
   return <canvas ref={canvasRef} />;
 };

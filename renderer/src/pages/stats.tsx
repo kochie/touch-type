@@ -235,7 +235,7 @@ const StatsPage = () => {
       svg.selectAll("*").remove();
       div.remove();
     };
-  }, [width, height]);
+  }, [width, height, results]);
 
   return (
     <div className="w-screen h-screen dark:text-white">

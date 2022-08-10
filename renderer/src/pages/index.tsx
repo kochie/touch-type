@@ -73,7 +73,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
 
   useEffect(() => {
     setWords(samplesize(wordList, 15).join(" "));
-  }, []);
+  }, [wordList]);
 
   const keys = useRef([]);
 
