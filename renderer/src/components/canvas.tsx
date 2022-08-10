@@ -1,6 +1,8 @@
 import React, { useEffect, useReducer, useRef } from "react";
 import { drawKey, KEYS } from "../lib/canvas_utils";
 
+import RobotoMono from "../assets/RobotoMono-Regular.ttf";
+
 const resizer = (state, action) => {
   switch (action.type) {
     case "RESIZE":
@@ -53,6 +55,13 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
+
+    // console.log(RobotoMono);
+    new FontFace("Roboto Mono", `url(${RobotoMono})`)
+      .load()
+      .then(function (font) {
+        document.fonts.add(font);
+      });
 
     canvasRef.current.style.width = `${width}px`;
     canvasRef.current.style.height = `${height}px`;

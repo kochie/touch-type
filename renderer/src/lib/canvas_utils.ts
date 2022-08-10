@@ -28,7 +28,7 @@ export function makeKey(
   ctx.fillStyle = fillColor;
   roundRect(ctx, X, Y, width, height, 12.5, true, true);
   ctx.fillStyle = "white";
-  ctx.font = `20px Roboto Mono`;
+  ctx.font = `20px 'Roboto Mono'`;
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";
   ctx.fillText(letter, X + width / 2, Y + height / 2 + 2);

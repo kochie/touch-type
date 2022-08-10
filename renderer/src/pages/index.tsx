@@ -170,7 +170,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
             />
           </Link>
         </div>
-        <p className="font-mono text-center p-10 whitespace-pre-wrap">
+        <p className="font-['Roboto_Mono'] text-center p-10 whitespace-pre-wrap">
           {letters.map((letter, i) => (
             // <span
             //   key={i}
