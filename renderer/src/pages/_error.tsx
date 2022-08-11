@@ -2,7 +2,7 @@ import NextErrorComponent from "next/error";
 
 import * as Sentry from "@sentry/nextjs";
 
-const MyError = ({ statusCode, hasGetInitialPropsRun, err }) => {
+export default function PageError({ statusCode, hasGetInitialPropsRun, err }) {
   if (!hasGetInitialPropsRun && err) {
     // getInitialProps is not called in case of
     // https://github.com/vercel/next.js/issues/8592. As a workaround, we pass
@@ -12,9 +12,9 @@ const MyError = ({ statusCode, hasGetInitialPropsRun, err }) => {
   }
 
   return <NextErrorComponent statusCode={statusCode} />;
-};
+}
 
-MyError.getInitialProps = async ({ res, err, asPath }) => {
+export const getStaticProps = async ({ res, err, asPath }) => {
   const errorInitialProps = await NextErrorComponent.getInitialProps({
     res,
     err,
@@ -45,7 +45,7 @@ MyError.getInitialProps = async ({ res, err, asPath }) => {
     // https://vercel.com/docs/platform/limits#streaming-responses
     await Sentry.flush(2000);
 
-    return errorInitialProps;
+    return { props: errorInitialProps };
   }
 
   // If this point is reached, getInitialProps was called without any
@@ -56,7 +56,5 @@ MyError.getInitialProps = async ({ res, err, asPath }) => {
   );
   await Sentry.flush(2000);
 
-  return errorInitialProps;
+  return { props: errorInitialProps };
 };
-
-export default MyError;

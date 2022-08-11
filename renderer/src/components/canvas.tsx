@@ -1,6 +1,7 @@
 import React, { useEffect, useReducer, useRef } from "react";
 import { drawKey, KEYS } from "../lib/canvas_utils";
 
+// @ts-ignore
 import RobotoMono from "../assets/RobotoMono-Regular.ttf";
 
 const resizer = (state, action) => {
