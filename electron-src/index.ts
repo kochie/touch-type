@@ -38,6 +38,7 @@ app.on("ready", async () => {
     // darkTheme: false,
     // visualEffectState: "followWindow",
     // roundedCorners: true,
+    // autoHideMenuBar: true,
     webPreferences: {
       // nodeIntegration: true,
       contextIsolation: false,

@@ -10,7 +10,7 @@ const resizer = (state, action) => {
       return {
         ...state,
         width: window.innerWidth,
-        height: window.innerHeight - 192,
+        height: window.innerHeight - 228,
       };
     case "PR":
       return {

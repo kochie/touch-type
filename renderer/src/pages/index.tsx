@@ -164,7 +164,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
   };
 
   return (
-    <div className="w-screen h-screen dark:text-white ">
+    <div className="w-screen h-[100svh] dark:text-white ">
       <div className="">
         <div className="flex gap-10 justify-between pt-10 font-mono mx-auto w-[600px]">
           {/* <p>Correct: {correct}</p> */}
