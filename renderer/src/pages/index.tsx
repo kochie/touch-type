@@ -93,6 +93,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
   const p = (correct / total) * 100;
 
   const keyDown = (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
+    console.log(e.key, words.charCodeAt(letters.length))
     if (e.key === "Backspace") statsDispatch({ type: "BACKSPACE" });
     if (e.key === "Escape") {
       if (letters.length === 0) {
@@ -162,6 +163,8 @@ const IndexPage = ({ wordList }: IndexProps) => {
   const intervalFn = () => {
     if (letters.length > 0) statsDispatch({ type: "TICK" });
   };
+
+  // console.log(words)
 
   return (
     <div className="w-screen h-[100svh] dark:text-white ">
@@ -245,9 +248,10 @@ const IndexPage = ({ wordList }: IndexProps) => {
 };
 
 export async function getStaticProps(context) {
+  // console.log(wordBlob.substring(0, 40))
   return {
     props: {
-      wordList: wordBlob.split("\n"),
+      wordList: wordBlob.replaceAll("\r", "").split("\n"),
     }, // will be passed to the page component as props
   };
 }

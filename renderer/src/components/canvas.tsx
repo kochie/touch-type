@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef } from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import { drawKey, KEYS } from "../lib/canvas_utils";
 
 // @ts-ignore
@@ -53,6 +53,8 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     };
   }, []);
 
+  const [fontLoaded, setFontLoaded] = useState(false)
+
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
@@ -62,6 +64,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
       .load()
       .then(function (font) {
         document.fonts.add(font);
+        setFontLoaded(true)
       });
 
     canvasRef.current.style.width = `${width}px`;
@@ -85,7 +88,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     return () => {
       ctx.clearRect(0, 0, width * pr, height * pr);
     };
-  }, [width, height, pr]);
+  }, [width, height, pr, fontLoaded]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
