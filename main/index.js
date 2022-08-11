@@ -51,4 +51,27 @@ import_electron.app.on("ready", async () => {
   });
   mainWindow.loadURL(url);
 });
+setInterval(() => {
+  import_electron_updater.autoUpdater.checkForUpdates();
+}, 6e4);
+import_electron_updater.autoUpdater.on("update-downloaded", (event) => {
+  const message = (process.platform === "win32" ? event.releaseNotes : event.releaseName) ?? "";
+  const dialogOpts = {
+    type: "info",
+    buttons: ["Restart", "Later"],
+    title: "Application Update",
+    message: Array.isArray(message) ? message.join("\n") : message,
+    detail: "A new version has been downloaded. Restart the application to apply the updates."
+  };
+  import_electron.dialog.showMessageBox(dialogOpts).then((returnValue) => {
+    if (returnValue.response === 0) {
+      import_electron.app.off("window-all-closed", import_electron.app.quit);
+      import_electron_updater.autoUpdater.quitAndInstall();
+    }
+  });
+});
+import_electron_updater.autoUpdater.on("error", (message) => {
+  console.error("There was a problem updating the application");
+  console.error(message);
+});
 import_electron.app.on("window-all-closed", import_electron.app.quit);
