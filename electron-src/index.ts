@@ -26,8 +26,9 @@ app.on("ready", async () => {
   autoUpdater.checkForUpdatesAndNotify();
 
   const mainWindow = new BrowserWindow({
-    width: 1000,
+    width: 1300,
     height: 800,
+    minWidth: 1300,
     // transparent: true,
     // frame: false,
     vibrancy: "under-window",

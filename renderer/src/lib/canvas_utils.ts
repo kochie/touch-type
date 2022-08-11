@@ -1,11 +1,11 @@
 export const KEYS = [
-  ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-  ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
-  ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
-  ["Z", "X", "C", "V", "B", "N", "M"],
-  [" "],
+  ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="],
+  ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]"],
+  ["A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'"],
+  ["Z", "X", "C", "V", "B", "N", "M", ",", ".", "/"],
+  ["cmd", { key: " ", width: 420 }, "cmd", "opt"],
 ];
-const OFFSETS = [0, 0, 60, 140, 250];
+const OFFSETS = [0, 20, 40, 70, 155];
 const GAP = 5;
 const SPACE = " ";
 
@@ -77,7 +77,13 @@ export function findKey(key: string): [number, number] {
   for (let i = 0; i < KEYS.length; i++) {
     const row = KEYS[i];
     for (let j = 0; j < row.length; j++) {
-      if (row[j] === key.toUpperCase()) {
+      if (typeof row[j] === "string" && row[j] === key.toUpperCase()) {
+        return [i, j];
+      }
+      if (
+        typeof row[j] === "object" &&
+        (row[j] as any).key === key.toUpperCase()
+      ) {
         return [i, j];
       }
     }
@@ -96,14 +102,25 @@ export const drawKey = (
   const height = 80;
   const gap = GAP;
 
+  // console.log(i, j);
+
   const keyboardLength = width * KEYS[0].length + (KEYS[0].length - 1) * gap;
   const offset = (window.innerWidth - keyboardLength) / 2 + OFFSETS[i];
 
+  let x = 0;
+  for (let q = 0; q < j; q++) {
+    const k = KEYS[i][q];
+    if (typeof k === "object") x += k.width;
+    else x += width;
+    x += gap;
+  }
+  // const x = j * (width + gap);
+
   makeKey(
     ctx,
-    j * (width + gap),
+    x,
     i * (height + gap),
-    letter === SPACE ? 400 : width,
+    letter === SPACE ? 420 : width,
     height,
     letter === SPACE ? "SPACE" : letter.toUpperCase(),
     color,

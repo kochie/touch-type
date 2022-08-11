@@ -71,7 +71,13 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
 
     KEYS.forEach((row, i) =>
       row.forEach((letter, j) => {
-        drawKey(ctx, i, j, letter, "rgba(0, 0, 0, 0.5)");
+        drawKey(
+          ctx,
+          i,
+          j,
+          typeof letter === "string" ? letter : letter.key,
+          "rgba(0, 0, 0, 0.5)"
+        );
       })
     );
 

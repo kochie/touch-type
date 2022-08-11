@@ -21,6 +21,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.1.2",
     "@fortawesome/free-regular-svg-icons": "^6.1.2",
     "@fortawesome/free-solid-svg-icons": "^6.1.2",
+    "@fortawesome/pro-duotone-svg-icons": "^6.1.2",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@sentry/electron": "^3.0.7",
     "@sentry/nextjs": "^7.9.0",

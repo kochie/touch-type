@@ -4,10 +4,19 @@ import samplesize from "lodash.samplesize";
 // @ts-ignore
 import wordBlob from "../assets/words.txt";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChartColumn, faGear } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChartColumn,
+  faGear,
+  faRunning,
+} from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import Canvas from "../components/canvas";
 import { drawKey, findKey, KEYS } from "../lib/canvas_utils";
+import {
+  faDungeon,
+  faPercentage,
+  faPersonRunning,
+} from "@fortawesome/pro-duotone-svg-icons";
 
 interface IndexProps {
   wordList: string[];
@@ -94,13 +103,24 @@ const IndexPage = ({ wordList }: IndexProps) => {
     }
     e.preventDefault();
 
-    if (!KEYS.some((rows) => rows.includes(e.key.toUpperCase()))) return;
+    // console.log(e.key);
+    if (
+      !KEYS.some((rows) => {
+        return rows.some((key) =>
+          typeof key === "object"
+            ? key.key === e.key.toUpperCase()
+            : key === e.key.toUpperCase()
+        );
+      })
+    )
+      return;
 
     if (letters.length === 0) {
       statsDispatch({ type: "START" });
     }
 
     const [i, j] = findKey(e.key);
+
     if (e.key === words[letters.length]) {
       // dispatch({ type: "CORRECT", key: words[letters.length] });
       statsDispatch({ type: "CORRECT", key: words[letters.length] });
@@ -146,12 +166,34 @@ const IndexPage = ({ wordList }: IndexProps) => {
   return (
     <div className="w-screen h-screen dark:text-white ">
       <div className="">
-        <div className="flex gap-10 justify-center pt-10 font-mono">
-          <p>Correct: {correct}</p>
-          <p>Incorrect: {incorrect}</p>
-          <p>Time: {d.toFormat("mm:ss")}</p>
-          <p>CPM: {Number.isFinite(cpm) ? cpm.toFixed(1) : 0}</p>
-          <p>Percentage: {Number.isFinite(p) ? p.toFixed(0) : 0}</p>
+        <div className="flex gap-10 justify-between pt-10 font-mono mx-auto w-[600px]">
+          {/* <p>Correct: {correct}</p> */}
+          <div className="flex items-center">
+            <FontAwesomeIcon icon={faDungeon} size="3x" />
+            <div className="ml-5">
+              <p className="text-4xl">{incorrect}</p>
+              <p className="text-sm text-gray-400">typos</p>
+            </div>
+          </div>
+          {/* <p>Time: {d.toFormat("mm:ss")}</p> */}
+          <div className="flex items-center">
+            <FontAwesomeIcon icon={faPersonRunning} size="3x" />
+            <div className="ml-5">
+              <p className="text-4xl">
+                {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
+              </p>
+              <p className="text-sm text-gray-400">char/min</p>
+            </div>
+          </div>
+          <div className="flex items-center">
+            <FontAwesomeIcon icon={faPercentage} size="3x" />
+            <div className="ml-5">
+              <p className="text-4xl">
+                {Number.isFinite(p) ? p.toFixed(0) : 0}
+              </p>
+              <p className="text-sm text-gray-400">accuracy</p>
+            </div>
+          </div>
         </div>
         <div className="hover:animate-spin absolute top-8 right-8 ">
           <FontAwesomeIcon

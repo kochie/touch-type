@@ -35,8 +35,9 @@ import_electron.app.on("ready", async () => {
   await (0, import_electron_next.default)("./renderer");
   import_electron_updater.autoUpdater.checkForUpdatesAndNotify();
   const mainWindow = new import_electron.BrowserWindow({
-    width: 1e3,
+    width: 1300,
     height: 800,
+    minWidth: 1300,
     vibrancy: "under-window",
     webPreferences: {
       contextIsolation: false,
