@@ -41,7 +41,7 @@ app.on("ready", async () => {
     // autoHideMenuBar: true,
     webPreferences: {
       // nodeIntegration: true,
-      contextIsolation: false,
+      contextIsolation: true,
       preload: join(__dirname, "preload.js"),
     },
   });

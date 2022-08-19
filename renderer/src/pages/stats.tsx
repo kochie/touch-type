@@ -70,9 +70,17 @@ const StatsPage = () => {
 
     const svg = select(svgRef.current);
 
+    const CHART_SIZE = 75;
     const data = [
-      ...Array(50 - results.length).fill({ correct: 0, incorrect: 0, cpm: 0 }),
-      ...results.slice(Math.max(results.length - 50, 0), results.length),
+      ...Array(CHART_SIZE - Math.min(results.length, CHART_SIZE)).fill({
+        correct: 0,
+        incorrect: 0,
+        cpm: 0,
+      }),
+      ...results.slice(
+        Math.max(results.length - CHART_SIZE, 0),
+        results.length
+      ),
     ];
 
     const X = map(data, (x, i) => i);
@@ -241,12 +249,14 @@ const StatsPage = () => {
     <div className="w-screen h-screen dark:text-white">
       <div className="">
         <div className="hover:animate-spin absolute top-8 right-8 ">
-          <FontAwesomeIcon
-            icon={faGear}
-            className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
-            size="lg"
-            // spin={}
-          />
+          <Link href={"/settings"}>
+            <FontAwesomeIcon
+              icon={faGear}
+              className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
+              size="lg"
+              // spin={}
+            />
+          </Link>
         </div>
         <div className="hover:animate-pulse absolute top-8 left-8">
           <Link href={"/"}>

@@ -4,14 +4,10 @@ import samplesize from "lodash.samplesize";
 // @ts-ignore
 import wordBlob from "../assets/words.txt";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faChartColumn,
-  faGear,
-  faRunning,
-} from "@fortawesome/free-solid-svg-icons";
+import { faChartColumn, faGear } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
-import Canvas from "../components/canvas";
-import { drawKey, findKey, KEYS } from "../lib/canvas_utils";
+import Canvas from "../components/canvas/canvas";
+import { KEYS } from "../lib/canvas_utils";
 import {
   faDungeon,
   faPercentage,
@@ -39,6 +35,7 @@ const statsReducer = (state, action) => {
         letters: [...state.letters, { key: action.key, correct: false }],
       };
     case "BACKSPACE":
+      // console.log(state.letters);
       return {
         ...state,
         time: Interval.fromDateTimes(state.start, DateTime.now()),
@@ -93,47 +90,42 @@ const IndexPage = ({ wordList }: IndexProps) => {
   const p = (correct / total) * 100;
 
   const keyDown = (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
-    console.log(e.key, words.charCodeAt(letters.length))
-    if (e.key === "Backspace") statsDispatch({ type: "BACKSPACE" });
+    if (e.key === "Backspace") {
+      statsDispatch({ type: "BACKSPACE" });
+      return;
+    }
     if (e.key === "Escape") {
       if (letters.length === 0) {
         setWords(samplesize(wordList, 15).join(" "));
       }
-      // dispatch({ type: "RESET" });
       statsDispatch({ type: "RESET" });
+      return;
     }
     e.preventDefault();
 
-    // console.log(e.key);
-    if (
-      !KEYS.some((rows) => {
-        return rows.some((key) =>
-          typeof key === "object"
-            ? key.key === e.key.toUpperCase()
-            : key === e.key.toUpperCase()
-        );
-      })
-    )
-      return;
+    if (!KEYS.keyExists(e.key)) return;
 
     if (letters.length === 0) {
       statsDispatch({ type: "START" });
     }
 
-    const [i, j] = findKey(e.key);
+    const key = KEYS.findKey(e.key);
+    const [i, j] = KEYS.findIndex(e.key);
+
+    if (key.isInert) return;
 
     if (e.key === words[letters.length]) {
       // dispatch({ type: "CORRECT", key: words[letters.length] });
       statsDispatch({ type: "CORRECT", key: words[letters.length] });
-      keys.current.push({ key: e.key, ttl: 255, i, j, correct: true });
+      keys.current.push({ key: key, ttl: 255, i, j, correct: true });
     } else {
       // dispatch({ type: "INCORRECT", key: words[letters.length] });
       statsDispatch({ type: "INCORRECT", key: words[letters.length] });
-      keys.current.push({ key: e.key, ttl: 255, i, j, correct: false });
+      keys.current.push({ key: key, ttl: 255, i, j, correct: false });
     }
 
     if (letters.length === words.length - 1) {
-      setWords(samplesize(wordList, 15).join(" "));
+      setWords(samplesize(wordList, 15).join(" ").replace("  ", ""));
       const prevResults = JSON.parse(localStorage.getItem("results") ?? "[]");
       localStorage.setItem(
         "results",
@@ -150,21 +142,20 @@ const IndexPage = ({ wordList }: IndexProps) => {
       statsDispatch({ type: "RESET" });
     }
 
-    if (!KEYS.some((rows) => rows.includes(e.key.toUpperCase()))) return;
+    // if (!KEYS.keyExists(e.key)) return;
 
     // ctx.scale(1, 1);
+    // const key = KEYS.findKey(e.key)
     if (e.key === words[letters.length]) {
-      drawKey(ctx, i, j, e.key, "rgba(0, 255, 0, 0.5)");
+      KEYS.drawKey(ctx, i, j, key, "rgba(0, 255, 0, 0.5)");
     } else {
-      drawKey(ctx, i, j, e.key, "rgba(255, 0, 0, 0.5)");
+      KEYS.drawKey(ctx, i, j, key, "rgba(255, 0, 0, 0.5)");
     }
   };
 
   const intervalFn = () => {
     if (letters.length > 0) statsDispatch({ type: "TICK" });
   };
-
-  // console.log(words)
 
   return (
     <div className="w-screen h-screen dark:text-white ">
@@ -199,12 +190,14 @@ const IndexPage = ({ wordList }: IndexProps) => {
           </div>
         </div>
         <div className="hover:animate-spin absolute top-8 right-8 ">
-          <FontAwesomeIcon
-            icon={faGear}
-            className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
-            size="lg"
-            // spin={}
-          />
+          <Link href={"/settings"}>
+            <FontAwesomeIcon
+              icon={faGear}
+              className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
+              size="lg"
+              // spin={}
+            />
+          </Link>
         </div>
         <div className="hover:animate-pulse absolute top-8 left-8">
           <Link href={"/stats"}>
@@ -248,7 +241,6 @@ const IndexPage = ({ wordList }: IndexProps) => {
 };
 
 export async function getStaticProps(context) {
-  // console.log(wordBlob.substring(0, 40))
   return {
     props: {
       wordList: wordBlob.replaceAll("\r", "").split("\n"),

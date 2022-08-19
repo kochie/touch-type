@@ -1,8 +1,10 @@
 import React, { useEffect, useReducer, useRef, useState } from "react";
-import { drawKey, KEYS } from "../lib/canvas_utils";
+import { KEYS } from "../../lib/canvas_utils";
 
 // @ts-ignore
-import RobotoMono from "../assets/RobotoMono-Regular.ttf";
+import RobotoMono from "../../assets/RobotoMono-Regular.ttf";
+import FontAwesomeRegular from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-regular-400.ttf";
+import FontAwesomeSolid from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-solid-900.ttf";
 
 const resizer = (state, action) => {
   switch (action.type) {
@@ -53,18 +55,24 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     };
   }, []);
 
-  const [fontLoaded, setFontLoaded] = useState(false)
+  const [fontLoaded, setFontLoaded] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
 
-    // console.log(RobotoMono);
-    new FontFace("Roboto Mono", `url(${RobotoMono})`)
-      .load()
-      .then(function (font) {
-        document.fonts.add(font);
-        setFontLoaded(true)
+    if (!fontLoaded)
+      Promise.all([
+        new FontFace("Roboto Mono", `url(${RobotoMono})`).load(),
+        new FontFace("FontAwesome", `url(${FontAwesomeSolid})`, {
+          weight: "900",
+        }).load(),
+        new FontFace("FontAwesome", `url(${FontAwesomeRegular})`, {
+          weight: "400",
+        }).load(),
+      ]).then((fonts) => {
+        fonts.forEach((font) => document.fonts.add(font));
+        setFontLoaded(true);
       });
 
     canvasRef.current.style.width = `${width}px`;
@@ -73,17 +81,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     canvasRef.current.height = height * pr;
     // ctx.scale(pr, pr);
 
-    KEYS.forEach((row, i) =>
-      row.forEach((letter, j) => {
-        drawKey(
-          ctx,
-          i,
-          j,
-          typeof letter === "string" ? letter : letter.key,
-          "rgba(0, 0, 0, 0.5)"
-        );
-      })
-    );
+    KEYS.drawKeyboard(ctx);
 
     return () => {
       ctx.clearRect(0, 0, width * pr, height * pr);
@@ -108,8 +106,8 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
       const keyz = uniqueChars.map((key) => {
         const x = 255 - (255 - key.ttl);
         if (key.correct)
-          drawKey(ctx, key.i, key.j, key.key, `rgba(0, ${x}, 0, 0.5)`);
-        else drawKey(ctx, key.i, key.j, key.key, `rgba(${x}, 0, 0, 0.5)`);
+          KEYS.drawKey(ctx, key.i, key.j, key.key, `rgba(0, ${x}, 0, 0.5)`);
+        else KEYS.drawKey(ctx, key.i, key.j, key.key, `rgba(${x}, 0, 0, 0.5)`);
         return { ...key, ttl: key.ttl - 7 };
       });
 
@@ -117,7 +115,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
         .filter((key) => key.ttl <= 0)
         .forEach((key) => {
           // TODO: clear key
-          drawKey(ctx, key.i, key.j, key.key, "rgba(0, 0, 0, 0.5)");
+          KEYS.drawKey(ctx, key.i, key.j, key.key, "rgba(0, 0, 0, 0.5)");
         });
 
       keys.current = keyz.filter((key) => key.ttl > 0);

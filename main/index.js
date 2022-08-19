@@ -40,7 +40,7 @@ import_electron.app.on("ready", async () => {
     minWidth: 1300,
     vibrancy: "under-window",
     webPreferences: {
-      contextIsolation: false,
+      contextIsolation: true,
       preload: (0, import_path.join)(__dirname, "preload.js")
     }
   });
