@@ -4,7 +4,7 @@
   "author": "Robert Koch <robert@kochie.io>",
   "main": "main/index.js",
   "productName": "Touch Typer",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "scripts": {
     "clean": "rimraf dist main renderer/out renderer/.next",
     "dev": "npm run build-electron && electron .",
