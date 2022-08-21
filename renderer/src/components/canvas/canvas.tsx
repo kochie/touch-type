@@ -3,7 +3,9 @@ import { KEYS } from "../../lib/canvas_utils";
 
 // @ts-ignore
 import RobotoMono from "../../assets/RobotoMono-Regular.ttf";
+// @ts-ignore
 import FontAwesomeRegular from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-regular-400.ttf";
+// @ts-ignore
 import FontAwesomeSolid from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-solid-900.ttf";
 
 const resizer = (state, action) => {

@@ -3,10 +3,16 @@ appId: io.kochie.touch-typer
 mac:
   hardenedRuntime: true
   category: public.app-category.productivity
+  icon: build/icon.png
   target:
     target: default
     arch:
       - universal
+mas:
+  hardenedRuntime: false
+  provisioningProfile: build/touch-typer-mas.provisionprofile
+  entitlements: build/entitlements.mas.plist
+  type: distribution
 appx:
   identityName: TouchTyper
 linux:
