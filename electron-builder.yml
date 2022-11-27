@@ -1,6 +1,8 @@
 afterSign: electron-builder-notarize
 appId: io.kochie.touch-typer
+copyright: "Copyright © 2022 Robert Koch"
 mac:
+  gatekeeperAssess: false
   hardenedRuntime: true
   category: public.app-category.productivity
   icon: build/icon.png
@@ -10,9 +12,10 @@ mac:
       - universal
 mas:
   hardenedRuntime: false
-  provisioningProfile: build/touch-typer-mas.provisionprofile
+  provisioningProfile: build/mastouchtyper.provisionprofile
+  entitlementsLoginHelper: build/entitlements.mas.loginhelper.plist
   entitlements: build/entitlements.mas.plist
-  type: distribution
+  entitlementsInherit: build/entitlements.mas.inherit.plist
 appx:
   identityName: TouchTyper
 linux:
