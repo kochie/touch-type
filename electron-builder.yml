@@ -6,6 +6,7 @@ mac:
   hardenedRuntime: true
   category: public.app-category.productivity
   icon: build/icon.png
+  entitlements: build/entitlements.mac.plist
   target:
     target: default
     arch:
@@ -16,6 +17,13 @@ mas:
   entitlementsLoginHelper: build/entitlements.mas.loginhelper.plist
   entitlements: build/entitlements.mas.plist
   entitlementsInherit: build/entitlements.mas.inherit.plist
+masDev:
+  hardenedRuntime: false
+  provisioningProfile: build/mastouchtyperdev.provisionprofile
+  entitlementsLoginHelper: build/entitlements.mas.loginhelper.plist
+  entitlements: build/entitlements.mas.plist
+  entitlementsInherit: build/entitlements.mas.inherit.plist
+
 appx:
   identityName: TouchTyper
 linux:
