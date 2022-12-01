@@ -5,7 +5,7 @@ mac:
   gatekeeperAssess: false
   hardenedRuntime: true
   category: public.app-category.productivity
-  icon: build/icon.png
+  icon: build/app-icon.png
   entitlements: build/entitlements.mac.plist
   target:
     target: default

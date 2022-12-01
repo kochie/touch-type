@@ -10,6 +10,7 @@ const sentryWebpackPluginOptions = {
   // recommended:
   //   release, url, org, project, authToken, configFile, stripPrefix,
   //   urlPrefix, include, ignore
+  hideSourceMaps: false,
 
   silent: true, // Suppresses all logs
   // For all available options, see:
