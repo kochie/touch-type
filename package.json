@@ -46,7 +46,7 @@
     "@types/react-dom": "^18.0.9",
     "autoprefixer": "^10.4.13",
     "d3": "^7.6.1",
-    "electron": "^21.3.1",
+    "electron": "^22.0.0",
     "electron-builder": "23.6.0",
     "electron-builder-notarize": "^1.5.0",
     "esbuild": "^0.15.15",
