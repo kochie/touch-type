@@ -5,7 +5,7 @@ mac:
   gatekeeperAssess: false
   hardenedRuntime: true
   category: public.app-category.productivity
-  icon: build/app-logo-mac.png
+  icon: build/app-icon.icns
   entitlements: build/entitlements.mac.plist
   target:
     target: default
@@ -30,7 +30,7 @@ linux:
   icon: build/app-logo-linux.png
   category: Utility
 win:
-  icon: build/app-logo-win.ico
+  icon: build/app-logo-win.png
   target:
     - target: nsis
     - target: appx
