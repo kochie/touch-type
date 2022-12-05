@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, useState } from "react";
-import { KEYS } from "../../lib/canvas_utils";
+// import { KEYS } from "../../lib/canvas_utils";
 
 // @ts-ignore
 import RobotoMono from "../../assets/RobotoMono-Regular.ttf";
@@ -7,6 +7,8 @@ import RobotoMono from "../../assets/RobotoMono-Regular.ttf";
 import FontAwesomeRegular from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-regular-400.ttf";
 // @ts-ignore
 import FontAwesomeSolid from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-solid-900.ttf";
+import { useKeyboard } from "../../lib/keyboard_hook";
+import { Keyboard } from "../../lib/keyboard_layouts";
 
 const resizer = (state, action) => {
   switch (action.type) {
@@ -34,6 +36,9 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     height: 0,
     pr: 1,
   });
+
+  const [KEYS] = useKeyboard();
+
   useEffect(() => {
     const resize = () => {
       resizeDispatch({ type: "RESIZE" });
@@ -60,6 +65,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
   const [fontLoaded, setFontLoaded] = useState(false);
 
   useEffect(() => {
+    const keyboard = new Keyboard(KEYS);
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
 
@@ -83,14 +89,15 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     canvasRef.current.height = height * pr;
     // ctx.scale(pr, pr);
 
-    KEYS.drawKeyboard(ctx);
+    keyboard.drawKeyboard(ctx);
 
     return () => {
       ctx.clearRect(0, 0, width * pr, height * pr);
     };
-  }, [width, height, pr, fontLoaded]);
+  }, [width, height, pr, fontLoaded, KEYS]);
 
   useEffect(() => {
+    const keyboard = new Keyboard(KEYS);
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
     const interval = setInterval(intervalFn, 500);
@@ -108,8 +115,9 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
       const keyz = uniqueChars.map((key) => {
         const x = 255 - (255 - key.ttl);
         if (key.correct)
-          KEYS.drawKey(ctx, key.i, key.j, key.key, `rgba(0, ${x}, 0, 0.5)`);
-        else KEYS.drawKey(ctx, key.i, key.j, key.key, `rgba(${x}, 0, 0, 0.5)`);
+          keyboard.drawKey(ctx, key.i, key.j, key.key, `rgba(0, ${x}, 0, 0.5)`);
+        else
+          keyboard.drawKey(ctx, key.i, key.j, key.key, `rgba(${x}, 0, 0, 0.5)`);
         return { ...key, ttl: key.ttl - 7 };
       });
 
@@ -117,7 +125,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
         .filter((key) => key.ttl <= 0)
         .forEach((key) => {
           // TODO: clear key
-          KEYS.drawKey(ctx, key.i, key.j, key.key, "rgba(0, 0, 0, 0.5)");
+          keyboard.drawKey(ctx, key.i, key.j, key.key, "rgba(0, 0, 0, 0.5)");
         });
 
       keys.current = keyz.filter((key) => key.ttl > 0);
@@ -135,7 +143,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
       clearInterval(interval);
       window.cancelAnimationFrame(requestId);
     };
-  }, [letters, pr, keyDown, intervalFn, keys]);
+  }, [letters, pr, keyDown, intervalFn, keys, KEYS]);
 
   return <canvas ref={canvasRef} />;
 };
