@@ -7,12 +7,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartColumn, faGear } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import Canvas from "../components/canvas/canvas";
-import { KEYS } from "../lib/canvas_utils";
 import {
   faDungeon,
   faPercentage,
   faPersonRunning,
 } from "@fortawesome/pro-duotone-svg-icons";
+import { Keyboard } from "../lib/keyboard_layouts";
+import { useKeyboard } from "../lib/keyboard_hook";
 
 interface IndexProps {
   wordList: string[];
@@ -89,6 +90,9 @@ const IndexPage = ({ wordList }: IndexProps) => {
   const cpm = total / m;
   const p = (correct / total) * 100;
 
+  const [KEYS] = useKeyboard();
+  const keyboard = new Keyboard(KEYS);
+
   const keyDown = (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
     if (e.key === "Backspace") {
       statsDispatch({ type: "BACKSPACE" });
@@ -103,14 +107,14 @@ const IndexPage = ({ wordList }: IndexProps) => {
     }
     e.preventDefault();
 
-    if (!KEYS.keyExists(e.key)) return;
+    if (!keyboard.keyExists(e.key)) return;
 
     if (letters.length === 0) {
       statsDispatch({ type: "START" });
     }
 
-    const key = KEYS.findKey(e.key);
-    const [i, j] = KEYS.findIndex(e.key);
+    const key = keyboard.findKey(e.key);
+    const [i, j] = keyboard.findIndex(e.key);
 
     if (key.isInert) return;
 
@@ -147,9 +151,9 @@ const IndexPage = ({ wordList }: IndexProps) => {
     // ctx.scale(1, 1);
     // const key = KEYS.findKey(e.key)
     if (e.key === words[letters.length]) {
-      KEYS.drawKey(ctx, i, j, key, "rgba(0, 255, 0, 0.5)");
+      keyboard.drawKey(ctx, i, j, key, "rgba(0, 255, 0, 0.5)");
     } else {
-      KEYS.drawKey(ctx, i, j, key, "rgba(255, 0, 0, 0.5)");
+      keyboard.drawKey(ctx, i, j, key, "rgba(255, 0, 0, 0.5)");
     }
   };
 

@@ -2,9 +2,12 @@ import { useEffect, useReducer } from "react";
 import * as Fathom from "fathom-client";
 
 import styles from "./settings.module.css";
+import { MACOS_US_DVORAK } from "../../lib/keyboard_layouts";
+import { KeyboardLayouts, useKeyboard } from "../../lib/keyboard_hook";
 
 const initialState = {
   analytics: false,
+  keyboard: KeyboardLayouts.MACOS_US_DVORAK,
 };
 
 const reducer = (state, action) => {
@@ -19,6 +22,12 @@ const reducer = (state, action) => {
         ...state,
         analytics: !state.analytics,
       };
+    case "CHANGE_KEYBOARD": {
+      return {
+        ...state,
+        keyboard: action.keyboard,
+      };
+    }
     case "SYNC":
       return {
         ...state,
@@ -40,14 +49,17 @@ const Settings = () => {
     });
   }, []);
 
+  const [_, setKeyboard] = useKeyboard();
+
   useEffect(() => {
     localStorage.setItem("settings", JSON.stringify(settings));
-  }, [settings]);
+    setKeyboard(settings.keyboard);
+  }, [settings, setKeyboard]);
 
   // console.log(settings);
   return (
     <div className="flex p-9">
-      <form>
+      <form className="flex flex-col gap-6">
         <label className={styles.switch}>
           Send Analytics
           <input
@@ -57,6 +69,24 @@ const Settings = () => {
             onChange={() => dispatch({ type: "TOGGLE_ANALYTICS" })}
           />
           <span className={`${styles.slider} ${styles.round} `}></span>
+        </label>
+
+        <label>
+          Keyboard
+          <select
+            className="text-black ml-5"
+            value={settings.keyboard}
+            onChange={(e) =>
+              dispatch({ type: "CHANGE_KEYBOARD", keyboard: e.target.value })
+            }
+          >
+            <option value={KeyboardLayouts.MACOS_US_DVORAK}>
+              MAC US DVORAK
+            </option>
+            <option value={KeyboardLayouts.MACOS_US_QWERTY}>
+              MAC US QWERTY
+            </option>
+          </select>
         </label>
       </form>
     </div>
