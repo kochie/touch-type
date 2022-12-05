@@ -6,9 +6,13 @@
 //   ["cmd", { key: " ", width: 420 }, "cmd", "opt"],
 // ];
 
-import { Key, Keyboard, MACOS_US_QWERTY } from "./keyboard_layouts";
+import {
+  Key,
+  Keyboard,
+  MACOS_US_QWERTY,
+  MACOS_US_DVORAK,
+} from "./keyboard_layouts";
 
-export const KEYS = new Keyboard(MACOS_US_QWERTY);
 export const OFFSETS = [0, 0, 0, 0, 0];
 // const SPACE = " ";
 
