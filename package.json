@@ -5,6 +5,10 @@
   "main": "main/index.js",
   "productName": "Touch Typer",
   "version": "1.8.1",
+  "files": [
+    "main/",
+    "renderer/out"
+  ],
   "scripts": {
     "clean": "rimraf dist main renderer/out renderer/.next",
     "dev": "npm run build-electron && electron .",

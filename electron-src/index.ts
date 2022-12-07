@@ -29,6 +29,7 @@ app.on("ready", async () => {
     width: 1280,
     height: 800,
     minWidth: 1280,
+    autoHideMenuBar: true,
     // transparent: true,
     // frame: false,
     vibrancy: "under-window",
