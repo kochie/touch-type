@@ -2,19 +2,16 @@ import { useEffect, useReducer } from "react";
 import * as Fathom from "fathom-client";
 
 import styles from "./settings.module.css";
-import { MACOS_US_DVORAK } from "../../lib/keyboard_layouts";
 import { KeyboardLayouts, useKeyboard } from "../../lib/keyboard_hook";
 
 const initialState = {
-  analytics: false,
-  keyboard: KeyboardLayouts.MACOS_US_DVORAK,
+  analytics: true,
+  keyboard: KeyboardLayouts.MACOS_US_QWERTY,
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
     case "TOGGLE_ANALYTICS":
-      // console.log(state);
-
       !state.analytics
         ? Fathom.enableTrackingForMe()
         : Fathom.blockTrackingForMe();
@@ -40,6 +37,7 @@ const reducer = (state, action) => {
 
 const Settings = () => {
   const [settings, dispatch] = useReducer(reducer, initialState);
+  const [_, setKeyboard] = useKeyboard();
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("settings");
@@ -49,14 +47,11 @@ const Settings = () => {
     });
   }, []);
 
-  const [_, setKeyboard] = useKeyboard();
-
   useEffect(() => {
     localStorage.setItem("settings", JSON.stringify(settings));
     setKeyboard(settings.keyboard);
   }, [settings, setKeyboard]);
 
-  // console.log(settings);
   return (
     <div className="flex p-9">
       <form className="flex flex-col gap-6">

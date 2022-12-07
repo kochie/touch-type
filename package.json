@@ -18,7 +18,6 @@
     "publish": "electron-builder -mlw -p always"
   },
   "dependencies": {
-    "@electron/osx-sign": "^1.0.1",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-regular-svg-icons": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",

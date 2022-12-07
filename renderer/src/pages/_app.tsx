@@ -29,7 +29,7 @@ function App({ Component, pageProps }) {
 
   return (
     <KeyboardProvider>
-      <Component {...pageProps} />;
+      <Component {...pageProps} />
     </KeyboardProvider>
   );
 }
