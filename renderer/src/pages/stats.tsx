@@ -38,7 +38,7 @@ const StatsPage = () => {
 
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
 
-  console.log(results);
+  // console.log(results);
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {

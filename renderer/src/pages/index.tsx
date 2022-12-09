@@ -82,7 +82,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
 
   useEffect(() => {
     const filtered = wordList.filter((word) => word.match(settings.level));
-    console.log(filtered);
+    // console.log(filtered);
     setWords(samplesize(filtered, 15).join(" "));
   }, [wordList, settings.level]);
 
@@ -104,7 +104,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
     if (e.key === "Escape") {
       if (letters.length === 0) {
         const filtered = wordList.filter((word) => word.match(settings.level));
-        console.log(LEVEL_1);
+        // console.log(LEVEL_1);
         setWords(samplesize(filtered, 15).join(" "));
       }
       statsDispatch({ type: "RESET" });
