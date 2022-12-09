@@ -13,7 +13,8 @@ import {
   faPersonRunning,
 } from "@fortawesome/pro-duotone-svg-icons";
 import { Keyboard } from "../lib/keyboard_layouts";
-import { useKeyboard } from "../lib/keyboard_hook";
+import { useSettings } from "../lib/settings_hook";
+import { LEVEL_1 } from "../lib/levels";
 
 interface IndexProps {
   wordList: string[];
@@ -77,10 +78,13 @@ const IndexPage = ({ wordList }: IndexProps) => {
       letters: [],
     }
   );
+  const settings = useSettings();
 
   useEffect(() => {
-    setWords(samplesize(wordList, 15).join(" "));
-  }, [wordList]);
+    const filtered = wordList.filter((word) => word.match(settings.level));
+    console.log(filtered);
+    setWords(samplesize(filtered, 15).join(" "));
+  }, [wordList, settings.level]);
 
   const keys = useRef([]);
 
@@ -90,8 +94,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
   const cpm = total / m;
   const p = (correct / total) * 100;
 
-  const [KEYS] = useKeyboard();
-  const keyboard = new Keyboard(KEYS);
+  const keyboard = new Keyboard(settings.keyboard);
 
   const keyDown = (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
     if (e.key === "Backspace") {
@@ -100,7 +103,9 @@ const IndexPage = ({ wordList }: IndexProps) => {
     }
     if (e.key === "Escape") {
       if (letters.length === 0) {
-        setWords(samplesize(wordList, 15).join(" "));
+        const filtered = wordList.filter((word) => word.match(settings.level));
+        console.log(LEVEL_1);
+        setWords(samplesize(filtered, 15).join(" "));
       }
       statsDispatch({ type: "RESET" });
       return;
@@ -129,7 +134,8 @@ const IndexPage = ({ wordList }: IndexProps) => {
     }
 
     if (letters.length === words.length - 1) {
-      setWords(samplesize(wordList, 15).join(" ").replace("  ", ""));
+      const filtered = wordList.filter((word) => word.match(settings.level));
+      setWords(samplesize(filtered, 15).join(" ").replace("  ", ""));
       const prevResults = JSON.parse(localStorage.getItem("results") ?? "[]");
       localStorage.setItem(
         "results",
@@ -139,6 +145,8 @@ const IndexPage = ({ wordList }: IndexProps) => {
             correct,
             incorrect,
             time: (time as Interval).toDuration().toISO(),
+            level: settings.levelName,
+            keyboard: settings.keyboardName,
           },
         ])
       );

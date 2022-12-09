@@ -7,7 +7,7 @@ import RobotoMono from "../../assets/RobotoMono-Regular.ttf";
 import FontAwesomeRegular from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-regular-400.ttf";
 // @ts-ignore
 import FontAwesomeSolid from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-solid-900.ttf";
-import { useKeyboard } from "../../lib/keyboard_hook";
+import { useSettings } from "../../lib/settings_hook";
 import { Keyboard } from "../../lib/keyboard_layouts";
 
 const resizer = (state, action) => {
@@ -37,7 +37,8 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     pr: 1,
   });
 
-  const [KEYS] = useKeyboard();
+  const settings = useSettings();
+  const KEYS = settings.keyboard;
 
   useEffect(() => {
     const resize = () => {

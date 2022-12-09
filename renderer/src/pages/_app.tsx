@@ -2,7 +2,7 @@ import "../styles/globals.css";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import * as Fathom from "fathom-client";
-import { KeyboardProvider } from "../lib/keyboard_hook";
+import { SettingsProvider } from "../lib/settings_hook";
 
 function App({ Component, pageProps }) {
   const router = useRouter();
@@ -28,9 +28,9 @@ function App({ Component, pageProps }) {
   }, [router.events]);
 
   return (
-    <KeyboardProvider>
+    <SettingsProvider>
       <Component {...pageProps} />
-    </KeyboardProvider>
+    </SettingsProvider>
   );
 }
 
