@@ -2,7 +2,12 @@ import { useEffect, useReducer } from "react";
 import * as Fathom from "fathom-client";
 
 import styles from "./settings.module.css";
-import { KeyboardLayouts, useKeyboard } from "../../lib/keyboard_hook";
+import {
+  KeyboardLayouts,
+  Levels,
+  useSettings,
+  useSettingsDispatch,
+} from "../../lib/settings_hook";
 
 const initialState = {
   analytics: true,
@@ -25,6 +30,12 @@ const reducer = (state, action) => {
         keyboard: action.keyboard,
       };
     }
+    case "CHANGE_LEVEL": {
+      return {
+        ...state,
+        level: action.level,
+      };
+    }
     case "SYNC":
       return {
         ...state,
@@ -37,7 +48,7 @@ const reducer = (state, action) => {
 
 const Settings = () => {
   const [settings, dispatch] = useReducer(reducer, initialState);
-  const [_, setKeyboard] = useKeyboard();
+  const dispatchSettings = useSettingsDispatch();
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("settings");
@@ -49,8 +60,7 @@ const Settings = () => {
 
   useEffect(() => {
     localStorage.setItem("settings", JSON.stringify(settings));
-    setKeyboard(settings.keyboard);
-  }, [settings, setKeyboard]);
+  }, [settings]);
 
   return (
     <div className="flex p-9">
@@ -71,9 +81,13 @@ const Settings = () => {
           <select
             className="text-black ml-5"
             value={settings.keyboard}
-            onChange={(e) =>
-              dispatch({ type: "CHANGE_KEYBOARD", keyboard: e.target.value })
-            }
+            onChange={(e) => {
+              dispatch({ type: "CHANGE_KEYBOARD", keyboard: e.target.value });
+              dispatchSettings({
+                type: "CHANGE_KEYBOARD",
+                keyboard: e.target.value,
+              });
+            }}
           >
             <option value={KeyboardLayouts.MACOS_US_DVORAK}>
               MAC US DVORAK
@@ -81,6 +95,25 @@ const Settings = () => {
             <option value={KeyboardLayouts.MACOS_US_QWERTY}>
               MAC US QWERTY
             </option>
+          </select>
+        </label>
+
+        <label>
+          Level
+          <select
+            className="text-black ml-5"
+            value={settings.level}
+            onChange={(e) => {
+              dispatch({ type: "CHANGE_LEVEL", level: e.target.value });
+              dispatchSettings({
+                type: "CHANGE_LEVEL",
+                level: e.target.value,
+              });
+            }}
+          >
+            <option value={Levels.LEVEL_1}>Level 1</option>
+            <option value={Levels.LEVEL_2}>Level 2</option>
+            <option value={Levels.LEVEL_3}>Level 3</option>
           </select>
         </label>
       </form>

@@ -8,6 +8,9 @@ import {
   axisRight,
   InternSet,
   interpolateBlues,
+  interpolateGreens,
+  interpolateOranges,
+  interpolatePurples,
   interpolateReds,
   map,
   max,
@@ -35,7 +38,7 @@ const StatsPage = () => {
 
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
 
-  console.log(results);
+  // console.log(results);
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -76,6 +79,7 @@ const StatsPage = () => {
         correct: 0,
         incorrect: 0,
         cpm: 0,
+        level: 0,
       }),
       ...results.slice(
         Math.max(results.length - CHART_SIZE, 0),
@@ -86,6 +90,7 @@ const StatsPage = () => {
     const X = map(data, (x, i) => i);
     const Y = map(data, (y) => y.cpm);
     const Y2 = map(data, (y) => y.incorrect);
+    const LEVEL = map(data, (y) => y.level);
 
     // console.log(Y);
 
@@ -118,8 +123,13 @@ const StatsPage = () => {
       return xDomain.has(X[i]);
     });
 
-    var blues = scaleSequential(yDomain, interpolateBlues);
-    var reds = scaleSequential(yDomain2, interpolateReds);
+    const blues = scaleSequential(yDomain, interpolateBlues);
+    const greens = scaleSequential(yDomain, interpolateGreens);
+    const oranges = scaleSequential(yDomain, interpolatePurples);
+
+    const reds = scaleSequential(yDomain2, interpolateReds);
+
+    const levelColors = [oranges, greens, blues];
 
     // console.log(I);
 
@@ -178,7 +188,10 @@ const StatsPage = () => {
       .selectAll("rect")
       .data(I)
       .join("rect")
-      .attr("fill", (i) => blues(Y[i]))
+      .attr("fill", (i) => {
+        const color = LEVEL[i] > 0 ? levelColors[LEVEL[i] - 1] : blues;
+        return color(Y[i]);
+      })
       .attr("x", (i) => xScale(X[i]))
       .attr("y", (i) => {
         // console.log(Y[i]);
@@ -193,11 +206,13 @@ const StatsPage = () => {
       .on("mouseover", function (d, i) {
         select(this).transition().duration(50).attr("opacity", ".50");
         // console.log(yScale2.invert(parseFloat(select(this).attr("height"))));
-        console.log(Y[i]);
+        // console.log(Y[i]);
         div.transition().duration(50).style("opacity", 1);
         // let num = Math.round((d.value / d.data.all) * 100).toString() + "%";
         div
-          .html(Y[i].toFixed(0))
+          .html(
+            Y[i].toFixed(0) + "cpm on Level: " + (LEVEL[i] ? LEVEL[i] : "3")
+          )
           .style("left", d.pageX + 10 + "px")
           .style("top", d.pageY - 15 + "px");
       })
@@ -226,11 +241,11 @@ const StatsPage = () => {
       .on("mouseover", function (d, i) {
         select(this).transition().duration(50).attr("opacity", ".50");
         // console.log(yScale2.invert(parseFloat(select(this).attr("height"))));
-        console.log(Y2[i]);
+        // console.log(Y2[i]);
         div.transition().duration(50).style("opacity", 1);
         // let num = Math.round((d.value / d.data.all) * 100).toString() + "%";
         div
-          .html(Y2[i].toFixed(0))
+          .html(Y2[i].toFixed(0) + " typos")
           .style("left", d.pageX + 10 + "px")
           .style("top", d.pageY - 15 + "px");
       })
