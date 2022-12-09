@@ -129,7 +129,7 @@ const StatsPage = () => {
 
     const reds = scaleSequential(yDomain2, interpolateReds);
 
-    const levelColors = [blues, greens, oranges];
+    const levelColors = [oranges, greens, blues];
 
     // console.log(I);
 
