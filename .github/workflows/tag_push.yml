@@ -36,6 +36,7 @@ jobs:
         run: |
           mkdir -p ~/private_keys/
           echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
+          echo '${{ secrets.provisioning_profile }}' > build/mastouchtyper.provisionprofile
 
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1
@@ -62,3 +63,9 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+      - name: Upload to App Store Connect
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-${{github.ref_name}}-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
+          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-${{github.ref_name}}-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}

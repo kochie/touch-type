@@ -8,9 +8,12 @@ mac:
   icon: build/app-icon.icns
   entitlements: build/entitlements.mac.plist
   target:
-    target: default
-    arch:
-      - universal
+    - target: default
+      arch:
+        - universal
+    - target: mas
+      arch:
+        - universal
 mas:
   hardenedRuntime: false
   provisioningProfile: build/mastouchtyper.provisionprofile
