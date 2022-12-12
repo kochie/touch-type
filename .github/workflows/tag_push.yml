@@ -71,3 +71,13 @@ jobs:
         run: |
           xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-${{github.ref_name}}-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
           xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-${{github.ref_name}}-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
+
+      - name: Upload to Windows Dev Center
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
+          Install-Module -Name StoreBroker
+          $password = ConvertTo-SecureString ${{ secrets.windows_dev_center_password }} -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential ${{ secrets.windows_dev_center_username }}, $password
+          Set-StoreBrokerAuthentication -TenantId ${{ secrets.windows_dev_center_tenant_id }} -Credential $credential
+          Update-ApplicationSubmission -AppId "9NG3CCFL631D" -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer-${{ github.ref_name }}.appx" -AutoCommit -Force
