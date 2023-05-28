@@ -44,6 +44,9 @@ const nextConfig = {
   },
   output: 'export',
   images: {
+    unoptimized: true,
+    // loader: 'custom',
+    // loaderFile: './src/app/image.ts',
     remotePatterns: [
       {
         hostname: "images.unsplash.com",

@@ -5,8 +5,8 @@ import Step01 from "./step01";
 import { useReducer } from "react";
 import Step02 from "./step02";
 import Step03 from "./step03";
-import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import background from "@/assets/bg.png"
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -73,7 +73,8 @@ export default function SignUp({ toSignIn, onClose }) {
         <div className="relative block flex-1 bg-black overflow-hidden">
           <Image
             className="absolute inset-0 h-full w-full object-cover opacity-30 blur-sm scale-105 bg-black"
-            src="https://images.unsplash.com/photo-1496917756835-20cb06e75b4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1908&q=80"
+            src={background}
+            placeholder="blur"
             alt=""
             fill
           />
