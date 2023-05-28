@@ -2,6 +2,7 @@
 import {
   Dispatch,
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useReducer,
@@ -118,13 +119,13 @@ export const SettingsProvider = ({ children }) => {
   const [mutateFunction] = useMutation(PUT_SETTINGS);
   const [user] = useUser();
 
-  function saveSettings(safeSettings) {
+  const saveSettings = useCallback((safeSettings) => {
     if (!user) return;
 
     mutateFunction({
       variables: { userId: user.username, settings: safeSettings },
     });
-  }
+  }, [user])
 
   useEffect(() => {
     const safeSettings = {
@@ -132,11 +133,11 @@ export const SettingsProvider = ({ children }) => {
       level: { pattern: settings.level.source, flags: settings.level.flags },
     };
 
-    console.log("USE EFFECT", settings);
+    // console.log("USE EFFECT", settings);
     localStorage.setItem("settings", JSON.stringify(safeSettings));
 
     saveSettings(safeSettings);
-  }, [settings]);
+  }, [settings, saveSettings]);
 
   if (!dispatch) {
     console.error("No dispatch");

@@ -12,7 +12,7 @@
   "scripts": {
     "clean": "rimraf dist main renderer/out renderer/.next",
     "dev": "npm run build-electron && electron .",
-    "build-renderer": "next build renderer && next export renderer",
+    "build-renderer": "next build renderer",
     "build-electron": "esbuild electron-src/index.ts electron-src/preload.ts --loader:.txt=file --outdir=main --platform=node --format=cjs --tsconfig=electron-src/tsconfig.json",
     "build": "npm run build-renderer && npm run build-electron",
     "pack-app": "npm run build && electron-builder --dir",
@@ -43,6 +43,7 @@
     "aws-appsync-auth-link": "^3.0.7",
     "aws-crt": "^1.15.17",
     "deepmerge": "^4.3.1",
+    "electron-builder-notarize": "^1.5.1",
     "electron-is-dev": "^2.0.0",
     "electron-log": "^4.4.8",
     "electron-next": "^3.1.5",
