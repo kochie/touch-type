@@ -1,91 +1,54 @@
-import { useEffect, useReducer } from "react";
+"use client";
+
 import * as Fathom from "fathom-client";
 
-import styles from "./settings.module.css";
 import {
   KeyboardLayouts,
   Levels,
   useSettings,
   useSettingsDispatch,
-} from "../../lib/settings_hook";
+} from "@/lib/settings_hook";
+import { Switch } from "@headlessui/react";
+import { useEffect } from "react";
+import { gql, useMutation } from "@apollo/client";
+import { useUser } from "@/lib/user_hook";
+import { PUT_SETTINGS } from "@/transactions/putSettings";
 
-const initialState = {
-  analytics: true,
-  keyboard: KeyboardLayouts.MACOS_US_QWERTY,
-};
-
-const reducer = (state, action) => {
-  switch (action.type) {
-    case "TOGGLE_ANALYTICS":
-      !state.analytics
-        ? Fathom.enableTrackingForMe()
-        : Fathom.blockTrackingForMe();
-      return {
-        ...state,
-        analytics: !state.analytics,
-      };
-    case "CHANGE_KEYBOARD": {
-      return {
-        ...state,
-        keyboard: action.keyboard,
-      };
-    }
-    case "CHANGE_LEVEL": {
-      return {
-        ...state,
-        level: action.level,
-      };
-    }
-    case "SYNC":
-      return {
-        ...state,
-        ...action.payload,
-      };
-    default:
-      return { ...state };
-  }
-};
+function classNames(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
 
 const Settings = () => {
-  const [settings, dispatch] = useReducer(reducer, initialState);
+  const settings = useSettings();
   const dispatchSettings = useSettingsDispatch();
-
-  useEffect(() => {
-    const storedSettings = localStorage.getItem("settings");
-    dispatch({
-      type: "SYNC",
-      payload: storedSettings ? JSON.parse(storedSettings) : initialState,
-    });
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("settings", JSON.stringify(settings));
-  }, [settings]);
 
   return (
     <div className="flex p-9">
       <form className="flex flex-col gap-6">
-        <label className={styles.switch}>
-          Send Analytics
-          <input
-            className=""
-            type="checkbox"
-            checked={settings.analytics}
-            onChange={() => dispatch({ type: "TOGGLE_ANALYTICS" })}
-          />
-          <span className={`${styles.slider} ${styles.round} `}></span>
-        </label>
+        <AnalyticsSwitch
+          enabled={settings.analytics}
+          setEnabled={(enabled) => {
+            enabled ? Fathom.enableTrackingForMe() : Fathom.blockTrackingForMe()
+            dispatchSettings({ type: "SET_ANALYTICS", analytics: enabled })
+          }}
+        />
+
+        <WhatsNewSwitch
+          enabled={settings.whatsNewOnStartup}
+          setEnabled={(enabled) =>
+            dispatchSettings({ type: "SET_WHATS_NEW", whatsnew: enabled })
+          }
+        />
 
         <label>
           Keyboard
           <select
             className="text-black ml-5"
-            value={settings.keyboard}
+            value={settings.keyboardName}
             onChange={(e) => {
-              dispatch({ type: "CHANGE_KEYBOARD", keyboard: e.target.value });
               dispatchSettings({
                 type: "CHANGE_KEYBOARD",
-                keyboard: e.target.value,
+                keyboardName: e.target.value,
               });
             }}
           >
@@ -102,12 +65,11 @@ const Settings = () => {
           Level
           <select
             className="text-black ml-5"
-            value={settings.level}
+            value={settings.levelName}
             onChange={(e) => {
-              dispatch({ type: "CHANGE_LEVEL", level: e.target.value });
               dispatchSettings({
                 type: "CHANGE_LEVEL",
-                level: e.target.value,
+                levelName: e.target.value,
               });
             }}
           >
@@ -122,3 +84,73 @@ const Settings = () => {
 };
 
 export default Settings;
+
+function WhatsNewSwitch({ enabled, setEnabled }) {
+  return (
+    <Switch.Group as="div" className="flex items-center justify-between">
+      <span className="flex flex-grow flex-col">
+        <Switch.Label
+          as="span"
+          className="text-sm font-medium leading-6 text-white"
+          passive
+        >
+          Show What's New on Startup
+        </Switch.Label>
+        <Switch.Description as="span" className="text-sm text-gray-500">
+          Show the What's New message when the app starts.
+        </Switch.Description>
+      </span>
+      <Switch
+        checked={enabled}
+        onChange={setEnabled}
+        className={classNames(
+          enabled ? "bg-indigo-600" : "bg-gray-200",
+          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={classNames(
+            enabled ? "translate-x-5" : "translate-x-0",
+            "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+          )}
+        />
+      </Switch>
+    </Switch.Group>
+  );
+}
+
+function AnalyticsSwitch({ enabled, setEnabled }) {
+  return (
+    <Switch.Group as="div" className="flex items-center justify-between">
+      <span className="flex flex-grow flex-col">
+        <Switch.Label
+          as="span"
+          className="text-sm font-medium leading-6 text-white"
+          passive
+        >
+          Enabled Analytics
+        </Switch.Label>
+        <Switch.Description as="span" className="text-sm text-gray-500">
+          Send tememetry data about usage back to developers.
+        </Switch.Description>
+      </span>
+      <Switch
+        checked={enabled}
+        onChange={setEnabled}
+        className={classNames(
+          enabled ? "bg-indigo-600" : "bg-gray-200",
+          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={classNames(
+            enabled ? "translate-x-5" : "translate-x-0",
+            "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+          )}
+        />
+      </Switch>
+    </Switch.Group>
+  );
+}

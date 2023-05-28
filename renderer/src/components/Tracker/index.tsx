@@ -1,72 +1,32 @@
+"use client"
 import { useEffect, useReducer, useRef, useState } from "react";
+import { statsReducer } from "./reducers";
 import { DateTime, Interval } from "luxon";
-import samplesize from "lodash.samplesize";
-// @ts-ignore
-import wordBlob from "../assets/words.txt";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChartColumn, faGear } from "@fortawesome/free-solid-svg-icons";
-import Link from "next/link";
-import Canvas from "../components/canvas/canvas";
-import {
-  faDungeon,
-  faPercentage,
-  faPersonRunning,
-} from "@fortawesome/pro-duotone-svg-icons";
-import { Keyboard } from "../lib/keyboard_layouts";
-import { useSettings } from "../lib/settings_hook";
-import { LEVEL_1 } from "../lib/levels";
+import { faDungeon, faPercentage, faPersonRunning } from "@fortawesome/pro-duotone-svg-icons";
+import Canvas from "../Canvas";
+import { Key, Keyboard } from "@/lib/keyboard_layouts";
+import sampleSize from "lodash.samplesize";
+import { useSettings } from "@/lib/settings_hook";
+
+import wordBlob from "@/assets/words.txt"
 
 interface IndexProps {
-  wordList: string[];
+    wordList: string[];
+  }
+
+const wordList = wordBlob.replaceAll("\r", "").split("\n");
+
+interface KeyPress {
+  key: Key;
+  ttl: number;
+  i: number;
+  j: number;
+  correct: boolean;
 }
 
-const statsReducer = (state, action) => {
-  switch (action.type) {
-    case "CORRECT":
-      return {
-        ...state,
-        correct: state.correct + 1,
-        time: Interval.fromDateTimes(state.start, DateTime.now()),
-        letters: [...state.letters, { key: action.key, correct: true }],
-      };
-    case "INCORRECT":
-      return {
-        ...state,
-        incorrect: state.incorrect + 1,
-        time: Interval.fromDateTimes(state.start, DateTime.now()),
-        letters: [...state.letters, { key: action.key, correct: false }],
-      };
-    case "BACKSPACE":
-      // console.log(state.letters);
-      return {
-        ...state,
-        time: Interval.fromDateTimes(state.start, DateTime.now()),
-        letters: [...state.letters.slice(0, -1)],
-      };
-    case "START":
-      return {
-        ...state,
-        start: DateTime.now(),
-      };
-    case "RESET":
-      return {
-        correct: 0,
-        incorrect: 0,
-        time: Interval.after(DateTime.now(), 0),
-        letters: [],
-      };
-    case "TICK":
-      return {
-        ...state,
-        time: Interval.fromDateTimes(state.start, DateTime.now()),
-      };
-    default:
-      return state;
-  }
-};
-
-const IndexPage = ({ wordList }: IndexProps) => {
-  const [words, setWords] = useState("");
+export default function Tracker({modal}) {
+  const [words, setWords] = useState("")
 
   const [{ correct, incorrect, time, letters }, statsDispatch] = useReducer(
     statsReducer,
@@ -78,15 +38,16 @@ const IndexPage = ({ wordList }: IndexProps) => {
       letters: [],
     }
   );
-  const settings = useSettings();
+
+  const settings = useSettings()
 
   useEffect(() => {
     const filtered = wordList.filter((word) => word.match(settings.level));
     // console.log(filtered);
-    setWords(samplesize(filtered, 15).join(" "));
+    setWords(sampleSize(filtered, 15).join(" "));
   }, [wordList, settings.level]);
 
-  const keys = useRef([]);
+  const keys = useRef<KeyPress[]>([]);
 
   const d = (time as Interval).toDuration();
   const total = correct + incorrect;
@@ -96,7 +57,15 @@ const IndexPage = ({ wordList }: IndexProps) => {
 
   const keyboard = new Keyboard(settings.keyboard);
 
+  const intervalFn = () => {
+    if (letters.length > 0) statsDispatch({ type: "TICK" });
+  };
+
   const keyDown = (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
+    if (modal) {
+      return;
+    }
+
     if (e.key === "Backspace") {
       statsDispatch({ type: "BACKSPACE" });
       return;
@@ -105,7 +74,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
       if (letters.length === 0) {
         const filtered = wordList.filter((word) => word.match(settings.level));
         // console.log(LEVEL_1);
-        setWords(samplesize(filtered, 15).join(" "));
+        setWords(sampleSize(filtered, 15).join(" "));
       }
       statsDispatch({ type: "RESET" });
       return;
@@ -135,7 +104,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
 
     if (letters.length === words.length - 1) {
       const filtered = wordList.filter((word) => word.match(settings.level));
-      setWords(samplesize(filtered, 15).join(" ").replace("  ", ""));
+      setWords(sampleSize(filtered, 15).join(" ").replace("  ", ""));
       const prevResults = JSON.parse(localStorage.getItem("results") ?? "[]");
       localStorage.setItem(
         "results",
@@ -165,12 +134,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
     }
   };
 
-  const intervalFn = () => {
-    if (letters.length > 0) statsDispatch({ type: "TICK" });
-  };
-
   return (
-    <div className="w-screen h-screen dark:text-white ">
       <div className="">
         <div className="flex gap-10 justify-between pt-10 font-mono mx-auto w-[600px]">
           {/* <p>Correct: {correct}</p> */}
@@ -201,25 +165,6 @@ const IndexPage = ({ wordList }: IndexProps) => {
             </div>
           </div>
         </div>
-        <div className="hover:animate-spin absolute top-8 right-8 ">
-          <Link href={"/settings"}>
-            <FontAwesomeIcon
-              icon={faGear}
-              className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
-              size="lg"
-              // spin={}
-            />
-          </Link>
-        </div>
-        <div className="hover:animate-pulse absolute top-8 left-8">
-          <Link href={"/stats"}>
-            <FontAwesomeIcon
-              icon={faChartColumn}
-              className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
-              size="lg"
-            />
-          </Link>
-        </div>
         <p className="font-['Roboto_Mono'] text-center p-10 whitespace-pre-wrap">
           {letters.map((letter, i) => (
             // <span
@@ -247,17 +192,7 @@ const IndexPage = ({ wordList }: IndexProps) => {
           keys={keys}
           intervalFn={intervalFn}
         />
+
       </div>
-    </div>
-  );
-};
-
-export async function getStaticProps(context) {
-  return {
-    props: {
-      wordList: wordBlob.replaceAll("\r", "").split("\n"),
-    }, // will be passed to the page component as props
-  };
+  )
 }
-
-export default IndexPage;

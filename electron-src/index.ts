@@ -2,14 +2,16 @@
 import { join } from "path";
 import { format } from "url";
 
+
 // Packages
-import { app, BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, dialog, session } from "electron";
 // import { BrowserWindow } from "electron-acrylic-window";
 import isDev from "electron-is-dev";
 import prepareNext from "electron-next";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import { init } from "@sentry/electron";
+import { homedir } from "os";
 
 init({
   dsn: "https://b91033c73a0f46a287bfaa7959809d12@o157203.ingest.sentry.io/6633710",
@@ -33,6 +35,8 @@ app.on("ready", async () => {
     // transparent: true,
     // frame: false,
     vibrancy: "under-window",
+    backgroundMaterial: "mica",
+    // opacity: 0.85,
     // transparent: true,
     // backgroundColor: "#00000000",
     // vibrancy: "under-page",
