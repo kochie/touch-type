@@ -21,7 +21,7 @@ jobs:
         
       - uses: pnpm/action-setup@v2
         with:
-          version: 7
+          version: 6.32.9
 
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v3
@@ -29,9 +29,9 @@ jobs:
           node-version: latest
           cache: pnpm
 
-      - run: pnpm install
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+#         env:
+#           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
       - run: pnpm run build
         env:
