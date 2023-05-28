@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    env:
+      FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
     strategy:
       matrix:
@@ -19,7 +21,7 @@ jobs:
         
       - uses: pnpm/action-setup@v2
         with:
-          version: latest
+          version: 7
 
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v3
