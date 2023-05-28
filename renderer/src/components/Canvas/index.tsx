@@ -2,13 +2,13 @@ import React, { useEffect, useReducer, useRef, useState } from "react";
 // import { KEYS } from "../../lib/canvas_utils";
 
 // @ts-ignore
-import RobotoMono from "../../assets/RobotoMono-Regular.ttf";
+import RobotoMono from "@/assets/RobotoMono-Regular.ttf";
 // @ts-ignore
-import FontAwesomeRegular from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-regular-400.ttf";
+import FontAwesomeRegular from "@/assets/fontawesome-pro-6.1.2-web/webfonts/fa-regular-400.ttf";
 // @ts-ignore
-import FontAwesomeSolid from "../../assets/fontawesome-pro-6.1.2-web/webfonts/fa-solid-900.ttf";
-import { useSettings } from "../../lib/settings_hook";
-import { Keyboard } from "../../lib/keyboard_layouts";
+import FontAwesomeSolid from "@/assets/fontawesome-pro-6.1.2-web/webfonts/fa-solid-900.ttf";
+import { useSettings } from "@/lib/settings_hook";
+import { Keyboard } from "@/lib/keyboard_layouts";
 
 const resizer = (state, action) => {
   switch (action.type) {
@@ -69,6 +69,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     const keyboard = new Keyboard(KEYS);
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
 
     if (!fontLoaded)
       Promise.all([
@@ -101,6 +102,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     const keyboard = new Keyboard(KEYS);
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
     const interval = setInterval(intervalFn, 500);
 
     // const keyDown = (e: KeyboardEvent) => {

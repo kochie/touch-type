@@ -6,7 +6,7 @@ import wordBlob from "../assets/words.txt";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartColumn, faGear } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
-import Canvas from "../components/canvas/canvas";
+import Canvas from "../components/Canvas";
 import {
   faDungeon,
   faPercentage,

@@ -1,7 +1,4 @@
-/**
- * @type {import('next').NextConfig}
- */
-
+const MDX = require("@next/mdx");
 const { withSentryConfig } = require("@sentry/nextjs");
 
 const sentryWebpackPluginOptions = {
@@ -17,6 +14,9 @@ const sentryWebpackPluginOptions = {
   // https://github.com/getsentry/sentry-webpack-plugin#options.
 };
 
+/**
+ * @type {import('next').NextConfig}
+ */
 const nextConfig = {
   /* config options here */
   webpack: (
@@ -38,6 +38,31 @@ const nextConfig = {
 
     return config;
   },
+
+  experimental: {
+    mdxRs: true,
+  },
+
+  images: {
+    remotePatterns: [
+      {
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
 };
 
-module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
+const withMDX = MDX({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [],
+    rehypePlugins: [],
+    // If you use `MDXProvider`, uncomment the following line.
+    // providerImportSource: '@mdx-js/react',
+    // development: true,
+  },
+});
+
+module.exports = withMDX(
+  withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+);
