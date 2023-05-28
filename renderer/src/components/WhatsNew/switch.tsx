@@ -5,7 +5,6 @@ function classNames(...classes) {
 }
 
 export default function Toggle({ label, description, enabled, setEnabled }) {
-
   return (
     <Switch.Group as="div" className="flex items-center justify-between">
       <span className="flex flex-grow flex-col">

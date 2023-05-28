@@ -1,4 +1,3 @@
-
 import { makeKey, OFFSETS } from "./canvas_utils";
 
 export class Key {

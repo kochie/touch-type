@@ -31,7 +31,7 @@ const Tick = (
 
 export default function Step02({ onContinue, email }) {
   const [formErrors, setFormErrors] = useState<string>();
-  const [_, setUser] = useUser()
+  const [_, setUser] = useUser();
 
   return (
     <Formik
@@ -50,11 +50,11 @@ export default function Step02({ onContinue, email }) {
 
           setSubmitting(false);
           setStatus("COMPLETE");
-          
+
           // await new Promise((resolve) => setTimeout(resolve, 1000));
 
-          const user = await Auth.currentAuthenticatedUser()
-          setUser(user)
+          const user = await Auth.currentAuthenticatedUser();
+          setUser(user);
           onContinue();
         } catch (error) {
           setFormErrors(error);

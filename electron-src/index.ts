@@ -2,7 +2,6 @@
 import { join } from "path";
 import { format } from "url";
 
-
 // Packages
 import { app, BrowserWindow, dialog, session } from "electron";
 // import { BrowserWindow } from "electron-acrylic-window";

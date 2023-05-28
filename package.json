@@ -19,7 +19,8 @@
     "dist": "npm run build && electron-builder -mlw",
     "type-check": "tsc -p ./renderer/tsconfig.json && tsc -p ./electron-src/tsconfig.json",
     "postinstall": "electron-builder install-app-deps",
-    "publish": "electron-builder -mlw -p always"
+    "publish": "electron-builder -mlw -p always",
+    "lint": "prettier --write ."
   },
   "dependencies": {
     "@apollo/client": "3.8.0-alpha.15",
@@ -50,6 +51,7 @@
     "formik": "^2.3.2",
     "lodash": "^4.17.21",
     "next": "^13.4.4",
+    "prettier": "^2.8.8",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "swr": "^2.1.5",

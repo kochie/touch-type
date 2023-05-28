@@ -5,8 +5,6 @@ import { faRightToBracket } from "@fortawesome/free-solid-svg-icons";
 import { faUser } from "@fortawesome/pro-duotone-svg-icons";
 import { useUser } from "@/lib/user_hook";
 
-
-
 export default function User({ signIn, account }) {
   const [user] = useUser();
 

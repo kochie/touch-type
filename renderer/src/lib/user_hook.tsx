@@ -17,15 +17,15 @@ export const UserProvider = ({ children }) => {
 
   async function getUser() {
     try {
-        const user = await Auth.currentAuthenticatedUser()
-        setUser(user);
+      const user = await Auth.currentAuthenticatedUser();
+      setUser(user);
     } catch (error) {
-        setUser(null);
+      setUser(null);
     }
   }
 
   useEffect(() => {
-    getUser()
+    getUser();
   }, []);
 
   return (

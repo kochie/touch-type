@@ -102,10 +102,9 @@ const defaultSettings = {
 };
 
 export const SettingsProvider = ({ children }) => {
-
   const [settings, dispatch] = useReducer(reducer, null, () => {
-    if (typeof localStorage === 'undefined') return { ...defaultSettings };
-    
+    if (typeof localStorage === "undefined") return { ...defaultSettings };
+
     const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
     if (savedSettings.level) {
       savedSettings.level = new RegExp(

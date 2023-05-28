@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import NextErrorComponent from "next/error";
 
 import * as Sentry from "@sentry/nextjs";

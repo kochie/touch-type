@@ -1,4 +1,4 @@
-declare module '*.txt' {
-    let Text: string
-    export default Text;
+declare module "*.txt" {
+  let Text: string;
+  export default Text;
 }

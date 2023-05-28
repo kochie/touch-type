@@ -1,5 +1,5 @@
 import Providers from "./Providers";
-import {Auth} from "aws-amplify"
+import { Auth } from "aws-amplify";
 
 const os = require("os");
 
@@ -14,8 +14,8 @@ Auth.configure({
   userPoolId: process.env.NEXT_PUBLIC_USERPOOL_ID,
   userPoolWebClientId: process.env.NEXT_PUBLIC_USERPOOL_CLIENT_ID,
   region: "ap-southeast-2",
-  ssr: true
-})
+  ssr: true,
+});
 
 export default function RootLayout({
   children,

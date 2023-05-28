@@ -21,7 +21,6 @@ const reducer = (state, action) => {
   }
 };
 
-
 export default function SignUp({ toSignIn, onClose }) {
   const [{ stage, email }, dispatch] = useReducer(reducer, {
     stage: "STEP_01",

@@ -17,20 +17,20 @@ const SignupSchema = Yup.object().shape({
   phone: Yup.string().required(),
 });
 
-const Spinner = <FontAwesomeIcon
-  icon={faSpinner}
-  className="text-white"
-  spin={true}
-  size="xl"
-/>
+const Spinner = (
+  <FontAwesomeIcon
+    icon={faSpinner}
+    className="text-white"
+    spin={true}
+    size="xl"
+  />
+);
 
-const Tick = <FontAwesomeIcon
-  icon={faCheck}
-  className="text-white"
-  size="xl"
-/>
+const Tick = (
+  <FontAwesomeIcon icon={faCheck} className="text-white" size="xl" />
+);
 
-export default function Step01({onContinue}) {
+export default function Step01({ onContinue }) {
   const [formErrors, setFormErrors] = useState<string>();
 
   return (
@@ -60,9 +60,9 @@ export default function Step01({onContinue}) {
           });
 
           setSubmitting(false);
-          setStatus("COMPLETE")
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          onContinue(values)
+          setStatus("COMPLETE");
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          onContinue(values);
         } catch (error) {
           setFormErrors(error);
         }

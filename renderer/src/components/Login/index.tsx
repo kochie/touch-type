@@ -30,7 +30,7 @@ const Tick = (
 
 export default function Login({ onSignUp, onContinue, onForgetPassword }) {
   const [formErrors, setFormErrors] = useState<string>();
-  const [_ ,setUser] = useUser()
+  const [_, setUser] = useUser();
 
   return (
     <>
@@ -61,7 +61,7 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
 
                 setSubmitting(false);
                 setStatus("COMPLETE");
-                setUser(user)
+                setUser(user);
                 await new Promise((resolve) => setTimeout(resolve, 1000));
                 onContinue(values);
               } catch (error) {

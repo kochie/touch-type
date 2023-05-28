@@ -69,7 +69,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     const keyboard = new Keyboard(KEYS);
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) return
+    if (!ctx) return;
 
     if (!fontLoaded)
       Promise.all([
@@ -102,7 +102,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
     const keyboard = new Keyboard(KEYS);
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) return
+    if (!ctx) return;
     const interval = setInterval(intervalFn, 500);
 
     // const keyDown = (e: KeyboardEvent) => {

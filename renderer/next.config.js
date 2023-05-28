@@ -44,10 +44,12 @@ const nextConfig = {
   },
 
   images: {
-    remotePatterns: [{
-      hostname: "images.unsplash.com"
-    }]
-  }
+    remotePatterns: [
+      {
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
 };
 
 const withMDX = MDX({

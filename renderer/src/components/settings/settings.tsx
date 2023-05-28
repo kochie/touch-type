@@ -28,8 +28,10 @@ const Settings = () => {
         <AnalyticsSwitch
           enabled={settings.analytics}
           setEnabled={(enabled) => {
-            enabled ? Fathom.enableTrackingForMe() : Fathom.blockTrackingForMe()
-            dispatchSettings({ type: "SET_ANALYTICS", analytics: enabled })
+            enabled
+              ? Fathom.enableTrackingForMe()
+              : Fathom.blockTrackingForMe();
+            dispatchSettings({ type: "SET_ANALYTICS", analytics: enabled });
           }}
         />
 

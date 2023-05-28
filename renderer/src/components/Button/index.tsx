@@ -1,11 +1,16 @@
 interface ButtonProps {
-    onClick?: () => void
-    children?:  React.ReactNode
-    type?: "button" | "submit" | "reset",
-    disabled?: boolean
+  onClick?: () => void;
+  children?: React.ReactNode;
+  type?: "button" | "submit" | "reset";
+  disabled?: boolean;
 }
 
-export default function Button({ onClick, children, type, disabled }: ButtonProps ) {
+export default function Button({
+  onClick,
+  children,
+  type,
+  disabled,
+}: ButtonProps) {
   return (
     <button
       type={type}

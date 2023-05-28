@@ -1,19 +1,23 @@
-"use client"
+"use client";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { statsReducer } from "./reducers";
 import { DateTime, Interval } from "luxon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDungeon, faPercentage, faPersonRunning } from "@fortawesome/pro-duotone-svg-icons";
+import {
+  faDungeon,
+  faPercentage,
+  faPersonRunning,
+} from "@fortawesome/pro-duotone-svg-icons";
 import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/lib/keyboard_layouts";
 import sampleSize from "lodash.samplesize";
 import { useSettings } from "@/lib/settings_hook";
 
-import wordBlob from "@/assets/words.txt"
+import wordBlob from "@/assets/words.txt";
 
 interface IndexProps {
-    wordList: string[];
-  }
+  wordList: string[];
+}
 
 const wordList = wordBlob.replaceAll("\r", "").split("\n");
 
@@ -25,8 +29,8 @@ interface KeyPress {
   correct: boolean;
 }
 
-export default function Tracker({modal}) {
-  const [words, setWords] = useState("")
+export default function Tracker({ modal }) {
+  const [words, setWords] = useState("");
 
   const [{ correct, incorrect, time, letters }, statsDispatch] = useReducer(
     statsReducer,
@@ -39,7 +43,7 @@ export default function Tracker({modal}) {
     }
   );
 
-  const settings = useSettings()
+  const settings = useSettings();
 
   useEffect(() => {
     const filtered = wordList.filter((word) => word.match(settings.level));
@@ -135,64 +139,61 @@ export default function Tracker({modal}) {
   };
 
   return (
-      <div className="">
-        <div className="flex gap-10 justify-between pt-10 font-mono mx-auto w-[600px]">
-          {/* <p>Correct: {correct}</p> */}
-          <div className="flex items-center">
-            <FontAwesomeIcon icon={faDungeon} size="3x" />
-            <div className="ml-5">
-              <p className="text-4xl">{incorrect}</p>
-              <p className="text-sm text-gray-400">typos</p>
-            </div>
-          </div>
-          {/* <p>Time: {d.toFormat("mm:ss")}</p> */}
-          <div className="flex items-center">
-            <FontAwesomeIcon icon={faPersonRunning} size="3x" />
-            <div className="ml-5">
-              <p className="text-4xl">
-                {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
-              </p>
-              <p className="text-sm text-gray-400">char/min</p>
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FontAwesomeIcon icon={faPercentage} size="3x" />
-            <div className="ml-5">
-              <p className="text-4xl">
-                {Number.isFinite(p) ? p.toFixed(0) : 0}
-              </p>
-              <p className="text-sm text-gray-400">accuracy</p>
-            </div>
+    <div className="">
+      <div className="flex gap-10 justify-between pt-10 font-mono mx-auto w-[600px]">
+        {/* <p>Correct: {correct}</p> */}
+        <div className="flex items-center">
+          <FontAwesomeIcon icon={faDungeon} size="3x" />
+          <div className="ml-5">
+            <p className="text-4xl">{incorrect}</p>
+            <p className="text-sm text-gray-400">typos</p>
           </div>
         </div>
-        <p className="font-['Roboto_Mono'] text-center p-10 whitespace-pre-wrap">
-          {letters.map((letter, i) => (
-            // <span
-            //   key={i}
-            //   className={letter.correct ? "bg-green-300" : "bg-red-500"}
-            // >
-            //   {letter.key}
-            // </span>
-            <span
-              key={i}
-              className={letter.correct ? "text-gray-400" : "bg-red-500"}
-            >
-              {letter.key}
-            </span>
-          ))}
-          <span className="bg-yellow-600 font-bold text-gray-200">
-            {words[letters.length]}
-          </span>
-          {words.substring(letters.length + 1, words.length)}
-        </p>
-
-        <Canvas
-          letters={letters}
-          keyDown={keyDown}
-          keys={keys}
-          intervalFn={intervalFn}
-        />
-
+        {/* <p>Time: {d.toFormat("mm:ss")}</p> */}
+        <div className="flex items-center">
+          <FontAwesomeIcon icon={faPersonRunning} size="3x" />
+          <div className="ml-5">
+            <p className="text-4xl">
+              {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
+            </p>
+            <p className="text-sm text-gray-400">char/min</p>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <FontAwesomeIcon icon={faPercentage} size="3x" />
+          <div className="ml-5">
+            <p className="text-4xl">{Number.isFinite(p) ? p.toFixed(0) : 0}</p>
+            <p className="text-sm text-gray-400">accuracy</p>
+          </div>
+        </div>
       </div>
-  )
+      <p className="font-['Roboto_Mono'] text-center p-10 whitespace-pre-wrap">
+        {letters.map((letter, i) => (
+          // <span
+          //   key={i}
+          //   className={letter.correct ? "bg-green-300" : "bg-red-500"}
+          // >
+          //   {letter.key}
+          // </span>
+          <span
+            key={i}
+            className={letter.correct ? "text-gray-400" : "bg-red-500"}
+          >
+            {letter.key}
+          </span>
+        ))}
+        <span className="bg-yellow-600 font-bold text-gray-200">
+          {words[letters.length]}
+        </span>
+        {words.substring(letters.length + 1, words.length)}
+      </p>
+
+      <Canvas
+        letters={letters}
+        keyDown={keyDown}
+        keys={keys}
+        intervalFn={intervalFn}
+      />
+    </div>
+  );
 }

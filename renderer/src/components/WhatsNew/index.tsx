@@ -6,15 +6,14 @@ import Button from "../Button";
 import Toggle from "./switch";
 import { useSettings, useSettingsDispatch } from "@/lib/settings_hook";
 
-export default function WhatsNew({onClose}) {
-
-  const settings = useSettings()
-  const settingsDispatch = useSettingsDispatch()
+export default function WhatsNew({ onClose }) {
+  const settings = useSettings();
+  const settingsDispatch = useSettingsDispatch();
 
   const setEnabled = (checked: boolean) => {
-    settingsDispatch({type: "SET_WHATS_NEW", whatsnew: checked})
+    settingsDispatch({ type: "SET_WHATS_NEW", whatsnew: checked });
     // console.log("SAVING", settings, checked)
-  }
+  };
 
   // useEffect(() => {
   //   localStorage.setItem("settings", JSON.stringify(settings));
@@ -36,7 +35,12 @@ export default function WhatsNew({onClose}) {
         </div>
       </div>
       <div>
-        <Toggle label="Show What's New on Startup" description="" enabled={settings.whatsNewOnStartup} setEnabled={setEnabled}/>
+        <Toggle
+          label="Show What's New on Startup"
+          description=""
+          enabled={settings.whatsNewOnStartup}
+          setEnabled={setEnabled}
+        />
       </div>
       <div className="mt-5 sm:mt-6">
         <Button onClick={onClose}>Nice!</Button>
