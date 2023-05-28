@@ -8,6 +8,7 @@ import Account from "@/components/Account";
 import Tracker from "@/components/Tracker";
 import Menu from "@/components/Menu";
 import { useSettings } from "@/lib/settings_hook";
+import ForgetPassword from "@/components/ForgotPassword";
 
 const modalReducer = (state, action) => {
   switch (action.type) {
@@ -25,6 +26,11 @@ const modalReducer = (state, action) => {
       return {
         ...state,
         modal: "SIGN_UP",
+      };
+    case "RECOVER_ACCOUNT":
+      return {
+        ...state,
+        modal: "RECOVER_ACCOUNT",
       };
     case "ACCOUNT":
       return { ...state, modal: "ACCOUNT" };
@@ -61,8 +67,20 @@ export default function IndexPage() {
       >
         {/* <Login /> */}
         <Login
+          onForgetPassword={() => modalDispatch({ type: "RECOVER_ACCOUNT" })}
           onSignUp={() => modalDispatch({ type: "SIGN_UP" })}
           onContinue={() => modalDispatch({ type: "NONE" })}
+        />
+      </Modal>
+
+      <Modal
+        open={modal === "RECOVER_ACCOUNT"}
+        onClose={() => modalDispatch({ type: "NONE" })}
+      >
+        <ForgetPassword
+          onSignIn={() => modalDispatch({ type: "SIGN_IN" })}
+          onContinue={() => modalDispatch({ type: "NONE" })}
+          onSignUp={() => modalDispatch({ type: "SIGN_UP" })}
         />
       </Modal>
 
@@ -94,7 +112,11 @@ export default function IndexPage() {
         onClose={() => modalDispatch({ type: "NONE" })}
       >
         <Suspense>
-          <Account onError={() => modalDispatch({ type: "NONE" })} />
+          <Account
+            onChangePassword={() => modalDispatch({ type: "RECOVER_ACCOUNT" })}
+            onError={() => modalDispatch({ type: "NONE" })}
+            onCancel={() => modalDispatch({ type: "NONE" })}
+          />
         </Suspense>
       </Modal>
     </div>

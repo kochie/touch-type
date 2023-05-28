@@ -1,13 +1,5 @@
-// export interface Key {
-//   key: string;
-//   position?: [CanvasTextBaseline, CanvasTextAlign];
-//   text?: string;
-//   width?: number;
-//   height?: number;
-// }
 
 import { makeKey, OFFSETS } from "./canvas_utils";
-// import {src} from "../assets/fontawesome-pro-6.1.2-web/svgs/solid/command.svg";
 
 export class Key {
   key: string;
@@ -142,7 +134,6 @@ export class Keyboard {
   ) {
     const width = 80;
     const height = 80;
-    // const gap = GAP;
 
     const keyboardLength = this.getRowWidth(0);
     const offset = (window.innerWidth - keyboardLength) / 2 + OFFSETS[i];
@@ -155,7 +146,6 @@ export class Keyboard {
       else x += width;
       x += this.gap;
     }
-    // const x = j * (width + gap);
     if (Array.isArray(letter)) {
       makeKey(
         ctx,

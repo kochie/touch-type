@@ -4,9 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
-  useLayoutEffect,
   useReducer,
-  useState,
 } from "react";
 import {
   KeyboardLayout,
@@ -104,14 +102,6 @@ const defaultSettings = {
 };
 
 export const SettingsProvider = ({ children }) => {
-  // const [initialSettings, setInitalSettings] = useState();
-
-  // useLayoutEffect(() => {
-  //   // console.log("USE LAYOUT EFFECT")
-
-  //   setInitalSettings();
-  //   console.log("USE LAYOUT EFFECT", { ...initialSettings, ...savedSettings });
-  // }, []);
 
   const [settings, dispatch] = useReducer(reducer, null, () => {
     if (typeof localStorage === 'undefined') return { ...defaultSettings };
@@ -122,22 +112,16 @@ export const SettingsProvider = ({ children }) => {
         savedSettings.level.pattern,
         savedSettings.level.flags
       );
-      // console.log("GOT FROM LOCAL");
       return { ...defaultSettings, ...savedSettings };
     }
   });
 
-  // console.log("SETTINGS", settings);
-
   const [mutateFunction] = useMutation(PUT_SETTINGS);
   const [user] = useUser();
-
-  // console.log(user)
 
   function saveSettings(safeSettings) {
     if (!user) return;
 
-    // console.log(user)
     mutateFunction({
       variables: { userId: user.username, settings: safeSettings },
     });

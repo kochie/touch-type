@@ -28,7 +28,7 @@ const Tick = (
   <FontAwesomeIcon icon={faCheck} className="text-white" size="xl" />
 );
 
-export default function Login({ onSignUp, onContinue }) {
+export default function Login({ onSignUp, onContinue, onForgetPassword }) {
   const [formErrors, setFormErrors] = useState<string>();
   const [_ ,setUser] = useUser()
 
@@ -114,7 +114,7 @@ export default function Login({ onSignUp, onContinue }) {
                     </label>
                     <div className="text-sm">
                       <a
-                        href="#"
+                        onClick={onForgetPassword}
                         className="font-semibold text-indigo-600 hover:text-indigo-500"
                       >
                         Forgot password?
