@@ -22,12 +22,14 @@ jobs:
         with:
           node-version: latest
           cache: npm
+          
+      - uses: pnpm/action-setup@v2
 
-      - run: npm ci
+      - run: pnpm install
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
-      - run: npm run build
+      - run: pnpm run build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
