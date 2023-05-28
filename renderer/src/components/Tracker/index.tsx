@@ -49,7 +49,7 @@ export default function Tracker({ modal }) {
     const filtered = wordList.filter((word) => word.match(settings.level));
     // console.log(filtered);
     setWords(sampleSize(filtered, 15).join(" "));
-  }, [wordList, settings.level]);
+  }, [settings.level]);
 
   const keys = useRef<KeyPress[]>([]);
 

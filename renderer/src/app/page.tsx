@@ -51,7 +51,7 @@ export default function IndexPage() {
     const firstTimeOpen = sessionStorage.getItem("firstTimeOpen") === null;
     if (settings.whatsNewOnStartup && firstTimeOpen)
       modalDispatch({ type: "WHATS_NEW" });
-  }, []);
+  }, [settings.whatsNewOnStartup]);
 
   return (
     <div className="w-screen h-screen dark:text-white ">

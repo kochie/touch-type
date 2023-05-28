@@ -189,22 +189,22 @@ const StatsPage = () => {
       .selectAll("rect")
       .data(I)
       .join("rect")
-      .attr("fill", (i) => {
+      .attr("fill", (i: number) => {
         const color = LEVEL[i] > 0 ? levelColors[LEVEL[i] - 1] : blues;
         return color(Y[i]);
       })
-      .attr("x", (i) => xScale(X[i]))
-      .attr("y", (i) => {
+      .attr("x", (i: number) => xScale(X[i]) ?? 0)
+      .attr("y", (i: number) => {
         // console.log(Y[i]);
         return yScale(Y[i]);
       })
-      .attr("height", (i) => {
+      .attr("height", (i: number) => {
         const h = yScale(0) - yScale(Y[i]);
         // console.log(h);
         return Math.max(h, 0);
       })
       .attr("width", xScale.bandwidth())
-      .on("mouseover", function (d, i) {
+      .on("mouseover", function (d, i: number) {
         select(this).transition().duration(50).attr("opacity", ".50");
         // console.log(yScale2.invert(parseFloat(select(this).attr("height"))));
         // console.log(Y[i]);
@@ -229,17 +229,17 @@ const StatsPage = () => {
       .selectAll("rect")
       .data(I)
       .join("rect")
-      .attr("fill", (i) => reds(Y2[i]))
-      .attr("x", (i) => xScale(X[i]))
+      .attr("fill", (i: number) => reds(Y2[i]))
+      .attr("x", (i: number) => xScale(X[i]) ?? 0)
       .attr("y", (i) => {
         return yScale2(0);
       })
-      .attr("height", (i) => {
+      .attr("height", (i: number) => {
         const h = yScale2(0) - yScale2(Y2[i]);
         return Math.max(-h, 0);
       })
       .attr("width", xScale.bandwidth())
-      .on("mouseover", function (d, i) {
+      .on("mouseover", function (d, i: number) {
         select(this).transition().duration(50).attr("opacity", ".50");
         // console.log(yScale2.invert(parseFloat(select(this).attr("height"))));
         // console.log(Y2[i]);

@@ -27,7 +27,7 @@ export default function WhatsNew({ onClose }) {
             as="h3"
             className="text-2xl font-semibold leading-6 text-gray-900"
           >
-            What's New
+            What&apos;s New
           </Dialog.Title>
           <div className="mt-2">
             <Text />

@@ -96,10 +96,10 @@ function WhatsNewSwitch({ enabled, setEnabled }) {
           className="text-sm font-medium leading-6 text-white"
           passive
         >
-          Show What's New on Startup
+          Show What&apos;s New on Startup
         </Switch.Label>
         <Switch.Description as="span" className="text-sm text-gray-500">
-          Show the What's New message when the app starts.
+          Show the What&apos;s New message when the app starts.
         </Switch.Description>
       </span>
       <Switch
