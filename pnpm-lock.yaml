@@ -108,6 +108,9 @@ devDependencies:
   '@electron-forge/cli':
     specifier: ^6.1.1
     version: 6.1.1
+  '@types/app-root-path':
+    specifier: ^1.2.5
+    version: 1.2.5
   '@types/d3':
     specifier: ^7.4.0
     version: 7.4.0
@@ -5408,6 +5411,10 @@ packages:
     dependencies:
       '@turf/helpers': 6.5.0
     dev: false
+
+  /@types/app-root-path@1.2.5:
+    resolution: {integrity: sha512-uJsNeY7Jwci2yDpjx0b99Vb7KOxAI7kgz7L7a19bXZMRFEhGSj0SZkGYg9nGgq+Zrp9nzEe+ceZRY68yIKqA5Q==}
+    dev: true
 
   /@types/cacheable-request@6.0.3:
     resolution: {integrity: sha512-IQ3EbTzGxIigb1I3qPZc1rWJnH0BmSKv5QYTalEwweFvyBDLSAe24zP0le/hyi7ecGfZVlIVAg4BZqb8WBwKqw==}

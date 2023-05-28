@@ -6,7 +6,7 @@ import { format } from "url";
 import { app, BrowserWindow, dialog } from "electron";
 // import { BrowserWindow } from "electron-acrylic-window";
 import isDev from "electron-is-dev";
-import prepareNext from "electron-next";
+import prepareNext from "./electron-next";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import { init } from "@sentry/electron";
@@ -53,19 +53,13 @@ app.on("ready", async () => {
 
   // mainWindow.setVibrancy("under-window");
 
-  // const url = isDev
-  //   ? "http://localhost:8000/"
-  //   : format({
-  //       pathname: join(__dirname, "../renderer/out/index.html"),
-  //       protocol: "file:",
-  //       slashes: true,
-  //     });
-
-  const url = format({
-    pathname: join(__dirname, "../renderer/out/index.html"),
-    protocol: "file:",
-    slashes: true,
-  });
+  const url = isDev
+    ? "http://localhost:8000/"
+    : format({
+        pathname: join(__dirname, "../renderer/out/index.html"),
+        protocol: "file:",
+        slashes: true,
+      });
 
   mainWindow.loadURL(url);
 });

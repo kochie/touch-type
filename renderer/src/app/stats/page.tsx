@@ -196,12 +196,12 @@ const StatsPage = () => {
       .attr("x", (i: number) => xScale(X[i]) ?? 0)
       .attr("y", (i: number) => {
         // console.log(Y[i]);
-        return yScale(Y[i]);
+        return isNaN(yScale(Y[i])) ? 0 : yScale(Y[i]);
       })
       .attr("height", (i: number) => {
         const h = yScale(0) - yScale(Y[i]);
         // console.log(h);
-        return Math.max(h, 0);
+        return isNaN(Math.max(h, 0)) ? 0 : Math.max(h, 0);
       })
       .attr("width", xScale.bandwidth())
       .on("mouseover", function (d, i: number) {
@@ -232,11 +232,11 @@ const StatsPage = () => {
       .attr("fill", (i: number) => reds(Y2[i]))
       .attr("x", (i: number) => xScale(X[i]) ?? 0)
       .attr("y", (i) => {
-        return yScale2(0);
+        return isNaN(yScale2(0)) ? 0 : yScale2(0);
       })
       .attr("height", (i: number) => {
         const h = yScale2(0) - yScale2(Y2[i]);
-        return Math.max(-h, 0);
+        return isNaN(Math.max(-h, 0)) ? 0 : Math.max(-h, 0);
       })
       .attr("width", xScale.bandwidth())
       .on("mouseover", function (d, i: number) {

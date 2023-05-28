@@ -109,11 +109,11 @@ export const SettingsProvider = ({ children }) => {
     const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
     if (savedSettings.level) {
       savedSettings.level = new RegExp(
-        savedSettings.level.pattern,
-        savedSettings.level.flags
+        savedSettings.level?.pattern,
+        savedSettings.level?.flags
       );
-      return { ...defaultSettings, ...savedSettings };
     }
+    return { ...defaultSettings, ...savedSettings }
   });
 
   const [mutateFunction] = useMutation(PUT_SETTINGS);
