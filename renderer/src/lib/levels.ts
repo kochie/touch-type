@@ -1,5 +1,5 @@
-const LEVEL_1 = /\b[asdfghjkl]+\b/;
-const LEVEL_2 = /\b[asdfghjklzxcvbnm]+\b/;
-const LEVEL_3 = /\b[asdfghjklzxcvbnmqwertyuiop]+\b/;
+const LEVEL_1 = /^[asdfghjkl]+$/u;
+const LEVEL_2 = /^[asdfghjklzxcvbnm]+$/u;
+const LEVEL_3 = /^[asdfghjklzxcvbnmqwertyuiop]+$/u;
 
 export { LEVEL_1, LEVEL_2, LEVEL_3 };

@@ -44,7 +44,15 @@ export enum ColorScheme {
   SYSTEM = "system"
 }
 
+export enum Languages {
+  ENGLISH = "en",
+  FRENCH = "fr",
+  GERMAN = "de",
+  SPANISH = "es"
+}
+
 const SettingsContext = createContext({
+  language: Languages.ENGLISH,
   keyboard: MACOS_US_QWERTY,
   level: LEVEL_1,
   analytics: true,
@@ -72,6 +80,12 @@ const reducer = (state, action) => {
       return {
         ...state,
         prefersColorScheme: action.colorScheme
+      }
+    }
+    case "CHANGE_LANGUAGE": {
+      return {
+        ...state,
+        language: action.language
       }
     }
     case "CHANGE_KEYBOARD":
@@ -107,6 +121,7 @@ const reducer = (state, action) => {
 const SettingsDispatchContext = createContext<Dispatch<any>>(() => {});
 
 const defaultSettings = {
+  language: Languages.ENGLISH,
   keyboard: MACOS_US_QWERTY,
   keyboardName: KeyboardLayouts.MACOS_US_QWERTY,
   level: LEVEL_1,
@@ -142,7 +157,7 @@ export const SettingsProvider = ({ children }) => {
   }, [user, mutateFunction])
 
   useEffect(() => {
-    console.log("RUNNING", settings.prefersColorScheme)
+    // console.log("RUNNING", settings.prefersColorScheme)
     if ( settings.prefersColorScheme === ColorScheme.DARK || (settings.prefersColorScheme === ColorScheme.SYSTEM && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark')
     } else {

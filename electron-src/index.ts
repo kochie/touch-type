@@ -3,13 +3,14 @@ import { join } from "path";
 import { format } from "url";
 
 // Packages
-import { app, BrowserWindow, dialog, MessageBoxOptions } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent, MessageBoxOptions } from "electron";
 // import { BrowserWindow } from "electron-acrylic-window";
 import isDev from "electron-is-dev";
 import prepareNext from "./electron-next";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import { init } from "@sentry/electron";
+import { readFile } from "fs/promises";
 
 init({
   dsn: "https://b91033c73a0f46a287bfaa7959809d12@o157203.ingest.sentry.io/6633710",
@@ -20,8 +21,21 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = "info";
 log.info("App starting...");
 
+async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
+
+  try {
+    const file = await readFile(join(__dirname, "../wordsets/", `${language}.txt`))
+    return file
+  } catch (error) {
+    return new Uint8Array()
+  }
+}
+
 // Prepare the renderer once the app is ready
 app.on("ready", async () => {
+  ipcMain.handle('getWordSet', handleWordSet)
+
+
   await prepareNext("./renderer");
   autoUpdater.checkForUpdatesAndNotify();
 

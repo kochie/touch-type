@@ -51,6 +51,7 @@ asar: true
 files:
   - main
   - renderer/out
+  - wordsets
 publish:
   - provider: github
     owner: kochie

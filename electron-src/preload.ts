@@ -6,7 +6,7 @@ declare global {
   namespace NodeJS {
     interface Global {
       ipcRenderer: IpcRenderer;
-      getWords: () => string[];
+      getWordSet: () => string[];
     }
   }
 }
@@ -14,5 +14,5 @@ declare global {
 // Since we disabled nodeIntegration we can reintroduce
 // needed node functionality here
 contextBridge.exposeInMainWorld("electronAPI", {
-  getWords: () => ipcRenderer.invoke("getWords"),
+  getWordSet: (language: string) => ipcRenderer.invoke("getWordSet", language),
 });

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { statsReducer } from "./reducers";
 import { DateTime, Interval } from "luxon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,15 +11,28 @@ import {
 import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/lib/keyboard_layouts";
 import sampleSize from "lodash.samplesize";
-import { useSettings } from "@/lib/settings_hook";
+import { Languages, useSettings } from "@/lib/settings_hook";
+import { useWords } from "@/lib/word-provider";
 
-import wordBlob from "@/assets/words.txt";
+// import wordBlob from "@/assets/words.txt";
+
+// import en from "@/assets/wordsets/en.txt"
+// import fr from "@/assets/wordsets/fr.txt"
+// import de from "@/assets/wordsets/de.txt"
+// import es from "@/assets/wordsets/es.txt"
 
 interface IndexProps {
   wordList: string[];
 }
 
-const wordList = wordBlob.replaceAll("\r", "").split("\n");
+// const wordSets = {
+//   [Languages.ENGLISH]: en.replaceAll("\r", "").split("\n"),
+//   [Languages.FRENCH]: fr.replaceAll("\r", "").split("\n"),
+//   [Languages.GERMAN]: de.replaceAll("\r", "").split("\n"),
+//   [Languages.SPANISH]: es.replaceAll("\r", "").split("\n")
+// }
+
+// const wordList = wordBlob.replaceAll("\r", "").split("\n");
 
 interface KeyPress {
   key: Key;
@@ -30,7 +43,10 @@ interface KeyPress {
 }
 
 export default function Tracker({ modal }) {
+  const settings = useSettings();
+
   const [words, setWords] = useState("");
+  const [wordList] = useWords()
 
   const [{ correct, incorrect, time, letters }, statsDispatch] = useReducer(
     statsReducer,
@@ -43,13 +59,32 @@ export default function Tracker({ modal }) {
     }
   );
 
-  const settings = useSettings();
+  // const getWordList = useCallback(async () => {
+  //   const buffer = (await window.electronAPI.getWordSet(
+  //     settings.language
+  //   )) as Uint8Array;
+
+  //   const words = new TextDecoder("utf-8")
+  //     .decode(buffer)
+  //     .replaceAll("\r", "")
+  //     .split("\n");
+  //   const filtered = words.filter((word) => word.match(settings.level));
+  //   setWordList(filtered);
+  // }, [settings.level, settings.language]);
+
+  // useEffect(() => {
+  //   getWordList();
+  // }, [getWordList]);
+
+  const resetWords = useCallback(async () => {
+    const pinned = sampleSize(wordList, 15).join(" ").replaceAll("  ", "");
+    setWords(pinned);
+  }, [wordList]);
+
 
   useEffect(() => {
-    const filtered = wordList.filter((word) => word.match(settings.level));
-    // console.log(filtered);
-    setWords(sampleSize(filtered, 15).join(" "));
-  }, [settings.level]);
+    resetWords();
+  }, [resetWords]);
 
   const keys = useRef<KeyPress[]>([]);
 
@@ -76,9 +111,7 @@ export default function Tracker({ modal }) {
     }
     if (e.key === "Escape") {
       if (letters.length === 0) {
-        const filtered = wordList.filter((word) => word.match(settings.level));
-        // console.log(LEVEL_1);
-        setWords(sampleSize(filtered, 15).join(" "));
+        resetWords();
       }
       statsDispatch({ type: "RESET" });
       return;
@@ -107,8 +140,9 @@ export default function Tracker({ modal }) {
     }
 
     if (letters.length === words.length - 1) {
-      const filtered = wordList.filter((word) => word.match(settings.level));
-      setWords(sampleSize(filtered, 15).join(" ").replace("  ", ""));
+      // const filtered = ()
+      resetWords();
+      // setWords(sampleSize(filtered, 15).join(" ").replace("  ", ""));
       const prevResults = JSON.parse(localStorage.getItem("results") ?? "[]");
       localStorage.setItem(
         "results",
