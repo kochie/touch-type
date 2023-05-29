@@ -20,6 +20,7 @@ export const WordProvider = ({ children }) => {
   const [wordList, setWordList] = useState([""]);
   
   const getWordList = useCallback(async () => {
+    // @ts-expect-error
     const buffer = (await window.electronAPI.getWordSet(
       settings.language
     )) as Uint8Array;
