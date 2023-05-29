@@ -3,7 +3,7 @@ import { join } from "path";
 import { format } from "url";
 
 // Packages
-import { app, BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, dialog, MessageBoxOptions } from "electron";
 // import { BrowserWindow } from "electron-acrylic-window";
 import isDev from "electron-is-dev";
 import prepareNext from "./electron-next";
@@ -72,7 +72,7 @@ autoUpdater.on("update-downloaded", (event) => {
   const message =
     (process.platform === "win32" ? event.releaseNotes : event.releaseName) ??
     "";
-  const dialogOpts = {
+  const dialogOpts: MessageBoxOptions = {
     type: "info",
     buttons: ["Restart", "Later"],
     title: "Application Update",
