@@ -3,6 +3,7 @@
 import * as Fathom from "fathom-client";
 
 import {
+  ColorScheme,
   KeyboardLayouts,
   Levels,
   useSettings,
@@ -79,6 +80,24 @@ const Settings = () => {
             <option value={Levels.LEVEL_1}>Level 1</option>
             <option value={Levels.LEVEL_2}>Level 2</option>
             <option value={Levels.LEVEL_3}>Level 3</option>
+          </select>
+        </label>
+
+        <label>
+          Theme
+          <select
+            className="text-black ml-5"
+            value={settings.prefersColorScheme}
+            onChange={(e) => {
+              dispatchSettings({
+                type: "CHANGE_COLOR_SCHEME",
+                colorScheme: e.target.value,
+              });
+            }}
+          >
+            <option value={ColorScheme.DARK}>Dark</option>
+            <option value={ColorScheme.LIGHT}>Light</option>
+            <option value={ColorScheme.SYSTEM}>System</option>
           </select>
         </label>
       </form>

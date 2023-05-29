@@ -38,6 +38,12 @@ export enum Levels {
   LEVEL_3 = "3",
 }
 
+export enum ColorScheme {
+  DARK = "dark",
+  LIGHT = "light",
+  SYSTEM = "system"
+}
+
 const SettingsContext = createContext({
   keyboard: MACOS_US_QWERTY,
   level: LEVEL_1,
@@ -45,6 +51,7 @@ const SettingsContext = createContext({
   levelName: Levels.LEVEL_1,
   keyboardName: KeyboardLayouts.MACOS_US_QWERTY,
   whatsNewOnStartup: true,
+  prefersColorScheme: ColorScheme.SYSTEM
 });
 
 const reducer = (state, action) => {
@@ -60,6 +67,12 @@ const reducer = (state, action) => {
         ...state,
         whatsNewOnStartup: action.whatsnew,
       };
+    }
+    case "CHANGE_COLOR_SCHEME": {
+      return {
+        ...state,
+        prefersColorScheme: action.colorScheme
+      }
     }
     case "CHANGE_KEYBOARD":
       switch (action.keyboardName) {
@@ -100,6 +113,7 @@ const defaultSettings = {
   levelName: Levels.LEVEL_1,
   analytics: true,
   whatsNewOnStartup: true,
+  prefersColorScheme: ColorScheme.SYSTEM
 };
 
 export const SettingsProvider = ({ children }) => {
@@ -125,7 +139,16 @@ export const SettingsProvider = ({ children }) => {
     mutateFunction({
       variables: { userId: user.username, settings: safeSettings },
     });
-  }, [user])
+  }, [user, mutateFunction])
+
+  useEffect(() => {
+    console.log("RUNNING", settings.prefersColorScheme)
+    if ( settings.prefersColorScheme === ColorScheme.DARK || (settings.prefersColorScheme === ColorScheme.SYSTEM && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [settings.prefersColorScheme])
 
   useEffect(() => {
     const safeSettings = {
