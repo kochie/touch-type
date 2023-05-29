@@ -120,7 +120,6 @@ const Settings = () => {
             <option value={Languages.SPANISH}>Spanish</option>
           </select>
         </label>
-
       </form>
     </div>
   );

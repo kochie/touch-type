@@ -50,7 +50,7 @@ export enum Languages {
   GERMAN = "de",
   SPANISH = "es"
 }
-
+        
 const SettingsContext = createContext({
   language: Languages.ENGLISH,
   keyboard: MACOS_US_QWERTY,
@@ -88,6 +88,7 @@ const reducer = (state, action) => {
         language: action.language
       }
     }
+
     case "CHANGE_KEYBOARD":
       switch (action.keyboardName) {
         case KeyboardLayouts.MACOS_US_QWERTY:
@@ -157,7 +158,6 @@ export const SettingsProvider = ({ children }) => {
   }, [user, mutateFunction])
 
   useEffect(() => {
-    // console.log("RUNNING", settings.prefersColorScheme)
     if ( settings.prefersColorScheme === ColorScheme.DARK || (settings.prefersColorScheme === ColorScheme.SYSTEM && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark')
     } else {
@@ -171,7 +171,6 @@ export const SettingsProvider = ({ children }) => {
       level: { pattern: settings.level.source, flags: settings.level.flags },
     };
 
-    // console.log("USE EFFECT", settings);
     localStorage.setItem("settings", JSON.stringify(safeSettings));
 
     saveSettings(safeSettings);
