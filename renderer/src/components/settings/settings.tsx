@@ -5,6 +5,7 @@ import * as Fathom from "fathom-client";
 import {
   ColorScheme,
   KeyboardLayouts,
+  Languages,
   Levels,
   useSettings,
   useSettingsDispatch,
@@ -98,6 +99,25 @@ const Settings = () => {
             <option value={ColorScheme.DARK}>Dark</option>
             <option value={ColorScheme.LIGHT}>Light</option>
             <option value={ColorScheme.SYSTEM}>System</option>
+          </select>
+        </label>
+
+        <label>
+          Language
+          <select
+            className="text-black ml-5"
+            value={settings.language}
+            onChange={(e) => {
+              dispatchSettings({
+                type: "CHANGE_LANGUAGE",
+                language: e.target.value,
+              });
+            }}
+          >
+            <option value={Languages.ENGLISH}>English</option>
+            <option value={Languages.GERMAN}>German</option>
+            <option value={Languages.FRENCH}>French</option>
+            <option value={Languages.SPANISH}>Spanish</option>
           </select>
         </label>
       </form>

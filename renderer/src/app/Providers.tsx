@@ -4,6 +4,7 @@ import { Auth } from "aws-amplify";
 import { SettingsProvider } from "@/lib/settings_hook";
 import { UserProvider } from "@/lib/user_hook";
 import { ApolloWrapper } from "@/lib/apollo-provider";
+import { WordProvider } from "@/lib/word-provider";
 
 Auth.configure({
   userPoolId: process.env.NEXT_PUBLIC_USERPOOL_ID,
@@ -16,7 +17,9 @@ export default function Providers({ children }) {
   return (
     <UserProvider>
       <ApolloWrapper>
-        <SettingsProvider>{children}</SettingsProvider>
+        <SettingsProvider>
+          <WordProvider>{children}</WordProvider>
+        </SettingsProvider>
       </ApolloWrapper>
     </UserProvider>
   );
