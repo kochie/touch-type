@@ -13,6 +13,7 @@ import { useEffect } from "react";
 import { gql, useMutation } from "@apollo/client";
 import { useUser } from "@/lib/user_hook";
 import { PUT_SETTINGS } from "@/transactions/putSettings";
+import { platform } from "os";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -93,7 +94,7 @@ function WhatsNewSwitch({ enabled, setEnabled }) {
       <span className="flex flex-grow flex-col">
         <Switch.Label
           as="span"
-          className="text-sm font-medium leading-6 text-white"
+          className={classNames("text-sm font-medium leading-6", platform() === "darwin" ? "text-white" :"")}
           passive
         >
           Show What&apos;s New on Startup
@@ -128,7 +129,7 @@ function AnalyticsSwitch({ enabled, setEnabled }) {
       <span className="flex flex-grow flex-col">
         <Switch.Label
           as="span"
-          className="text-sm font-medium leading-6 text-white"
+          className={classNames("text-sm font-medium leading-6", platform() === "darwin" ? "text-white" :"")}
           passive
         >
           Enabled Analytics

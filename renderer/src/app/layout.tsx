@@ -10,6 +10,10 @@ const isLinux = os.platform() === "linux";
 import "@/styles/globals.css";
 import Fathom from "@/components/Fathom";
 
+function classNames(...classes) {
+  return classes.filter(Boolean).join(" ")
+}
+
 Auth.configure({
   userPoolId: process.env.NEXT_PUBLIC_USERPOOL_ID,
   userPoolWebClientId: process.env.NEXT_PUBLIC_USERPOOL_CLIENT_ID,
@@ -26,9 +30,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={
-          isWindows
-            ? "dark:text-white text-black dark:bg-zinc-800 bg-zinc-300"
-            : ""
+          classNames(!isMac &&  "dark:text-white text-black dark:bg-zinc-800 bg-zinc-300")
         }
       >
         <Fathom />
