@@ -3,6 +3,7 @@
 import * as Fathom from "fathom-client";
 
 import {
+  ColorScheme,
   KeyboardLayouts,
   Levels,
   useSettings,
@@ -13,6 +14,7 @@ import { useEffect } from "react";
 import { gql, useMutation } from "@apollo/client";
 import { useUser } from "@/lib/user_hook";
 import { PUT_SETTINGS } from "@/transactions/putSettings";
+import { platform } from "os";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -80,6 +82,24 @@ const Settings = () => {
             <option value={Levels.LEVEL_3}>Level 3</option>
           </select>
         </label>
+
+        <label>
+          Theme
+          <select
+            className="text-black ml-5"
+            value={settings.prefersColorScheme}
+            onChange={(e) => {
+              dispatchSettings({
+                type: "CHANGE_COLOR_SCHEME",
+                colorScheme: e.target.value,
+              });
+            }}
+          >
+            <option value={ColorScheme.DARK}>Dark</option>
+            <option value={ColorScheme.LIGHT}>Light</option>
+            <option value={ColorScheme.SYSTEM}>System</option>
+          </select>
+        </label>
       </form>
     </div>
   );
@@ -93,7 +113,7 @@ function WhatsNewSwitch({ enabled, setEnabled }) {
       <span className="flex flex-grow flex-col">
         <Switch.Label
           as="span"
-          className="text-sm font-medium leading-6 text-white"
+          className={classNames("text-sm font-medium leading-6", platform() === "darwin" ? "text-white" :"")}
           passive
         >
           Show What&apos;s New on Startup
@@ -128,7 +148,7 @@ function AnalyticsSwitch({ enabled, setEnabled }) {
       <span className="flex flex-grow flex-col">
         <Switch.Label
           as="span"
-          className="text-sm font-medium leading-6 text-white"
+          className={classNames("text-sm font-medium leading-6", platform() === "darwin" ? "text-white" :"")}
           passive
         >
           Enabled Analytics
