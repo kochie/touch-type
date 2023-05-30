@@ -6,12 +6,7 @@
 //   ["cmd", { key: " ", width: 420 }, "cmd", "opt"],
 // ];
 
-import {
-  Key,
-  Keyboard,
-  MACOS_US_QWERTY,
-  MACOS_US_DVORAK,
-} from "./keyboard_layouts";
+import { Key, Shape } from "@/keyboards";
 
 export const OFFSETS = [0, 0, 0, 0, 0];
 // const SPACE = " ";
@@ -23,7 +18,7 @@ export function makeKey(
   width: number,
   height: number,
   letter: Key,
-  fillColor: string
+  fillColor: string,
 ) {
   const textColor = letter.isInert ? "gray" : "white";
 
@@ -38,7 +33,25 @@ export function makeKey(
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
   ctx.clearRect(X, Y, width, height);
   ctx.fillStyle = fillColor;
-  roundRect(ctx, X, Y, width, height, 12.5, true, true);
+  // roundRect(ctx, X, Y, width, height, 12.5, true, true);
+
+  switch (letter.shape) {
+    case "ansi":
+      roundRect(ctx, X, Y, width, height, 12.5, true, true);
+      break;
+    case "iso":
+      break;
+    case "backwards-l-slim":
+      roundLShape(ctx, X, Y, width, height, 12.5, true, true);
+      break;
+    case "backwards-l-wide":
+      roundLShape(ctx, X, Y, width, height, 12.5, true, true);
+      break;
+    default:
+      roundRect(ctx, X, Y, width, height, 12.5, true, true);
+      break;
+  }
+
   ctx.fillStyle = textColor;
   letter.font
     ? (ctx.font = letter.font)
@@ -136,6 +149,45 @@ export function roundRect(
   ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
   ctx.lineTo(x, y + radius.tl);
   ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+  ctx.closePath();
+  if (fill) {
+    ctx.fill();
+  }
+  if (stroke) {
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+  }
+}
+
+export function roundLShape(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  r = 5,
+  fill = false,
+  stroke = true
+) {
+  const radius = { tl: r, tr: r, br: r, bl: r, ml: r, mr: r/2 };
+  const gap = 5
+  const H = height + gap;
+  const W = 22;
+
+  ctx.beginPath();
+  ctx.moveTo(x, y + radius.mr); // start bottom left
+  ctx.lineTo(x, y + height - radius.bl); // goto bottom right
+  ctx.quadraticCurveTo(x, y + height, x + radius.bl, y + height); // curve to right
+  ctx.lineTo(x + width - radius.br, y + height); // goto top right
+  ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius.br); // curve to top
+  ctx.lineTo(x + width, y - H + radius.tr); // goto top left
+  ctx.quadraticCurveTo(x + width, y - H, x + width - radius.tr, y - H); // curve to left
+  ctx.lineTo(x - W + radius.tl, y - H); // goto bottom left
+  ctx.quadraticCurveTo(x - W, y - H, x - W, y - H + radius.tl); // curve to bottom
+  ctx.lineTo(x - W, y - radius.ml - gap);
+  ctx.quadraticCurveTo(x - W, y - gap, x + radius.ml - W, y - gap);
+  ctx.lineTo(x - radius.mr, y - gap);
+  ctx.quadraticCurveTo(x, y - gap, x, y + radius.mr);
   ctx.closePath();
   if (fill) {
     ctx.fill();

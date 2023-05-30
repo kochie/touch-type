@@ -4,22 +4,56 @@ import * as Fathom from "fathom-client";
 
 import {
   ColorScheme,
-  KeyboardLayouts,
   Languages,
   Levels,
   useSettings,
   useSettingsDispatch,
 } from "@/lib/settings_hook";
 import { Switch } from "@headlessui/react";
-import { useEffect } from "react";
-import { gql, useMutation } from "@apollo/client";
-import { useUser } from "@/lib/user_hook";
-import { PUT_SETTINGS } from "@/transactions/putSettings";
+// import { useEffect } from "react";
+// import { gql, useMutation } from "@apollo/client";
+// import { useUser } from "@/lib/user_hook";
+// import { PUT_SETTINGS } from "@/transactions/putSettings";
 import { platform } from "os";
+import KeyboardSelect from "../KeyboardSelect";
+import { KeyboardLayoutNames } from "@/keyboards";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
+
+const keyboards = [
+  {
+    name: "MAC COLEMAK",
+    layout: KeyboardLayoutNames.MACOS_US_COLEMAK,
+    country: "🇺🇸",
+  },
+  {
+    name: "MAC QWERTY (American)",
+    layout: KeyboardLayoutNames.MACOS_US_QWERTY,
+    country: "🇺🇸",
+  },
+  {
+    name: "MAC DVORAK",
+    layout: KeyboardLayoutNames.MACOS_US_DVORAK,
+    country: "🇺🇸",
+  },
+  {
+    name: "MAC AZERTY",
+    layout: KeyboardLayoutNames.MACOS_FR_AZERTY,
+    country: "🇫🇷",
+  },
+  {
+    name: "MAC AZERTZ",
+    layout: KeyboardLayoutNames.MACOS_DE_QWERTZ,
+    country: "🇩🇪",
+  },
+  {
+    name: "MAC QWERTY (Spanish)",
+    layout: KeyboardLayoutNames.MACOS_ES_QWERTY,
+    country: "🇪🇸",
+  },
+];
 
 const Settings = () => {
   const settings = useSettings();
@@ -45,26 +79,16 @@ const Settings = () => {
           }
         />
 
-        <label>
-          Keyboard
-          <select
-            className="text-black ml-5"
-            value={settings.keyboardName}
-            onChange={(e) => {
-              dispatchSettings({
-                type: "CHANGE_KEYBOARD",
-                keyboardName: e.target.value,
-              });
-            }}
-          >
-            <option value={KeyboardLayouts.MACOS_US_DVORAK}>
-              MAC US DVORAK
-            </option>
-            <option value={KeyboardLayouts.MACOS_US_QWERTY}>
-              MAC US QWERTY
-            </option>
-          </select>
-        </label>
+        <KeyboardSelect
+          sel={keyboards.find(keyboard => keyboard.layout === settings.keyboardName)}
+          setSelected={(selectedValue) => {
+            dispatchSettings({
+              type: "CHANGE_KEYBOARD",
+              keyboardName: selectedValue,
+            });
+          }}
+          keyboards={keyboards}
+        />
 
         <label>
           Level
@@ -133,7 +157,10 @@ function WhatsNewSwitch({ enabled, setEnabled }) {
       <span className="flex flex-grow flex-col">
         <Switch.Label
           as="span"
-          className={classNames("text-sm font-medium leading-6", platform() === "darwin" ? "text-white" :"")}
+          className={classNames(
+            "text-sm font-medium leading-6",
+            platform() === "darwin" ? "text-white" : ""
+          )}
           passive
         >
           Show What&apos;s New on Startup
@@ -168,7 +195,10 @@ function AnalyticsSwitch({ enabled, setEnabled }) {
       <span className="flex flex-grow flex-col">
         <Switch.Label
           as="span"
-          className={classNames("text-sm font-medium leading-6", platform() === "darwin" ? "text-white" :"")}
+          className={classNames(
+            "text-sm font-medium leading-6",
+            platform() === "darwin" ? "text-white" : ""
+          )}
           passive
         >
           Enabled Analytics

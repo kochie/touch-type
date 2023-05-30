@@ -9,10 +9,11 @@ import {
   faPersonRunning,
 } from "@fortawesome/pro-duotone-svg-icons";
 import Canvas from "../Canvas";
-import { Key, Keyboard } from "@/lib/keyboard_layouts";
+import { Key, Keyboard } from "@/keyboards/key";
 import sampleSize from "lodash.samplesize";
-import { Languages, useSettings } from "@/lib/settings_hook";
+import { KeyboardLayoutNames, useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
+import { MACOS_US_COLEMAK, MACOS_US_DVORAK, MACOS_US_QWERTY, lookupKeyboard } from "@/keyboards";
 
 // import wordBlob from "@/assets/words.txt";
 
@@ -94,7 +95,9 @@ export default function Tracker({ modal }) {
   const cpm = total / m;
   const p = (correct / total) * 100;
 
-  const keyboard = new Keyboard(settings.keyboard);
+  const keyboardLayout = lookupKeyboard(settings.keyboardName)
+  // console.log(settings.keyboardName, keyboardLayout)
+  const keyboard = new Keyboard(keyboardLayout);
 
   const intervalFn = () => {
     if (letters.length > 0) statsDispatch({ type: "TICK" });
@@ -152,8 +155,10 @@ export default function Tracker({ modal }) {
             correct,
             incorrect,
             time: (time as Interval).toDuration().toISO(),
+            datetime: Date.now(),
             level: settings.levelName,
             keyboard: settings.keyboardName,
+            language: settings.language
           },
         ])
       );

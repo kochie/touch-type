@@ -8,7 +8,8 @@ import FontAwesomeRegular from "@/assets/fontawesome-pro-6.1.2-web/webfonts/fa-r
 // @ts-ignore
 import FontAwesomeSolid from "@/assets/fontawesome-pro-6.1.2-web/webfonts/fa-solid-900.ttf";
 import { useSettings } from "@/lib/settings_hook";
-import { Keyboard } from "@/lib/keyboard_layouts";
+import { Keyboard } from "@/keyboards/key";
+import { lookupKeyboard } from "@/keyboards";
 
 const resizer = (state, action) => {
   switch (action.type) {
@@ -38,7 +39,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
   });
 
   const settings = useSettings();
-  const KEYS = settings.keyboard;
+  const KEYS = lookupKeyboard(settings.keyboardName);
 
   useEffect(() => {
     const resize = () => {
