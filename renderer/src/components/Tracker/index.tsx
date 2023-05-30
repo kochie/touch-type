@@ -14,8 +14,6 @@ import sampleSize from "lodash.samplesize";
 import { KeyboardLayoutNames, useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
 import { MACOS_US_COLEMAK, MACOS_US_DVORAK, MACOS_US_QWERTY, lookupKeyboard } from "@/keyboards";
-import { useSettings } from "@/lib/settings_hook";
-import { lookupKeyboard } from "@/keyboards";
 
 // import wordBlob from "@/assets/words.txt";
 
