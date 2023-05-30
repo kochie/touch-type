@@ -10,6 +10,7 @@ import {
   scaleLinear,
   scaleTime,
   select,
+  timeParse,
 } from "d3";
 import { DateTime, Duration, Interval } from "luxon";
 import { useEffect, useRef, useState } from "react";
@@ -97,6 +98,13 @@ export default function LineChart() {
     if (maxIncorrect === undefined) return;
     const y2 = scaleLinear().domain([0, maxIncorrect*1.7]).range([height, 0]);
     svg.append("g").call(axisRight(y2)).attr("transform", `translate(${width}, 0)`);
+
+    const maxCpm = max(results, function (d) {
+      return +d.cpm;
+    });
+    if (maxCpm === undefined) return;
+    const y3 = scaleLinear().domain([0, maxCpm]).range([height, 0]);
+    svg.append("g").call(axisLeft(y));
 
     // Add the line
     svg
