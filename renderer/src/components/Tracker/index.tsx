@@ -11,9 +11,9 @@ import {
 import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/keyboards/key";
 import sampleSize from "lodash.samplesize";
-import { KeyboardLayoutNames, useSettings } from "@/lib/settings_hook";
+import { useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
-import { MACOS_US_COLEMAK, MACOS_US_DVORAK, MACOS_US_QWERTY, lookupKeyboard } from "@/keyboards";
+import { lookupKeyboard } from "@/keyboards";
 
 // import wordBlob from "@/assets/words.txt";
 
@@ -22,9 +22,9 @@ import { MACOS_US_COLEMAK, MACOS_US_DVORAK, MACOS_US_QWERTY, lookupKeyboard } fr
 // import de from "@/assets/wordsets/de.txt"
 // import es from "@/assets/wordsets/es.txt"
 
-interface IndexProps {
-  wordList: string[];
-}
+// interface IndexProps {
+//   wordList: string[];
+// }
 
 // const wordSets = {
 //   [Languages.ENGLISH]: en.replaceAll("\r", "").split("\n"),
