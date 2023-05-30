@@ -11,9 +11,9 @@ import {
 import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/keyboards/key";
 import sampleSize from "lodash.samplesize";
-import { KeyboardLayoutNames, useSettings } from "@/lib/settings_hook";
+import { useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
-import { MACOS_US_COLEMAK, MACOS_US_DVORAK, MACOS_US_QWERTY, lookupKeyboard } from "@/keyboards";
+import { lookupKeyboard } from "@/keyboards";
 
 // import wordBlob from "@/assets/words.txt";
 

@@ -70,13 +70,11 @@ export const WordProvider = ({ children }) => {
       .decode(buffer)
       .replaceAll("\r", "")
       .split("\n");
-
     const filtered = words
       .filter((word) =>
         word.match(getRegExp(settings.levelName, settings.keyboardName))
       )
       .filter((word) => !naughty.en.includes(word));
-
     setWordList(filtered);
   }, [settings.levelName, settings.language, settings.keyboardName]);
 
