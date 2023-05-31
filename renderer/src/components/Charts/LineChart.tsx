@@ -10,7 +10,6 @@ import {
   scaleLinear,
   scaleTime,
   select,
-  timeParse,
 } from "d3";
 import { DateTime, Duration, Interval } from "luxon";
 import { useEffect, useRef, useState } from "react";
@@ -23,12 +22,12 @@ interface Result {
   keyboard: string;
   language: string;
   datetime: Date;
-  time: Duration
+  time: Duration;
 }
 
-const margin = { top: 10, right: 30, bottom: 30, left: 60 }
+const margin = { top: 10, right: 30, bottom: 30, left: 60 };
 // const   width = 460 - margin.left - margin.right,
-  // height = 400 - margin.top - margin.bottom;
+// height = 400 - margin.top - margin.bottom;
 
 export default function LineChart() {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -54,7 +53,7 @@ export default function LineChart() {
           (res.correct + res.incorrect) /
           (Duration.fromISO(res.time).toMillis() / 1000 / 60),
         datetime: DateTime.fromMillis(res.datetime ?? 0).toJSDate(),
-        time: Duration.fromISO(res.time)
+        time: Duration.fromISO(res.time),
       }));
     console.log(computed);
     setResults(computed);
@@ -86,7 +85,7 @@ export default function LineChart() {
 
     // Add Y axis
     const maxTime = max(results, function (d) {
-      return +d.time.toMillis()/1000;
+      return +d.time.toMillis() / 1000;
     });
     if (maxTime === undefined) return;
     const y = scaleLinear().domain([0, maxTime]).range([height, 0]);
@@ -96,15 +95,19 @@ export default function LineChart() {
       return +d.incorrect;
     });
     if (maxIncorrect === undefined) return;
-    const y2 = scaleLinear().domain([0, maxIncorrect*1.7]).range([height, 0]);
-    svg.append("g").call(axisRight(y2)).attr("transform", `translate(${width}, 0)`);
+    const y2 = scaleLinear()
+      .domain([0, maxIncorrect * 1.7])
+      .range([height, 0]);
+    svg
+      .append("g")
+      .call(axisRight(y2))
+      .attr("transform", `translate(${width}, 0)`);
 
     const maxCpm = max(results, function (d) {
       return +d.cpm;
     });
     if (maxCpm === undefined) return;
     const y3 = scaleLinear().domain([0, maxCpm]).range([height, 0]);
-    svg.append("g").call(axisLeft(y));
 
     // Add the line
     svg
@@ -115,10 +118,13 @@ export default function LineChart() {
       .attr("stroke-width", 3.5)
       .attr(
         "d",
-        line((d) => x(d.datetime), (d) => y(d.time.toMillis()/1000))
+        line(
+          (d) => x(d.datetime),
+          (d) => y(d.time.toMillis() / 1000),
+        ),
       );
 
-      svg
+    svg
       .append("path")
       .datum(results)
       .attr("fill", "none")
@@ -128,8 +134,8 @@ export default function LineChart() {
         "d",
         line(
           (d: Result) => x(d.datetime),
-          (d: Result) => y2(d.incorrect)
-        )
+          (d: Result) => y2(d.incorrect),
+        ),
       );
   }, [results, width, height]);
 

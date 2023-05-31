@@ -61,13 +61,10 @@ function calculateAverageCorrect(results: Result[]) {
 }
 
 export default function TopStats() {
-<<<<<<< HEAD
   const [accuracy, setAccuracy] = useState<Stat>();
   const [speed, setSpeed] = useState<Stat>();
   const [streak, setStreak] = useState<Stat>();
-=======
   const [stats, setStats] = useState<Stat[]>(testStats);
->>>>>>> 6caf05f (adds line chart)
 
   useEffect(() => {
     if (!localStorage) return;
@@ -137,24 +134,17 @@ export default function TopStats() {
       changeType: incorrect1 < incorrect2 ? "increase" : "decrease",
     };
 
-<<<<<<< HEAD
-    setAccuracy(accuracy);
-    setSpeed(speed);
-    setStreak(streak);
-=======
     setStats([accuracy, speed, streak]);
->>>>>>> 6caf05f (adds line chart)
   }, []);
 
   return (
     <div className="mx-40">
       <h3 className="text-base font-semibold leading-6">Last 7 days</h3>
       <dl className="mt-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-3 md:divide-x md:divide-y-0">
-<<<<<<< HEAD
         {accuracy && <Accuracy accuracy={accuracy} />}
         {speed && <Speed speed={speed} />}
         {streak && <Streak streak={streak} />}
-=======
+
         {stats.map((item) => (
           <div key={item.name} className="px-4 py-5 sm:p-6">
             <dt className="text-base font-normal text-gray-900">{item.name}</dt>
@@ -198,12 +188,13 @@ export default function TopStats() {
             </dd>
           </div>
         ))}
->>>>>>> 6caf05f (adds line chart)
+        {accuracy && <Accuracy accuracy={accuracy} />}
+        {speed && <Speed speed={speed} />}
+        {streak && <Streak streak={streak} />}
       </dl>
     </div>
   );
 }
-<<<<<<< HEAD
 
 const Accuracy = ({ accuracy }: { accuracy: Stat }) => (
   <div key={accuracy.name} className="px-4 py-5 sm:p-6">
@@ -329,5 +320,3 @@ const Streak = ({ streak }: { streak: Stat }) => (
     </dd>
   </div>
 );
-=======
->>>>>>> 6caf05f (adds line chart)
