@@ -61,7 +61,9 @@ function calculateAverageCorrect(results: Result[]) {
 }
 
 export default function TopStats() {
-  const [stats, setStats] = useState<Stat[]>(testStats);
+  const [accuracy, setAccuracy] = useState<Stat>();
+  const [speed, setSpeed] = useState<Stat>();
+  const [streak, setStreak] = useState<Stat>();
 
   useEffect(() => {
     if (!localStorage) return;
@@ -131,57 +133,144 @@ export default function TopStats() {
       changeType: incorrect1 < incorrect2 ? "increase" : "decrease",
     };
 
-    setStats([accuracy, speed, streak]);
+    setAccuracy(accuracy);
+    setSpeed(speed);
+    setStreak(streak);
   }, []);
 
   return (
     <div className="mx-40">
       <h3 className="text-base font-semibold leading-6">Last 7 days</h3>
       <dl className="mt-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-3 md:divide-x md:divide-y-0">
-        {stats.map((item) => (
-          <div key={item.name} className="px-4 py-5 sm:p-6">
-            <dt className="text-base font-normal text-gray-900">{item.name}</dt>
-            <dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
-              <div className="flex items-baseline text-2xl font-semibold text-indigo-600">
-                {item.stat}
-                <span className="ml-2 text-sm font-medium text-gray-500">
-                  from {item.previousStat}
-                </span>
-              </div>
-
-              <div
-                className={classNames(
-                  item.changeType === "increase"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800",
-                  "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0"
-                )}
-              >
-                {item.changeType === "increase" ? (
-                  <ArrowUpIcon
-                    className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-green-500"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <ArrowDownIcon
-                    className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-red-500"
-                    aria-hidden="true"
-                  />
-                )}
-
-                <span className="sr-only">
-                  {" "}
-                  {item.changeType === "increase"
-                    ? "Increased"
-                    : "Decreased"}{" "}
-                  by{" "}
-                </span>
-                {item.change}
-              </div>
-            </dd>
-          </div>
-        ))}
+        {accuracy && <Accuracy accuracy={accuracy} />}
+        {speed && <Speed speed={speed} />}
+        {streak && <Streak streak={streak} />}
       </dl>
     </div>
   );
 }
+
+const Accuracy = ({ accuracy }: { accuracy: Stat }) => (
+  <div key={accuracy.name} className="px-4 py-5 sm:p-6">
+    <dt className="text-base font-normal text-gray-900">{accuracy.name}</dt>
+    <dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
+      <div className="flex items-baseline text-2xl font-semibold text-indigo-600">
+        {accuracy.stat}
+        <span className="ml-2 text-sm font-medium text-gray-500">
+          from {accuracy.previousStat}
+        </span>
+      </div>
+
+      <div
+        className={classNames(
+          accuracy.changeType === "increase"
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800",
+          "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0"
+        )}
+      >
+        {accuracy.changeType === "increase" ? (
+          <ArrowUpIcon
+            className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-green-500"
+            aria-hidden="true"
+          />
+        ) : (
+          <ArrowDownIcon
+            className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-red-500"
+            aria-hidden="true"
+          />
+        )}
+
+        <span className="sr-only">
+          {" "}
+          {accuracy.changeType === "increase"
+            ? "Increased"
+            : "Decreased"} by{" "}
+        </span>
+        {accuracy.change}
+      </div>
+    </dd>
+  </div>
+);
+
+const Speed = ({ speed }: { speed: Stat }) => (
+  <div key={speed.name} className="px-4 py-5 sm:p-6">
+    <dt className="text-base font-normal text-gray-900">{speed.name}</dt>
+    <dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
+      <div className="flex items-baseline text-2xl font-semibold text-indigo-600">
+        {speed.stat}
+        <span className="ml-2 text-sm font-medium text-gray-500">
+          from {speed.previousStat}
+        </span>
+      </div>
+
+      <div
+        className={classNames(
+          speed.changeType === "increase"
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800",
+          "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0"
+        )}
+      >
+        {speed.changeType === "increase" ? (
+          <ArrowUpIcon
+            className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-green-500"
+            aria-hidden="true"
+          />
+        ) : (
+          <ArrowDownIcon
+            className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-red-500"
+            aria-hidden="true"
+          />
+        )}
+
+        <span className="sr-only">
+          {" "}
+          {speed.changeType === "increase" ? "Increased" : "Decreased"} by{" "}
+        </span>
+        {speed.change}
+      </div>
+    </dd>
+  </div>
+);
+
+const Streak = ({ streak }: { streak: Stat }) => (
+  <div key={streak.name} className="px-4 py-5 sm:p-6">
+    <dt className="text-base font-normal text-gray-900">{streak.name}</dt>
+    <dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
+      <div className="flex items-baseline text-2xl font-semibold text-indigo-600">
+        {streak.stat}
+        <span className="ml-2 text-sm font-medium text-gray-500">
+          from {streak.previousStat}
+        </span>
+      </div>
+
+      <div
+        className={classNames(
+          streak.changeType === "increase"
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800",
+          "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0"
+        )}
+      >
+        {streak.changeType === "decrease" ? (
+          <ArrowUpIcon
+            className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-red-500"
+            aria-hidden="true"
+          />
+        ) : (
+          <ArrowDownIcon
+            className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-green-500"
+            aria-hidden="true"
+          />
+        )}
+
+        <span className="sr-only">
+          {" "}
+          {streak.changeType === "increase" ? "Increased" : "Decreased"} by{" "}
+        </span>
+        {streak.change}
+      </div>
+    </dd>
+  </div>
+);
