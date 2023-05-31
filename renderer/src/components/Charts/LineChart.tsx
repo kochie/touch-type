@@ -11,7 +11,7 @@ import {
   scaleTime,
   select,
 } from "d3";
-import { DateTime, Duration } from "luxon";
+import { DateTime, Duration, Interval } from "luxon";
 import { useEffect, useRef, useState } from "react";
 
 interface Result {
