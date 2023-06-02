@@ -9,11 +9,40 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useSettings } from "./settings_hook";
+import { Levels, useSettings } from "./settings_hook";
+import { LEVEL_1_QWERTY, LEVEL_2_QWERTY, LEVEL_3_QWERTY } from "./levels";
+import { KeyboardLayoutNames } from "@/keyboards";
 
 type UserContextProps = [string[]];
 
 const WordContext = createContext<UserContextProps>([[""]]);
+
+function getRegExp(levelName: Levels, keyboardName: KeyboardLayoutNames) {
+  switch(keyboardName) {
+    case KeyboardLayoutNames.MACOS_US_COLEMAK:
+      switch(levelName) {
+        case Levels.LEVEL_1: return LEVEL_1_QWERTY
+        case Levels.LEVEL_2: return LEVEL_2_QWERTY
+        case Levels.LEVEL_3: return LEVEL_3_QWERTY
+        default: return /^[a-z]{1,6}$/;
+      }
+    case KeyboardLayoutNames.MACOS_US_DVORAK:
+      switch(levelName) {
+        case Levels.LEVEL_1: return LEVEL_1_QWERTY
+        case Levels.LEVEL_2: return LEVEL_2_QWERTY
+        case Levels.LEVEL_3: return LEVEL_3_QWERTY
+        default: return /^[a-z]{1,6}$/;
+      }
+    case KeyboardLayoutNames.MACOS_US_QWERTY:
+      switch(levelName) {
+        case Levels.LEVEL_1: return LEVEL_1_QWERTY
+        case Levels.LEVEL_2: return LEVEL_2_QWERTY
+        case Levels.LEVEL_3: return LEVEL_3_QWERTY
+        default: return /^[a-z]{1,6}$/;
+      }
+    default: return /^[a-z]{1,6}$/;
+  }
+}
 
 export const WordProvider = ({ children }) => {
   const settings = useSettings()
@@ -29,9 +58,9 @@ export const WordProvider = ({ children }) => {
       .decode(buffer)
       .replaceAll("\r", "")
       .split("\n");
-    const filtered = words.filter((word) => word.match(settings.level));
+    const filtered = words.filter((word) => word.match(getRegExp(settings.levelName, settings.keyboardName)));
     setWordList(filtered);
-  }, [settings.level, settings.language]);
+  }, [settings.levelName, settings.language, settings.keyboardName]);
 
   useEffect(() => {
     getWordList()
