@@ -2,12 +2,12 @@
 // ^ this file needs the "use client" pragma
 
 import {
-  ApolloClient,
   ApolloLink,
   HttpLink,
   SuspenseCache,
 } from "@apollo/client";
 import {
+  NextSSRApolloClient,
   ApolloNextAppProvider,
   NextSSRInMemoryCache,
   SSRMultipartLink,
@@ -36,7 +36,7 @@ function makeClient() {
     fetchOptions: { cache: "no-store" },
   });
 
-  return new ApolloClient({
+  return new NextSSRApolloClient({
     // use the `NextSSRInMemoryCache`, not the normal `InMemoryCache`
     cache: new NextSSRInMemoryCache(),
     link:
@@ -63,10 +63,7 @@ function makeSuspenseCache() {
 // you need to create a component to wrap your app in
 export function ApolloWrapper({ children }: React.PropsWithChildren) {
   return (
-    <ApolloNextAppProvider
-      makeClient={makeClient}
-      makeSuspenseCache={makeSuspenseCache}
-    >
+    <ApolloNextAppProvider makeClient={makeClient}>
       {children}
     </ApolloNextAppProvider>
   );
