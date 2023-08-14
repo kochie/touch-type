@@ -12,7 +12,6 @@ import { LEVEL_1_QWERTY, LEVEL_2_QWERTY, LEVEL_3_QWERTY } from "./levels";
 import { KeyboardLayoutNames } from "@/keyboards";
 import naughty from "naughty-words";
 
-
 type UserContextProps = [string[]];
 
 const WordContext = createContext<UserContextProps>([[""]]);
@@ -54,7 +53,6 @@ function getRegExp(levelName: Levels, keyboardName: KeyboardLayoutNames) {
       }
     default:
       return /^[a-z]{1,6}$/;
-
   }
 }
 
@@ -72,6 +70,7 @@ export const WordProvider = ({ children }) => {
       .decode(buffer)
       .replaceAll("\r", "")
       .split("\n");
+
     const filtered = words
       .filter((word) =>
         word.match(getRegExp(settings.levelName, settings.keyboardName))
