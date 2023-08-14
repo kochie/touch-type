@@ -10,9 +10,8 @@ import {
   scaleLinear,
   scaleTime,
   select,
-  timeParse,
 } from "d3";
-import { DateTime, Duration, Interval } from "luxon";
+import { DateTime, Duration } from "luxon";
 import { useEffect, useRef, useState } from "react";
 
 interface Result {
@@ -26,9 +25,9 @@ interface Result {
   time: Duration
 }
 
-const margin = { top: 10, right: 30, bottom: 30, left: 60 },
-  width = 460 - margin.left - margin.right,
-  height = 400 - margin.top - margin.bottom;
+const margin = { top: 10, right: 30, bottom: 30, left: 60 }
+// const   width = 460 - margin.left - margin.right,
+  // height = 400 - margin.top - margin.bottom;
 
 export default function LineChart() {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -108,13 +107,7 @@ export default function LineChart() {
       .attr("stroke-width", 3.5)
       .attr(
         "d",
-        line()
-          .x(function (d: Result) {
-            return x(d.datetime);
-          })
-          .y(function (d: Result) {
-            return y(d.time.toMillis()/1000);
-          })
+        line((d) => x(d.datetime), (d) => y(d.time.toMillis()/1000))
       );
 
       svg
@@ -125,15 +118,12 @@ export default function LineChart() {
       .attr("stroke-width", 3.5)
       .attr(
         "d",
-        line()
-          .x(function (d: Result) {
-            return x(d.datetime);
-          })
-          .y(function (d: Result) {
-            return y2(d.incorrect);
-          })
+        line(
+          (d: Result) => x(d.datetime),
+          (d: Result) => y2(d.incorrect)
+        )
       );
-  }, [results]);
+  }, [results, width, height]);
 
   return <svg ref={svgRef} className="mx-auto" />;
 }
