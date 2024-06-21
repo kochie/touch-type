@@ -38,6 +38,8 @@ jobs:
             pnpm store path --silent
             echo EOF 
           } >> $GITHUB_ENV
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
       - uses: actions/cache@v4
         name: Setup pnpm cache
@@ -49,6 +51,8 @@ jobs:
       
       - name: Install dependencies
         run: pnpm install
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v1
