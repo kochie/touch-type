@@ -4,6 +4,7 @@ copyright: "Copyright © 2022 Robert Koch"
 mac:
   gatekeeperAssess: false
   hardenedRuntime: true
+  notarize: true
   category: public.app-category.productivity
   icon: build/app-icon.icns
   entitlements: build/entitlements.mac.plist
