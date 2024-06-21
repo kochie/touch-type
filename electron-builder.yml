@@ -5,6 +5,7 @@ mac:
   gatekeeperAssess: false
   hardenedRuntime: true
   notarize: true
+  provisioningProfile: build/mastouchtyper.provisionprofile
   category: public.app-category.productivity
   icon: build/app-icon.icns
   entitlements: build/entitlements.mac.plist
