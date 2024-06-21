@@ -38,7 +38,6 @@ export default function Barline() {
 
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
 
-  // console.log(results);
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -92,8 +91,6 @@ export default function Barline() {
     const Y2 = map(data, (y) => y.incorrect);
     const LEVEL = map(data, (y) => y.level);
 
-    // console.log(Y);
-
     const xDomain = new InternSet(X);
     const yDomain = new InternSet([0, max(Y)]);
     const yDomain2 = new InternSet([0, max(Y2)]);
@@ -115,11 +112,7 @@ export default function Barline() {
     const yAxis = axisRight(yScale).ticks(height / 100, yFormat);
     const yAxis2 = axisLeft(yScale2).ticks(height / 40, yFormat);
 
-    // console.log(X, Y);
-
-    // console.log(xDomain);
     const I = range(X.length).filter((i) => {
-      // console.log(X[i], xDomain.has(X[i]));
       return xDomain.has(X[i]);
     });
 
@@ -130,8 +123,6 @@ export default function Barline() {
     const reds = scaleSequential(yDomain2, interpolateReds);
 
     const levelColors = [oranges, greens, blues];
-
-    // console.log(I);
 
     svg
       .attr("width", width)
@@ -194,19 +185,15 @@ export default function Barline() {
       })
       .attr("x", (i: number) => xScale(X[i]) ?? 0)
       .attr("y", (i: number) => {
-        // console.log(Y[i]);
         return isNaN(yScale(Y[i])) ? 0 : yScale(Y[i]);
       })
       .attr("height", (i: number) => {
         const h = yScale(0) - yScale(Y[i]);
-        // console.log(h);
         return isNaN(Math.max(h, 0)) ? 0 : Math.max(h, 0);
       })
       .attr("width", xScale.bandwidth())
       .on("mouseover", function (d, i: number) {
         select(this).transition().duration(50).attr("opacity", ".50");
-        // console.log(yScale2.invert(parseFloat(select(this).attr("height"))));
-        // console.log(Y[i]);
         div.transition().duration(50).style("opacity", 1);
         // let num = Math.round((d.value / d.data.all) * 100).toString() + "%";
         div
@@ -240,8 +227,6 @@ export default function Barline() {
       .attr("width", xScale.bandwidth())
       .on("mouseover", function (d, i: number) {
         select(this).transition().duration(50).attr("opacity", ".50");
-        // console.log(yScale2.invert(parseFloat(select(this).attr("height"))));
-        // console.log(Y2[i]);
         div.transition().duration(50).style("opacity", 1);
         // let num = Math.round((d.value / d.data.all) * 100).toString() + "%";
         div

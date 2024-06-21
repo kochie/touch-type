@@ -12,7 +12,6 @@ export default function WhatsNew({ onClose }) {
 
   const setEnabled = (checked: boolean) => {
     settingsDispatch({ type: "SET_WHATS_NEW", whatsnew: checked });
-    // console.log("SAVING", settings, checked)
   };
 
   // useEffect(() => {

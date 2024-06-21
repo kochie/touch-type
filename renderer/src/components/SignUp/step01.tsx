@@ -4,7 +4,7 @@ import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Button from "../Button";
 
-import { Auth } from "aws-amplify";
+import { signUp } from "aws-amplify/auth";
 import Error from "../Errors";
 import { useState } from "react";
 
@@ -48,15 +48,17 @@ export default function Step01({ onContinue }) {
         setFormErrors("");
 
         try {
-          await Auth.signUp({
-            autoSignIn: { enabled: true },
+          await signUp({
+            options: {
+              autoSignIn: true,
+              userAttributes: {
+                email: values.email,
+                phone_number: values.phone,
+                name: values.name,
+              },
+            },
             password: values.password,
             username: values.email,
-            attributes: {
-              email: values.email,
-              phone_number: values.phone,
-              name: values.name,
-            },
           });
 
           setSubmitting(false);

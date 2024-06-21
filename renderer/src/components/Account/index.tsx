@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { Auth } from "aws-amplify";
+import { use, useEffect, useState } from "react";
+import { deleteUser, fetchUserAttributes, getCurrentUser, signOut, updateUserAttributes } from "aws-amplify/auth";
 import Button from "../Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
@@ -10,14 +10,12 @@ import { useUser } from "@/lib/user_hook";
 export default function Account({ onError, onCancel, onChangePassword }) {
   const [submitting, setSubmitting] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
-  const [user, setUser] = useUser();
+  const user = useUser();
 
-  // console.log(user);
-
-  const signOut = async () => {
+  const handleSignOut = async () => {
     setSubmitting(true);
-    await Auth.signOut();
-    setUser(null);
+    await signOut();
+    onError()
     setSubmitting(false);
   };
 
@@ -29,22 +27,33 @@ export default function Account({ onError, onCancel, onChangePassword }) {
         "For real, this will delete your account and all data associated with it. Are you sure?"
       )
     ) {
-      await Auth.deleteUser();
-      setUser(null);
+      await deleteUser();
     }
     setDeleteSubmitting(false);
   };
 
-  if (!user) {
-    onError();
-    return null;
-  }
+  useEffect(() => {
+    if (user === null) {
+      onError();
+    }
+  }, [user])
+
+  if (!user) return null
+
+  const attributes = use(fetchUserAttributes().catch(error => {
+    onError()
+    return {
+      email: "",
+      phone_number: "",
+      name: ""
+    }
+  }))
 
   return (
     <div className="h-full">
       <div className="flex min-h-full max-h-[80vh] max-w-7xl">
-        <div className="flex flex-1 flex-col justify-center mx-8 my-12 overflow-y-scroll">
-          <div className="mx-auto w-full ">
+        <div className="flex flex-1 flex-col justify-center mx-8 my-12">
+          <div className="mx-auto w-full">
             <div>
               <h2 className="text-2xl font-bold leading-9 tracking-tight text-gray-900">
                 Account Details
@@ -55,19 +64,19 @@ export default function Account({ onError, onCancel, onChangePassword }) {
 
               <Formik
                 initialValues={{
-                  email: user.attributes.email,
-                  phone: user.attributes.phone_number,
-                  name: user.attributes.name,
+                  email: attributes.email,
+                  phone: attributes.phone_number,
+                  name: attributes.name,
                 }}
                 onSubmit={async (values) => {
-                  await Auth.updateUserAttributes(user, {
-                    email: values.email,
+                  await updateUserAttributes({
+                    userAttributes: {
+                      email: values.email,
                     name: values.name,
                     phone_number: values.phone,
+                    }
                   });
 
-                  const updatedUser = await Auth.currentAuthenticatedUser();
-                  setUser(updatedUser);
                   setSubmitting(false);
                 }}
               >
@@ -138,8 +147,9 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     <div className="mt-6 flex items-center justify-between gap-x-6">
                       <div className="gap-6 flex">
                         <button
-                          onClick={signOut}
+                          onClick={handleSignOut}
                           disabled={submitting}
+                          type="button"
                           className="rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
                         >
                           {!submitting ? (
@@ -149,6 +159,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                           )}
                         </button>
                         <button
+                          type="button"
                           onClick={onChangePassword}
                           className="rounded-md bg-pink-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600"
                         >
@@ -191,6 +202,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                   </p>
                   <button
                     onClick={deleteAccount}
+                    type="button"
                     disabled={deleteSubmitting}
                     className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                   >

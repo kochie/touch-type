@@ -4,7 +4,7 @@ import { join, isAbsolute, normalize } from 'path'
 
 // Packages
 import { app, protocol } from 'electron'
-import isDev from 'electron-is-dev'
+// import isDev from 'electron-is-dev'
 import { resolve } from 'app-root-path'
 
 interface Directories {
@@ -65,8 +65,6 @@ const adjustRenderer = (directory: string) => {
     // Electron apps with spaces in their app names.
     path = decodeURIComponent(path)
 
-    // console.log("PATH", path)
-
     callback({ path })
   })
 }
@@ -93,7 +91,8 @@ export default async (directories: Directories | string, port?: number) => {
     }
   }
 
-  if (!isDev) {
+  const isDev = await import('electron-is-dev');
+  if (!isDev.default) {
     adjustRenderer(directories.production)
     return
   }

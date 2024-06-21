@@ -55,7 +55,6 @@ export default function LineChart() {
         datetime: DateTime.fromMillis(res.datetime ?? 0).toJSDate(),
         time: Duration.fromISO(res.time)
       }));
-    console.log(computed);
     setResults(computed);
 
     return () => {

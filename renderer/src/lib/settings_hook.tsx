@@ -14,6 +14,7 @@ import {
 import { useMutation } from "@apollo/client";
 import { PUT_SETTINGS } from "@/transactions/putSettings";
 import { useUser } from "./user_hook";
+import { InputSettings } from "@/generated/graphql";
 
 
 export interface Settings {
@@ -51,7 +52,7 @@ const SettingsContext = createContext({
   levelName: Levels.LEVEL_1,
   keyboardName: KeyboardLayoutNames.MACOS_US_QWERTY,
   whatsNewOnStartup: true,
-  prefersColorScheme: ColorScheme.SYSTEM
+  theme: ColorScheme.SYSTEM
 });
 
 const reducer = (state, action) => {
@@ -71,7 +72,7 @@ const reducer = (state, action) => {
     case "CHANGE_COLOR_SCHEME": {
       return {
         ...state,
-        prefersColorScheme: action.colorScheme
+        theme: action.colorScheme
       }
     }
     case "CHANGE_LANGUAGE": {
@@ -104,7 +105,6 @@ const reducer = (state, action) => {
       //     };
       // }
     case "CHANGE_LEVEL":
-      // console.log(action);
       return {
         ...state,
         levelName: action.levelName
@@ -130,7 +130,7 @@ const defaultSettings = {
   levelName: Levels.LEVEL_1,
   analytics: true,
   whatsNewOnStartup: true,
-  prefersColorScheme: ColorScheme.SYSTEM
+  theme: ColorScheme.SYSTEM
 };
 
 export const SettingsProvider = ({ children }) => {
@@ -148,10 +148,12 @@ export const SettingsProvider = ({ children }) => {
   });
 
   const [mutateFunction] = useMutation(PUT_SETTINGS);
-  const [user] = useUser();
+  const user = useUser();
 
-  const saveSettings = useCallback((safeSettings) => {
+  const saveSettings = useCallback((safeSettings: InputSettings) => {
     if (!user) return;
+
+    console.log(safeSettings)
 
     mutateFunction({
       variables: { userId: user.username, settings: safeSettings },
@@ -159,12 +161,12 @@ export const SettingsProvider = ({ children }) => {
   }, [user, mutateFunction])
 
   useEffect(() => {
-    if ( settings.prefersColorScheme === ColorScheme.DARK || (settings.prefersColorScheme === ColorScheme.SYSTEM && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if ( settings.theme === ColorScheme.DARK || (settings.theme === ColorScheme.SYSTEM && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
     }
-  }, [settings.prefersColorScheme])
+  }, [settings.theme])
 
   useEffect(() => {
     const safeSettings = {

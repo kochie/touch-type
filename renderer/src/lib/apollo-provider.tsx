@@ -4,7 +4,6 @@
 import {
   ApolloLink,
   HttpLink,
-  SuspenseCache,
 } from "@apollo/client";
 import {
   NextSSRApolloClient,
@@ -14,7 +13,7 @@ import {
 } from "@apollo/experimental-nextjs-app-support/ssr";
 
 import { createAuthLink } from "aws-appsync-auth-link";
-import { Auth } from "aws-amplify";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 // have a function to create a client for you
 function makeClient() {
@@ -23,8 +22,7 @@ function makeClient() {
     region: "ap-southeast-2",
     auth: {
       type: "AMAZON_COGNITO_USER_POOLS",
-      jwtToken: async () =>
-        (await Auth.currentSession()).getIdToken().getJwtToken(),
+      jwtToken: () => fetchAuthSession().then((session) => session.tokens?.accessToken.toString() ?? ""),
     },
   });
 
@@ -53,11 +51,6 @@ function makeClient() {
           ])
         : ApolloLink.from([authLink, httpLink]),
   });
-}
-
-// also have a function to create a suspense cache
-function makeSuspenseCache() {
-  return new SuspenseCache();
 }
 
 // you need to create a component to wrap your app in

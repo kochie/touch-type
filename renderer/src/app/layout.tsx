@@ -1,5 +1,5 @@
 import Providers from "./Providers";
-import { Auth } from "aws-amplify";
+import { Amplify } from "aws-amplify";
 
 const os = require("os");
 
@@ -11,15 +11,20 @@ import "@/styles/globals.css";
 import Fathom from "@/components/Fathom";
 
 function classNames(...classes) {
-  return classes.filter(Boolean).join(" ")
+  return classes.filter(Boolean).join(" ");
 }
 
-Auth.configure({
-  userPoolId: process.env.NEXT_PUBLIC_USERPOOL_ID,
-  userPoolWebClientId: process.env.NEXT_PUBLIC_USERPOOL_CLIENT_ID,
-  region: "ap-southeast-2",
-  ssr: true,
-});
+Amplify.configure(
+  {
+    Auth: {
+      Cognito: {
+        userPoolId: process.env.NEXT_PUBLIC_USERPOOL_ID!,
+        userPoolClientId: process.env.NEXT_PUBLIC_USERPOOL_CLIENT_ID!,
+      },
+    },
+  },
+  { ssr: true },
+);
 
 export default function RootLayout({
   children,
@@ -29,9 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={
-          classNames(!isMac &&  "dark:text-white text-black dark:bg-zinc-800 bg-zinc-300")
-        }
+        className={classNames(
+          !isMac && "dark:text-white text-black dark:bg-zinc-800 bg-zinc-300",
+        )}
       >
         <Fathom />
         <Providers>{children}</Providers>

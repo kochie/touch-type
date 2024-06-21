@@ -29,7 +29,6 @@ const nextConfig = {
       test: /\.txt$/,
       use: "raw-loader",
     });
-    // console.log(config.module.rules);
 
     config.module.rules.push({
       test: /\.ttf$/,

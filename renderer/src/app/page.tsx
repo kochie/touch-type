@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useLayoutEffect, useReducer, useState } from "react";
+import { Suspense, useLayoutEffect, useReducer } from "react";
 import WhatsNew from "@/components/WhatsNew";
 import Modal from "@/components/Modal";
 import Login from "@/components/Login";
@@ -9,6 +9,8 @@ import Tracker from "@/components/Tracker";
 import Menu from "@/components/Menu";
 import { useSettings } from "@/lib/settings_hook";
 import ForgetPassword from "@/components/ForgotPassword";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 const modalReducer = (state, action) => {
   switch (action.type) {
@@ -65,7 +67,6 @@ export default function IndexPage() {
         open={modal === "SIGN_IN"}
         onClose={() => modalDispatch({ type: "NONE" })}
       >
-        {/* <Login /> */}
         <Login
           onForgetPassword={() => modalDispatch({ type: "RECOVER_ACCOUNT" })}
           onSignUp={() => modalDispatch({ type: "SIGN_UP" })}
@@ -88,7 +89,6 @@ export default function IndexPage() {
         open={modal === "SIGN_UP"}
         onClose={() => modalDispatch({ type: "NONE" })}
       >
-        {/* <Login /> */}
         <SignUp
           toSignIn={() => modalDispatch({ type: "SIGN_IN" })}
           onClose={() => modalDispatch({ type: "NONE" })}
@@ -111,14 +111,32 @@ export default function IndexPage() {
         open={modal === "ACCOUNT"}
         onClose={() => modalDispatch({ type: "NONE" })}
       >
-        <Suspense>
-          <Account
-            onChangePassword={() => modalDispatch({ type: "RECOVER_ACCOUNT" })}
-            onError={() => modalDispatch({ type: "NONE" })}
-            onCancel={() => modalDispatch({ type: "NONE" })}
-          />
-        </Suspense>
+          <Suspense fallback={<Loading />}>
+            <Account
+              onChangePassword={() =>
+                modalDispatch({ type: "RECOVER_ACCOUNT" })
+              }
+              onError={() => modalDispatch({ type: "NONE" })}
+              onCancel={() => modalDispatch({ type: "NONE" })}
+            />
+          </Suspense>
       </Modal>
+    </div>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="h-full">
+      <div className="flex min-h-full max-h-[80vh] max-w-7xl">
+        <div className="flex flex-1 flex-col justify-center mx-8 my-12">
+          <div className="mx-auto w-full ">
+            <div>
+              <FontAwesomeIcon icon={faSpinner} spin size="lg" /> Loading
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

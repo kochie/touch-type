@@ -2,14 +2,13 @@
 import { join } from "path";
 import { format } from "url";
 
-// Packages
 import { app, BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent, MessageBoxOptions } from "electron";
-// import { BrowserWindow } from "electron-acrylic-window";
-import isDev from "electron-is-dev";
+// import isDev from "electron-is-dev";
+// import isDev from 'electron-is-dev';
 import prepareNext from "./electron-next";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import { init } from "@sentry/electron";
+import { init } from "@sentry/electron/main";
 import { readFile } from "fs/promises";
 
 init({
@@ -22,7 +21,6 @@ autoUpdater.logger.transports.file.level = "info";
 log.info("App starting...");
 
 async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
-
   try {
     const file = await readFile(join(__dirname, "../wordsets/", `${language}.txt`))
     return file
@@ -66,8 +64,9 @@ app.on("ready", async () => {
   });
 
   // mainWindow.setVibrancy("under-window");
+  const isDev = await import('electron-is-dev');
 
-  const url = isDev
+  const url = isDev.default
     ? "http://localhost:8000/"
     : format({
         pathname: join(__dirname, "../renderer/out/index.html"),

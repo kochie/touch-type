@@ -11,10 +11,8 @@ import {
 import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/keyboards/key";
 import sampleSize from "lodash.samplesize";
-import { KeyboardLayoutNames, useSettings } from "@/lib/settings_hook";
-import { useWords } from "@/lib/word-provider";
-import { MACOS_US_COLEMAK, MACOS_US_DVORAK, MACOS_US_QWERTY, lookupKeyboard } from "@/keyboards";
 import { useSettings } from "@/lib/settings_hook";
+import { useWords } from "@/lib/word-provider";
 import { lookupKeyboard } from "@/keyboards";
 
 // import wordBlob from "@/assets/words.txt";
@@ -98,7 +96,6 @@ export default function Tracker({ modal }) {
   const p = (correct / total) * 100;
 
   const keyboardLayout = lookupKeyboard(settings.keyboardName)
-  // console.log(settings.keyboardName, keyboardLayout)
   const keyboard = new Keyboard(keyboardLayout);
 
   const intervalFn = () => {

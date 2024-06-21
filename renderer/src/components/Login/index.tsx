@@ -3,12 +3,11 @@ import { useState } from "react";
 import Button from "../Button";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { Auth } from "aws-amplify";
+import { signIn } from "aws-amplify/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import Error from "../Errors";
 import { Transition } from "@headlessui/react";
-import { useUser } from "@/lib/user_hook";
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -30,7 +29,6 @@ const Tick = (
 
 export default function Login({ onSignUp, onContinue, onForgetPassword }) {
   const [formErrors, setFormErrors] = useState<string>();
-  const [_, setUser] = useUser();
 
   return (
     <>
@@ -54,14 +52,13 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
               setFormErrors("");
 
               try {
-                const user = await Auth.signIn({
+                const user = await signIn({
                   username: values.email,
                   password: values.password,
                 });
 
                 setSubmitting(false);
                 setStatus("COMPLETE");
-                setUser(user);
                 await new Promise((resolve) => setTimeout(resolve, 1000));
                 onContinue(values);
               } catch (error) {

@@ -112,7 +112,7 @@ const Settings = () => {
           Theme
           <select
             className="text-black ml-5"
-            value={settings.prefersColorScheme}
+            value={settings.theme}
             onChange={(e) => {
               dispatchSettings({
                 type: "CHANGE_COLOR_SCHEME",

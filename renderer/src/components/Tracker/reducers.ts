@@ -17,7 +17,6 @@ export const statsReducer = (state, action) => {
         letters: [...state.letters, { key: action.key, correct: false }],
       };
     case "BACKSPACE":
-      // console.log(state.letters);
       return {
         ...state,
         time: Interval.fromDateTimes(state.start, DateTime.now()),

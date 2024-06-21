@@ -97,7 +97,6 @@ export function makeKey(
       break;
   }
 
-  // console.log(tX, tY);
 
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";
@@ -112,7 +111,6 @@ export function makeKey(
     ctx.textAlign = "end";
     ctx.textBaseline = "top";
 
-    // console.log(icon);
     ctx.fillText(letter.icon, X + width - padding, Y + padding / 2);
     ctx.restore();
   }

@@ -35,7 +35,6 @@ export class Key {
     this.height = opts?.height ?? 80;
     this.secondaryKey = opts?.secondaryKey;
     this.isInert = opts?.inert ?? false;
-    // console.log()
     this.icon = opts?.icon;
     this.font = opts?.font;
     this.shape = opts?.shape;
@@ -63,7 +62,6 @@ export class Keyboard {
   }
 
   drawKeyboard(ctx: CanvasRenderingContext2D) {
-    // console.log("HELLO");
     this.rows.forEach((row, i) =>
       row.forEach((letter, j) => {
         this.drawKey(

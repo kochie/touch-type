@@ -3,7 +3,7 @@ import * as Yup from "yup";
 
 import { Transition } from "@headlessui/react";
 
-import { Auth } from "aws-amplify";
+import { confirmSignUp, getCurrentUser } from "aws-amplify/auth";
 import { useState } from "react";
 import Error from "../Errors";
 import Button from "../Button";
@@ -31,7 +31,6 @@ const Tick = (
 
 export default function Step02({ onContinue, email }) {
   const [formErrors, setFormErrors] = useState<string>();
-  const [_, setUser] = useUser();
 
   return (
     <Formik
@@ -46,15 +45,17 @@ export default function Step02({ onContinue, email }) {
         setFormErrors("");
 
         try {
-          await Auth.confirmSignUp(values.email, values.code);
+          await confirmSignUp({
+            username: values.email,
+            confirmationCode: values.code,
+          });
 
           setSubmitting(false);
           setStatus("COMPLETE");
 
           // await new Promise((resolve) => setTimeout(resolve, 1000));
 
-          const user = await Auth.currentAuthenticatedUser();
-          setUser(user);
+          const user = await getCurrentUser();
           onContinue();
         } catch (error) {
           setFormErrors(error);

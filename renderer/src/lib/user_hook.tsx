@@ -1,38 +1,46 @@
 import {
-  Dispatch,
-  SetStateAction,
   createContext,
   useContext,
   useEffect,
   useState,
 } from "react";
-import { Auth } from "aws-amplify";
+import { AuthUser } from "aws-amplify/auth";
+import { Hub } from "aws-amplify/utils";
 
-type UserContextProps = [any, Dispatch<SetStateAction<null>>];
+type UserContextProps = AuthUser | null;
 
-const UserContext = createContext<UserContextProps>([null, () => {}]);
+const UserContext = createContext<UserContextProps>(null);
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, _setUser] = useState<AuthUser | null>(null);
 
-  async function getUser() {
-    try {
-      const user = await Auth.currentAuthenticatedUser();
-      setUser(user);
-    } catch (error) {
-      setUser(null);
-    }
-  }
+  // async function getUser() {
+  //   try {
+  //     const user = await getCurrentUser();
+  //     setUser(user);
+  //   } catch (error) {
+  //     setUser(null);
+  //   }
+  // }
 
   useEffect(() => {
-    getUser();
+    // getUser();
+    const stopCallback = Hub.listen("auth", async ({ payload }) => {
+      switch (payload.event) {
+        case "signedIn":
+          _setUser(payload.data);
+          break;
+        case "signedOut":
+          _setUser(null);
+          break;
+        
+      }
+    });
+
+    return stopCallback;
   }, []);
 
-  return (
-    <UserContext.Provider value={[user, setUser]}>
-      {children}
-    </UserContext.Provider>
-  );
+  return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 };
 
 export function useUser() {

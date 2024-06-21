@@ -76,7 +76,6 @@ export default function TopStats() {
         (Duration.fromISO(res.time).toMillis() / 1000 / 60),
     }));
 
-    // console.log(computed);
 
     // using luxon get start of day
 

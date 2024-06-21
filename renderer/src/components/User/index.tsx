@@ -6,10 +6,9 @@ import { faUser } from "@fortawesome/pro-duotone-svg-icons";
 import { useUser } from "@/lib/user_hook";
 
 export default function User({ signIn, account }) {
-  const [user] = useUser();
+  const user = useUser();
 
   if (!user) {
-    // console.log("NULL USER");
 
     return (
       <div onClick={signIn} title="Sign In or Sign Up">
@@ -23,7 +22,6 @@ export default function User({ signIn, account }) {
     );
   }
 
-  // console.log("USER");
   return (
     <div onClick={account} title="Account">
       <FontAwesomeIcon

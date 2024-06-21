@@ -3,7 +3,7 @@ import { useState } from "react";
 import Button from "../Button";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { Auth } from "aws-amplify";
+import { resetPassword } from "aws-amplify/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import Error from "../Errors";
@@ -41,7 +41,7 @@ export function Step01({ onContinue }) {
         setFormErrors("");
 
         try {
-          await Auth.forgotPassword(values.email);
+          await resetPassword({username: values.email});
 
           setSubmitting(false);
           setStatus("COMPLETE");
