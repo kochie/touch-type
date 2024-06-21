@@ -1,6 +1,7 @@
 name: Building Release
 
 on:
+  workflow_dispatch: {}
   push:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
@@ -44,6 +45,7 @@ jobs:
           mkdir -p ~/private_keys/
           echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
+
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1
         with:
