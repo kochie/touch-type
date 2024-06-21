@@ -9,6 +9,7 @@
     "main/",
     "renderer/out"
   ],
+  "license": "GNU GPLv3",
   "scripts": {
     "clean": "rimraf dist main renderer/out renderer/.next",
     "dev": "npm run build-electron && electron .",
