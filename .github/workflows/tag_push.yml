@@ -21,6 +21,7 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: latest
+          run_install: false
 
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v3
@@ -28,6 +29,22 @@ jobs:
           node-version: latest
           cache: pnpm
           cache-dependency-path: ./pnpm-lock.yaml
+      
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      
+      - name: Install dependencies
+        run: pnpm install
 
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v1
