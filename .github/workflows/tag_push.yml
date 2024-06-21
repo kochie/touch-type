@@ -35,6 +35,11 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
 
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: startsWith(matrix.os, 'macos')
+        with:
+          xcode-version: latest-stable
+
       - name: Prepare for app notarization
         if: startsWith(matrix.os, 'macos')
         env:
@@ -64,8 +69,12 @@ jobs:
           # windows_certs_password: ${{ secrets.windows_certs_password }}
         env:
           # macOS notarization API key
-          API_KEY_ID: ${{ secrets.api_key_id }}
-          API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
+          # API_KEY_ID: ${{ secrets.api_key_id }}
+          # API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
+          # macOS notarization credentials key details
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
