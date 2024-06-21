@@ -72,6 +72,13 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
+      - name: Upload error log
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: notarization-error.log
+          path: notarization-error.log
+
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos')
         run: |
