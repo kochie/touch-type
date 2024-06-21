@@ -29,6 +29,8 @@ jobs:
           node-version: latest
           cache: pnpm
           cache-dependency-path: ./pnpm-lock.yaml
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
       
       - name: Get pnpm store directory
         shell: bash
