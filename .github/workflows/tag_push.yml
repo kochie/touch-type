@@ -110,7 +110,7 @@ jobs:
 
           package_manager: pnpm
 
-          args: --config.extraMetadata.version=${{ github.run_number }}
+          args: --config.buildVersion=${{ steps.get_version.outputs.build_version }}
 
           # windows_certs: ${{ secrets.windows_certs }}
           # windows_certs_password: ${{ secrets.windows_certs_password }}
@@ -125,7 +125,8 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
-          
+          BUILD_NUMBER: ${{ github.run_number }}
+
       - name: Upload error log
         if: failure()
         uses: actions/upload-artifact@v2
@@ -137,8 +138,10 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: |
           version=$(jq -r .version package.json)
-          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
-          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
+          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version-$BUILD_NUMBER-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
+          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version-$BUILD_NUMBER-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
 
       - name: Upload to Windows Dev Center
         if: startsWith(matrix.os, 'windows')
@@ -152,9 +155,10 @@ jobs:
           $password = ConvertTo-SecureString $env:APPX_UPLOAD_TOKEN -AsPlainText -Force
           $credential = New-Object System.Management.Automation.PSCredential $env:APPX_UPLOAD_USERNAME, $password
           Set-StoreBrokerAuthentication -TenantId $env:APPX_UPLOAD_TENANT_ID -Credential $credential
-          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version.appx" -AutoCommit -Force
+          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version-$env:BUILD_NUMBER.appx" -AutoCommit -Force
         env:
           APPX_UPLOAD_TOKEN: ${{ secrets.windows_dev_center_password }}
           APPX_UPLOAD_USERNAME: ${{ secrets.windows_dev_center_username }}
           APPX_UPLOAD_TENANT_ID: ${{ secrets.windows_dev_center_tenant_id }}
           APPX_UPLOAD_APP_ID: "9NG3CCFL631D"
+          BUILD_NUMBER: ${{ github.run_number }}
