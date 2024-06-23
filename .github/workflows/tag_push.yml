@@ -110,6 +110,8 @@ jobs:
 
           package_manager: pnpm
 
+          args: --config.extraMetadata.version=${{ github.run_number }}
+
           # windows_certs: ${{ secrets.windows_certs }}
           # windows_certs_password: ${{ secrets.windows_certs_password }}
         env:
@@ -123,9 +125,7 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
-
-          BUILD_NUMBER: ${{ github.run_number }}
-
+          
       - name: Upload error log
         if: failure()
         uses: actions/upload-artifact@v2
