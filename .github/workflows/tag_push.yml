@@ -149,10 +149,12 @@ jobs:
 
           Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
           Install-Module -Name StoreBroker
+
           $password = ConvertTo-SecureString $env:APPX_UPLOAD_TOKEN -AsPlainText -Force
           $credential = New-Object System.Management.Automation.PSCredential $env:APPX_UPLOAD_USERNAME, $password
           Set-StoreBrokerAuthentication -TenantId $env:APPX_UPLOAD_TENANT_ID -Credential $credential
-          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version.appx" -AutoCommit -Force -ReplacePackages
+
+          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version.appx" -AutoCommit -Force -AddPackages
         env:
           APPX_UPLOAD_TOKEN: ${{ secrets.windows_dev_center_password }}
           APPX_UPLOAD_USERNAME: ${{ secrets.windows_dev_center_username }}
