@@ -82,7 +82,7 @@ jobs:
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
 
       - name: Build/release Electron app
-        uses: Yan-Jobs/action-electron-builder@v1.7.0
+        uses: kochie/action-electron-builder
         with:
           # GitHub token, automatically provided to the action
           # (No need to define this secret in the repo settings)
@@ -94,6 +94,8 @@ jobs:
 
           mac_certs: ${{ secrets.mac_certs }}
           mac_certs_password: ${{ secrets.mac_certs_password }}
+
+          package_manager: pnpm
 
           # windows_certs: ${{ secrets.windows_certs }}
           # windows_certs_password: ${{ secrets.windows_certs_password }}
