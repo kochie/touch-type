@@ -144,8 +144,8 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: |
           version=$(jq -r .version package.json)
-          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version.$BUILD_NUMBER-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
-          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version.$BUILD_NUMBER-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
+          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
+          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
         env:
           BUILD_NUMBER: ${{ github.run_number }}
 
@@ -161,7 +161,7 @@ jobs:
           $password = ConvertTo-SecureString $env:APPX_UPLOAD_TOKEN -AsPlainText -Force
           $credential = New-Object System.Management.Automation.PSCredential $env:APPX_UPLOAD_USERNAME, $password
           Set-StoreBrokerAuthentication -TenantId $env:APPX_UPLOAD_TENANT_ID -Credential $credential
-          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version.$env:BUILD_NUMBER.appx" -AutoCommit -Force
+          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version.appx" -AutoCommit -Force
         env:
           APPX_UPLOAD_TOKEN: ${{ secrets.windows_dev_center_password }}
           APPX_UPLOAD_USERNAME: ${{ secrets.windows_dev_center_username }}
