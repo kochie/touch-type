@@ -87,11 +87,11 @@ jobs:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.provisioning_profile }}
           PP_PATH: build/mastouchtyper.provisionprofile
           API_KEY_BASE64: ${{ secrets.api_key }}
-          API_KEY_PATH: ~/private_keys/AuthKey_4R59VBAA4R.p8
+          API_KEY_PATH: ~/private_keys/AuthKey.p8
         # Import Apple API key for app notarization on macOS
         run: |
           mkdir -p ~/private_keys/
-          echo -n "$API_KEY_BASE64" | base64 --decode --output $RUNNER_TEMP/AuthKey.p8
+          echo -n "$API_KEY_BASE64" | base64 --decode --output $API_KEY_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
 
       - name: Build/release Electron app
@@ -114,13 +114,10 @@ jobs:
           # windows_certs_password: ${{ secrets.windows_certs_password }}
         env:
           # macOS notarization API key
-          APPLE_API_KEY: $RUNNER_TEMP/AuthKey.p8
+          APPLE_API_KEY: ~/private_keys/AuthKey.p8
           APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
           APPLE_API_ISSUER: ${{ secrets.api_key_issuer_id }}
-          # macOS notarization credentials key details
-          # APPLE_ID: ${{ secrets.APPLE_ID }}
-          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
