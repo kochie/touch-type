@@ -1,4 +1,3 @@
-afterSign: electron-builder-notarize
 appId: io.kochie.touch-typer
 copyright: "Copyright © 2022 Robert Koch"
 mac:
