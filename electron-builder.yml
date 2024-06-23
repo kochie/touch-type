@@ -1,5 +1,6 @@
 appId: io.kochie.touch-typer
 copyright: "Copyright © 2022 Robert Koch"
+buildVersion: null
 mac:
   gatekeeperAssess: false
   hardenedRuntime: true

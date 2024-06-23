@@ -124,6 +124,8 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
+          BUILD_NUMBER: ${{ github.run_number }}
+
       - name: Upload error log
         if: failure()
         uses: actions/upload-artifact@v2
