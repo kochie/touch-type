@@ -87,7 +87,7 @@ jobs:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.provisioning_profile }}
           PP_PATH: build/mastouchtyper.provisionprofile
           API_KEY_BASE64: ${{ secrets.api_key }}
-          API_KEY_PATH: build/AuthKey_${{ secrets.api_key_id }}.p8
+          API_KEY_PATH: AuthKey_${{ secrets.api_key_id }}.p8
         # Import Apple API key for app notarization on macOS
         run: |
           echo -n "$API_KEY_BASE64" | base64 --decode --output $API_KEY_PATH
