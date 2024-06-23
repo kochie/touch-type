@@ -133,8 +133,9 @@ jobs:
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos')
         run: |
-          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-${{github.ref_name}}-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
-          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-${{github.ref_name}}-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
+          version=$(jq -r .version package.json)
+          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
+          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
 
       - name: Upload to Windows Dev Center
         if: startsWith(matrix.os, 'windows')
