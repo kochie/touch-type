@@ -94,6 +94,12 @@ jobs:
           echo -n "$API_KEY_BASE64" | base64 --decode --output $API_KEY_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
 
+      - name: Get build version
+        id: get_version
+        run: echo "::set-output name=build_version::$(node get-version.js)"
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+
       - name: Build/release Electron app
         uses: kochie/action-electron-builder@1.8.0
         with:
