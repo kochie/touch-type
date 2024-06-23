@@ -139,9 +139,18 @@ jobs:
       - name: Upload to Windows Dev Center
         if: startsWith(matrix.os, 'windows')
         run: |
+          $jsonContent = Get-Content -Path "$env:GITHUB_WORKSPACE\package.json" -Raw
+          $jsonObject = $jsonContent | ConvertFrom-Json
+          $version = $jsonObject.version
+
           Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
           Install-Module -Name StoreBroker
-          $password = ConvertTo-SecureString ${{ secrets.windows_dev_center_password }} -AsPlainText -Force
-          $credential = New-Object System.Management.Automation.PSCredential ${{ secrets.windows_dev_center_username }}, $password
-          Set-StoreBrokerAuthentication -TenantId ${{ secrets.windows_dev_center_tenant_id }} -Credential $credential
-          Update-ApplicationSubmission -AppId "9NG3CCFL631D" -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer ${{ github.ref_name }}.appx" -AutoCommit -Force
+          $password = ConvertTo-SecureString $env:APPX_UPLOAD_TOKEN -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential $env:APPX_UPLOAD_USERNAME, $password
+          Set-StoreBrokerAuthentication -TenantId $env:APPX_UPLOAD_TENANT_ID -Credential $credential
+          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version.appx" -AutoCommit -Force
+        env:
+          APPX_UPLOAD_TOKEN: ${{ secrets.windows_dev_center_password }}
+          APPX_UPLOAD_USERNAME: ${{ secrets.windows_dev_center_username }}
+          APPX_UPLOAD_TENANT_ID: ${{ secrets.windows_dev_center_tenant_id }}
+          APPX_UPLOAD_APP_ID: "9NG3CCFL631D"
