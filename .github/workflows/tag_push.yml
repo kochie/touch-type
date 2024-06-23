@@ -94,11 +94,11 @@ jobs:
           echo -n "$API_KEY_BASE64" | base64 --decode --output $API_KEY_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
 
-      - name: Get build version
-        id: get_version
-        run: echo "::set-output name=build_version::$(node get-version.js)"
-        env:
-          BUILD_NUMBER: ${{ github.run_number }}
+      # - name: Get build version
+      #   id: get_version
+      #   run: echo "::set-output name=build_version::$(node get-version.js)"
+      #   env:
+      #     BUILD_NUMBER: ${{ github.run_number }}
 
       - name: Build/release Electron app
         uses: kochie/action-electron-builder@1.8.0
@@ -116,7 +116,7 @@ jobs:
 
           package_manager: pnpm
 
-          args: --config.buildVersion=${{ steps.get_version.outputs.build_version }}
+          # args: --config.buildVersion=${{ steps.get_version.outputs.build_version }}
 
           # windows_certs: ${{ secrets.windows_certs }}
           # windows_certs_password: ${{ secrets.windows_certs_password }}
@@ -144,8 +144,8 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: |
           version=$(jq -r .version package.json)
-          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version-$BUILD_NUMBER-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
-          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version-$BUILD_NUMBER-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
+          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version.$BUILD_NUMBER-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
+          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version.$BUILD_NUMBER-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
         env:
           BUILD_NUMBER: ${{ github.run_number }}
 
@@ -161,7 +161,7 @@ jobs:
           $password = ConvertTo-SecureString $env:APPX_UPLOAD_TOKEN -AsPlainText -Force
           $credential = New-Object System.Management.Automation.PSCredential $env:APPX_UPLOAD_USERNAME, $password
           Set-StoreBrokerAuthentication -TenantId $env:APPX_UPLOAD_TENANT_ID -Credential $credential
-          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version-$env:BUILD_NUMBER.appx" -AutoCommit -Force
+          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version.$env:BUILD_NUMBER.appx" -AutoCommit -Force
         env:
           APPX_UPLOAD_TOKEN: ${{ secrets.windows_dev_center_password }}
           APPX_UPLOAD_USERNAME: ${{ secrets.windows_dev_center_username }}
