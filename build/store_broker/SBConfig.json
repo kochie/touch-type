@@ -40,7 +40,7 @@
     //
     // File separator '\' must be escaped, i.e. '\\'
     // Ex: \\\\filehare\\Public\\AppPDPs\\MyApp
-    "PDPRootPath": "",
+    "PDPRootPath": "build\\store_broker",
 
     // If your PDP files are being placed in a directory structure like this:
     //     <PDPRootPath>\<Release>\<lang-code>\...\PDP.xml
@@ -56,6 +56,7 @@
     //         "ProductDescription.xml"  <- No comma for last item, or JSON deserialization will fail
     //     ]
     "PDPInclude": [
+      "PDP.xml"
     ],
 
     // Filenames that SHOULD NOT be processed.
@@ -93,7 +94,7 @@
     //
     // File separator '\' must be escaped, i.e. '\\'
     // Ex: \\\\fileshare\\Public\\Screenshots\\MyApp
-    "ImagesRootPath": "",
+    "ImagesRootPath": "build/store_broker/images",
 
     // Some apps may not localize all of their metadata media (images, trailers, etc..) across all languages.
     // By default, StoreBroker will look in the PDP langcode's subfolder within ImagesRootPath for that
@@ -119,6 +120,7 @@
     // NOTE: File separator '\' must be escaped, i.e. '\\'
     // Ex: \\\\fileshare\\Public\\AppPDPs\\MyApp
     "AppxPath": [
+      
     ],
 
     // Full path to a directory where the Packaging Tool can write the .json submission request
@@ -126,10 +128,10 @@
     //
     // File separator '\' must be escaped, i.e. '\\'
     // Ex: "OutPath": "C:\\app\\output"
-    "OutPath": "",
+    "OutPath": "build",
 
     // Common name to give to the .json and .zip files outputted by the Packaging Tool.
-    "OutName": "",
+    "OutName": "submission",
 
     // By default, the packages will be renamed using a consistent naming scheme, which
     // embeds the application name, version, as well as targeted platform and architecture.
