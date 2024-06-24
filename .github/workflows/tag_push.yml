@@ -146,6 +146,7 @@ jobs:
           $jsonContent = Get-Content -Path "$env:GITHUB_WORKSPACE\package.json" -Raw
           $jsonObject = $jsonContent | ConvertFrom-Json
           $version = $jsonObject.version
+          $appx = "./dist/Touch Typer $version.appx"
 
           Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
           Install-Module -Name StoreBroker
@@ -154,7 +155,9 @@ jobs:
           $credential = New-Object System.Management.Automation.PSCredential $env:APPX_UPLOAD_USERNAME, $password
           Set-StoreBrokerAuthentication -TenantId $env:APPX_UPLOAD_TENANT_ID -Credential $credential
 
-          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath ".\dist\Touch Typer $version.appx" -AutoCommit -Force -AddPackages
+          New-SubmissionPackage -ConfigPath build\store_broker\SBConfig.json -AppxPath $appx
+
+          Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath $appx -AutoCommit -Force -ReplacePackages
         env:
           APPX_UPLOAD_TOKEN: ${{ secrets.windows_dev_center_password }}
           APPX_UPLOAD_USERNAME: ${{ secrets.windows_dev_center_username }}
