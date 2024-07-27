@@ -19,7 +19,7 @@ async function main() {
   let version = getElectronVersion();
   if (!version) {
     console.error(
-      "Cannot detect electron version, check that electron is installed"
+      "Cannot detect electron version, check that electron is installed",
     );
     return;
   }
@@ -27,7 +27,7 @@ async function main() {
   console.log("We are starting to download all possible electron symbols");
   console.log("We need it in order to symbolicate native crashes");
   console.log(
-    "This step is only needed once whenever you update your electron version"
+    "This step is only needed once whenever you update your electron version",
   );
   console.log("Just call this script again it should do everything for you.");
 
@@ -88,7 +88,7 @@ async function downloadSymbols(options) {
         } else {
           resolve(zipPath);
         }
-      }
+      },
     );
   });
 }

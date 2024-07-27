@@ -1,11 +1,11 @@
 // Native
-import { createServer } from 'http'
-import { join, isAbsolute, normalize } from 'path'
+import { createServer } from "http";
+import { join, isAbsolute, normalize } from "path";
 
 // Packages
-import { app, protocol } from 'electron'
+import { app, protocol } from "electron";
 // import isDev from 'electron-is-dev'
-import { resolve } from 'app-root-path'
+import { resolve } from "app-root-path";
 
 interface Directories {
   [key: string]: string;
@@ -17,85 +17,88 @@ const devServer = async (dir: string, port?: number) => {
   // We need to load it here because the app's production
   // bundle shouldn't include it, which would result
   // in an error
-  const next = require('next')({ dev: true, dir })
-  const requestHandler = next.getRequestHandler()
+  const next = require("next")({ dev: true, dir });
+  const requestHandler = next.getRequestHandler();
 
   // Build the renderer code and watch the files
-  await next.prepare()
+  await next.prepare();
 
   // But if developing the application, create a
   // new native HTTP server (which supports hot code reloading)
-  const server = createServer(requestHandler)
+  const server = createServer(requestHandler);
 
   server.listen(port || 8000, () => {
     // Make sure to stop the server when the app closes
     // Otherwise it keeps running on its own
-    app.on('before-quit', () => server.close())
-  })
-}
+    app.on("before-quit", () => server.close());
+  });
+};
 
 const adjustRenderer = (directory: string) => {
-  const paths = ['/_next', '/static']
-  const isWindows = process.platform === 'win32'
+  const paths = ["/_next", "/static"];
+  const isWindows = process.platform === "win32";
 
-  const rscFile = /\/.+\.txt/
+  const rscFile = /\/.+\.txt/;
 
-  protocol.interceptFileProtocol('file', (request, callback) => {
-    let path = request.url.substr(isWindows ? 8 : 7)
+  protocol.interceptFileProtocol("file", (request, callback) => {
+    let path = request.url.substr(isWindows ? 8 : 7);
 
-    let newPath = path
+    let newPath = path;
 
     // On windows the request looks like: file:///C:/static/bar
     // On other systems it's file:///static/bar
     if (isWindows) {
-      newPath = newPath.substr(2)
+      newPath = newPath.substr(2);
     }
 
-    if (paths.some(prefix => newPath.startsWith(prefix)) || rscFile.test(newPath)) {
+    if (
+      paths.some((prefix) => newPath.startsWith(prefix)) ||
+      rscFile.test(newPath)
+    ) {
       if (isWindows) {
-        newPath = normalize(newPath)
+        newPath = normalize(newPath);
       }
 
-      newPath = join(directory, 'out', newPath)
-      path = newPath
+      newPath = join(directory, "out", newPath);
+      path = newPath;
     }
 
     // Electron doesn't like anything in the path to be encoded,
     // so we need to undo that. This specifically allows for
     // Electron apps with spaces in their app names.
-    path = decodeURIComponent(path)
+    path = decodeURIComponent(path);
 
-    callback({ path })
-  })
-}
+    callback({ path });
+  });
+};
 
 export default async (directories: Directories | string, port?: number) => {
   if (!directories) {
-    throw new Error('Renderer location not defined')
+    throw new Error("Renderer location not defined");
   }
 
-  if (typeof directories === 'string') {
+  if (typeof directories === "string") {
     directories = {
       production: directories,
-      development: directories
-    }
+      development: directories,
+    };
   }
 
   for (const directory in directories) {
     if (!Object.hasOwnProperty.call(directories, directory)) {
-      continue
+      continue;
     }
 
     if (!isAbsolute(directories[directory])) {
-      directories[directory] = resolve(directories[directory])
+      directories[directory] = resolve(directories[directory]);
     }
   }
 
-  const isDev = await import('electron-is-dev');
+  const isDev = await import("electron-is-dev");
   if (!isDev.default) {
-    adjustRenderer(directories.production)
-    return
+    adjustRenderer(directories.production);
+    return;
   }
 
-  await devServer(directories.development, port)
-}
+  await devServer(directories.development, port);
+};

@@ -1,6 +1,6 @@
 import { makeKey, OFFSETS } from "../lib/canvas_utils";
 
-export type Shape = "ansi" | "iso" | "backwards-l-slim" | "backwards-l-wide"
+export type Shape = "ansi" | "iso" | "backwards-l-slim" | "backwards-l-wide";
 
 export class Key {
   key: string;
@@ -26,7 +26,7 @@ export class Key {
       font?: string;
       shape?: Shape;
     },
-    text?: string
+    text?: string,
   ) {
     this.key = key;
     this.position = opts?.position ?? ["middle", "center"];
@@ -70,9 +70,9 @@ export class Keyboard {
           j,
           letter,
           "rgba(0, 0, 0, 0.5)",
-          Array.isArray(letter) ? letter[0].isInert : letter.isInert
+          Array.isArray(letter) ? letter[0].isInert : letter.isInert,
         );
-      })
+      }),
     );
   }
 
@@ -81,8 +81,8 @@ export class Keyboard {
       rows.some((key) =>
         Array.isArray(key)
           ? key[0].key === k || key[1].key === k
-          : key.key === k
-      )
+          : key.key === k,
+      ),
     );
   }
 
@@ -132,7 +132,7 @@ export class Keyboard {
     j: number,
     letter: Key | Key[],
     color: string,
-    isInert: boolean = false
+    isInert: boolean = false,
   ) {
     const width = 80;
     const height = 80;
@@ -156,7 +156,7 @@ export class Keyboard {
         letter[0].width || width,
         letter[0].height || height,
         letter[0],
-        color
+        color,
       );
       makeKey(
         ctx,
@@ -165,7 +165,7 @@ export class Keyboard {
         letter[1].width || width,
         letter[1].height || height,
         letter[1],
-        color
+        color,
       );
     } else {
       makeKey(
@@ -175,11 +175,8 @@ export class Keyboard {
         letter.width || width,
         letter.height || height,
         letter,
-        color
+        color,
       );
     }
   }
 }
-
-
-

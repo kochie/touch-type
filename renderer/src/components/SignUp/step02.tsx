@@ -67,6 +67,7 @@ export default function Step02({ onContinue, email }) {
       {({ isSubmitting, errors, touched, status }) => (
         <Form className="space-y-6">
           <Transition
+            as="div"
             appear={true}
             show={!!formErrors}
             enter="transition-opacity duration-100"

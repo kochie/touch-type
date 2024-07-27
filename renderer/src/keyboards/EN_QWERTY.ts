@@ -19,14 +19,14 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
     new Key(
       "Backspace",
       { position: ["bottom", "right"], width: 120, inert: true },
-      "delete"
+      "delete",
     ),
   ],
   [
     new Key(
       "Tab",
       { position: ["bottom", "left"], width: 120, inert: true },
-      "tab"
+      "tab",
     ),
     new Key("q", {}, "Q"),
     new Key("w", {}, "W"),
@@ -50,7 +50,7 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
         width: 142.5,
         inert: true,
       },
-      "caps lock"
+      "caps lock",
     ),
     new Key("a", {}, "A"),
     new Key("s", {}, "S"),
@@ -66,14 +66,14 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
     new Key(
       "Enter",
       { position: ["bottom", "right"], width: 142.5, inert: true },
-      "return"
+      "return",
     ),
   ],
   [
     new Key(
       "Shift",
       { position: ["bottom", "left"], width: 185, inert: true },
-      "shift"
+      "shift",
     ),
     new Key("z", {}, "Z"),
     new Key("x", {}, "X"),
@@ -88,7 +88,7 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
     new Key(
       "Shift",
       { position: ["bottom", "right"], width: 185, inert: true },
-      "shift"
+      "shift",
     ),
   ],
   [
@@ -96,12 +96,12 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
     new Key(
       "Control",
       { position: ["bottom", "center"], inert: true, icon: "\uf106" },
-      "control"
+      "control",
     ),
     new Key(
       "Alt",
       { position: ["bottom", "center"], inert: true, icon: "\ue318" },
-      "option"
+      "option",
     ),
     new Key(
       "Meta",
@@ -111,7 +111,7 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
         inert: true,
         icon: "\ue142",
       },
-      "command"
+      "command",
     ),
     new Key(" ", { width: 420 }),
     new Key(
@@ -122,12 +122,12 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
         inert: true,
         icon: "\ue142",
       },
-      "command"
+      "command",
     ),
     new Key(
       "Alt",
       { position: ["bottom", "center"], inert: true, icon: "\ue318" },
-      "option"
+      "option",
     ),
     new Key(
       "ArrowLeft",
@@ -136,7 +136,7 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
         inert: true,
         font: "bold 20px FontAwesome",
       },
-      "\uf0d9"
+      "\uf0d9",
     ),
     [
       new Key(
@@ -147,7 +147,7 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
           height: 37.5,
           font: "bold 20px FontAwesome",
         },
-        "\uf0d8"
+        "\uf0d8",
       ),
       new Key(
         "ArrowDown",
@@ -157,7 +157,7 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
           inert: true,
           font: "bold 20px FontAwesome",
         },
-        "\uf0d7"
+        "\uf0d7",
       ),
     ],
     new Key(
@@ -167,7 +167,7 @@ export const MACOS_US_QWERTY: KeyboardLayout = [
         inert: true,
         font: "bold 20px FontAwesome",
       },
-      "\uf0da"
+      "\uf0da",
     ),
   ],
 ];

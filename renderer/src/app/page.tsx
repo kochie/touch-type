@@ -62,7 +62,9 @@ export default function IndexPage() {
         handleAccount={() => modalDispatch({ type: "ACCOUNT" })}
         handleWhatsNew={() => modalDispatch({ type: "WHATS_NEW" })}
       />
+
       <Tracker modal={modal} />
+      
       <Modal
         open={modal === "SIGN_IN"}
         onClose={() => modalDispatch({ type: "NONE" })}
@@ -111,15 +113,13 @@ export default function IndexPage() {
         open={modal === "ACCOUNT"}
         onClose={() => modalDispatch({ type: "NONE" })}
       >
-          <Suspense fallback={<Loading />}>
-            <Account
-              onChangePassword={() =>
-                modalDispatch({ type: "RECOVER_ACCOUNT" })
-              }
-              onError={() => modalDispatch({ type: "NONE" })}
-              onCancel={() => modalDispatch({ type: "NONE" })}
-            />
-          </Suspense>
+        <Suspense fallback={<Loading />}>
+          <Account
+            onChangePassword={() => modalDispatch({ type: "RECOVER_ACCOUNT" })}
+            onError={() => modalDispatch({ type: "NONE" })}
+            onCancel={() => modalDispatch({ type: "NONE" })}
+          />
+        </Suspense>
       </Modal>
     </div>
   );

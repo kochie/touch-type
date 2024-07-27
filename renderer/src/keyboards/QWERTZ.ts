@@ -14,19 +14,19 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
     new Key("8"),
     new Key("9"),
     new Key("0"),
-    new Key("ß", {secondaryKey: "?"}, "ß"),
-    new Key("`", {secondaryKey: "´"}, "`"),
+    new Key("ß", { secondaryKey: "?" }, "ß"),
+    new Key("`", { secondaryKey: "´" }, "`"),
     new Key(
       "Backspace",
       { position: ["bottom", "right"], width: 120, inert: true },
-      "delete"
+      "delete",
     ),
   ],
   [
     new Key(
       "Tab",
       { position: ["bottom", "left"], width: 120, inert: true },
-      "tab"
+      "tab",
     ),
     new Key("q", {}, "Q"),
     new Key("w", {}, "W"),
@@ -39,7 +39,7 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
     new Key("o", {}, "O"),
     new Key("p", {}, "P"),
     new Key("ü", {}, "Ü"),
-    new Key("+", {secondaryKey: "*"}),
+    new Key("+", { secondaryKey: "*" }),
   ],
   [
     new Key(
@@ -49,7 +49,7 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
         width: 142.5,
         inert: true,
       },
-      "caps lock"
+      "caps lock",
     ),
     new Key("a", {}, "A"),
     new Key("s", {}, "S"),
@@ -62,18 +62,23 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
     new Key("l", {}, "L"),
     new Key("ö", {}, "Ö"),
     new Key("ä", {}, "Ä"),
-    new Key("#", {secondaryKey: "'"}, "'"),
+    new Key("#", { secondaryKey: "'" }, "'"),
     new Key(
       "Enter",
-      { position: ["top", "center"], width: 58, inert: true, shape: "backwards-l-slim"},
-      "↵"
+      {
+        position: ["top", "center"],
+        width: 58,
+        inert: true,
+        shape: "backwards-l-slim",
+      },
+      "↵",
     ),
   ],
   [
     new Key(
       "Shift",
       { position: ["bottom", "left"], width: 185, inert: true },
-      "shift"
+      "shift",
     ),
     new Key("y", {}, "Y"),
     new Key("x", {}, "X"),
@@ -81,14 +86,14 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
     new Key("v", {}, "V"),
     new Key("b", {}, "B"),
     new Key("n", {}, "N"),
-    new Key("m", {secondaryKey: "μ"}, "M"),
-    new Key(",", {secondaryKey: ";"}, ","),
-    new Key(".", {secondaryKey: ":"}, "."),
-    new Key("-", {secondaryKey: "_"}, "-"),
+    new Key("m", { secondaryKey: "μ" }, "M"),
+    new Key(",", { secondaryKey: ";" }, ","),
+    new Key(".", { secondaryKey: ":" }, "."),
+    new Key("-", { secondaryKey: "_" }, "-"),
     new Key(
       "Shift",
       { position: ["bottom", "right"], width: 185, inert: true },
-      "shift"
+      "shift",
     ),
   ],
   [
@@ -96,12 +101,12 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
     new Key(
       "Control",
       { position: ["bottom", "center"], inert: true, icon: "\uf106" },
-      "control"
+      "control",
     ),
     new Key(
       "Alt",
       { position: ["bottom", "center"], inert: true, icon: "\ue318" },
-      "option"
+      "option",
     ),
     new Key(
       "Meta",
@@ -111,7 +116,7 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
         inert: true,
         icon: "\ue142",
       },
-      "command"
+      "command",
     ),
     new Key(" ", { width: 420 }),
     new Key(
@@ -122,12 +127,12 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
         inert: true,
         icon: "\ue142",
       },
-      "command"
+      "command",
     ),
     new Key(
       "Alt",
       { position: ["bottom", "center"], inert: true, icon: "\ue318" },
-      "option"
+      "option",
     ),
     new Key(
       "ArrowLeft",
@@ -136,7 +141,7 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
         inert: true,
         font: "bold 20px FontAwesome",
       },
-      "\uf0d9"
+      "\uf0d9",
     ),
     [
       new Key(
@@ -147,7 +152,7 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
           height: 37.5,
           font: "bold 20px FontAwesome",
         },
-        "\uf0d8"
+        "\uf0d8",
       ),
       new Key(
         "ArrowDown",
@@ -157,7 +162,7 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
           inert: true,
           font: "bold 20px FontAwesome",
         },
-        "\uf0d7"
+        "\uf0d7",
       ),
     ],
     new Key(
@@ -167,7 +172,7 @@ export const MACOS_DE_QWERTZ: KeyboardLayout = [
         inert: true,
         font: "bold 20px FontAwesome",
       },
-      "\uf0da"
+      "\uf0da",
     ),
   ],
 ];

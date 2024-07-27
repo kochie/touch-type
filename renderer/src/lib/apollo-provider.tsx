@@ -1,19 +1,16 @@
 "use client";
 // ^ this file needs the "use client" pragma
 
-import {
-  ApolloLink,
-  HttpLink,
-} from "@apollo/client";
-import {
-  NextSSRApolloClient,
-  ApolloNextAppProvider,
-  NextSSRInMemoryCache,
-  SSRMultipartLink,
-} from "@apollo/experimental-nextjs-app-support/ssr";
+import { ApolloLink, HttpLink } from "@apollo/client";
 
 import { createAuthLink } from "aws-appsync-auth-link";
 import { fetchAuthSession } from "aws-amplify/auth";
+import {
+  ApolloClient,
+  InMemoryCache,
+  SSRMultipartLink,
+  ApolloNextAppProvider,
+} from "@apollo/experimental-nextjs-app-support";
 
 // have a function to create a client for you
 function makeClient() {
@@ -22,7 +19,10 @@ function makeClient() {
     region: "ap-southeast-2",
     auth: {
       type: "AMAZON_COGNITO_USER_POOLS",
-      jwtToken: () => fetchAuthSession().then((session) => session.tokens?.accessToken.toString() ?? ""),
+      jwtToken: () =>
+        fetchAuthSession().then(
+          (session) => session.tokens?.accessToken.toString() ?? "",
+        ),
     },
   });
 
@@ -34,9 +34,9 @@ function makeClient() {
     fetchOptions: { cache: "no-store" },
   });
 
-  return new NextSSRApolloClient({
+  return new ApolloClient({
     // use the `NextSSRInMemoryCache`, not the normal `InMemoryCache`
-    cache: new NextSSRInMemoryCache(),
+    cache: new InMemoryCache(),
     link:
       typeof window === "undefined"
         ? ApolloLink.from([

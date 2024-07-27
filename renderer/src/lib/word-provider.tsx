@@ -63,7 +63,7 @@ export const WordProvider = ({ children }) => {
   const getWordList = useCallback(async () => {
     // @ts-expect-error
     const buffer = (await window.electronAPI.getWordSet(
-      settings.language
+      settings.language,
     )) as Uint8Array;
 
     const words = new TextDecoder("utf-8")
@@ -73,7 +73,7 @@ export const WordProvider = ({ children }) => {
 
     const filtered = words
       .filter((word) =>
-        word.match(getRegExp(settings.levelName, settings.keyboardName))
+        word.match(getRegExp(settings.levelName, settings.keyboardName)),
       )
       .filter((word) => !naughty.en.includes(word));
 

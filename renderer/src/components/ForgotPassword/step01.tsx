@@ -41,7 +41,7 @@ export function Step01({ onContinue }) {
         setFormErrors("");
 
         try {
-          await resetPassword({username: values.email});
+          await resetPassword({ username: values.email });
 
           setSubmitting(false);
           setStatus("COMPLETE");
@@ -57,6 +57,7 @@ export function Step01({ onContinue }) {
       {({ isSubmitting, errors, touched, status }) => (
         <Form className="space-y-6">
           <Transition
+            as="div"
             appear={true}
             show={!!formErrors}
             enter="transition-opacity duration-100"

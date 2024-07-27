@@ -54,7 +54,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
       matchMedia(`(resolution: ${pr}dppx)`).addEventListener(
         "change",
         updatePixelRatio,
-        { once: true }
+        { once: true },
       );
     };
     updatePixelRatio();

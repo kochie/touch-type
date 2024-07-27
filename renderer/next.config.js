@@ -21,7 +21,7 @@ const nextConfig = {
   /* config options here */
   webpack: (
     config,
-    { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
+    { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack },
   ) => {
     // Important: return the modified config
 
@@ -41,7 +41,7 @@ const nextConfig = {
   experimental: {
     mdxRs: true,
   },
-  output: 'export',
+  output: "export",
   images: {
     unoptimized: true,
     // loader: 'custom',
@@ -66,5 +66,5 @@ const withMDX = MDX({
 });
 
 module.exports = withMDX(
-  withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  withSentryConfig(nextConfig, sentryWebpackPluginOptions),
 );

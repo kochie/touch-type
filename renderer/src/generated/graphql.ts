@@ -16,34 +16,85 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type InputLeaderboard = {
+  keyboard: Scalars['String']['input'];
+  language: Scalars['String']['input'];
+  level: Scalars['String']['input'];
+};
+
+export type InputResult = {
+  correct: Scalars['Int']['input'];
+  incorrect: Scalars['Int']['input'];
+  keyboard: Scalars['String']['input'];
+  language: Scalars['String']['input'];
+  level: Scalars['String']['input'];
+  time: Scalars['String']['input'];
+};
+
 export type InputSettings = {
   analytics: Scalars['Boolean']['input'];
   keyboardName: Scalars['String']['input'];
   language: Scalars['String']['input'];
   levelName: Scalars['String']['input'];
+  publishToLeaderboard: Scalars['Boolean']['input'];
   theme: Scalars['String']['input'];
   whatsNewOnStartup: Scalars['Boolean']['input'];
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
-  putSettings: Settings;
+  addResult: Result;
+  removeAllResults: Scalars['Boolean']['output'];
+  updateSettings: Settings;
 };
 
 
-export type MutationPutSettingsArgs = {
+export type MutationAddResultArgs = {
+  result: InputResult;
+};
+
+
+export type MutationUpdateSettingsArgs = {
   settings: InputSettings;
-  userId: Scalars['String']['input'];
+};
+
+export type Plan = {
+  __typename?: 'Plan';
+  auto_renew?: Maybe<Scalars['Boolean']['output']>;
+  billing_period?: Maybe<Scalars['String']['output']>;
+  billing_plan?: Maybe<Scalars['String']['output']>;
+  next_billing_date?: Maybe<Scalars['String']['output']>;
 };
 
 export type Query = {
   __typename?: 'Query';
-  getSettings: Settings;
+  leaderboards: Scores;
+  results: Array<Result>;
+  settings: Settings;
+  subscription: Plan;
 };
 
 
-export type QueryGetSettingsArgs = {
-  userId: Scalars['String']['input'];
+export type QueryLeaderboardsArgs = {
+  leaderboard: InputLeaderboard;
+};
+
+export type Result = {
+  __typename?: 'Result';
+  correct: Scalars['Int']['output'];
+  incorrect: Scalars['Int']['output'];
+  keyboard: Scalars['String']['output'];
+  language: Scalars['String']['output'];
+  level: Scalars['String']['output'];
+  time: Scalars['String']['output'];
+};
+
+export type Scores = {
+  __typename?: 'Scores';
+  correct: Scalars['Int']['output'];
+  incorrect: Scalars['Int']['output'];
+  time: Scalars['String']['output'];
+  userName: Scalars['String']['output'];
 };
 
 export type Settings = {
@@ -52,6 +103,7 @@ export type Settings = {
   keyboardName: Scalars['String']['output'];
   language: Scalars['String']['output'];
   levelName: Scalars['String']['output'];
+  publishToLeaderboard: Scalars['Boolean']['output'];
   theme: Scalars['String']['output'];
   whatsNewOnStartup: Scalars['Boolean']['output'];
 };
@@ -128,9 +180,15 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  InputLeaderboard: InputLeaderboard;
+  InputResult: InputResult;
   InputSettings: InputSettings;
+  Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
+  Plan: ResolverTypeWrapper<Plan>;
   Query: ResolverTypeWrapper<{}>;
+  Result: ResolverTypeWrapper<Result>;
+  Scores: ResolverTypeWrapper<Scores>;
   Settings: ResolverTypeWrapper<Settings>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
 };
@@ -138,19 +196,56 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
+  InputLeaderboard: InputLeaderboard;
+  InputResult: InputResult;
   InputSettings: InputSettings;
+  Int: Scalars['Int']['output'];
   Mutation: {};
+  Plan: Plan;
   Query: {};
+  Result: Result;
+  Scores: Scores;
   Settings: Settings;
   String: Scalars['String']['output'];
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  putSettings?: Resolver<ResolversTypes['Settings'], ParentType, ContextType, RequireFields<MutationPutSettingsArgs, 'settings' | 'userId'>>;
+  addResult?: Resolver<ResolversTypes['Result'], ParentType, ContextType, RequireFields<MutationAddResultArgs, 'result'>>;
+  removeAllResults?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  updateSettings?: Resolver<ResolversTypes['Settings'], ParentType, ContextType, RequireFields<MutationUpdateSettingsArgs, 'settings'>>;
+};
+
+export type PlanResolvers<ContextType = any, ParentType extends ResolversParentTypes['Plan'] = ResolversParentTypes['Plan']> = {
+  auto_renew?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  billing_period?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  billing_plan?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  next_billing_date?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  getSettings?: Resolver<ResolversTypes['Settings'], ParentType, ContextType, RequireFields<QueryGetSettingsArgs, 'userId'>>;
+  leaderboards?: Resolver<ResolversTypes['Scores'], ParentType, ContextType, RequireFields<QueryLeaderboardsArgs, 'leaderboard'>>;
+  results?: Resolver<Array<ResolversTypes['Result']>, ParentType, ContextType>;
+  settings?: Resolver<ResolversTypes['Settings'], ParentType, ContextType>;
+  subscription?: Resolver<ResolversTypes['Plan'], ParentType, ContextType>;
+};
+
+export type ResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['Result'] = ResolversParentTypes['Result']> = {
+  correct?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  incorrect?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  time?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ScoresResolvers<ContextType = any, ParentType extends ResolversParentTypes['Scores'] = ResolversParentTypes['Scores']> = {
+  correct?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  incorrect?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  time?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  userName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type SettingsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Settings'] = ResolversParentTypes['Settings']> = {
@@ -158,6 +253,7 @@ export type SettingsResolvers<ContextType = any, ParentType extends ResolversPar
   keyboardName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   levelName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  publishToLeaderboard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   theme?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   whatsNewOnStartup?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -165,7 +261,10 @@ export type SettingsResolvers<ContextType = any, ParentType extends ResolversPar
 
 export type Resolvers<ContextType = any> = {
   Mutation?: MutationResolvers<ContextType>;
+  Plan?: PlanResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Result?: ResultResolvers<ContextType>;
+  Scores?: ScoresResolvers<ContextType>;
   Settings?: SettingsResolvers<ContextType>;
 };
 

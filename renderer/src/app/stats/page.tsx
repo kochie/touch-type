@@ -6,9 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import React from "react";
 
-
 const StatsPage = () => {
-
   return (
     <div className="w-screen min-h-screen dark:text-white">
       <div className="">

@@ -1,22 +1,22 @@
-"use client"
+"use client";
 import { useEffect, useRef, useState } from "react";
 import {
-    axisBottom,
-    axisLeft,
-    axisRight,
-    InternSet,
-    interpolateBlues,
-    interpolateGreens,
-    interpolateOranges,
-    interpolatePurples,
-    interpolateReds,
-    map,
-    max,
-    scaleBand,
-    scaleLinear,
-    scaleSequential,
-    select,
-  } from "d3";
+  axisBottom,
+  axisLeft,
+  axisRight,
+  InternSet,
+  interpolateBlues,
+  interpolateGreens,
+  interpolateOranges,
+  interpolatePurples,
+  interpolateReds,
+  map,
+  max,
+  scaleBand,
+  scaleLinear,
+  scaleSequential,
+  select,
+} from "d3";
 import { Duration } from "luxon";
 import { range } from "lodash";
 
@@ -33,7 +33,6 @@ interface Result {
 }
 
 export default function Barline() {
-
   const [results, setResults] = useState<Result[]>([]);
 
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
@@ -82,7 +81,7 @@ export default function Barline() {
       }),
       ...results.slice(
         Math.max(results.length - CHART_SIZE, 0),
-        results.length
+        results.length,
       ),
     ];
 
@@ -142,7 +141,7 @@ export default function Barline() {
           .attr("x2", -width + marginLeft + marginRight)
           // .attr("stroke-opacity", 0.5)
           // .attr("stroke", )
-          .attr("stroke-dasharray", "5,5")
+          .attr("stroke-dasharray", "5,5"),
       );
 
     // svg
@@ -198,7 +197,7 @@ export default function Barline() {
         // let num = Math.round((d.value / d.data.all) * 100).toString() + "%";
         div
           .html(
-            Y[i].toFixed(0) + "cpm on Level: " + (LEVEL[i] ? LEVEL[i] : "3")
+            Y[i].toFixed(0) + "cpm on Level: " + (LEVEL[i] ? LEVEL[i] : "3"),
           )
           .style("left", d.pageX + 10 + "px")
           .style("top", d.pageY - 15 + "px");
@@ -244,5 +243,5 @@ export default function Barline() {
       div.remove();
     };
   }, [width, height, results]);
-    return <svg ref={svgRef} className="mx-auto" />  
+  return <svg ref={svgRef} className="mx-auto" />;
 }

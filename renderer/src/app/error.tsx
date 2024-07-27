@@ -1,11 +1,9 @@
+"use client"; // Error components must be Client Components
 
-'use client'; // Error components must be Client Components
- 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 import * as Sentry from "@sentry/nextjs";
 
- 
 export default function Error({
   error,
   reset,
@@ -19,7 +17,7 @@ export default function Error({
 
     console.error(error);
   }, [error]);
- 
+
   return (
     <div>
       <h2>Something went wrong!</h2>

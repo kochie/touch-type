@@ -1,6 +1,11 @@
 "use client";
 import { use, useEffect, useState } from "react";
-import { deleteUser, fetchUserAttributes, getCurrentUser, signOut, updateUserAttributes } from "aws-amplify/auth";
+import {
+  deleteUser,
+  fetchUserAttributes,
+  signOut,
+  updateUserAttributes,
+} from "aws-amplify/auth";
 import Button from "../Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
@@ -15,7 +20,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   const handleSignOut = async () => {
     setSubmitting(true);
     await signOut();
-    onError()
+    onError();
     setSubmitting(false);
   };
 
@@ -24,7 +29,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
 
     if (
       confirm(
-        "For real, this will delete your account and all data associated with it. Are you sure?"
+        "For real, this will delete your account and all data associated with it. Are you sure?",
       )
     ) {
       await deleteUser();
@@ -36,18 +41,20 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     if (user === null) {
       onError();
     }
-  }, [user])
+  }, [user]);
 
-  if (!user) return null
+  if (!user) return null;
 
-  const attributes = use(fetchUserAttributes().catch(error => {
-    onError()
-    return {
-      email: "",
-      phone_number: "",
-      name: ""
-    }
-  }))
+  const attributes = use(
+    fetchUserAttributes().catch((error) => {
+      onError();
+      return {
+        email: "",
+        phone_number: "",
+        name: "",
+      };
+    }),
+  );
 
   return (
     <div className="h-full">
@@ -62,6 +69,8 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                 Change details associated with your account.
               </p>
 
+              {/* <Link href="/account/billing">Billing</Link> */}
+
               <Formik
                 initialValues={{
                   email: attributes.email,
@@ -72,9 +81,9 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                   await updateUserAttributes({
                     userAttributes: {
                       email: values.email,
-                    name: values.name,
-                    phone_number: values.phone,
-                    }
+                      name: values.name,
+                      phone_number: values.phone,
+                    },
                   });
 
                   setSubmitting(false);

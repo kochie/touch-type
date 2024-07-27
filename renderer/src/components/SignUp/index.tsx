@@ -6,7 +6,7 @@ import { useReducer } from "react";
 import Step02 from "./step02";
 import Step03 from "./step03";
 
-import background from "@/assets/bg.png"
+import background from "@/assets/bg.png";
 
 const reducer = (state, action) => {
   switch (action.type) {

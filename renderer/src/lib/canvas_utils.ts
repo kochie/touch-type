@@ -97,7 +97,6 @@ export function makeKey(
       break;
   }
 
-
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";
   if (letter.secondaryKey) {
@@ -128,7 +127,7 @@ export function roundRect(
   height: number,
   r = 5,
   fill = false,
-  stroke = true
+  stroke = true,
 ) {
   const radius = { tl: r, tr: r, br: r, bl: r };
 
@@ -141,7 +140,7 @@ export function roundRect(
     x + width,
     y + height,
     x + width - radius.br,
-    y + height
+    y + height,
   );
   ctx.lineTo(x + radius.bl, y + height);
   ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
@@ -165,10 +164,10 @@ export function roundLShape(
   height: number,
   r = 5,
   fill = false,
-  stroke = true
+  stroke = true,
 ) {
-  const radius = { tl: r, tr: r, br: r, bl: r, ml: r, mr: r/2 };
-  const gap = 5
+  const radius = { tl: r, tr: r, br: r, bl: r, ml: r, mr: r / 2 };
+  const gap = 5;
   const H = height + gap;
   const W = 22;
 
@@ -177,7 +176,12 @@ export function roundLShape(
   ctx.lineTo(x, y + height - radius.bl); // goto bottom right
   ctx.quadraticCurveTo(x, y + height, x + radius.bl, y + height); // curve to right
   ctx.lineTo(x + width - radius.br, y + height); // goto top right
-  ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius.br); // curve to top
+  ctx.quadraticCurveTo(
+    x + width,
+    y + height,
+    x + width,
+    y + height - radius.br,
+  ); // curve to top
   ctx.lineTo(x + width, y - H + radius.tr); // goto top left
   ctx.quadraticCurveTo(x + width, y - H, x + width - radius.tr, y - H); // curve to left
   ctx.lineTo(x - W + radius.tl, y - H); // goto bottom left

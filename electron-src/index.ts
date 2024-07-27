@@ -2,7 +2,14 @@
 import { join } from "path";
 import { format } from "url";
 
-import { app, BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent, MessageBoxOptions } from "electron";
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  IpcMainInvokeEvent,
+  MessageBoxOptions,
+} from "electron";
 // import isDev from "electron-is-dev";
 // import isDev from 'electron-is-dev';
 import prepareNext from "./electron-next";
@@ -22,17 +29,18 @@ log.info("App starting...");
 
 async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
   try {
-    const file = await readFile(join(__dirname, "../wordsets/", `${language}.txt`))
-    return file
+    const file = await readFile(
+      join(__dirname, "../wordsets/", `${language}.txt`),
+    );
+    return file;
   } catch (error) {
-    return new Uint8Array()
+    return new Uint8Array();
   }
 }
 
 // Prepare the renderer once the app is ready
 app.on("ready", async () => {
-  ipcMain.handle('getWordSet', handleWordSet)
-
+  ipcMain.handle("getWordSet", handleWordSet);
 
   await prepareNext("./renderer");
   autoUpdater.checkForUpdatesAndNotify();
@@ -64,7 +72,11 @@ app.on("ready", async () => {
   });
 
   // mainWindow.setVibrancy("under-window");
-  const isDev = await import('electron-is-dev');
+  const isDev = await import("electron-is-dev");
+
+  if (isDev.default) {
+    console.log("Running in development");
+  }
 
   const url = isDev.default
     ? "http://localhost:8000/"

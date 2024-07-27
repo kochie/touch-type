@@ -9,7 +9,6 @@ export default function User({ signIn, account }) {
   const user = useUser();
 
   if (!user) {
-
     return (
       <div onClick={signIn} title="Sign In or Sign Up">
         <FontAwesomeIcon

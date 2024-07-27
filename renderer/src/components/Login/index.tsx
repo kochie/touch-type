@@ -71,6 +71,7 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
             {({ isSubmitting, errors, touched, status }) => (
               <Form className="space-y-6">
                 <Transition
+                  as="div"
                   appear={true}
                   show={!!formErrors}
                   enter="transition-opacity duration-100"

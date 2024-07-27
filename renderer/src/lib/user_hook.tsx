@@ -1,10 +1,5 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { AuthUser } from "aws-amplify/auth";
+import { createContext, useContext, useLayoutEffect, useState } from "react";
+import { AuthUser, getCurrentUser } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 
 type UserContextProps = AuthUser | null;
@@ -22,10 +17,12 @@ export const UserProvider = ({ children }) => {
   //     setUser(null);
   //   }
   // }
+  // console.log("UserProvider");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // getUser();
     const stopCallback = Hub.listen("auth", async ({ payload }) => {
+      console.log(payload)
       switch (payload.event) {
         case "signedIn":
           _setUser(payload.data);
@@ -33,12 +30,18 @@ export const UserProvider = ({ children }) => {
         case "signedOut":
           _setUser(null);
           break;
-        
       }
     });
 
     return stopCallback;
   }, []);
+
+  
+    useLayoutEffect(() => {
+      getCurrentUser().then((user) => {
+        _setUser(user);
+      });
+    }, [])
 
   return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 };

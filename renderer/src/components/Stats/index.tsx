@@ -76,18 +76,17 @@ export default function TopStats() {
         (Duration.fromISO(res.time).toMillis() / 1000 / 60),
     }));
 
-
     // using luxon get start of day
 
     // get the average accuracy for todays results
     const todaysResults = computed.filter((result) =>
-      DateTime.fromMillis(result.datetime ?? 0).hasSame(DateTime.now(), "day")
+      DateTime.fromMillis(result.datetime ?? 0).hasSame(DateTime.now(), "day"),
     );
 
     const thisWeeksResults = computed.filter(
       (result) =>
         DateTime.fromMillis(result.datetime ?? 0) <
-        DateTime.now().startOf("day")
+        DateTime.now().startOf("day"),
     );
 
     const accuracy1 = calculateAverageCorrect(todaysResults);
@@ -165,7 +164,7 @@ const Accuracy = ({ accuracy }: { accuracy: Stat }) => (
           accuracy.changeType === "increase"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800",
-          "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0"
+          "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0",
         )}
       >
         {accuracy.changeType === "increase" ? (
@@ -208,7 +207,7 @@ const Speed = ({ speed }: { speed: Stat }) => (
           speed.changeType === "increase"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800",
-          "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0"
+          "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0",
         )}
       >
         {speed.changeType === "increase" ? (
@@ -249,7 +248,7 @@ const Streak = ({ streak }: { streak: Stat }) => (
           streak.changeType === "increase"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800",
-          "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0"
+          "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0",
         )}
       >
         {streak.changeType === "decrease" ? (

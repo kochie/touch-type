@@ -47,7 +47,7 @@ export default function Tracker({ modal }) {
   const settings = useSettings();
 
   const [words, setWords] = useState("");
-  const [wordList] = useWords()
+  const [wordList] = useWords();
 
   const [{ correct, incorrect, time, letters }, statsDispatch] = useReducer(
     statsReducer,
@@ -57,7 +57,7 @@ export default function Tracker({ modal }) {
       time: Interval.after(DateTime.now(), 0),
       start: DateTime.now(),
       letters: [],
-    }
+    },
   );
 
   // const getWordList = useCallback(async () => {
@@ -82,7 +82,6 @@ export default function Tracker({ modal }) {
     setWords(pinned);
   }, [wordList]);
 
-
   useEffect(() => {
     resetWords();
   }, [resetWords]);
@@ -95,7 +94,7 @@ export default function Tracker({ modal }) {
   const cpm = total / m;
   const p = (correct / total) * 100;
 
-  const keyboardLayout = lookupKeyboard(settings.keyboardName)
+  const keyboardLayout = lookupKeyboard(settings.keyboardName);
   const keyboard = new Keyboard(keyboardLayout);
 
   const intervalFn = () => {
@@ -157,9 +156,9 @@ export default function Tracker({ modal }) {
             datetime: Date.now(),
             level: settings.levelName,
             keyboard: settings.keyboardName,
-            language: settings.language
+            language: settings.language,
           },
-        ])
+        ]),
       );
       // dispatch({ type: "RESET" });
       statsDispatch({ type: "RESET" });
