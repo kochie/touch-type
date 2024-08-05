@@ -41,6 +41,7 @@ export enum Languages {
   FRENCH = "fr",
   GERMAN = "de",
   SPANISH = "es",
+  MAORI = "mi"
 }
 
 const SettingsContext = createContext({

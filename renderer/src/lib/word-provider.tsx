@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import { Levels, useSettings } from "./settings_hook";
-import { LEVEL_1_QWERTY, LEVEL_2_QWERTY, LEVEL_3_QWERTY } from "./levels";
+import { LEVEL_1_QWERTY, LEVEL_1_QWERTY_MI, LEVEL_2_QWERTY, LEVEL_2_QWERTY_MI, LEVEL_3_QWERTY, LEVEL_3_QWERTY_MI } from "./levels";
 import { KeyboardLayoutNames } from "@/keyboards";
 import naughty from "naughty-words";
 
@@ -51,6 +51,17 @@ function getRegExp(levelName: Levels, keyboardName: KeyboardLayoutNames) {
         default:
           return /^[a-z]{1,6}$/;
       }
+    case KeyboardLayoutNames.MACOS_NZ_QWERTY:
+      switch (levelName) {
+        case Levels.LEVEL_1:
+          return LEVEL_1_QWERTY_MI;
+        case Levels.LEVEL_2:
+          return LEVEL_2_QWERTY_MI;
+        case Levels.LEVEL_3:
+          return LEVEL_3_QWERTY_MI;
+        default:
+          return /^[a-z]{1,6}$/;
+      }
     default:
       return /^[a-z]{1,6}$/;
   }
@@ -70,6 +81,8 @@ export const WordProvider = ({ children }) => {
       .decode(buffer)
       .replaceAll("\r", "")
       .split("\n");
+
+    console.log(`found ${words.length} words`)
 
     const filtered = words
       .filter((word) =>
