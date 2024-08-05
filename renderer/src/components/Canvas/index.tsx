@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef, useState } from "react";
+import React, { MutableRefObject, useEffect, useReducer, useRef, useState } from "react";
 // import { KEYS } from "../../lib/canvas_utils";
 
 // @ts-ignore
@@ -10,8 +10,17 @@ import FontAwesomeSolid from "@/assets/fontawesome-pro-6.1.2-web/webfonts/fa-sol
 import { useSettings } from "@/lib/settings_hook";
 import { Keyboard } from "@/keyboards/key";
 import { lookupKeyboard } from "@/keyboards";
+import { LetterStat } from "../Tracker/reducers";
+import { KeyPress } from "../Tracker";
 
-const resizer = (state, action) => {
+type ResizerAction = { type: "RESIZE" } | { type: "PR" };
+interface ResizerState {
+  width: number;
+  height: number;
+  pr: number;
+}
+
+const resizer = (state: ResizerState, action: ResizerAction) => {
   switch (action.type) {
     case "RESIZE":
       return {
@@ -29,7 +38,14 @@ const resizer = (state, action) => {
   }
 };
 
-const Canvas = ({ letters, keyDown, keys, intervalFn }) => {
+interface CanvasProps {
+  letters: LetterStat[];
+  keyDown: (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => void;
+  keys: MutableRefObject<KeyPress[]>;
+  intervalFn: () => void;
+}
+
+const Canvas = ({ letters, keyDown, keys, intervalFn }: CanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [{ width, height, pr }, resizeDispatch] = useReducer(resizer, {

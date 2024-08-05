@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { statsReducer } from "./reducers";
+import { LetterStat, StatAction, statsReducer, StatState } from "./reducers";
 import { DateTime, Interval } from "luxon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -14,6 +14,10 @@ import sampleSize from "lodash.samplesize";
 import { useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
 import { lookupKeyboard } from "@/keyboards";
+import { useMutation } from "@apollo/client";
+import { PUT_RESULT } from "@/transactions/putResult";
+import { useResults } from "@/lib/result-provider";
+import { useModal } from "@/lib/modal-provider";
 
 // import wordBlob from "@/assets/words.txt";
 
@@ -35,7 +39,7 @@ import { lookupKeyboard } from "@/keyboards";
 
 // const wordList = wordBlob.replaceAll("\r", "").split("\n");
 
-interface KeyPress {
+export interface KeyPress {
   key: Key;
   ttl: number;
   i: number;
@@ -43,21 +47,27 @@ interface KeyPress {
   correct: boolean;
 }
 
-export default function Tracker({ modal }) {
+const initialStat: StatState = {
+  correct: 0,
+  incorrect: 0,
+  time: Interval.after(DateTime.now(), 0),
+  start: DateTime.now(),
+  letters: [] as LetterStat[],
+  immutableLetters: [] as LetterStat[],
+};
+
+export default function Tracker() {
   const settings = useSettings();
+  const {modal} = useModal()
 
   const [words, setWords] = useState("");
   const [wordList] = useWords();
 
-  const [{ correct, incorrect, time, letters }, statsDispatch] = useReducer(
+  const {putResult} = useResults()
+
+  const [{ correct, incorrect, time, letters, immutableLetters }, statsDispatch] = useReducer(
     statsReducer,
-    {
-      correct: 0,
-      incorrect: 0,
-      time: Interval.after(DateTime.now(), 0),
-      start: DateTime.now(),
-      letters: [],
-    },
+    initialStat,
   );
 
   // const getWordList = useCallback(async () => {
@@ -136,30 +146,42 @@ export default function Tracker({ modal }) {
       keys.current.push({ key: key, ttl: 255, i, j, correct: true });
     } else {
       // dispatch({ type: "INCORRECT", key: words[letters.length] });
-      statsDispatch({ type: "INCORRECT", key: words[letters.length] });
+      statsDispatch({
+        type: "INCORRECT",
+        key: words[letters.length],
+        pressedKey: e.key,
+      });
       keys.current.push({ key: key, ttl: 255, i, j, correct: false });
     }
 
     if (letters.length === words.length - 1) {
       // const filtered = ()
+      const results = {
+        correct,
+        incorrect,
+        keyPresses: [...immutableLetters],
+        time: (time as Interval).toDuration().toISO() ?? "",
+        datetime: new Date().toISOString(),
+        level: settings.levelName,
+        keyboard: settings.keyboardName,
+        language: settings.language,
+      };
+      putResult(results)
+
+      
+
+      // TODO: catch error with notification
+      // TODO: check if looged in first
+      
+
       resetWords();
       // setWords(sampleSize(filtered, 15).join(" ").replace("  ", ""));
-      const prevResults = JSON.parse(localStorage.getItem("results") ?? "[]");
-      localStorage.setItem(
-        "results",
-        JSON.stringify([
-          ...prevResults,
-          {
-            correct,
-            incorrect,
-            time: (time as Interval).toDuration().toISO(),
-            datetime: Date.now(),
-            level: settings.levelName,
-            keyboard: settings.keyboardName,
-            language: settings.language,
-          },
-        ]),
-      );
+      // const prevResults = JSON.parse(localStorage.getItem("results") ?? "[]");
+      // localStorage.setItem(
+      //   "results",
+      //   JSON.stringify([...prevResults, results]),
+      // );
+
       // dispatch({ type: "RESET" });
       statsDispatch({ type: "RESET" });
     }

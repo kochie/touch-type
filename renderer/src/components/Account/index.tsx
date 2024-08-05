@@ -52,6 +52,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
         email: "",
         phone_number: "",
         name: "",
+        preferred_username: "",
       };
     }),
   );
@@ -76,6 +77,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                   email: attributes.email,
                   phone: attributes.phone_number,
                   name: attributes.name,
+                  username: attributes.preferred_username,
                 }}
                 onSubmit={async (values) => {
                   await updateUserAttributes({
@@ -83,6 +85,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                       email: values.email,
                       name: values.name,
                       phone_number: values.phone,
+                      preferred_username: values.username,
                     },
                   });
 
@@ -92,6 +95,26 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                 {({ isSubmitting }) => (
                   <Form>
                     <div className="mt-5 grid grid-cols-4 gap-3">
+                    <div className="col-span-2">
+                        <label
+                          htmlFor="username"
+                          className="block text-sm font-medium leading-6 text-gray-900"
+                        >
+                          Username
+                        </label>
+                        <div className="mt-2">
+                          <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600">
+                            <Field
+                              type="text"
+                              name="username"
+                              id="username"
+                              autoComplete="username"
+                              className="block flex-1 border-0 bg-transparent text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                              placeholder=""
+                            />
+                          </div>
+                        </div>
+                      </div>
                       <div className="col-span-4">
                         <label
                           htmlFor="name"

@@ -46,7 +46,7 @@ interface Result {
   level: number;
   keyboard: string;
   language: string;
-  datetime: number;
+  datetime: string;
 }
 
 function calculateAverageCorrect(results: Result[]) {
@@ -80,12 +80,12 @@ export default function TopStats() {
 
     // get the average accuracy for todays results
     const todaysResults = computed.filter((result) =>
-      DateTime.fromMillis(result.datetime ?? 0).hasSame(DateTime.now(), "day"),
+      DateTime.fromISO(result.datetime ?? 0).hasSame(DateTime.now(), "day"),
     );
 
     const thisWeeksResults = computed.filter(
       (result) =>
-        DateTime.fromMillis(result.datetime ?? 0) <
+        DateTime.fromISO(result.datetime ?? 0) <
         DateTime.now().startOf("day"),
     );
 

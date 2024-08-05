@@ -9,10 +9,9 @@ const isLinux = os.platform() === "linux";
 
 import "@/styles/globals.css";
 import Fathom from "@/components/Fathom";
+import clsx from "clsx";
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
+
 
 Amplify.configure(
   {
@@ -34,12 +33,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={classNames(
+        className={clsx(
           !isMac && "dark:text-white text-black dark:bg-zinc-800 bg-zinc-300",
+          "w-screen min-h-screen dark:text-white"
         )}
       >
         <Fathom />
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

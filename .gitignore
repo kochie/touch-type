@@ -43,3 +43,5 @@ next-env.d.ts
 .env
 *.provisionprofile
 main/
+
+private_keys/

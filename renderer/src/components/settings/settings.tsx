@@ -10,10 +10,6 @@ import {
   useSettingsDispatch,
 } from "@/lib/settings_hook";
 import { Description, Field, Label, Select, Switch } from "@headlessui/react";
-// import { useEffect } from "react";
-// import { gql, useMutation } from "@apollo/client";
-// import { useUser } from "@/lib/user_hook";
-// import { PUT_SETTINGS } from "@/transactions/putSettings";
 import { platform } from "os";
 import KeyboardSelect from "../KeyboardSelect";
 import clsx from "clsx";
@@ -74,7 +70,7 @@ const Settings = () => {
             onChange={(e) => {
               dispatchSettings({
                 type: "CHANGE_LANGUAGE",
-                language: e.target.value,
+                language: e.target.value as Languages,
               });
             }}
           >

@@ -45,9 +45,12 @@ export class Keyboard {
   rows: (Key | Key[])[][];
   width: number = 80;
   gap: number = 5;
+  scale: number = 1;
 
-  constructor(rows: (Key | Key[])[][]) {
+  constructor(rows: (Key | Key[])[][], scale: number = 1) {
     this.rows = rows;
+    this.scale = scale;
+    this.gap = this.gap * this.scale;
   }
 
   getRowWidth(rowNumber: number) {
@@ -134,8 +137,8 @@ export class Keyboard {
     color: string,
     isInert: boolean = false,
   ) {
-    const width = 80;
-    const height = 80;
+    const width = 80
+    const height = 80
 
     const keyboardLength = this.getRowWidth(0);
     const offset = (window.innerWidth - keyboardLength) / 2 + OFFSETS[i];
@@ -151,31 +154,34 @@ export class Keyboard {
     if (Array.isArray(letter)) {
       makeKey(
         ctx,
-        x + offset,
-        i * (height + this.gap),
-        letter[0].width || width,
-        letter[0].height || height,
+        (x + offset) * this.scale,
+        (i * (height + this.gap)) * this.scale,
+        (letter[0].width || width) * this.scale,
+        (letter[0].height || height) * this.scale,
         letter[0],
         color,
+        this.scale
       );
       makeKey(
         ctx,
-        x + offset,
-        i * (height + this.gap) + letter[0].height + this.gap,
-        letter[1].width || width,
-        letter[1].height || height,
+        (x + offset) * this.scale,
+        (i * (height + this.gap) + letter[0].height + this.gap) * this.scale,
+        (letter[1].width || width) * this.scale,
+        (letter[1].height || height) * this.scale,
         letter[1],
         color,
+        this.scale
       );
     } else {
       makeKey(
         ctx,
-        x + offset,
-        i * (height + this.gap),
-        letter.width || width,
-        letter.height || height,
+        (x + offset) * this.scale,
+        (i * (height + this.gap)) * this.scale,
+        (letter.width || width) * this.scale,
+        (letter.height || height) * this.scale,
         letter,
         color,
+        this.scale
       );
     }
   }

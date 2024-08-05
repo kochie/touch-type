@@ -21,19 +21,17 @@ import { Duration } from "luxon";
 import { range } from "lodash";
 
 import styles from "@/styles/stats.module.css";
+import { Result, useResults } from "@/lib/result-provider";
 
 const marginTop = 20; // the top margin, in pixels
 const marginRight = 40; // the right margin, in pixels
 const marginBottom = 100; // the bottom margin, in pixels
 const marginLeft = 40;
 
-interface Result {
-  correct: number;
-  incorrect: number;
-}
 
 export default function Barline() {
-  const [results, setResults] = useState<Result[]>([]);
+  const {results} = useResults()
+  const [computedResults, setComputedResults] = useState<Result[]>([]);
 
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
 
@@ -49,14 +47,15 @@ export default function Barline() {
     window.addEventListener("resize", resize);
     resize();
 
-    const storedResults = JSON.parse(localStorage.getItem("results") ?? "[]");
-    const computed = storedResults.map((res) => ({
+    const computed = results.map((res) => ({
       ...res,
       cpm:
         (res.correct + res.incorrect) /
         (Duration.fromISO(res.time).toMillis() / 1000 / 60),
     }));
-    setResults(computed);
+
+    setComputedResults(computed);
+
 
     return () => {
       window.removeEventListener("resize", resize);
@@ -73,15 +72,15 @@ export default function Barline() {
 
     const CHART_SIZE = 75;
     const data = [
-      ...Array(CHART_SIZE - Math.min(results.length, CHART_SIZE)).fill({
+      ...Array(CHART_SIZE - Math.min(computedResults.length, CHART_SIZE)).fill({
         correct: 0,
         incorrect: 0,
         cpm: 0,
         level: 0,
       }),
-      ...results.slice(
-        Math.max(results.length - CHART_SIZE, 0),
-        results.length,
+      ...computedResults.slice(
+        Math.max(computedResults.length - CHART_SIZE, 0),
+        computedResults.length,
       ),
     ];
 
@@ -242,6 +241,6 @@ export default function Barline() {
       svg.selectAll("*").remove();
       div.remove();
     };
-  }, [width, height, results]);
+  }, [width, height, computedResults]);
   return <svg ref={svgRef} className="mx-auto" />;
 }

@@ -19,6 +19,7 @@ export function makeKey(
   height: number,
   letter: Key,
   fillColor: string,
+  scale: number = 1,
 ) {
   const textColor = letter.isInert ? "gray" : "white";
 
@@ -27,7 +28,7 @@ export function makeKey(
 
   const padding = 15;
 
-  const fontSize = letter.text.length > 1 ? 15 : 20;
+  const fontSize = (letter.text.length > 1 ? 15 : 20) * scale;
 
   ctx.save();
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);

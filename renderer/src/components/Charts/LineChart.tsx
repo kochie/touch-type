@@ -52,7 +52,7 @@ export default function LineChart() {
         cpm:
           (res.correct + res.incorrect) /
           (Duration.fromISO(res.time).toMillis() / 1000 / 60),
-        datetime: DateTime.fromMillis(res.datetime ?? 0).toJSDate(),
+        datetime: DateTime.fromISO(res.datetime ?? 0).toJSDate(),
         time: Duration.fromISO(res.time),
       }));
     setResults(computed);

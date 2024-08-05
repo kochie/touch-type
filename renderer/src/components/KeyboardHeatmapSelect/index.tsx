@@ -1,5 +1,4 @@
 import { KeyboardLayoutNames } from "@/keyboards";
-import { useSettings, useSettingsDispatch } from "@/lib/settings_hook";
 import {
   Description,
   Field,
@@ -11,7 +10,6 @@ import {
 } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
-import { useLayoutEffect, useState } from "react";
 
 const keyboards = [
   {
@@ -46,30 +44,16 @@ const keyboards = [
   },
 ];
 
-export default function KeyboardSelect() {
-  //   const [selected, setSelected] = useState(people[3])
-  const [selectedKeyboard, setSelectedKeyboard] = useState(keyboards[0]);
+interface KeyboardSelectProps {
+  selectedKeyboardName: KeyboardLayoutNames;
+  setSelectedKeyboard: (keyboard: KeyboardLayoutNames) => void;
+}
 
-  const settings = useSettings();
-  const dispatchSettings = useSettingsDispatch();
-
-  useLayoutEffect(() => {
-    const foundKeyboard = keyboards.find(
-      (keyboard) => keyboard.layout === settings.keyboardName,
-    );
-    if (foundKeyboard) {
-      setSelectedKeyboard(foundKeyboard);
-    }
-  }, []);
-
+export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboard}: KeyboardSelectProps) {
   const handleChange = (value: KeyboardLayoutNames) => {
     const keyboard = keyboards.find((keyboard) => keyboard.layout === value);
     if (!keyboard) return 
-    setSelectedKeyboard(keyboard);
-    dispatchSettings({
-      type: "CHANGE_KEYBOARD",
-      keyboardName: value,
-    });
+    setSelectedKeyboard(value);
   };
 
   return (
@@ -78,9 +62,9 @@ export default function KeyboardSelect() {
         Keyboard Layout
       </Label>
       <Description as="span" className="text-sm text-gray-500">
-        Select the keyboard layout you are using.
+        Select a keyboard layout to render your heatmap.
       </Description>
-      <Listbox value={selectedKeyboard.name} onChange={handleChange}>
+      <Listbox value={selectedKeyboardName} onChange={handleChange}>
         <ListboxButton
           className={clsx(
             "relative block w-full rounded-lg bg-white/5 py-1.5 pr-8 pl-3 text-left text-sm/6 text-white",
@@ -89,9 +73,11 @@ export default function KeyboardSelect() {
         >
           <span className="flex items-center">
             <span className="flex-shrink text-lg">
-              {selectedKeyboard.country}
+              {keyboards.find((keyboard) => keyboard.layout === selectedKeyboardName)?.country}
             </span>
-            <span className="ml-3 block truncate">{selectedKeyboard.name}</span>
+            <span className="ml-3 block truncate">{keyboards.find(
+              (keyboard) => keyboard.layout === selectedKeyboardName)?.name}</span>
+
           </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 ml-3 flex items-center pr-2">
             <ChevronUpDownIcon

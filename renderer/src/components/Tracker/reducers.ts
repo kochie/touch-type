@@ -1,6 +1,29 @@
 import { DateTime, Interval } from "luxon";
 
-export const statsReducer = (state, action) => {
+export type StatAction =
+  | { type: "CORRECT"; key: string }
+  | { type: "INCORRECT"; key: string; pressedKey: string }
+  | { type: "BACKSPACE" }
+  | { type: "START" }
+  | { type: "RESET" }
+  | { type: "TICK" };
+
+export interface LetterStat {
+  key: string;
+  correct: boolean;
+  pressedKey?: string;
+}
+
+export interface StatState {
+  correct: number;
+  incorrect: number;
+  start: DateTime;
+  time: Interval;
+  letters: LetterStat[];
+  immutableLetters: LetterStat[];
+}
+
+export const statsReducer = (state: StatState, action: StatAction) => {
   switch (action.type) {
     case "CORRECT":
       return {
@@ -8,13 +31,15 @@ export const statsReducer = (state, action) => {
         correct: state.correct + 1,
         time: Interval.fromDateTimes(state.start, DateTime.now()),
         letters: [...state.letters, { key: action.key, correct: true }],
+        immutableLetters: [...state.immutableLetters, { key: action.key, correct: true }],
       };
     case "INCORRECT":
       return {
         ...state,
         incorrect: state.incorrect + 1,
         time: Interval.fromDateTimes(state.start, DateTime.now()),
-        letters: [...state.letters, { key: action.key, correct: false }],
+        letters: [...state.letters, { key: action.key, correct: false, pressedKey: action.pressedKey }],
+        immutableLetters: [...state.immutableLetters, { key: action.key, correct: false, pressedKey: action.pressedKey }],
       };
     case "BACKSPACE":
       return {
@@ -32,7 +57,8 @@ export const statsReducer = (state, action) => {
         correct: 0,
         incorrect: 0,
         time: Interval.after(DateTime.now(), 0),
-        letters: [],
+        letters: [] as LetterStat[],
+        immutableLetters: [] as LetterStat[],
       };
     case "TICK":
       return {

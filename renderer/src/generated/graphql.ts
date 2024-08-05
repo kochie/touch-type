@@ -1,4 +1,4 @@
-import { GraphQLResolveInfo } from 'graphql';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -14,17 +14,29 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  AWSDateTime: { input: any; output: any; }
+  AWSEmail: { input: any; output: any; }
+  AWSIPAddress: { input: any; output: any; }
+  AWSJSON: { input: any; output: any; }
+  AWSPhone: { input: any; output: any; }
+  AWSTime: { input: any; output: any; }
+  AWSTimestamp: { input: any; output: any; }
+  AWSURL: { input: any; output: any; }
+  BigInt: { input: any; output: any; }
+  Double: { input: any; output: any; }
 };
 
 export type InputLeaderboard = {
-  keyboard: Scalars['String']['input'];
-  language: Scalars['String']['input'];
-  level: Scalars['String']['input'];
+  keyboard?: InputMaybe<Scalars['String']['input']>;
+  language?: InputMaybe<Scalars['String']['input']>;
+  level?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type InputResult = {
   correct: Scalars['Int']['input'];
+  datetime: Scalars['AWSDateTime']['input'];
   incorrect: Scalars['Int']['input'];
+  keyPresses: Array<InputMaybe<KeyPressInput>>;
   keyboard: Scalars['String']['input'];
   language: Scalars['String']['input'];
   level: Scalars['String']['input'];
@@ -39,6 +51,12 @@ export type InputSettings = {
   publishToLeaderboard: Scalars['Boolean']['input'];
   theme: Scalars['String']['input'];
   whatsNewOnStartup: Scalars['Boolean']['input'];
+};
+
+export type KeyPressInput = {
+  correct: Scalars['Boolean']['input'];
+  key: Scalars['String']['input'];
+  pressedKey?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Mutation = {
@@ -68,7 +86,7 @@ export type Plan = {
 
 export type Query = {
   __typename?: 'Query';
-  leaderboards: Scores;
+  leaderboards: Array<Maybe<Scores>>;
   results: Array<Result>;
   settings: Settings;
   subscription: Plan;
@@ -76,7 +94,7 @@ export type Query = {
 
 
 export type QueryLeaderboardsArgs = {
-  leaderboard: InputLeaderboard;
+  leaderboard?: InputMaybe<InputLeaderboard>;
 };
 
 export type Result = {
@@ -92,9 +110,12 @@ export type Result = {
 export type Scores = {
   __typename?: 'Scores';
   correct: Scalars['Int']['output'];
+  datetime: Scalars['AWSDateTime']['output'];
   incorrect: Scalars['Int']['output'];
-  time: Scalars['String']['output'];
-  userName: Scalars['String']['output'];
+  keyboard: Scalars['String']['output'];
+  level: Scalars['String']['output'];
+  time: Scalars['Int']['output'];
+  username: Scalars['String']['output'];
 };
 
 export type Settings = {
@@ -179,11 +200,22 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  AWSDateTime: ResolverTypeWrapper<Scalars['AWSDateTime']['output']>;
+  AWSEmail: ResolverTypeWrapper<Scalars['AWSEmail']['output']>;
+  AWSIPAddress: ResolverTypeWrapper<Scalars['AWSIPAddress']['output']>;
+  AWSJSON: ResolverTypeWrapper<Scalars['AWSJSON']['output']>;
+  AWSPhone: ResolverTypeWrapper<Scalars['AWSPhone']['output']>;
+  AWSTime: ResolverTypeWrapper<Scalars['AWSTime']['output']>;
+  AWSTimestamp: ResolverTypeWrapper<Scalars['AWSTimestamp']['output']>;
+  AWSURL: ResolverTypeWrapper<Scalars['AWSURL']['output']>;
+  BigInt: ResolverTypeWrapper<Scalars['BigInt']['output']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Double: ResolverTypeWrapper<Scalars['Double']['output']>;
   InputLeaderboard: InputLeaderboard;
   InputResult: InputResult;
   InputSettings: InputSettings;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  KeyPressInput: KeyPressInput;
   Mutation: ResolverTypeWrapper<{}>;
   Plan: ResolverTypeWrapper<Plan>;
   Query: ResolverTypeWrapper<{}>;
@@ -195,11 +227,22 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  AWSDateTime: Scalars['AWSDateTime']['output'];
+  AWSEmail: Scalars['AWSEmail']['output'];
+  AWSIPAddress: Scalars['AWSIPAddress']['output'];
+  AWSJSON: Scalars['AWSJSON']['output'];
+  AWSPhone: Scalars['AWSPhone']['output'];
+  AWSTime: Scalars['AWSTime']['output'];
+  AWSTimestamp: Scalars['AWSTimestamp']['output'];
+  AWSURL: Scalars['AWSURL']['output'];
+  BigInt: Scalars['BigInt']['output'];
   Boolean: Scalars['Boolean']['output'];
+  Double: Scalars['Double']['output'];
   InputLeaderboard: InputLeaderboard;
   InputResult: InputResult;
   InputSettings: InputSettings;
   Int: Scalars['Int']['output'];
+  KeyPressInput: KeyPressInput;
   Mutation: {};
   Plan: Plan;
   Query: {};
@@ -208,6 +251,76 @@ export type ResolversParentTypes = {
   Settings: Settings;
   String: Scalars['String']['output'];
 };
+
+export type Aws_Api_KeyDirectiveArgs = { };
+
+export type Aws_Api_KeyDirectiveResolver<Result, Parent, ContextType = any, Args = Aws_Api_KeyDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
+export type Aws_AuthDirectiveArgs = {
+  cognito_groups: Array<Scalars['String']['input']>;
+};
+
+export type Aws_AuthDirectiveResolver<Result, Parent, ContextType = any, Args = Aws_AuthDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
+export type Aws_Cognito_User_PoolsDirectiveArgs = {
+  cognito_groups?: Maybe<Array<Scalars['String']['input']>>;
+};
+
+export type Aws_Cognito_User_PoolsDirectiveResolver<Result, Parent, ContextType = any, Args = Aws_Cognito_User_PoolsDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
+export type Aws_IamDirectiveArgs = { };
+
+export type Aws_IamDirectiveResolver<Result, Parent, ContextType = any, Args = Aws_IamDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
+export type Aws_OidcDirectiveArgs = { };
+
+export type Aws_OidcDirectiveResolver<Result, Parent, ContextType = any, Args = Aws_OidcDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
+export type Aws_SubscribeDirectiveArgs = {
+  mutations: Array<Scalars['String']['input']>;
+};
+
+export type Aws_SubscribeDirectiveResolver<Result, Parent, ContextType = any, Args = Aws_SubscribeDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
+export interface AwsDateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['AWSDateTime'], any> {
+  name: 'AWSDateTime';
+}
+
+export interface AwsEmailScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['AWSEmail'], any> {
+  name: 'AWSEmail';
+}
+
+export interface AwsipAddressScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['AWSIPAddress'], any> {
+  name: 'AWSIPAddress';
+}
+
+export interface AwsjsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['AWSJSON'], any> {
+  name: 'AWSJSON';
+}
+
+export interface AwsPhoneScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['AWSPhone'], any> {
+  name: 'AWSPhone';
+}
+
+export interface AwsTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['AWSTime'], any> {
+  name: 'AWSTime';
+}
+
+export interface AwsTimestampScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['AWSTimestamp'], any> {
+  name: 'AWSTimestamp';
+}
+
+export interface AwsurlScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['AWSURL'], any> {
+  name: 'AWSURL';
+}
+
+export interface BigIntScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['BigInt'], any> {
+  name: 'BigInt';
+}
+
+export interface DoubleScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Double'], any> {
+  name: 'Double';
+}
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   addResult?: Resolver<ResolversTypes['Result'], ParentType, ContextType, RequireFields<MutationAddResultArgs, 'result'>>;
@@ -224,7 +337,7 @@ export type PlanResolvers<ContextType = any, ParentType extends ResolversParentT
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  leaderboards?: Resolver<ResolversTypes['Scores'], ParentType, ContextType, RequireFields<QueryLeaderboardsArgs, 'leaderboard'>>;
+  leaderboards?: Resolver<Array<Maybe<ResolversTypes['Scores']>>, ParentType, ContextType, Partial<QueryLeaderboardsArgs>>;
   results?: Resolver<Array<ResolversTypes['Result']>, ParentType, ContextType>;
   settings?: Resolver<ResolversTypes['Settings'], ParentType, ContextType>;
   subscription?: Resolver<ResolversTypes['Plan'], ParentType, ContextType>;
@@ -242,9 +355,12 @@ export type ResultResolvers<ContextType = any, ParentType extends ResolversParen
 
 export type ScoresResolvers<ContextType = any, ParentType extends ResolversParentTypes['Scores'] = ResolversParentTypes['Scores']> = {
   correct?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  datetime?: Resolver<ResolversTypes['AWSDateTime'], ParentType, ContextType>;
   incorrect?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  time?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  userName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  time?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -260,6 +376,16 @@ export type SettingsResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type Resolvers<ContextType = any> = {
+  AWSDateTime?: GraphQLScalarType;
+  AWSEmail?: GraphQLScalarType;
+  AWSIPAddress?: GraphQLScalarType;
+  AWSJSON?: GraphQLScalarType;
+  AWSPhone?: GraphQLScalarType;
+  AWSTime?: GraphQLScalarType;
+  AWSTimestamp?: GraphQLScalarType;
+  AWSURL?: GraphQLScalarType;
+  BigInt?: GraphQLScalarType;
+  Double?: GraphQLScalarType;
   Mutation?: MutationResolvers<ContextType>;
   Plan?: PlanResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
@@ -268,3 +394,11 @@ export type Resolvers<ContextType = any> = {
   Settings?: SettingsResolvers<ContextType>;
 };
 
+export type DirectiveResolvers<ContextType = any> = {
+  aws_api_key?: Aws_Api_KeyDirectiveResolver<any, any, ContextType>;
+  aws_auth?: Aws_AuthDirectiveResolver<any, any, ContextType>;
+  aws_cognito_user_pools?: Aws_Cognito_User_PoolsDirectiveResolver<any, any, ContextType>;
+  aws_iam?: Aws_IamDirectiveResolver<any, any, ContextType>;
+  aws_oidc?: Aws_OidcDirectiveResolver<any, any, ContextType>;
+  aws_subscribe?: Aws_SubscribeDirectiveResolver<any, any, ContextType>;
+};
