@@ -78,6 +78,7 @@ const Settings = () => {
             <option value={Languages.GERMAN}>German</option>
             <option value={Languages.FRENCH}>French</option>
             <option value={Languages.SPANISH}>Spanish</option>
+            <option value={Languages.MAORI}>Māori</option>
           </Select>
         </Field>
       </form>

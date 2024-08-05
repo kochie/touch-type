@@ -17,7 +17,7 @@ import { lookupKeyboard } from "@/keyboards";
 import { useMutation } from "@apollo/client";
 import { PUT_RESULT } from "@/transactions/putResult";
 import { useResults } from "@/lib/result-provider";
-import { useModal } from "@/lib/modal-provider";
+import { ModalType, useModal } from "@/lib/modal-provider";
 
 // import wordBlob from "@/assets/words.txt";
 
@@ -112,7 +112,7 @@ export default function Tracker() {
   };
 
   const keyDown = (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
-    if (modal) {
+    if (modal !== ModalType.NONE) {
       return;
     }
 

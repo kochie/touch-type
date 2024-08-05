@@ -5,6 +5,7 @@ import { MACOS_US_DVORAK } from "./DVORAK";
 import { MACOS_US_AZERTY } from "./AZERTY";
 import { MACOS_DE_QWERTZ } from "./QWERTZ";
 import { MACOS_ES_QWERTY } from "./ES_QWERTY";
+import { MACOS_NZ_QWERTY } from "./NZ_QWERTY";
 
 export enum KeyboardLayoutNames {
   MACOS_US_QWERTY = "MACOS_US_QWERTY",
@@ -13,6 +14,7 @@ export enum KeyboardLayoutNames {
   MACOS_FR_AZERTY = "MACOS_FR_AZERTY",
   MACOS_DE_QWERTZ = "MACOS_DE_QWERTZ",
   MACOS_ES_QWERTY = "MACOS_ES_QWERTY",
+  MACOS_NZ_QWERTY = "MACOS_NZ_QWERTY",
 }
 
 export type KeyboardLayout = (Key | Key[])[][];
@@ -24,6 +26,7 @@ export {
   MACOS_US_AZERTY,
   MACOS_DE_QWERTZ,
   MACOS_ES_QWERTY,
+  MACOS_NZ_QWERTY,
 };
 
 export type { Key, Shape } from "./key";
@@ -42,6 +45,8 @@ export function lookupKeyboard(keyboardName: KeyboardLayoutNames) {
       return MACOS_DE_QWERTZ;
     case KeyboardLayoutNames.MACOS_ES_QWERTY:
       return MACOS_ES_QWERTY;
+    case KeyboardLayoutNames.MACOS_NZ_QWERTY:
+      return MACOS_NZ_QWERTY;
     default:
       return MACOS_US_QWERTY;
   }

@@ -44,6 +44,11 @@ const keyboards = [
     layout: KeyboardLayoutNames.MACOS_ES_QWERTY,
     country: "🇪🇸",
   },
+  {
+    name: "MAC QWERTY (Māori)",
+    layout: KeyboardLayoutNames.MACOS_NZ_QWERTY,
+    country: "🇳🇿",
+  },
 ];
 
 export default function KeyboardSelect() {
