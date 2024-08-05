@@ -49,6 +49,8 @@ const Settings = () => {
             <option value={Levels.LEVEL_1}>Level 1</option>
             <option value={Levels.LEVEL_2}>Level 2</option>
             <option value={Levels.LEVEL_3}>Level 3</option>
+            <option value={Levels.LEVEL_4}>Level 4</option>
+            <option value={Levels.LEVEL_5}>Level 5</option>
           </Select>
         </Field>
 
