@@ -83,7 +83,7 @@ const Settings = () => {
         </Field>
       </form>
       <form className="flex flex-col gap-6">
-        <AnalyticsSwitch
+        <SettingsSwitch
           enabled={settings.analytics}
           setEnabled={(enabled) => {
             enabled
@@ -91,13 +91,17 @@ const Settings = () => {
               : Fathom.blockTrackingForMe();
             dispatchSettings({ type: "SET_ANALYTICS", analytics: enabled });
           }}
+          label="Enabled Analytics"
+          description="Send telemetry data about usage back to developers."
         />
 
-        <WhatsNewSwitch
+        <SettingsSwitch
           enabled={settings.whatsNewOnStartup}
           setEnabled={(enabled) =>
             dispatchSettings({ type: "SET_WHATS_NEW", whatsnew: enabled })
           }
+          label="Show What's New on Startup"
+          description="Show the What's New message when the app starts."
         />
 
         <Field as="div" className="flex items-center justify-between">
@@ -128,11 +132,22 @@ const Settings = () => {
           </Select>
         </Field>
 
-        <PublishSwitch
+        <SettingsSwitch
           enabled={settings.publishToLeaderboard}
           setEnabled={(enabled: boolean) =>
             dispatchSettings({ type: "SET_PUBLISH_TO_LEADERBOARD", publishToLeaderboard: enabled })
           }
+          label="Publish to Leaderboard"
+          description="Publish results to the public leaderboard."
+        />
+
+        <SettingsSwitch
+          enabled={settings.blinker}
+          setEnabled={(enabled: boolean) =>
+            dispatchSettings({ type: "SET_BLINKER", blinker: enabled })
+          }
+          label="Blinker"
+          description="Blink the key being typed."
         />
       </form>
     </div>
@@ -141,7 +156,15 @@ const Settings = () => {
 
 export default Settings;
 
-function WhatsNewSwitch({ enabled, setEnabled }) {
+
+interface SettingsSwitchProps {
+  enabled: boolean;
+  setEnabled: (enabled: boolean) => void;
+  label: string;
+  description: string;
+}
+
+function SettingsSwitch({ enabled, setEnabled, label, description }: SettingsSwitchProps) {
   return (
     <Field as="div" className="flex items-center justify-between">
       <span className="flex flex-grow flex-col">
@@ -153,10 +176,10 @@ function WhatsNewSwitch({ enabled, setEnabled }) {
           )}
           passive
         >
-          Show What&apos;s New on Startup
+          {label}
         </Label>
         <Description as="span" className="text-sm text-gray-500">
-          Show the What&apos;s New message when the app starts.
+          {description}
         </Description>
       </span>
       <Switch
@@ -176,82 +199,5 @@ function WhatsNewSwitch({ enabled, setEnabled }) {
         />
       </Switch>
     </Field>
-  );
+  );  
 }
-
-function AnalyticsSwitch({ enabled, setEnabled }) {
-  return (
-    <Field as="div" className="flex items-center justify-between">
-      <span className="flex flex-grow flex-col">
-        <Label
-          as="span"
-          className={clsx(
-            "text-sm font-medium leading-6",
-            platform() === "darwin" ? "text-white" : "",
-          )}
-          passive
-        >
-          Enabled Analytics
-        </Label>
-        <Description as="span" className="text-sm text-gray-500">
-          Send tememetry data about usage back to developers.
-        </Description>
-      </span>
-      <Switch
-        checked={enabled}
-        onChange={setEnabled}
-        className={clsx(
-          enabled ? "bg-indigo-600" : "bg-gray-200",
-          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
-        )}
-      >
-        <span
-          aria-hidden="true"
-          className={clsx(
-            enabled ? "translate-x-5" : "translate-x-0",
-            "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-          )}
-        />
-      </Switch>
-    </Field>
-  );
-}
-
-function PublishSwitch({ enabled, setEnabled }) {
-  return (
-    <Field as="div" className="flex items-center justify-between">
-      <span className="flex flex-grow flex-col">
-        <Label
-          as="span"
-          className={clsx(
-            "text-sm font-medium leading-6",
-            platform() === "darwin" ? "text-white" : "",
-          )}
-          passive
-        >
-          Publish to Leaderboard
-        </Label>
-        <Description as="span" className="text-sm text-gray-500">
-          Publish results to the public leaderboard.
-        </Description>
-      </span>
-      <Switch
-        checked={enabled}
-        onChange={setEnabled}
-        className={clsx(
-          enabled ? "bg-indigo-600" : "bg-gray-200",
-          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
-        )}
-      >
-        <span
-          aria-hidden="true"
-          className={clsx(
-            enabled ? "translate-x-5" : "translate-x-0",
-            "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-          )}
-        />
-      </Switch>
-    </Field>
-  );
-}
-
