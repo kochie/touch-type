@@ -54,6 +54,7 @@ const SettingsContext = createContext({
   whatsNewOnStartup: true,
   theme: ColorScheme.SYSTEM,
   publishToLeaderboard: true,
+  blinker: true
 });
 
 const defaultSettings = {
@@ -64,6 +65,7 @@ const defaultSettings = {
   whatsNewOnStartup: true,
   theme: ColorScheme.SYSTEM,
   publishToLeaderboard: true,
+  blinker: true
 };
 
 type ChangeSettingsAction =
@@ -94,6 +96,10 @@ type ChangeSettingsAction =
   | {
       type: "CHANGE_LEVEL";
       levelName: Levels;
+    }
+  | {
+      type: "SET_BLINKER";
+      blinker: boolean;
     };
 
 const reducer = (
@@ -147,6 +153,12 @@ const reducer = (
         ...state,
         publishToLeaderboard: action.publishToLeaderboard,
       };
+
+    case "SET_BLINKER":
+      return {
+        ...state,
+        blinker: action.blinker
+      }
 
     default:
       return { ...state };
