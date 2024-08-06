@@ -4,11 +4,11 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useReducer,
 } from "react";
 import { KeyboardLayout, KeyboardLayoutNames } from "@/keyboards";
-// import { LEVEL_1, LEVEL_2, LEVEL_3 } from "./levels";
 import { useMutation } from "@apollo/client";
 import { UPDATE_SETTINGS } from "@/transactions/putSettings";
 import { useUser } from "./user_hook";
@@ -43,7 +43,7 @@ export enum Languages {
   FRENCH = "fr",
   GERMAN = "de",
   SPANISH = "es",
-  MAORI = "mi"
+  MAORI = "mi",
 }
 
 const SettingsContext = createContext({
@@ -54,10 +54,10 @@ const SettingsContext = createContext({
   whatsNewOnStartup: true,
   theme: ColorScheme.SYSTEM,
   publishToLeaderboard: true,
-  blinker: true
+  blinker: true,
 });
 
-const defaultSettings = {
+export const defaultSettings = {
   language: Languages.ENGLISH,
   keyboardName: KeyboardLayoutNames.MACOS_US_QWERTY,
   levelName: Levels.LEVEL_1,
@@ -65,10 +65,14 @@ const defaultSettings = {
   whatsNewOnStartup: true,
   theme: ColorScheme.SYSTEM,
   publishToLeaderboard: true,
-  blinker: true
+  blinker: true,
 };
 
 type ChangeSettingsAction =
+  | {
+      type: "LOAD_SETTINGS";
+      settings: typeof defaultSettings;
+    }
   | {
       type: "SET_ANALYTICS";
       analytics: boolean;
@@ -111,6 +115,12 @@ const reducer = (
   }
 
   switch (action.type) {
+    case "LOAD_SETTINGS": {
+      return {
+        ...state,
+        ...action.settings,
+      };
+    }
     case "SET_ANALYTICS": {
       return {
         ...state,
@@ -157,29 +167,32 @@ const reducer = (
     case "SET_BLINKER":
       return {
         ...state,
-        blinker: action.blinker
-      }
+        blinker: action.blinker,
+      };
 
     default:
       return { ...state };
   }
 };
 
-const SettingsDispatchContext = createContext<Dispatch<ChangeSettingsAction>>(() => {});
+const SettingsDispatchContext = createContext<Dispatch<ChangeSettingsAction>>(
+  () => {},
+);
 
 export const SettingsProvider = ({ children }) => {
   const [settings, dispatch] = useReducer(reducer, null, () => {
     if (typeof localStorage === "undefined") return { ...defaultSettings };
 
     const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
-    // if (savedSettings.level) {
-    //   savedSettings.level = new RegExp(
-    //     savedSettings.level?.pattern,
-    //     savedSettings.level?.flags
-    //   );
-    // }
+
     return { ...defaultSettings, ...savedSettings };
   });
+
+  useLayoutEffect(() => {
+    const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
+    
+    dispatch({type: "LOAD_SETTINGS", settings: savedSettings });
+  }, [])
 
   const [mutateFunction] = useMutation(UPDATE_SETTINGS);
   const user = useUser();
@@ -187,8 +200,6 @@ export const SettingsProvider = ({ children }) => {
   const saveSettings = useCallback(
     (safeSettings: InputSettings) => {
       if (!user) return;
-
-      // console.log(safeSettings);
 
       mutateFunction({
         variables: { settings: safeSettings },
@@ -209,10 +220,9 @@ export const SettingsProvider = ({ children }) => {
     }
   }, [settings.theme]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const safeSettings = {
       ...settings,
-      // level: { pattern: settings.level.source, flags: settings.level.flags },
     };
 
     localStorage.setItem("settings", JSON.stringify(safeSettings));
@@ -234,7 +244,8 @@ export const SettingsProvider = ({ children }) => {
 };
 
 export function useSettings() {
-  return useContext(SettingsContext);
+  const settings = useContext(SettingsContext);
+  return settings;
 }
 
 export function useSettingsDispatch() {

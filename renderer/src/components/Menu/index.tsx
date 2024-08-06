@@ -1,4 +1,5 @@
 "use client";
+
 import User from "@/components/User";
 import {
   faChartColumn,
@@ -10,9 +11,12 @@ import { faChartRadar } from "@fortawesome/pro-regular-svg-icons";
 import { faSparkles } from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import { defaultSettings, useSettings } from "@/lib/settings_hook";
+import { keyboards } from "../KeyboardSelect";
+import { languages } from "../settings/settings";
 
 interface MenuProps {
   handleWhatsNew?: () => void;
@@ -26,6 +30,15 @@ export default function Menu({
   handleAccount,
 }: MenuProps) {
   const pathname = usePathname();
+  const settings = useSettings();
+
+  // This is being done because of hydration errors in the settings hook. 
+  // Because using the settings hook uses local storage any direct rendering 
+  // of the settings hook will cause a hydration error.
+  const [hydratedSettings, setHydratedSettings] = useState(defaultSettings)
+  useLayoutEffect(() => {
+    setHydratedSettings(prev => ({...prev, ...settings}))
+  }, [settings]);
 
   return (
     <div className="flex justify-between mt-8 mx-8">
@@ -67,6 +80,34 @@ export default function Menu({
           </Link>
         </div>
       </div>
+
+      {pathname === "/" ? (
+        <div className="flex gap-4 text-sm font-normal text-gray-400">
+          <div className="after:content-['•'] after:absolute after:right-0 after:pl-2 last:after:content-['']">
+            <p className="">
+              Level <span>{hydratedSettings.levelName}</span>
+            </p>
+          </div>
+          <div>
+            <p className="">
+              {
+                keyboards.find(
+                  (keyboard) => keyboard.layout === hydratedSettings.keyboardName,
+                )?.name
+              }
+            </p>
+          </div>
+          <div>
+            <p className="">
+              {
+                languages.find((lang) => lang.value === hydratedSettings.language)
+                  ?.label
+              }
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex gap-4">
         <Suspense
           fallback={

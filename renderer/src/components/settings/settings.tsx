@@ -15,6 +15,24 @@ import KeyboardSelect from "../KeyboardSelect";
 import clsx from "clsx";
 
 
+export const languages = [{
+  value: Languages.ENGLISH,
+  label: "English"
+}, {
+  value: Languages.FRENCH,
+  label: "French"
+}, {
+  value: Languages.GERMAN,
+  label: "German"
+}, {
+  value: Languages.SPANISH,
+  label: "Spanish"
+}, {
+  value: Languages.MAORI,
+  label: "Maori"
+}];
+
+
 const Settings = () => {
   const settings = useSettings();
   const dispatchSettings = useSettingsDispatch();
@@ -76,11 +94,11 @@ const Settings = () => {
               });
             }}
           >
-            <option value={Languages.ENGLISH}>English</option>
-            <option value={Languages.GERMAN}>German</option>
-            <option value={Languages.FRENCH}>French</option>
-            <option value={Languages.SPANISH}>Spanish</option>
-            <option value={Languages.MAORI}>Māori</option>
+            {languages.map((language) => (
+              <option key={language.value} value={language.value}>
+                {language.label}
+              </option>
+            ))}
           </Select>
         </Field>
       </form>
