@@ -13,7 +13,7 @@ import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import { useLayoutEffect, useState } from "react";
 
-const keyboards = [
+export const keyboards = [
   {
     name: "MAC COLEMAK",
     layout: KeyboardLayoutNames.MACOS_US_COLEMAK,
