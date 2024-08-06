@@ -45,6 +45,7 @@ export type InputResult = {
 
 export type InputSettings = {
   analytics: Scalars['Boolean']['input'];
+  blinker: Scalars['Boolean']['input'];
   keyboardName: Scalars['String']['input'];
   language: Scalars['String']['input'];
   levelName: Scalars['String']['input'];
@@ -121,6 +122,7 @@ export type Scores = {
 export type Settings = {
   __typename?: 'Settings';
   analytics: Scalars['Boolean']['output'];
+  blinker: Scalars['Boolean']['output'];
   keyboardName: Scalars['String']['output'];
   language: Scalars['String']['output'];
   levelName: Scalars['String']['output'];
@@ -366,6 +368,7 @@ export type ScoresResolvers<ContextType = any, ParentType extends ResolversParen
 
 export type SettingsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Settings'] = ResolversParentTypes['Settings']> = {
   analytics?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  blinker?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   keyboardName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   levelName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

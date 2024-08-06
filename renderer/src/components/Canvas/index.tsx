@@ -11,7 +11,7 @@ import { useSettings } from "@/lib/settings_hook";
 import { Keyboard } from "@/keyboards/key";
 import { lookupKeyboard } from "@/keyboards";
 import { LetterStat } from "../Tracker/reducers";
-import { KeyPress } from "../Tracker";
+import { CurrentKeyRef, KeyPress } from "../Tracker";
 
 type ResizerAction = { type: "RESIZE" } | { type: "PR" };
 interface ResizerState {
@@ -43,9 +43,10 @@ interface CanvasProps {
   keyDown: (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => void;
   keys: MutableRefObject<KeyPress[]>;
   intervalFn: () => void;
+  currentKey?: CurrentKeyRef;
 }
 
-const Canvas = ({ letters, keyDown, keys, intervalFn }: CanvasProps) => {
+const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [{ width, height, pr }, resizeDispatch] = useReducer(resizer, {
@@ -55,7 +56,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }: CanvasProps) => {
   });
 
   const settings = useSettings();
-  const KEYS = lookupKeyboard(settings.keyboardName);
+  const keyboardLayout = lookupKeyboard(settings.keyboardName);
 
   useEffect(() => {
     const resize = () => {
@@ -83,7 +84,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }: CanvasProps) => {
   const [fontLoaded, setFontLoaded] = useState(false);
 
   useEffect(() => {
-    const keyboard = new Keyboard(KEYS);
+    const keyboard = new Keyboard(keyboardLayout);
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
     if (!ctx) return;
@@ -106,31 +107,36 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }: CanvasProps) => {
     canvasRef.current.style.height = `${height}px`;
     canvasRef.current.width = width * pr;
     canvasRef.current.height = height * pr;
-    // ctx.scale(pr, pr);
 
     keyboard.drawKeyboard(ctx);
 
     return () => {
       ctx.clearRect(0, 0, width * pr, height * pr);
     };
-  }, [width, height, pr, fontLoaded, KEYS]);
+  }, [width, height, pr, fontLoaded, keyboardLayout]);
 
   useEffect(() => {
-    const keyboard = new Keyboard(KEYS);
+    const keyboard = new Keyboard(keyboardLayout);
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
     if (!ctx) return;
     const interval = setInterval(intervalFn, 500);
 
-    // const keyDown = (e: KeyboardEvent) => {
-    //   // dispatch({ type: "CORRECT", key: e.key });
-    // };
-
     let requestId: number;
     const animate = (time: number) => {
+      ctx.clearRect(0, 0, width * pr, height * pr);
+      keyboard.drawKeyboard(ctx);
+
       const uniqueChars = keys.current.reverse().filter((c, index) => {
         return keys.current.findIndex((i) => i.key === c.key) === index;
       });
+
+      if (currentKey && settings.blinker) {
+        const t = 1 - (time % 1500) / 1500;
+
+        const x = 255 - 255 * (1 - t);
+        keyboard.drawKey(ctx, currentKey.i, currentKey.j, currentKey.current, `rgba(0, 0, ${x}, 0.5)`);
+      }
 
       const keyz = uniqueChars.map((key) => {
         const x = 255 - (255 - key.ttl);
@@ -149,6 +155,8 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }: CanvasProps) => {
         });
 
       keys.current = keyz.filter((key) => key.ttl > 0);
+      
+
       requestId = window.requestAnimationFrame(animate);
     };
     requestId = window.requestAnimationFrame(animate);
@@ -163,7 +171,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn }: CanvasProps) => {
       clearInterval(interval);
       window.cancelAnimationFrame(requestId);
     };
-  }, [letters, pr, keyDown, intervalFn, keys, KEYS]);
+  }, [letters, pr, keyDown, intervalFn, keys, keyboardLayout, currentKey]);
 
   return <canvas ref={canvasRef} />;
 };
