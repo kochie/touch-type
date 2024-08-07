@@ -1,7 +1,14 @@
 "use client";
-import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { LetterStat, statsReducer, StatState } from "./reducers";
-import { DateTime, Interval } from "luxon";
+import { DateTime, Duration, Interval } from "luxon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDungeon,
@@ -16,7 +23,7 @@ import { useWords } from "@/lib/word-provider";
 import { lookupKeyboard } from "@/keyboards";
 import { useResults } from "@/lib/result-provider";
 import { ModalType, useModal } from "@/lib/modal-provider";
-
+import clsx from "clsx";
 
 export interface KeyPress {
   key: Key;
@@ -27,9 +34,9 @@ export interface KeyPress {
 }
 
 export interface CurrentKeyRef {
-  current: Key
-  i: number
-  j: number
+  current: Key;
+  i: number;
+  j: number;
 }
 
 const initialStat: StatState = {
@@ -43,18 +50,19 @@ const initialStat: StatState = {
 
 export default function Tracker() {
   const settings = useSettings();
-  const {modal} = useModal()
+  const { modal } = useModal();
 
   const [words, setWords] = useState("");
   const [wordList] = useWords();
 
-  const {putResult} = useResults()
+  const [wordMetric, setWordMetric] = useState("cpm");
 
-  const [{ correct, incorrect, time, letters, immutableLetters }, statsDispatch] = useReducer(
-    statsReducer,
-    initialStat,
-  );
+  const { putResult } = useResults();
 
+  const [
+    { correct, incorrect, time, letters, immutableLetters },
+    statsDispatch,
+  ] = useReducer(statsReducer, initialStat);
 
   const resetWords = useCallback(async () => {
     const pinned = sampleSize(wordList, 15).join(" ").replaceAll("  ", "");
@@ -67,18 +75,21 @@ export default function Tracker() {
 
   const keys = useRef<KeyPress[]>([]);
   const [currentKey, setCurrentKey] = useState<CurrentKeyRef>();
+
   useLayoutEffect(() => {
     if (words.length === 0) return;
     console.log(letters.length, words[letters.length]);
     const key = keyboard.findKey(words[letters.length]);
     const [i, j] = keyboard.findIndex(words[letters.length]);
-    setCurrentKey({ current: key, i, j })
-  }, [letters.length, words])
+    setCurrentKey({ current: key, i, j });
+  }, [letters.length, words]);
 
   const d = (time as Interval).toDuration();
   const total = correct + incorrect;
   const m = d.toMillis() / 1000 / 60;
   const cpm = total / m;
+  const cps = cpm / 1000 / 60 / 60;
+  const wpm = cpm / 5;
   const p = (correct / total) * 100;
 
   const keyboardLayout = lookupKeyboard(settings.keyboardName);
@@ -141,7 +152,7 @@ export default function Tracker() {
         language: settings.language,
       };
 
-      putResult(results)
+      putResult(results);
       resetWords();
       statsDispatch({ type: "RESET" });
     }
@@ -153,6 +164,26 @@ export default function Tracker() {
     }
   };
 
+  const { results } = useResults();
+  // get the typo diff between the last two results
+  const typoDiff =
+    results.length > 1
+      ? results[results.length - 1].incorrect -
+        results[results.length - 2].incorrect
+      : 0;
+
+  let cpmDiff = 0;
+  if (results.length > 1) {
+    const cpm1 =
+      (results[results.length - 1].correct +
+        results[results.length - 1].incorrect) /
+      Duration.fromISO(results[results.length - 1].time).as("minutes");
+    const cpm2 =
+      (results[results.length - 2].correct +
+        results[results.length - 2].incorrect) /
+      Duration.fromISO(results[results.length - 2].time).as("minutes");
+    cpmDiff = cpm1 - cpm2;
+  }
 
   return (
     <div className="">
@@ -163,6 +194,16 @@ export default function Tracker() {
             <p className="text-4xl">{incorrect}</p>
             <p className="text-sm text-gray-400">typos</p>
           </div>
+          <div>
+            <p
+              className={clsx(
+                typoDiff <= 0 ? "text-green-400" : "text-red-400",
+                "text-sm",
+              )}
+            >
+              {typoDiff}
+            </p>
+          </div>
         </div>
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPersonRunning} size="3x" />
@@ -171,6 +212,16 @@ export default function Tracker() {
               {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
             </p>
             <p className="text-sm text-gray-400">char/min</p>
+          </div>
+          <div>
+            <p
+              className={clsx(
+                cpmDiff >= 0 ? "text-green-400" : "text-red-400",
+                "text-sm",
+              )}
+            >
+              {cpmDiff.toFixed(0)}
+            </p>
           </div>
         </div>
         <div className="flex items-center">
