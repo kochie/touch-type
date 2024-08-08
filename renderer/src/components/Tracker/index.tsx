@@ -48,12 +48,19 @@ const initialStat: StatState = {
   immutableLetters: [] as LetterStat[],
 };
 
+function sign(num: number): string {
+  if (num > 0) return "+"
+  // if (num < 0) return "-"
+  return ""
+}
+
 export default function Tracker() {
   const settings = useSettings();
   const { modal } = useModal();
 
   const [words, setWords] = useState("");
   const [wordList] = useWords();
+  const [showChange, setShowChange] = useState(false)
 
   const [wordMetric, setWordMetric] = useState("cpm");
 
@@ -121,6 +128,7 @@ export default function Tracker() {
 
     if (letters.length === 0) {
       statsDispatch({ type: "START" });
+      setShowChange(false)
     }
 
     const key = keyboard.findKey(e.key);
@@ -141,6 +149,7 @@ export default function Tracker() {
     }
 
     if (letters.length === words.length - 1) {
+      setShowChange(true)
       const results = {
         correct,
         incorrect,
@@ -173,6 +182,7 @@ export default function Tracker() {
       : 0;
 
   let cpmDiff = 0;
+  let accuracyDiff = 0
   if (results.length > 1) {
     const cpm1 =
       (results[results.length - 1].correct +
@@ -183,6 +193,11 @@ export default function Tracker() {
         results[results.length - 2].incorrect) /
       Duration.fromISO(results[results.length - 2].time).as("minutes");
     cpmDiff = cpm1 - cpm2;
+
+    const acc1 = results[results.length-1].correct /(results[results.length-1].correct+results[results.length-1].incorrect)
+    const acc2 = results[results.length-2].correct /(results[results.length-2].correct+results[results.length-2].incorrect)
+
+    let accuracyDiff = acc1 - acc2
   }
 
   return (
@@ -194,16 +209,16 @@ export default function Tracker() {
             <p className="text-4xl">{incorrect}</p>
             <p className="text-sm text-gray-400">typos</p>
           </div>
-          <div>
+          {showChange ? (<div>
             <p
               className={clsx(
                 typoDiff <= 0 ? "text-green-400" : "text-red-400",
                 "text-sm",
               )}
             >
-              {typoDiff}
+              {sign(typoDiff)}{typoDiff}
             </p>
-          </div>
+          </div>):null}
         </div>
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPersonRunning} size="3x" />
@@ -213,16 +228,16 @@ export default function Tracker() {
             </p>
             <p className="text-sm text-gray-400">char/min</p>
           </div>
-          <div>
+          {showChange ? (<div>
             <p
               className={clsx(
                 cpmDiff >= 0 ? "text-green-400" : "text-red-400",
                 "text-sm",
               )}
             >
-              {cpmDiff.toFixed(0)}
+              {sign(cpmDiff)}{cpmDiff.toFixed(0)}
             </p>
-          </div>
+          </div>): null}
         </div>
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPercentage} size="3x" />
@@ -230,6 +245,16 @@ export default function Tracker() {
             <p className="text-4xl">{Number.isFinite(p) ? p.toFixed(0) : 0}</p>
             <p className="text-sm text-gray-400">accuracy</p>
           </div>
+          {showChange ? (<div>
+            <p
+              className={clsx(
+                accuracyDiff >= 0 ? "text-green-400" : "text-red-400",
+                "text-sm",
+              )}
+            >
+              {sign(accuracyDiff)}{accuracyDiff.toFixed(0)}
+            </p>
+          </div>): null}
         </div>
       </div>
       <p className="font-['Roboto_Mono'] text-center p-10 whitespace-pre-wrap">
