@@ -19,6 +19,9 @@ export interface Result {
   level: Levels,
   keyboard: KeyboardLayoutNames,
   language: Languages,
+  capital: boolean,
+  punctuation: boolean,
+  numbers: boolean,
 }
 
 

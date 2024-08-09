@@ -20,6 +20,7 @@ export function makeKey(
   letter: Key,
   fillColor: string,
   scale: number = 1,
+  hideSecondary: boolean = false,
 ) {
   const textColor = letter.isInert ? "gray" : "white";
 
@@ -64,7 +65,7 @@ export function makeKey(
   let sX = 0;
   let sY = 0;
 
-  if (letter.secondaryKey) letter.position[0] = "bottom";
+  if (!!letter.secondaryKey && !hideSecondary) letter.position[0] = "bottom";
   // ctx.textBaseline = position[0];
   switch (letter.position[0]) {
     case "top":
@@ -100,7 +101,7 @@ export function makeKey(
 
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";
-  if (letter.secondaryKey) {
+  if (letter.secondaryKey && !hideSecondary) {
     ctx.fillText(letter.secondaryKey, sX, sY);
     // ctx.restore();
   }

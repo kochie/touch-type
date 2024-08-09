@@ -14,24 +14,55 @@ import { platform } from "os";
 import KeyboardSelect from "../KeyboardSelect";
 import clsx from "clsx";
 
+export const languages = [
+  {
+    value: Languages.ENGLISH,
+    label: "English",
+  },
+  {
+    value: Languages.FRENCH,
+    label: "French",
+  },
+  {
+    value: Languages.GERMAN,
+    label: "German",
+  },
+  {
+    value: Languages.SPANISH,
+    label: "Spanish",
+  },
+  {
+    value: Languages.MAORI,
+    label: "Maori",
+  },
+];
 
-export const languages = [{
-  value: Languages.ENGLISH,
-  label: "English"
-}, {
-  value: Languages.FRENCH,
-  label: "French"
-}, {
-  value: Languages.GERMAN,
-  label: "German"
-}, {
-  value: Languages.SPANISH,
-  label: "Spanish"
-}, {
-  value: Languages.MAORI,
-  label: "Maori"
-}];
-
+export const levels = [
+  {
+    value: Levels.LEVEL_1,
+    label: "Level 1",
+  },
+  {
+    value: Levels.LEVEL_2,
+    label: "Level 2",
+  },
+  {
+    value: Levels.LEVEL_3,
+    label: "Level 3",
+  },
+  {
+    value: Levels.LEVEL_4,
+    label: "Level 4",
+  },
+  {
+    value: Levels.LEVEL_5,
+    label: "Level 5",
+  },
+  {
+    value: Levels.LEVEL_6,
+    label: "Level 6",
+  },
+];
 
 const Settings = () => {
   const settings = useSettings();
@@ -64,11 +95,11 @@ const Settings = () => {
               });
             }}
           >
-            <option value={Levels.LEVEL_1}>Level 1</option>
-            <option value={Levels.LEVEL_2}>Level 2</option>
-            <option value={Levels.LEVEL_3}>Level 3</option>
-            <option value={Levels.LEVEL_4}>Level 4</option>
-            <option value={Levels.LEVEL_5}>Level 5</option>
+            {levels.map((level) => (
+              <option key={level.value} value={level.value}>
+                {level.label}
+              </option>
+            ))}
           </Select>
         </Field>
 
@@ -101,6 +132,24 @@ const Settings = () => {
             ))}
           </Select>
         </Field>
+        <SettingsSwitch 
+          enabled={settings.punctuation}
+          setEnabled={(enabled) => dispatchSettings({ type: "SET_PUNCTUATION", punctuation: enabled })}
+          label="Punctuation"
+          description="Include punctuation in the words to type."
+        />
+        <SettingsSwitch 
+          enabled={settings.numbers}
+          setEnabled={(enabled) => dispatchSettings({ type: "SET_NUMBERS", numbers: enabled })}
+          label="Numbers"
+          description="Include numbers in the words to type."
+        />
+        <SettingsSwitch 
+          enabled={settings.capital}
+          setEnabled={(enabled) => dispatchSettings({ type: "SET_CAPITAL", capital: enabled })}
+          label="Capital"
+          description="Include capital letters in the words to type."
+        />
       </form>
       <form className="flex flex-col gap-6">
         <SettingsSwitch
@@ -155,7 +204,10 @@ const Settings = () => {
         <SettingsSwitch
           enabled={settings.publishToLeaderboard}
           setEnabled={(enabled: boolean) =>
-            dispatchSettings({ type: "SET_PUBLISH_TO_LEADERBOARD", publishToLeaderboard: enabled })
+            dispatchSettings({
+              type: "SET_PUBLISH_TO_LEADERBOARD",
+              publishToLeaderboard: enabled,
+            })
           }
           label="Publish to Leaderboard"
           description="Publish results to the public leaderboard."
@@ -176,7 +228,6 @@ const Settings = () => {
 
 export default Settings;
 
-
 interface SettingsSwitchProps {
   enabled: boolean;
   setEnabled: (enabled: boolean) => void;
@@ -184,7 +235,12 @@ interface SettingsSwitchProps {
   description: string;
 }
 
-function SettingsSwitch({ enabled, setEnabled, label, description }: SettingsSwitchProps) {
+function SettingsSwitch({
+  enabled,
+  setEnabled,
+  label,
+  description,
+}: SettingsSwitchProps) {
   return (
     <Field as="div" className="flex items-center justify-between">
       <span className="flex flex-grow flex-col">
@@ -219,5 +275,5 @@ function SettingsSwitch({ enabled, setEnabled, label, description }: SettingsSwi
         />
       </Switch>
     </Field>
-  );  
+  );
 }

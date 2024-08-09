@@ -33,6 +33,7 @@ export type InputLeaderboard = {
 };
 
 export type InputResult = {
+  capital: Scalars['Boolean']['input'];
   correct: Scalars['Int']['input'];
   datetime: Scalars['AWSDateTime']['input'];
   incorrect: Scalars['Int']['input'];
@@ -40,16 +41,21 @@ export type InputResult = {
   keyboard: Scalars['String']['input'];
   language: Scalars['String']['input'];
   level: Scalars['String']['input'];
+  numbers: Scalars['Boolean']['input'];
+  punctuation: Scalars['Boolean']['input'];
   time: Scalars['String']['input'];
 };
 
 export type InputSettings = {
   analytics: Scalars['Boolean']['input'];
   blinker: Scalars['Boolean']['input'];
+  capital: Scalars['Boolean']['input'];
   keyboardName: Scalars['String']['input'];
   language: Scalars['String']['input'];
   levelName: Scalars['String']['input'];
+  numbers: Scalars['Boolean']['input'];
   publishToLeaderboard: Scalars['Boolean']['input'];
+  punctuation: Scalars['Boolean']['input'];
   theme: Scalars['String']['input'];
   whatsNewOnStartup: Scalars['Boolean']['input'];
 };
@@ -100,11 +106,14 @@ export type QueryLeaderboardsArgs = {
 
 export type Result = {
   __typename?: 'Result';
+  capital: Scalars['Boolean']['output'];
   correct: Scalars['Int']['output'];
   incorrect: Scalars['Int']['output'];
   keyboard: Scalars['String']['output'];
   language: Scalars['String']['output'];
   level: Scalars['String']['output'];
+  numbers: Scalars['Boolean']['output'];
+  punctuation: Scalars['Boolean']['output'];
   time: Scalars['String']['output'];
 };
 
@@ -123,10 +132,13 @@ export type Settings = {
   __typename?: 'Settings';
   analytics: Scalars['Boolean']['output'];
   blinker: Scalars['Boolean']['output'];
+  capital: Scalars['Boolean']['output'];
   keyboardName: Scalars['String']['output'];
   language: Scalars['String']['output'];
   levelName: Scalars['String']['output'];
+  numbers: Scalars['Boolean']['output'];
   publishToLeaderboard: Scalars['Boolean']['output'];
+  punctuation: Scalars['Boolean']['output'];
   theme: Scalars['String']['output'];
   whatsNewOnStartup: Scalars['Boolean']['output'];
 };
@@ -346,11 +358,14 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type ResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['Result'] = ResolversParentTypes['Result']> = {
+  capital?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   correct?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   incorrect?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  numbers?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  punctuation?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   time?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -369,10 +384,13 @@ export type ScoresResolvers<ContextType = any, ParentType extends ResolversParen
 export type SettingsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Settings'] = ResolversParentTypes['Settings']> = {
   analytics?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   blinker?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  capital?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   keyboardName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   levelName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  numbers?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   publishToLeaderboard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  punctuation?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   theme?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   whatsNewOnStartup?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
