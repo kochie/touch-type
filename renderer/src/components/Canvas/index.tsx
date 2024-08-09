@@ -108,7 +108,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps)
     canvasRef.current.width = width * pr;
     canvasRef.current.height = height * pr;
 
-    keyboard.drawKeyboard(ctx);
+    keyboard.drawKeyboard(ctx, !settings.punctuation);
 
     return () => {
       ctx.clearRect(0, 0, width * pr, height * pr);
@@ -125,7 +125,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps)
     let requestId: number;
     const animate = (time: number) => {
       ctx.clearRect(0, 0, width * pr, height * pr);
-      keyboard.drawKeyboard(ctx);
+      keyboard.drawKeyboard(ctx, !settings.punctuation);
 
       const uniqueChars = keys.current.reverse().filter((c, index) => {
         return keys.current.findIndex((i) => i.key === c.key) === index;

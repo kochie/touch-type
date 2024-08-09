@@ -9,20 +9,9 @@ const UserContext = createContext<UserContextProps>(null);
 export const UserProvider = ({ children }) => {
   const [user, _setUser] = useState<AuthUser | null>(null);
 
-  // async function getUser() {
-  //   try {
-  //     const user = await getCurrentUser();
-  //     setUser(user);
-  //   } catch (error) {
-  //     setUser(null);
-  //   }
-  // }
-  // console.log("UserProvider");
 
   useLayoutEffect(() => {
-    // getUser();
     const stopCallback = Hub.listen("auth", async ({ payload }) => {
-      console.log(payload)
       switch (payload.event) {
         case "signedIn":
           _setUser(payload.data);

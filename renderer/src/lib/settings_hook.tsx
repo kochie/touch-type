@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Dispatch,
   createContext,
@@ -30,6 +31,7 @@ export enum Levels {
   LEVEL_3 = "3",
   LEVEL_4 = "4",
   LEVEL_5 = "5",
+  LEVEL_6 = "6",
 }
 
 export enum ColorScheme {
@@ -55,6 +57,9 @@ const SettingsContext = createContext({
   theme: ColorScheme.SYSTEM,
   publishToLeaderboard: true,
   blinker: true,
+  punctuation: false,
+  numbers: false,
+  capital: false,
 });
 
 export const defaultSettings = {
@@ -66,6 +71,9 @@ export const defaultSettings = {
   theme: ColorScheme.SYSTEM,
   publishToLeaderboard: true,
   blinker: true,
+  punctuation: false,
+  numbers: false,
+  capital: false,
 };
 
 type ChangeSettingsAction =
@@ -104,7 +112,20 @@ type ChangeSettingsAction =
   | {
       type: "SET_BLINKER";
       blinker: boolean;
+    }
+  | {
+      type: "SET_PUNCTUATION";
+      punctuation: boolean;
+    }
+  | {
+      type: "SET_NUMBERS";
+      numbers: boolean;
+    }
+  | {
+      type: "SET_CAPITAL";
+      capital: boolean;
     };
+  
 
 const reducer = (
   state: typeof defaultSettings,
@@ -168,6 +189,24 @@ const reducer = (
       return {
         ...state,
         blinker: action.blinker,
+      };
+    
+    case "SET_PUNCTUATION":
+      return {
+        ...state,
+        punctuation: action.punctuation,
+      };
+    
+    case "SET_NUMBERS":
+      return {
+        ...state,
+        numbers: action.numbers,
+      };
+
+    case "SET_CAPITAL":
+      return {
+        ...state,
+        capital: action.capital,
       };
 
     default:

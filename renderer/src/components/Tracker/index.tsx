@@ -21,7 +21,7 @@ import sampleSize from "lodash.samplesize";
 import { useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
 import { lookupKeyboard } from "@/keyboards";
-import { useResults } from "@/lib/result-provider";
+import { Result, useResults } from "@/lib/result-provider";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import clsx from "clsx";
 
@@ -85,9 +85,9 @@ export default function Tracker() {
 
   useLayoutEffect(() => {
     if (words.length === 0) return;
-    console.log(letters.length, words[letters.length]);
-    const key = keyboard.findKey(words[letters.length]);
-    const [i, j] = keyboard.findIndex(words[letters.length]);
+    if (!keyboard.keyExists(words[letters.length].toLowerCase())) return;
+    const key = keyboard.findKey(words[letters.length].toLowerCase());
+    const [i, j] = keyboard.findIndex(words[letters.length].toLowerCase());
     setCurrentKey({ current: key, i, j });
   }, [letters.length, words]);
 
@@ -107,9 +107,12 @@ export default function Tracker() {
   };
 
   const keyDown = (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
+    e.preventDefault();
     if (modal !== ModalType.NONE) {
       return;
     }
+
+    if (e.key === "Shift") return;
 
     if (e.key === "Backspace") {
       statsDispatch({ type: "BACKSPACE" });
@@ -122,17 +125,15 @@ export default function Tracker() {
       statsDispatch({ type: "RESET" });
       return;
     }
-    e.preventDefault();
-
-    if (!keyboard.keyExists(e.key)) return;
+    if (!keyboard.keyExists(e.key.toLowerCase())) return;
 
     if (letters.length === 0) {
       statsDispatch({ type: "START" });
       setShowChange(false)
     }
 
-    const key = keyboard.findKey(e.key);
-    const [i, j] = keyboard.findIndex(e.key);
+    const key = keyboard.findKey(e.key.toLowerCase());
+    const [i, j] = keyboard.findIndex(e.key.toLowerCase());
 
     if (key.isInert) return;
 
@@ -150,7 +151,7 @@ export default function Tracker() {
 
     if (letters.length === words.length - 1) {
       setShowChange(true)
-      const results = {
+      const results: Result = {
         correct,
         incorrect,
         keyPresses: [...immutableLetters],
@@ -159,6 +160,9 @@ export default function Tracker() {
         level: settings.levelName,
         keyboard: settings.keyboardName,
         language: settings.language,
+        capital: settings.capital,
+        punctuation: settings.punctuation,
+        numbers: settings.numbers,
       };
 
       putResult(results);

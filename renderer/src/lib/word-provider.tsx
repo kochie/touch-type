@@ -23,6 +23,7 @@ const regExpMap = {
     [Levels.LEVEL_3]: regexp.LEVEL_3_QWERTY,
     [Levels.LEVEL_4]: regexp.LEVEL_4_QWERTY,
     [Levels.LEVEL_5]: regexp.LEVEL_5_QWERTY,
+    [Levels.LEVEL_6]: regexp.LEVEL_6_QWERTY,
   },
   [KeyboardLayoutNames.MACOS_US_DVORAK]: {
     [Levels.LEVEL_1]: regexp.LEVEL_1_DVORAK,
@@ -72,16 +73,29 @@ export const WordProvider = ({ children }) => {
       .replaceAll("\r", "")
       .split("\n");
 
-    console.log(`found ${words.length} words`);
-
-    const filtered = words
+    let filtered = words
       .filter((word) =>
         word.match(getRegExp(settings.levelName, settings.keyboardName)),
       )
       .filter((word) => !naughty.en.includes(word));
 
+    if (settings.capital) {
+      filtered = filtered.map((word) => word[0].toUpperCase()+word.slice(1));
+    }
+
+    if (settings.numbers) {
+      filtered = filtered.map((word) => word + Math.floor(Math.random() * 100));
+    }
+
+    if (settings.punctuation) {
+      filtered = filtered.map((word) => {
+        const punc = regexp.PUNCTUATION
+        return word + punc[Math.floor(Math.random() * punc.length)];
+      });
+    }
+
     setWordList(filtered);
-  }, [settings.levelName, settings.language, settings.keyboardName]);
+  }, [settings.levelName, settings.language, settings.keyboardName, settings.capital, settings.numbers, settings.punctuation]);
 
   useEffect(() => {
     getWordList();

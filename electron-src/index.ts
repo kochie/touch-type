@@ -28,7 +28,6 @@ autoUpdater.logger.transports.file.level = "info";
 log.info("App starting...");
 
 async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
-  console.log("Getting word set for", language);
   try {
     const file = await readFile(
       join(__dirname, "../wordsets/", `${language}.txt`),
