@@ -1,12 +1,12 @@
 export const PUNCTUATION = ["!", "@", "#", "$", "%", "&", "'", ",", ".", "?"];
 export const NUMBERS = /^[0-9]+$/u;
 
-export const LEVEL_1_QWERTY = /^[sdkl]+$/u;
-export const LEVEL_2_QWERTY = /^[sdkl afj]+$/u;
-export const LEVEL_3_QWERTY = /^[sdkl afjg hwoe]+$/u;
-export const LEVEL_4_QWERTY = /^[sdkl afjg hwoe iru]+$/u;
-export const LEVEL_5_QWERTY = /^[sdkl afjg hwoe iru zxcm]+$/u;
-export const LEVEL_6_QWERTY = /^[sdkl afjg hwoe iru zxcm qtybvpn]+$/u;
+export const LEVEL_1_QWERTY = /^[sdklaei]+$/u;
+export const LEVEL_2_QWERTY = /^[sdklaei fjg]+$/u;
+export const LEVEL_3_QWERTY = /^[sdklaei fjg hwo]+$/u;
+export const LEVEL_4_QWERTY = /^[sdklaei fjg hwo ru]+$/u;
+export const LEVEL_5_QWERTY = /^[sdklaei fjg hwo ru zxcm]+$/u;
+export const LEVEL_6_QWERTY = /^[sdklaei fjg hwo ru zxcm qtybvpn]+$/u;
 
 export const LEVEL_1_DVORAK = /^[oetn]+$/u;
 export const LEVEL_2_DVORAK = /^[oetn auhs]+$/u;
@@ -22,19 +22,19 @@ export const LEVEL_4_COLEMAK = /^[rsei atno wfuy qpjy]+$/u;
 export const LEVEL_5_COLEMAK = /^[rsei atno wfuy qpjy xcm]+$/u;
 export const LEVEL_6_COLEMAK = /^[rsei atno wfuy qpjy xcm zvbdhgk]+$/u;
 
-export const LEVEL_1_AZERTY = /^[sdkl]+$/u;
-export const LEVEL_2_AZERTY = /^[sdkl qfjm]+$/u;
-export const LEVEL_3_AZERTY = /^[sdkl qfjm zeio]+$/u;
-export const LEVEL_4_AZERTY = /^[sdkl qfjm zeio xcngh]+$/u;
-export const LEVEL_5_AZERTY = /^[sdkl qfjm zeio xcngh arupty]+$/u;
-export const LEVEL_6_AZERTY = /^[sdkl qfjm zeio xcngh arupty bvp]+$/u;
+export const LEVEL_1_AZERTY = /^[sdkleio]+$/u;
+export const LEVEL_2_AZERTY = /^[sdkleio qfjm]+$/u;
+export const LEVEL_3_AZERTY = /^[sdkleio qfjm zxc]+$/u;
+export const LEVEL_4_AZERTY = /^[sdkleio qfjm zxc ngh]+$/u;
+export const LEVEL_5_AZERTY = /^[sdkleio qfjm zxc ngh arupty]+$/u;
+export const LEVEL_6_AZERTY = /^[sdkleio qfjm zxc ngh arupty bvp]+$/u;
 
-export const LEVEL_1_QWERTY_MI = /^[sdkl]+$/u;
-export const LEVEL_2_QWERTY_MI = /^[sdkl āafj]+$/u;
-export const LEVEL_3_QWERTY_MI = /^[sdkl āafjg hwoveē]+$/u;
-export const LEVEL_4_QWERTY_MI = /^[sdkl āafjg hwoōeē iīruū]+$/u;
-export const LEVEL_5_QWERTY_MI = /^[sdkl āafjg hwoōeē iīruū zxcm]+$/u;
-export const LEVEL_6_QWERTY_MI = /^[sdkl āafjg hwoōeē iīruū zxcm qtybvpn]+$/u;
+export const LEVEL_1_QWERTY_MI = /^[sdklaei]+$/u;
+export const LEVEL_2_QWERTY_MI = /^[sdklaei āfj]+$/u;
+export const LEVEL_3_QWERTY_MI = /^[sdklaei āfjg hwovē]+$/u;
+export const LEVEL_4_QWERTY_MI = /^[sdklaei āfjg hwoōē īruū]+$/u;
+export const LEVEL_5_QWERTY_MI = /^[sdklaei āfjg hwoōē īruū zxcm]+$/u;
+export const LEVEL_6_QWERTY_MI = /^[sdklaei āfjg hwoōē īruū zxcm qtybvpn]+$/u;
 
 export const LEVEL_1_QWERTZ = /^[sdkläüop]+$/u;
 export const LEVEL_2_QWERTZ = /^[sdkläüop afjö]+$/u;
