@@ -42,6 +42,11 @@ const keyboards = [
     layout: KeyboardLayoutNames.MACOS_ES_QWERTY,
     country: "🇪🇸",
   },
+  {
+    name: "MAC QWERTY (Māori)",
+    layout: KeyboardLayoutNames.MACOS_NZ_QWERTY,
+    country: "🇳🇿",
+  },
 ];
 
 interface KeyboardSelectProps {
@@ -62,7 +67,7 @@ export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboar
         Keyboard Layout
       </Label>
       <Description as="span" className="text-sm text-gray-500">
-        Select a keyboard layout to render your heatmap.
+        Select a keyboard layout to display the heatmap of incorrect key taps.
       </Description>
       <Listbox value={selectedKeyboardName} onChange={handleChange}>
         <ListboxButton
