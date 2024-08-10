@@ -113,7 +113,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps)
     return () => {
       ctx.clearRect(0, 0, width * pr, height * pr);
     };
-  }, [width, height, pr, fontLoaded, keyboardLayout]);
+  }, [width, height, pr, fontLoaded, keyboardLayout, settings.punctuation]);
 
   useEffect(() => {
     const keyboard = new Keyboard(keyboardLayout);
@@ -135,15 +135,15 @@ const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps)
         const t = 1 - (time % 1500) / 1500;
 
         const x = 255 - 255 * (1 - t);
-        keyboard.drawKey(ctx, currentKey.i, currentKey.j, currentKey.current, `rgba(0, 0, ${x}, 0.5)`);
+        keyboard.drawKey(ctx, currentKey.i, currentKey.j, currentKey.current, `rgba(0, 0, ${x}, 0.5)`, false, !settings.punctuation);
       }
 
       const keyz = uniqueChars.map((key) => {
         const x = 255 - (255 - key.ttl);
         if (key.correct)
-          keyboard.drawKey(ctx, key.i, key.j, key.key, `rgba(0, ${x}, 0, 0.5)`);
+          keyboard.drawKey(ctx, key.i, key.j, key.key, `rgba(0, ${x}, 0, 0.5)`, false, !settings.punctuation);
         else
-          keyboard.drawKey(ctx, key.i, key.j, key.key, `rgba(${x}, 0, 0, 0.5)`);
+          keyboard.drawKey(ctx, key.i, key.j, key.key, `rgba(${x}, 0, 0, 0.5)`, false, !settings.punctuation);
         return { ...key, ttl: key.ttl - 7 };
       });
 
@@ -151,7 +151,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps)
         .filter((key) => key.ttl <= 0)
         .forEach((key) => {
           // TODO: clear key
-          keyboard.drawKey(ctx, key.i, key.j, key.key, "rgba(0, 0, 0, 0.5)");
+          keyboard.drawKey(ctx, key.i, key.j, key.key, "rgba(0, 0, 0, 0.5)", false, !settings.punctuation);
         });
 
       keys.current = keyz.filter((key) => key.ttl > 0);
@@ -171,7 +171,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps)
       clearInterval(interval);
       window.cancelAnimationFrame(requestId);
     };
-  }, [letters, pr, keyDown, intervalFn, keys, keyboardLayout, currentKey]);
+  }, [letters, pr, keyDown, intervalFn, keys, keyboardLayout, currentKey, settings.punctuation]);
 
   return <canvas ref={canvasRef} />;
 };
