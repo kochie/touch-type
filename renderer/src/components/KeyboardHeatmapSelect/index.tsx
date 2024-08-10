@@ -33,7 +33,7 @@ const keyboards = [
     country: "🇫🇷",
   },
   {
-    name: "MAC AZERTZ",
+    name: "MAC QWERTZ",
     layout: KeyboardLayoutNames.MACOS_DE_QWERTZ,
     country: "🇩🇪",
   },

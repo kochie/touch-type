@@ -17,7 +17,7 @@ import {
 } from "@fortawesome/pro-duotone-svg-icons";
 import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/keyboards/key";
-import sampleSize from "lodash.samplesize";
+import sample from "lodash.sample";
 import { useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
 import { lookupKeyboard } from "@/keyboards";
@@ -72,7 +72,12 @@ export default function Tracker() {
   ] = useReducer(statsReducer, initialStat);
 
   const resetWords = useCallback(async () => {
-    const pinned = sampleSize(wordList, 15).join(" ").replaceAll("  ", "");
+    const selected: string[] = [];
+    for (let i = 0; i < 15; i++) {
+      selected.push(sample(wordList)!);
+    }
+
+    const pinned = selected.join(" ").replaceAll("  ", "");
     setWords(pinned);
   }, [wordList]);
 
