@@ -64,7 +64,7 @@ export class Keyboard {
     );
   }
 
-  drawKeyboard(ctx: CanvasRenderingContext2D) {
+  drawKeyboard(ctx: CanvasRenderingContext2D, hideSecondary: boolean = false) {
     this.rows.forEach((row, i) =>
       row.forEach((letter, j) => {
         this.drawKey(
@@ -74,6 +74,7 @@ export class Keyboard {
           letter,
           "rgba(0, 0, 0, 0.5)",
           Array.isArray(letter) ? letter[0].isInert : letter.isInert,
+          hideSecondary,
         );
       }),
     );
@@ -83,8 +84,8 @@ export class Keyboard {
     return this.rows.some((rows) =>
       rows.some((key) =>
         Array.isArray(key)
-          ? key[0].key === k || key[1].key === k
-          : key.key === k,
+          ? key[0].key === k || key[1].key === k || key[0].secondaryKey === k || key[1].secondaryKey === k
+          : key.key === k || key.secondaryKey === k,
       ),
     );
   }
@@ -95,13 +96,13 @@ export class Keyboard {
       for (let j = 0; j < row.length; j++) {
         const b = row[j];
         if (Array.isArray(b)) {
-          if (b[0].key === key) {
+          if (b[0].key === key || b[0].secondaryKey === key) {
             return [i, j, 0];
           }
-          if (b[1].key === key) {
+          if (b[1].key === key || b[1].secondaryKey === key) {
             return [i, j, 1];
           }
-        } else if (b.key === key) {
+        } else if (b.key === key || b.secondaryKey === key) {
           return [i, j, 0];
         }
       }
@@ -115,18 +116,18 @@ export class Keyboard {
       for (let j = 0; j < row.length; j++) {
         const b = row[j];
         if (Array.isArray(b)) {
-          if (b[0].key === key) {
+          if (b[0].key === key || b[0].secondaryKey === key) {
             return this.rows[i][j][0];
           }
-          if (b[1].key === key) {
+          if (b[1].key === key || b[1].secondaryKey === key) {
             return this.rows[i][j][1];
           }
-        } else if (b.key === key) {
+        } else if (b.key === key || b.secondaryKey === key) {
           return this.rows[i][j] as Key;
         }
       }
     }
-    throw new Error("Can't find key on keyboard");
+    throw new Error(`Can't find key on keyboard - ${key}`);
   }
 
   drawKey(
@@ -136,6 +137,7 @@ export class Keyboard {
     letter: Key | Key[],
     color: string,
     isInert: boolean = false,
+    hideSecondary: boolean = false,
   ) {
     const width = 80
     const height = 80
@@ -160,7 +162,8 @@ export class Keyboard {
         (letter[0].height || height) * this.scale,
         letter[0],
         color,
-        this.scale
+        this.scale,
+        hideSecondary,
       );
       makeKey(
         ctx,
@@ -170,7 +173,8 @@ export class Keyboard {
         (letter[1].height || height) * this.scale,
         letter[1],
         color,
-        this.scale
+        this.scale,
+        hideSecondary,
       );
     } else {
       makeKey(
@@ -181,7 +185,8 @@ export class Keyboard {
         (letter.height || height) * this.scale,
         letter,
         color,
-        this.scale
+        this.scale,
+        hideSecondary,
       );
     }
   }

@@ -103,6 +103,9 @@ dependencies:
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
+  lodash.sample:
+    specifier: ^4.2.1
+    version: 4.2.1
   naughty-words:
     specifier: ^1.2.0
     version: 1.2.0
@@ -8271,6 +8274,10 @@ packages:
 
   /lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
+
+  /lodash.sample@4.2.1:
+    resolution: {integrity: sha512-odCZufa8jYDBZQ+JOSePWRs+iApPdvIp3qAiKc9F22RdSCMLuUu60Jvgs2M6qMisKAeBZoumAkqDiGr9HDym/Q==}
+    dev: false
 
   /lodash.samplesize@4.2.0:
     resolution: {integrity: sha512-1ZhKV7/nuISuaQdxfCqrs4HHxXIYN+0Z4f7NMQn2PHkxFZJGavJQ1j/paxyJnLJmN2ZamNN6SMepneV+dCgQTA==}
