@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useReducer,
@@ -9,7 +10,14 @@ import {
 } from "react";
 import { KeyboardLayoutNames, lookupKeyboard } from "@/keyboards";
 import { Keyboard } from "@/keyboards/key";
-import { interpolateRgb, max, scaleSequential } from "d3";
+import {
+  axisBottom,
+  interpolateRgb,
+  max,
+  scaleLinear,
+  scaleSequential,
+  select,
+} from "d3";
 
 // @ts-ignore
 import RobotoMono from "@/assets/RobotoMono-Regular.ttf";
@@ -27,7 +35,7 @@ interface ResizerState {
 }
 
 const marginWidth = 120;
-const marginHeight = 380;
+const marginHeight = 350;
 
 // reducer for resizing the canvas
 const resizer = (state: ResizerState, action: ResizerAction) => {
@@ -60,6 +68,7 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
   const keyboardLayout = lookupKeyboard(keyboardName);
   const [fontLoaded, setFontLoaded] = useState(false);
   const keyboard = new Keyboard(keyboardLayout, 0.9);
+  const axisRef = useRef<SVGSVGElement>(null);
 
   const { results } = useResults();
   const [{ width, height, pr }, resizeDispatch] = useReducer(resizer, {
@@ -91,6 +100,28 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
     };
   }, []);
 
+  const generateDomain = useCallback(() => {
+    const keyResults = results
+      .filter((res) => res.keyboard === keyboardName)
+      .reduce((acc, result) => {
+        result.keyPresses?.forEach((keyPress) => {
+          if (!acc.has(keyPress.key)) {
+            acc.set(keyPress.key, { correct: 0, incorrect: 0 });
+          }
+          const key = acc.get(keyPress.key)!;
+          if (keyPress.correct) {
+            key.correct += 1;
+          } else {
+            key.incorrect += 1;
+          }
+          acc.set(keyPress.key, key);
+        });
+        return acc;
+      }, new Map<string, { correct: number; incorrect: number }>());
+
+    return [0, max(Array.from(keyResults.values()).map((v) => v.incorrect))!];
+  }, [results, keyboardName]);
+
   // Draw the keyboard on the canvas
   useLayoutEffect(() => {
     if (!canvasRef.current) return;
@@ -108,34 +139,63 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
     return () => {
       ctx.clearRect(0, 0, width * pr, height * pr);
     };
-  }, [width, height, pr, fontLoaded, keyboardLayout]);
+  }, [width, height, pr, fontLoaded, keyboardLayout, results]);
 
   useLayoutEffect(() => {
+    // Draw the scale
     if (!scaleRef.current) return;
     const ctx = scaleRef.current.getContext("2d");
     if (!ctx) return;
-    scaleRef.current.style.width = `${500}px`;
-    scaleRef.current.style.height = `${100}px`;
-    scaleRef.current.width = 500 * pr;
-    scaleRef.current.height = 100 * pr;
+    scaleRef.current.style.width = `${1000}px`;
+    scaleRef.current.style.height = `${50}px`;
+    scaleRef.current.width = 1000 * pr;
+    scaleRef.current.height = 50 * pr;
 
     const colorScale = scaleSequential()
-      .interpolator(interpolateRgb("rgba(0,255,0,0)", "rgba(255,0,0,1)"))
+      .interpolator(interpolateRgb("rgba(0,0,0,0.5)", "rgba(255,0,0,1)"))
       .domain([0, 100]);
 
-    const gradient = ctx.createLinearGradient(0, 0, 500 * pr, 0);
+    const gradient = ctx.createLinearGradient(0, 0, 1000 * pr, 0);
     for (let i = 0; i <= 100; i++) {
       gradient.addColorStop(i / 100, colorScale(i));
     }
 
+    const domain = generateDomain()
+    if (domain[1] === undefined) return
+
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 500 * pr, 100 * pr);
-  }, []);
+    ctx.fillRect(0, 0, 1000 * pr, 50 * pr);
+
+    const axisScale = scaleLinear()
+      .domain(domain)
+      .range([0, 1000]);
+
+
+    const axis = axisBottom(axisScale)
+      .tickValues([0, domain[1]*0.25, domain[1]*0.5, domain[1]*0.75, domain[1]])
+      .tickFormat((d) => `${d}`);
+
+    const svg = select(axisRef.current);
+    svg.attr("width", 1050).attr("height", 20);
+
+    svg.select(".axis").remove(); // Remove previous axis if any
+    svg
+      .append("g")
+      .attr("class", "axis")
+      .attr("transform", "translate(25,0)")
+      .call(axis);
+
+    return () => {
+      ctx.clearRect(0, 0, 1000 * pr, 50 * pr);
+      svg.selectAll("*").remove();
+    }
+  }, [generateDomain]);
 
   return (
     <>
       <canvas ref={canvasRef} className="mx-auto" />
-      <canvas ref={scaleRef} />
+      <canvas ref={scaleRef} className="mx-auto" />
+      <svg ref={axisRef} className="mx-auto" />
     </>
   );
 
@@ -159,12 +219,9 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
       }, new Map<string, { correct: number; incorrect: number }>());
 
     const colorScale = scaleSequential()
-      .interpolator(interpolateRgb("rgba(0,255,0,0)", "rgba(255,0,0,1)"))
+      .interpolator(interpolateRgb("rgba(0,0,0,0.5)", "rgba(255,0,0,1)"))
       // This needs to be the scale of correct vs incorrect
-      .domain([
-        0,
-        max(Array.from(keyResults.values()).map((v) => v.incorrect))!,
-      ]);
+      .domain(generateDomain());
 
     keyResults.forEach((value, k) => {
       const [i, j] = keyboard.findIndex(k);

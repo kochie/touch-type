@@ -41,7 +41,7 @@ export default function Menu({
   }, [settings]);
 
   return (
-    <div className="flex justify-between mt-8 mx-8">
+    <div className="flex justify-between pt-8 mx-8">
       <div className="flex gap-4">
         <div className="hover:animate-pulse" title="Stats">
           <Link href={"/stats"}>
