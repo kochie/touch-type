@@ -13,6 +13,8 @@ export default function HeatmapPage() {
         <KeyboardSelect
           selectedKeyboardName={keyboard}
           setSelectedKeyboard={setKeyboard}
+          label="Keyboard Layout"
+          description="Select a keyboard layout to display the heatmap of incorrect key taps."
         />
       </div>
 

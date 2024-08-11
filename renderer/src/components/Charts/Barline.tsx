@@ -6,10 +6,13 @@ import {
   axisRight,
   InternSet,
   interpolateBlues,
+  interpolateCool,
   interpolateGreens,
+  interpolateGreys,
   interpolateOranges,
   interpolatePurples,
   interpolateReds,
+  interpolateWarm,
   map,
   max,
   scaleBand,
@@ -22,15 +25,19 @@ import { range } from "lodash";
 
 import styles from "@/styles/stats.module.css";
 import { Result, useResults } from "@/lib/result-provider";
+import { Levels } from "@/lib/settings_hook";
 
 const marginTop = 20; // the top margin, in pixels
 const marginRight = 40; // the right margin, in pixels
 const marginBottom = 100; // the bottom margin, in pixels
 const marginLeft = 40;
 
+interface BarlineProps {
+  keyboard: string;
+}
 
-export default function Barline() {
-  const {results} = useResults()
+export default function Barline({ keyboard }: BarlineProps) {
+  const { results } = useResults();
   const [computedResults, setComputedResults] = useState<Result[]>([]);
 
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
@@ -47,20 +54,21 @@ export default function Barline() {
     window.addEventListener("resize", resize);
     resize();
 
-    const computed = results.map((res) => ({
-      ...res,
-      cpm:
-        (res.correct + res.incorrect) /
-        (Duration.fromISO(res.time).toMillis() / 1000 / 60),
-    }));
+    const computed = results
+      .filter((res) => res.keyboard === keyboard)
+      .map((res) => ({
+        ...res,
+        cpm:
+          (res.correct + res.incorrect) /
+          (Duration.fromISO(res.time).toMillis() / 1000 / 60),
+      }));
 
     setComputedResults(computed);
-
 
     return () => {
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [results, keyboard]);
 
   useEffect(() => {
     if (!svgRef.current) return;
@@ -71,23 +79,33 @@ export default function Barline() {
     const svg = select(svgRef.current);
 
     const CHART_SIZE = 75;
-    const data = [
-      ...Array(CHART_SIZE - Math.min(computedResults.length, CHART_SIZE)).fill({
-        correct: 0,
+
+    const dummyData = Array(
+      CHART_SIZE - Math.min(computedResults.length, CHART_SIZE),
+    )
+      .fill(null)
+      .map(() => ({
+        correct: 10,
         incorrect: 0,
-        cpm: 0,
-        level: 0,
-      }),
+        cpm: Math.random() * 200,
+        level: Levels.LEVEL_0,
+      }));
+    // console.log(dummyData)
+
+    const data = [
+      ...dummyData,
       ...computedResults.slice(
         Math.max(computedResults.length - CHART_SIZE, 0),
         computedResults.length,
       ),
     ];
 
+    // console.log(data)
+
     const X = map(data, (x, i) => i);
     const Y = map(data, (y) => y.cpm);
     const Y2 = map(data, (y) => y.incorrect);
-    const LEVEL = map(data, (y) => y.level);
+    const LEVEL = map(data, (y) => y.level ?? Levels.LEVEL_3);
 
     const xDomain = new InternSet(X);
     const yDomain = new InternSet([0, max(Y)]);
@@ -114,19 +132,22 @@ export default function Barline() {
       return xDomain.has(X[i]);
     });
 
-    const blues = scaleSequential(yDomain, interpolateBlues);
-    const greens = scaleSequential(yDomain, interpolateGreens);
-    const oranges = scaleSequential(yDomain, interpolatePurples);
-
     const reds = scaleSequential(yDomain2, interpolateReds);
 
-    const levelColors = [oranges, greens, blues];
+    const levelColors = {
+      [Levels.LEVEL_0]: scaleSequential(yDomain, interpolateGreys),
+      [Levels.LEVEL_1]: scaleSequential(yDomain, interpolateBlues),
+      [Levels.LEVEL_2]: scaleSequential(yDomain, interpolateGreens),
+      [Levels.LEVEL_3]: scaleSequential(yDomain, interpolateOranges),
+      [Levels.LEVEL_4]: scaleSequential(yDomain, interpolatePurples),
+      [Levels.LEVEL_5]: scaleSequential(yDomain, interpolateCool),
+      [Levels.LEVEL_6]: scaleSequential(yDomain, interpolateWarm),
+    };
 
     svg
       .attr("width", width)
       .attr("height", height)
       .attr("viewBox", [0, 0, width, height]);
-    // .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
 
     svg
       .append("g")
@@ -138,33 +159,9 @@ export default function Barline() {
           .selectAll(".tick line")
           .clone()
           .attr("x2", -width + marginLeft + marginRight)
-          // .attr("stroke-opacity", 0.5)
-          // .attr("stroke", )
           .attr("stroke-dasharray", "5,5"),
       );
 
-    // svg
-    //   .append("g")
-    //   .attr("transform", `translate(${marginLeft},0)`)
-    //   .call(yAxis2)
-    //   .call((g) => g.select(".domain").remove())
-    //   .call((g) =>
-    //     g
-    //       .selectAll(".tick line")
-    //       .clone()
-    //       .attr("x2", width - marginLeft - marginRight)
-    //       .attr("stroke-opacity", 0.5)
-    //   )
-    //   .call((g) =>
-    //     g
-    //       .append("text")
-    //       .attr("x", -marginLeft)
-    //       .attr("y", 10)
-    //       .attr("fill", "currentColor")
-    //       // .attr("stroke", "red")
-    //       .attr("text-anchor", "start")
-    //       .text(yLabel)
-    //   );
     const div = select("body")
       .append("div")
       .attr("class", styles.tooltip)
@@ -178,7 +175,7 @@ export default function Barline() {
       .data(I)
       .join("rect")
       .attr("fill", (i: number) => {
-        const color = LEVEL[i] > 0 ? levelColors[LEVEL[i] - 1] : blues;
+        const color = levelColors[LEVEL[i]];
         return color(Y[i]);
       })
       .attr("x", (i: number) => xScale(X[i]) ?? 0)
@@ -191,9 +188,9 @@ export default function Barline() {
       })
       .attr("width", xScale.bandwidth())
       .on("mouseover", function (d, i: number) {
+        if (LEVEL[i] === Levels.LEVEL_0) return;
         select(this).transition().duration(50).attr("opacity", ".50");
         div.transition().duration(50).style("opacity", 1);
-        // let num = Math.round((d.value / d.data.all) * 100).toString() + "%";
         div
           .html(
             Y[i].toFixed(0) + "cpm on Level: " + (LEVEL[i] ? LEVEL[i] : "3"),
@@ -226,7 +223,6 @@ export default function Barline() {
       .on("mouseover", function (d, i: number) {
         select(this).transition().duration(50).attr("opacity", ".50");
         div.transition().duration(50).style("opacity", 1);
-        // let num = Math.round((d.value / d.data.all) * 100).toString() + "%";
         div
           .html(Y2[i].toFixed(0) + " typos")
           .style("left", d.pageX + 10 + "px")
@@ -242,5 +238,6 @@ export default function Barline() {
       div.remove();
     };
   }, [width, height, computedResults]);
+
   return <svg ref={svgRef} className="mx-auto" />;
 }

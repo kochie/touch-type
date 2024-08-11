@@ -1,35 +1,11 @@
 "use client";
+
+import { Result, useResults } from "@/lib/result-provider";
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid";
+import clsx from "clsx";
 import { Duration, DateTime } from "luxon";
 import { useEffect, useState } from "react";
 
-const testStats = [
-  {
-    name: "Accuracy",
-    stat: "71,897",
-    previousStat: "70,946",
-    change: "12%",
-    changeType: "increase",
-  },
-  {
-    name: "Speed",
-    stat: "58.16%",
-    previousStat: "56.14%",
-    change: "2.02%",
-    changeType: "increase",
-  },
-  {
-    name: "Streak",
-    stat: "24.57%",
-    previousStat: "28.62%",
-    change: "4.05%",
-    changeType: "decrease",
-  },
-];
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
 
 interface Stat {
   name: string;
@@ -39,15 +15,6 @@ interface Stat {
   change: string;
 }
 
-interface Result {
-  correct: number;
-  incorrect: number;
-  cpm: number;
-  level: number;
-  keyboard: string;
-  language: string;
-  datetime: string;
-}
 
 function calculateAverageCorrect(results: Result[]) {
   const correct = results.reduce((acc, curr) => {
@@ -64,12 +31,10 @@ export default function TopStats() {
   const [accuracy, setAccuracy] = useState<Stat>();
   const [speed, setSpeed] = useState<Stat>();
   const [streak, setStreak] = useState<Stat>();
+  const {results} = useResults();
 
   useEffect(() => {
-    if (!localStorage) return;
-
-    const storedResults = JSON.parse(localStorage.getItem("results") ?? "[]");
-    const computed: Result[] = storedResults.map((res) => ({
+    const computed: (Result & {cpm: number})[] = results.map((res) => ({
       ...res,
       cpm:
         (res.correct + res.incorrect) /
@@ -85,23 +50,23 @@ export default function TopStats() {
 
     const thisWeeksResults = computed.filter(
       (result) =>
-        DateTime.fromISO(result.datetime ?? 0) <
+        DateTime.fromISO(result.datetime) <
         DateTime.now().startOf("day"),
     );
 
+    console.log(todaysResults, thisWeeksResults);
+
     const accuracy1 = calculateAverageCorrect(todaysResults);
-
     const accuracy2 = calculateAverageCorrect(thisWeeksResults);
-
     const accuracyDiff = accuracy1 - accuracy2;
 
-    const accuracy: Stat = {
+    setAccuracy(prev => ({
       name: "Accuracy",
       stat: (accuracy1 * 100).toFixed(2) + "%",
       previousStat: (accuracy2 * 100).toFixed(2) + "%",
       change: (accuracyDiff * 100).toFixed(2) + "%",
       changeType: accuracyDiff > 0 ? "increase" : "decrease",
-    };
+    }));
 
     const speed1 =
       todaysResults.reduce((acc, curr) => acc + curr.cpm, 0) /
@@ -109,7 +74,7 @@ export default function TopStats() {
     const speed2 =
       thisWeeksResults.reduce((acc, curr) => acc + curr.cpm, 0) /
       thisWeeksResults.length;
-    const speed: Stat = {
+    const newSpeed: Stat = {
       name: "Speed (CPM)",
       stat: speed1.toFixed(2),
       previousStat: speed2.toFixed(2),
@@ -123,7 +88,7 @@ export default function TopStats() {
     const incorrect2 =
       thisWeeksResults.reduce((acc, curr) => acc + curr.incorrect, 0) /
       thisWeeksResults.length;
-    const streak: Stat = {
+    const newStreak: Stat = {
       name: "Average Error",
       stat: incorrect1.toFixed(2),
       previousStat: incorrect2.toFixed(2),
@@ -131,10 +96,7 @@ export default function TopStats() {
       changeType: incorrect1 < incorrect2 ? "increase" : "decrease",
     };
 
-    setAccuracy(accuracy);
-    setSpeed(speed);
-    setStreak(streak);
-  }, []);
+  }, [results]);
 
   return (
     <div className="mx-40">
@@ -160,7 +122,7 @@ const Accuracy = ({ accuracy }: { accuracy: Stat }) => (
       </div>
 
       <div
-        className={classNames(
+        className={clsx(
           accuracy.changeType === "increase"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800",
@@ -203,7 +165,7 @@ const Speed = ({ speed }: { speed: Stat }) => (
       </div>
 
       <div
-        className={classNames(
+        className={clsx(
           speed.changeType === "increase"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800",
@@ -244,7 +206,7 @@ const Streak = ({ streak }: { streak: Stat }) => (
       </div>
 
       <div
-        className={classNames(
+        className={clsx(
           streak.changeType === "increase"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800",

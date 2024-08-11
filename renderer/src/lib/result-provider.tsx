@@ -8,26 +8,26 @@ import { openDB } from "idb";
 import { createContext, useContext, useEffect, useState } from "react";
 import { Languages, Levels } from "./settings_hook";
 import { KeyboardLayoutNames } from "@/keyboards";
-
+import { Duration } from "luxon";
 
 export interface Result {
   correct: number;
   incorrect: number;
-  keyPresses: LetterStat[],
-  time: string,
-  datetime: string,
-  level: Levels,
-  keyboard: KeyboardLayoutNames,
-  language: Languages,
-  capital: boolean,
-  punctuation: boolean,
-  numbers: boolean,
+  keyPresses: LetterStat[];
+  time: string;
+  datetime: string;
+  level: Levels;
+  keyboard: KeyboardLayoutNames;
+  language: Languages;
+  capital: boolean;
+  punctuation: boolean;
+  numbers: boolean;
+  cpm: number;
 }
 
-
 const ResultsContext = createContext({
-    results: [] as Result[],
-    putResult: (result: Result) => {},
+  results: [] as Result[],
+  putResult: (result: Result) => {},
 });
 
 export function ResultsProvider({ children }) {
@@ -50,7 +50,13 @@ export function ResultsProvider({ children }) {
           const results = JSON.parse(oldResults);
           const store = tx.objectStore("results");
           for (const result of results) {
-            store.put({datetime: new Date().toISOString(), ...result});
+            store.put({
+              datetime: new Date().toISOString(),
+              cpm:
+                (result.correct + result.incorrect) /
+                (Duration.fromISO(result.time).toMillis() / 1000 / 60),
+              ...result,
+            });
           }
           localStorage.removeItem("results");
         }
@@ -59,7 +65,12 @@ export function ResultsProvider({ children }) {
     const tx = db.transaction("results", "readonly");
     const store = tx.objectStore("results");
     const results_store = await store.getAll();
-    _setResults(results_store.sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime()));
+    _setResults(
+      results_store.sort(
+        (a, b) =>
+          new Date(b.datetime).getTime() - new Date(a.datetime).getTime(),
+      ),
+    );
   }
 
   useEffect(() => {
