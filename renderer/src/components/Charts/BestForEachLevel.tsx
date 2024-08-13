@@ -127,7 +127,7 @@ export default function BestForEachLevel({ keyboard }: BestForEachLevelProps) {
             </div>
             <div className="text-xs py-1">
               {b.cpm > 0 && (
-                <div className="flex gap-3">
+                <div className="flex gap-3 justify-between">
                   <span className="inline-flex items-center rounded-md bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700">
                     {b.cpm.toFixed(0)}cpm
                   </span>
