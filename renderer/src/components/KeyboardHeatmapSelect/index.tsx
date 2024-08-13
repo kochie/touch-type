@@ -52,9 +52,11 @@ const keyboards = [
 interface KeyboardSelectProps {
   selectedKeyboardName: KeyboardLayoutNames;
   setSelectedKeyboard: (keyboard: KeyboardLayoutNames) => void;
+  label: string
+  description: string
 }
 
-export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboard}: KeyboardSelectProps) {
+export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboard, label, description}: KeyboardSelectProps) {
   const handleChange = (value: KeyboardLayoutNames) => {
     const keyboard = keyboards.find((keyboard) => keyboard.layout === value);
     if (!keyboard) return 
@@ -64,10 +66,10 @@ export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboar
   return (
     <Field>
       <Label className="block text-sm font-medium leading-6">
-        Keyboard Layout
+        {label}
       </Label>
       <Description as="span" className="text-sm text-gray-500">
-        Select a keyboard layout to display the heatmap of incorrect key taps.
+        {description}
       </Description>
       <Listbox value={selectedKeyboardName} onChange={handleChange}>
         <ListboxButton

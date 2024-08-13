@@ -26,7 +26,7 @@ const resizer = (state: ResizerState, action: ResizerAction) => {
       return {
         ...state,
         width: window.innerWidth,
-        height: window.innerHeight - 228,
+        height: window.innerHeight - 300,
       };
     case "PR":
       return {
@@ -134,7 +134,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps)
       if (currentKey && settings.blinker) {
         const t = 1 - (time % 1500) / 1500;
 
-        const x = 255 - 255 * (1 - t);
+        const x = 255 * -t
         keyboard.drawKey(ctx, currentKey.i, currentKey.j, currentKey.current, `rgba(0, 0, ${x}, 0.5)`, false, !settings.punctuation);
       }
 

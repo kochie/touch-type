@@ -1,35 +1,11 @@
 "use client";
+
+import { KeyboardLayoutNames } from "@/keyboards";
+import { Result, useResults } from "@/lib/result-provider";
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid";
+import clsx from "clsx";
 import { Duration, DateTime } from "luxon";
 import { useEffect, useState } from "react";
-
-const testStats = [
-  {
-    name: "Accuracy",
-    stat: "71,897",
-    previousStat: "70,946",
-    change: "12%",
-    changeType: "increase",
-  },
-  {
-    name: "Speed",
-    stat: "58.16%",
-    previousStat: "56.14%",
-    change: "2.02%",
-    changeType: "increase",
-  },
-  {
-    name: "Streak",
-    stat: "24.57%",
-    previousStat: "28.62%",
-    change: "4.05%",
-    changeType: "decrease",
-  },
-];
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
 
 interface Stat {
   name: string;
@@ -37,16 +13,6 @@ interface Stat {
   previousStat: string;
   changeType: string;
   change: string;
-}
-
-interface Result {
-  correct: number;
-  incorrect: number;
-  cpm: number;
-  level: number;
-  keyboard: string;
-  language: string;
-  datetime: string;
 }
 
 function calculateAverageCorrect(results: Result[]) {
@@ -60,114 +26,148 @@ function calculateAverageCorrect(results: Result[]) {
   return correct / total;
 }
 
-export default function TopStats() {
-  const [accuracy, setAccuracy] = useState<Stat>();
-  const [speed, setSpeed] = useState<Stat>();
-  const [streak, setStreak] = useState<Stat>();
+interface TopStatsProps {
+  keyboard: KeyboardLayoutNames;
+}
+
+// 
+
+export default function TopStats({ keyboard }: TopStatsProps) {
+  const [keyboardBest, setKeyboardBest] = useState<Stat>({name: "", stat: "", previousStat: "", changeType: "", change: ""});
+  const [averageCpm, setAverageCpm] = useState<Stat>({name: "", stat: "", previousStat: "", changeType: "", change: ""});
+  const [streak, setStreak] = useState<Stat>({
+    name: "Streak",
+    stat: "0",
+    previousStat: "0",
+    change: "0",
+    changeType: "increase",
+  });
+  const { results } = useResults();
 
   useEffect(() => {
-    if (!localStorage) return;
-
-    const storedResults = JSON.parse(localStorage.getItem("results") ?? "[]");
-    const computed: Result[] = storedResults.map((res) => ({
-      ...res,
-      cpm:
-        (res.correct + res.incorrect) /
-        (Duration.fromISO(res.time).toMillis() / 1000 / 60),
-    }));
-
-    // using luxon get start of day
+    const computed: Result[] = results.filter(
+      (res) => res.keyboard === keyboard,
+    );
 
     // get the average accuracy for todays results
     const todaysResults = computed.filter((result) =>
       DateTime.fromISO(result.datetime ?? 0).hasSame(DateTime.now(), "day"),
     );
 
-    const thisWeeksResults = computed.filter(
+    const previousResults = computed.filter(
       (result) =>
-        DateTime.fromISO(result.datetime ?? 0) <
-        DateTime.now().startOf("day"),
+        DateTime.fromISO(result.datetime) < DateTime.now().startOf("day"),
     );
 
-    const accuracy1 = calculateAverageCorrect(todaysResults);
+    // number of days with results starting today.
+    const uniqueDays = Array.from(new Set(
+      computed.map((res) => DateTime.fromISO(res.datetime).toISODate()),
+    ));
 
-    const accuracy2 = calculateAverageCorrect(thisWeeksResults);
+    console.log("UNIQUE DAYS", uniqueDays);
 
-    const accuracyDiff = accuracy1 - accuracy2;
+    console.log("RESULTS", todaysResults, previousResults, computed);
+    // if (todaysResults.length === 0 || previousResults.length === 0) {
+    //   return;
+    // }
 
-    const accuracy: Stat = {
-      name: "Accuracy",
-      stat: (accuracy1 * 100).toFixed(2) + "%",
-      previousStat: (accuracy2 * 100).toFixed(2) + "%",
-      change: (accuracyDiff * 100).toFixed(2) + "%",
-      changeType: accuracyDiff > 0 ? "increase" : "decrease",
-    };
+    // const averageCpm = results.map((res) => res.cpm).reduce((acc, curr) => acc + curr, 0) / results.length;
 
-    const speed1 =
-      todaysResults.reduce((acc, curr) => acc + curr.cpm, 0) /
-      todaysResults.length;
-    const speed2 =
-      thisWeeksResults.reduce((acc, curr) => acc + curr.cpm, 0) /
-      thisWeeksResults.length;
-    const speed: Stat = {
-      name: "Speed (CPM)",
-      stat: speed1.toFixed(2),
-      previousStat: speed2.toFixed(2),
-      change: (speed1 - speed2).toFixed(2),
-      changeType: speed1 > speed2 ? "increase" : "decrease",
-    };
 
-    const incorrect1 =
-      todaysResults.reduce((acc, curr) => acc + curr.incorrect, 0) /
-      todaysResults.length;
-    const incorrect2 =
-      thisWeeksResults.reduce((acc, curr) => acc + curr.incorrect, 0) /
-      thisWeeksResults.length;
-    const streak: Stat = {
-      name: "Average Error",
-      stat: incorrect1.toFixed(2),
-      previousStat: incorrect2.toFixed(2),
-      change: (incorrect1 - incorrect2).toFixed(2),
-      changeType: incorrect1 < incorrect2 ? "increase" : "decrease",
-    };
 
-    setAccuracy(accuracy);
-    setSpeed(speed);
-    setStreak(streak);
-  }, []);
+    
+
+    // const accuracy1 = calculateAverageCorrect(todaysResults);
+    // const accuracy2 = calculateAverageCorrect(thisWeeksResults);
+    // const accuracyDiff = accuracy1 - accuracy2;
+
+    // setAccuracy((prev) => ({
+    //   name: "Accuracy",
+    //   stat: (accuracy1 * 100).toFixed(2) + "%",
+    //   previousStat: (accuracy2 * 100).toFixed(2) + "%",
+    //   change: (accuracyDiff * 100).toFixed(2) + "%",
+    //   changeType: accuracyDiff > 0 ? "increase" : "decrease",
+    // }));
+
+    // const speed1 =
+    //   todaysResults.reduce((acc, curr) => acc + curr.cpm, 0) /
+    //   todaysResults.length;
+    // const speed2 =
+    //   thisWeeksResults.reduce((acc, curr) => acc + curr.cpm, 0) /
+    //   thisWeeksResults.length;
+    // const newSpeed: Stat = {
+    //   name: "Speed (CPM)",
+    //   stat: speed1.toFixed(2),
+    //   previousStat: speed2.toFixed(2),
+    //   change: (speed1 - speed2).toFixed(2),
+    //   changeType: speed1 > speed2 ? "increase" : "decrease",
+    // };
+
+    setKeyboardBest({
+      name: "Best Keyboard",
+      stat: keyboard,
+      previousStat: "",
+      change: "0",
+      changeType: "increase",
+    })
+
+    const avgCpm = results.map((res) => res.cpm).reduce((acc, curr) => acc + curr, 0) / results.length
+    setAverageCpm({
+      name: "Average CPM",
+      stat: `${avgCpm.toFixed(2)} CPM`,
+      previousStat: `${avgCpm.toFixed(2)} CPM`,
+      change: "0",
+      changeType: "increase",
+    })
+
+
+    
+    const currentStreak = getCurrentStreak(results.map((res) => new Date(res.datetime).toDateString()))
+    const [bestStreak, secondBestStreak] = getStreaks(results.map((res) => new Date(res.datetime).toDateString()))
+
+    console.log("CURRENT STREAK", currentStreak, bestStreak, secondBestStreak);
+
+    setStreak({
+      name: "Current Streak",
+      stat: `${currentStreak} days`,
+      previousStat: currentStreak === bestStreak ? `${secondBestStreak} days` : `${bestStreak} days`,
+      change: `${Math.abs(bestStreak - secondBestStreak)} days`,
+      changeType: currentStreak === bestStreak ? "increase" : "decrease",
+    })
+  }, [results]);
 
   return (
     <div className="mx-40">
-      <h3 className="text-base font-semibold leading-6">Last 7 days</h3>
+      {/* <h3 className="text-base font-semibold leading-6">Last 7 days</h3> */}
       <dl className="mt-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-3 md:divide-x md:divide-y-0">
-        {accuracy && <Accuracy accuracy={accuracy} />}
-        {speed && <Speed speed={speed} />}
+        {averageCpm && <CPM averageCpm={averageCpm} />}
+        {keyboardBest && <KeyboardBest keyboardBest={keyboardBest} />}
         {streak && <Streak streak={streak} />}
       </dl>
     </div>
   );
 }
 
-const Accuracy = ({ accuracy }: { accuracy: Stat }) => (
-  <div key={accuracy.name} className="px-4 py-5 sm:p-6">
-    <dt className="text-base font-normal text-gray-900">{accuracy.name}</dt>
+const CPM = ({ averageCpm }: { averageCpm: Stat }) => (
+  <div key={averageCpm.name} className="px-4 py-5 sm:p-6">
+    <dt className="text-base font-normal text-gray-900">{averageCpm.name}</dt>
     <dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
       <div className="flex items-baseline text-2xl font-semibold text-indigo-600">
-        {accuracy.stat}
+        {averageCpm.stat}
         <span className="ml-2 text-sm font-medium text-gray-500">
-          from {accuracy.previousStat}
+          from {averageCpm.previousStat}
         </span>
       </div>
 
       <div
-        className={classNames(
-          accuracy.changeType === "increase"
+        className={clsx(
+          averageCpm.changeType === "increase"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800",
           "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0",
         )}
       >
-        {accuracy.changeType === "increase" ? (
+        {averageCpm.changeType === "increase" ? (
           <ArrowUpIcon
             className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-green-500"
             aria-hidden="true"
@@ -181,36 +181,36 @@ const Accuracy = ({ accuracy }: { accuracy: Stat }) => (
 
         <span className="sr-only">
           {" "}
-          {accuracy.changeType === "increase"
+          {averageCpm.changeType === "increase"
             ? "Increased"
             : "Decreased"} by{" "}
         </span>
-        {accuracy.change}
+        {averageCpm.change}
       </div>
     </dd>
   </div>
 );
 
-const Speed = ({ speed }: { speed: Stat }) => (
-  <div key={speed.name} className="px-4 py-5 sm:p-6">
-    <dt className="text-base font-normal text-gray-900">{speed.name}</dt>
+const KeyboardBest = ({ keyboardBest }: { keyboardBest: Stat }) => (
+  <div key={keyboardBest.name} className="px-4 py-5 sm:p-6">
+    <dt className="text-base font-normal text-gray-900">{keyboardBest.name}</dt>
     <dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
       <div className="flex items-baseline text-2xl font-semibold text-indigo-600">
-        {speed.stat}
+        {keyboardBest.stat}
         <span className="ml-2 text-sm font-medium text-gray-500">
-          from {speed.previousStat}
+          from {keyboardBest.previousStat}
         </span>
       </div>
 
       <div
-        className={classNames(
-          speed.changeType === "increase"
+        className={clsx(
+          keyboardBest.changeType === "increase"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800",
           "inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0",
         )}
       >
-        {speed.changeType === "increase" ? (
+        {keyboardBest.changeType === "increase" ? (
           <ArrowUpIcon
             className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-green-500"
             aria-hidden="true"
@@ -224,9 +224,9 @@ const Speed = ({ speed }: { speed: Stat }) => (
 
         <span className="sr-only">
           {" "}
-          {speed.changeType === "increase" ? "Increased" : "Decreased"} by{" "}
+          {keyboardBest.changeType === "increase" ? "Increased" : "Decreased"} by{" "}
         </span>
-        {speed.change}
+        {keyboardBest.change}
       </div>
     </dd>
   </div>
@@ -244,7 +244,7 @@ const Streak = ({ streak }: { streak: Stat }) => (
       </div>
 
       <div
-        className={classNames(
+        className={clsx(
           streak.changeType === "increase"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800",
@@ -272,3 +272,81 @@ const Streak = ({ streak }: { streak: Stat }) => (
     </dd>
   </div>
 );
+
+
+function getStreaks(dates: string[]): number[] {
+  if (dates.length === 0) return [0];
+
+  // Remove duplicates and sort the dates in ascending order
+  const uniqueDates = Array.from(new Set(dates)).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+  let streaks: number[] = [];
+  let currentStreak = 1;
+
+  for (let i = 1; i < uniqueDates.length; i++) {
+    const currentDate = new Date(uniqueDates[i]);
+    const previousDate = new Date(uniqueDates[i - 1]);
+
+    // Normalize dates to remove the time component
+    currentDate.setHours(0, 0, 0, 0);
+    previousDate.setHours(0, 0, 0, 0);
+
+    // Calculate the difference in days
+    const diffInTime = currentDate.getTime() - previousDate.getTime();
+    const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+    if (diffInDays === 1) {
+      // The dates are consecutive
+      currentStreak += 1;
+    } else {
+      // The streak is broken, push the current streak to the streaks array
+      streaks.push(currentStreak);
+      currentStreak = 1;
+    }
+  }
+
+  // Add the last streak to the streaks array
+  streaks.push(currentStreak);
+
+  // Sort streaks in descending order to find the second best
+  streaks.sort((a, b) => b - a);
+
+  // Return the second best streak if it exists, otherwise return 0
+  return streaks
+}
+
+function getCurrentStreak(dates: string[]): number {
+  if (dates.length === 0) return 0;
+
+  // Remove duplicates and sort the dates in ascending order
+  const uniqueDates = Array.from(new Set(dates)).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+  let currentStreak = 1;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalize today's date to remove time component
+
+  for (let i = uniqueDates.length - 1; i > 0; i--) {
+    const currentDate = new Date(uniqueDates[i]);
+    currentDate.setHours(0, 0, 0, 0); // Normalize date to remove time component
+
+    if (currentDate.getTime() === today.getTime() || i === uniqueDates.length - 1) {
+      // Check if the last date is today or if we are starting from today
+      const previousDate = new Date(uniqueDates[i - 1]);
+      previousDate.setHours(0, 0, 0, 0);
+
+      // Calculate the difference in days
+      const diffInTime = currentDate.getTime() - previousDate.getTime();
+      const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+      if (diffInDays === 1) {
+        // The dates are consecutive
+        currentStreak += 1;
+      } else {
+        // Break in the streak
+        break;
+      }
+    }
+  }
+
+  return currentStreak;
+}

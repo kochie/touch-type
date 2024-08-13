@@ -1,5 +1,7 @@
 "use client";
 
+import { KeyboardLayoutNames } from "@/keyboards";
+import { useResults } from "@/lib/result-provider";
 import {
   axisBottom,
   axisLeft,
@@ -11,7 +13,7 @@ import {
   scaleTime,
   select,
 } from "d3";
-import { DateTime, Duration } from "luxon";
+import { Duration } from "luxon";
 import { useEffect, useRef, useState } from "react";
 
 interface Result {
@@ -29,9 +31,14 @@ const margin = { top: 10, right: 30, bottom: 30, left: 60 };
 // const   width = 460 - margin.left - margin.right,
 // height = 400 - margin.top - margin.bottom;
 
-export default function LineChart() {
+interface LineChartProps {
+  keyboard: KeyboardLayoutNames;
+}
+
+export default function LineChart({keyboard}: LineChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [results, setResults] = useState<Result[]>([]);
+  const {results} = useResults()
+  const [computedResults, setComputedResults] = useState<Result[]>([]);
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -44,19 +51,6 @@ export default function LineChart() {
     window.addEventListener("resize", resize);
     resize();
 
-    const storedResults = JSON.parse(localStorage.getItem("results") ?? "[]");
-    const computed = storedResults
-      .filter((res) => !!res.datetime)
-      .map((res) => ({
-        ...res,
-        cpm:
-          (res.correct + res.incorrect) /
-          (Duration.fromISO(res.time).toMillis() / 1000 / 60),
-        datetime: DateTime.fromISO(res.datetime ?? 0).toJSDate(),
-        time: Duration.fromISO(res.time),
-      }));
-    setResults(computed);
-
     return () => {
       window.removeEventListener("resize", resize);
     };
@@ -65,8 +59,11 @@ export default function LineChart() {
   useEffect(() => {
     if (!svgRef.current) return;
 
+    const computed = results
+      .filter(result => result.keyboard === keyboard)
+
     const minMax = extent(results, function (d) {
-      return d.datetime;
+      return new Date(d.datetime);
     });
     if (minMax[0] === undefined || minMax[1] === undefined) return;
     const x = scaleTime().domain(minMax).range([0, width]);
@@ -83,14 +80,14 @@ export default function LineChart() {
       .call(axisBottom(x));
 
     // Add Y axis
-    const maxTime = max(results, function (d) {
-      return +d.time.toMillis() / 1000;
+    const maxTime = max(computed, function (d) {
+      return Duration.fromISO(d.time).toMillis() / 1000
     });
     if (maxTime === undefined) return;
     const y = scaleLinear().domain([0, maxTime]).range([height, 0]);
     svg.append("g").call(axisLeft(y));
 
-    const maxIncorrect = max(results, function (d) {
+    const maxIncorrect = max(computed, function (d) {
       return +d.incorrect;
     });
     if (maxIncorrect === undefined) return;
@@ -105,29 +102,29 @@ export default function LineChart() {
     // Add the line
     svg
       .append("path")
-      .datum(results)
+      .datum(computed)
       .attr("fill", "none")
       .attr("stroke", "steelblue")
       .attr("stroke-width", 3.5)
       .attr(
         "d",
         line(
-          (d) => x(d.datetime),
-          (d) => y(d.time.toMillis() / 1000),
+          (d) => x(new Date(d.datetime)),
+          (d) => y(Duration.fromISO(d.time).toMillis() / 1000),
         ),
       );
 
     svg
       .append("path")
-      .datum(results)
+      .datum(computed)
       .attr("fill", "none")
       .attr("stroke", "red")
       .attr("stroke-width", 3.5)
       .attr(
         "d",
         line(
-          (d: Result) => x(d.datetime),
-          (d: Result) => y2(d.incorrect),
+          (d ) => x(new Date(d.datetime)),
+          (d ) => y2(d.incorrect),
         ),
       );
   }, [results, width, height]);
