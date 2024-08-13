@@ -56,12 +56,7 @@ export default function Barline({ keyboard }: BarlineProps) {
 
     const computed = results
       .filter((res) => res.keyboard === keyboard)
-      .map((res) => ({
-        ...res,
-        cpm:
-          (res.correct + res.incorrect) /
-          (Duration.fromISO(res.time).toMillis() / 1000 / 60),
-      }));
+      .sort((a, b) => Date.parse(a.datetime) - Date.parse(b.datetime));
 
     setComputedResults(computed);
 

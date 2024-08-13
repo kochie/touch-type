@@ -75,20 +75,21 @@ export function ResultsProvider({ children }) {
 
   useEffect(() => {
     initializeDB();
+
+    // runTempUpdates()
   }, []);
 
-  async function updateDB() {
+  async function updateDB(result: Result) {
     const db = await openDB("touch-type-db", 1);
     const tx = db.transaction("results", "readwrite");
     const store = tx.objectStore("results");
-    for (const result of results) {
-      await store.put(result);
-    }
+    
+    await store.put(result);
   }
 
   const putResult = (result: Result) => {
     _setResults((prev) => [...prev, result]);
-    updateDB();
+    updateDB(result);
 
     uploadResult({ variables: { result: result } });
   };
@@ -103,3 +104,22 @@ export function ResultsProvider({ children }) {
 export const useResults = () => {
   return useContext(ResultsContext);
 };
+
+async function runTempUpdates() {
+  const db = await openDB("touch-type-db", 1);
+  const tx = db.transaction("results", "readwrite");
+  const store = tx.objectStore("results");
+
+  const results = await store.getAll();
+  await store.clear()
+
+  for (const result of results) {
+    if (result.datetime) {
+      await store.put({
+        ...result,
+        datetime: new Date(result.datetime).toISOString(),
+        cpm: (result.correct + result.incorrect) / (Duration.fromISO(result.time).toMillis() / 1000 / 60),
+      });
+    }
+  }
+}
