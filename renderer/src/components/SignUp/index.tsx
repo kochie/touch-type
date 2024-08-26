@@ -27,7 +27,7 @@ export default function SignUp({ toSignIn, onClose }) {
   });
 
   return (
-    <div className="h-full">
+    <div className="h-full text-black">
       <div className="flex min-h-full max-h-[80vh] max-w-5xl">
         <div className="flex flex-1 flex-col justify-center px-4 py-12 overflow-y-scroll">
           <div className="mx-auto w-full max-w-sm lg:w-96">

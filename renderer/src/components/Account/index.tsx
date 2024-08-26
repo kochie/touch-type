@@ -11,10 +11,30 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { Formik, Form, Field } from "formik";
 import { useUser } from "@/lib/user_hook";
+import { useQuery } from "@apollo/client";
+import { GET_SUBSCRIPTION } from "@/transactions/getSubscription";
+import { Plan } from "@/generated/graphql";
+import { shell } from "electron";
+
+enum PlanType {
+  FREE = "free",
+  PREMIUM = "premium",
+}
+
+const features = {
+  [PlanType.FREE]: ["Settings Sync", "Cloud Saves", "Leaderboard Access"],
+  [PlanType.PREMIUM]: ["AI Tutor", "Progress Reports"],
+};
 
 export default function Account({ onError, onCancel, onChangePassword }) {
   const [submitting, setSubmitting] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [attributes, setAttributes] = useState({
+    email: "",
+    phone_number: "",
+    name: "",
+    preferred_username: "",
+  });
   const user = useUser();
 
   const handleSignOut = async () => {
@@ -41,21 +61,26 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     if (user === null) {
       onError();
     }
+
+    fetchUserAttributes()
+      .then((attributes) => {
+        setAttributes((prev) => ({ ...prev, ...attributes }));
+      })
+      .catch((error) => {
+        onError();
+      });
   }, [user]);
 
   if (!user) return null;
 
-  const attributes = use(
-    fetchUserAttributes().catch((error) => {
-      onError();
-      return {
-        email: "",
-        phone_number: "",
-        name: "",
-        preferred_username: "",
-      };
-    }),
+  const { data, loading, error } = useQuery<{ subscription: Plan }>(
+    GET_SUBSCRIPTION,
+    { pollInterval: 1000 },
   );
+
+  if (error) {
+    console.error(error);
+  }
 
   return (
     <div className="h-full">
@@ -73,6 +98,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
               {/* <Link href="/account/billing">Billing</Link> */}
 
               <Formik
+                enableReinitialize={true}
                 initialValues={{
                   email: attributes.email,
                   phone: attributes.phone_number,
@@ -94,8 +120,8 @@ export default function Account({ onError, onCancel, onChangePassword }) {
               >
                 {({ isSubmitting }) => (
                   <Form>
-                    <div className="mt-5 grid grid-cols-4 gap-3">
-                    <div className="col-span-2">
+                    <div className="mt-5 grid grid-cols-6 gap-3">
+                      <div className="col-span-3">
                         <label
                           htmlFor="username"
                           className="block text-sm font-medium leading-6 text-gray-900"
@@ -115,7 +141,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                           </div>
                         </div>
                       </div>
-                      <div className="col-span-4">
+                      <div className="col-span-3">
                         <label
                           htmlFor="name"
                           className="block text-sm font-medium leading-6 text-gray-900"
@@ -135,7 +161,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                           </div>
                         </div>
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-3">
                         <label
                           htmlFor="email"
                           className="block text-sm font-medium leading-6 text-gray-900"
@@ -155,7 +181,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                           </div>
                         </div>
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-3">
                         <label
                           htmlFor="phone"
                           className="block text-sm font-medium leading-6 text-gray-900"
@@ -219,6 +245,63 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                   </Form>
                 )}
               </Formik>
+
+              <div className="border-b border-gray-900/10 my-6" />
+
+              <div>
+                <h2 className="text-base font-semibold leading-7 text-gray-900">
+                  Account Features
+                </h2>
+
+                <div className="flex gap-12 justify-between">
+                  <div>
+                    <p className="mt-1 text-sm leading-6 text-gray-600">
+                      Control what features are available to you.
+                    </p>
+
+                    {loading || !data ? (
+                      <p>Loading...</p>
+                    ) : (
+                      <>
+                        <p className="text-gray-600 text-sm leading-6">
+                          <span>You're currently on the</span>
+                          <span className="mx-1 inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                            {data.subscription.billing_plan}
+                          </span>
+                          <span>plan.</span>
+                        </p>
+                        <div className="flex gap-1 mt-4">
+                          {features[data.subscription.billing_plan!]?.map(
+                            (feature) => (
+                              <span
+                                key={feature}
+                                className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                              >
+                                {feature}
+                              </span>
+                            ),
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div>
+                    <button
+                      onClick={(event) => {
+                        // require('electron').shell.openExternal("https://google.com");
+                        event.preventDefault();
+                        window.open("http://localhost:3000/account", "_blank");
+                      }}
+                      type="button"
+                      disabled={deleteSubmitting}
+                      className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+                    >
+                      Change Plan
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <div className="border-b border-gray-900/10 my-6" />
 

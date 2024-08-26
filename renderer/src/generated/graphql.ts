@@ -35,6 +35,7 @@ export type InputLeaderboard = {
 export type InputResult = {
   capital: Scalars['Boolean']['input'];
   correct: Scalars['Int']['input'];
+  cpm: Scalars['Float']['input'];
   datetime: Scalars['AWSDateTime']['input'];
   incorrect: Scalars['Int']['input'];
   keyPresses: Array<InputMaybe<KeyPressInput>>;
@@ -89,6 +90,7 @@ export type Plan = {
   billing_period?: Maybe<Scalars['String']['output']>;
   billing_plan?: Maybe<Scalars['String']['output']>;
   next_billing_date?: Maybe<Scalars['String']['output']>;
+  status?: Maybe<Scalars['String']['output']>;
 };
 
 export type Query = {
@@ -108,6 +110,7 @@ export type Result = {
   __typename?: 'Result';
   capital: Scalars['Boolean']['output'];
   correct: Scalars['Int']['output'];
+  cpm: Scalars['Float']['output'];
   incorrect: Scalars['Int']['output'];
   keyboard: Scalars['String']['output'];
   language: Scalars['String']['output'];
@@ -119,11 +122,15 @@ export type Result = {
 
 export type Scores = {
   __typename?: 'Scores';
+  capital: Scalars['Boolean']['output'];
   correct: Scalars['Int']['output'];
+  cpm: Scalars['Float']['output'];
   datetime: Scalars['AWSDateTime']['output'];
   incorrect: Scalars['Int']['output'];
   keyboard: Scalars['String']['output'];
   level: Scalars['String']['output'];
+  numbers: Scalars['Boolean']['output'];
+  punctuation: Scalars['Boolean']['output'];
   time: Scalars['Int']['output'];
   username: Scalars['String']['output'];
 };
@@ -225,6 +232,7 @@ export type ResolversTypes = {
   BigInt: ResolverTypeWrapper<Scalars['BigInt']['output']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Double: ResolverTypeWrapper<Scalars['Double']['output']>;
+  Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   InputLeaderboard: InputLeaderboard;
   InputResult: InputResult;
   InputSettings: InputSettings;
@@ -252,6 +260,7 @@ export type ResolversParentTypes = {
   BigInt: Scalars['BigInt']['output'];
   Boolean: Scalars['Boolean']['output'];
   Double: Scalars['Double']['output'];
+  Float: Scalars['Float']['output'];
   InputLeaderboard: InputLeaderboard;
   InputResult: InputResult;
   InputSettings: InputSettings;
@@ -347,6 +356,7 @@ export type PlanResolvers<ContextType = any, ParentType extends ResolversParentT
   billing_period?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   billing_plan?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   next_billing_date?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  status?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -360,6 +370,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 export type ResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['Result'] = ResolversParentTypes['Result']> = {
   capital?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   correct?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  cpm?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   incorrect?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -371,11 +382,15 @@ export type ResultResolvers<ContextType = any, ParentType extends ResolversParen
 };
 
 export type ScoresResolvers<ContextType = any, ParentType extends ResolversParentTypes['Scores'] = ResolversParentTypes['Scores']> = {
+  capital?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   correct?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  cpm?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   datetime?: Resolver<ResolversTypes['AWSDateTime'], ParentType, ContextType>;
   incorrect?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  numbers?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  punctuation?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   time?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
