@@ -103,8 +103,8 @@ export default function Barline({ keyboard }: BarlineProps) {
     const LEVEL = map(data, (y) => y.level ?? Levels.LEVEL_3);
 
     const xDomain = new InternSet(X);
-    const yDomain = new InternSet([0, max(Y)]);
-    const yDomain2 = new InternSet([0, max(Y2)]);
+    const yDomain = new InternSet([0, max(Y)!]);
+    const yDomain2 = new InternSet([0, max(Y2)!]);
 
     const xRange = [marginLeft, width - marginRight];
     const yRange = [height - marginBottom, marginTop];

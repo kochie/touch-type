@@ -7,7 +7,7 @@ import {
   faKeyboard,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
-import { faChartRadar } from "@fortawesome/pro-regular-svg-icons";
+import { faChartRadar, faMicrochipAi } from "@fortawesome/pro-regular-svg-icons";
 import { faSparkles } from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
@@ -41,6 +41,7 @@ export default function Menu({
   }, [settings]);
 
   return (
+    <div className="top-0 sticky w-full">
     <div className="flex justify-between pt-8 mx-8">
       <div className="flex gap-4">
         <div className="hover:animate-pulse" title="Stats">
@@ -73,6 +74,18 @@ export default function Menu({
               icon={faKeyboard}
               className={clsx(
                 pathname === "/" ? "text-yellow-500" : "",
+                "cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out",
+              )}
+              size="lg"
+            />
+          </Link>
+        </div>
+        <div className="hover:animate-pulse">
+          <Link href={"/assistant"}>
+            <FontAwesomeIcon
+              icon={faMicrochipAi}
+              className={clsx(
+                pathname === "/assistant" ? "text-yellow-500" : "",
                 "cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out",
               )}
               size="lg"
@@ -141,6 +154,7 @@ export default function Menu({
           </Link>
         </div>
       </div>
+    </div>
     </div>
   );
 }

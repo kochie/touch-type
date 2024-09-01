@@ -16,18 +16,6 @@ import {
 } from "@/lib/modal-provider";
 import Menu from "@/components/Menu";
 
-Amplify.configure(
-  {
-    Auth: {
-      Cognito: {
-        userPoolId: process.env.NEXT_PUBLIC_USERPOOL_ID!,
-        userPoolClientId: process.env.NEXT_PUBLIC_USERPOOL_CLIENT_ID!,
-      },
-    },
-  },
-  { ssr: true },
-);
-
 export default function Providers({ children }) {
   return (
     <UserProvider>

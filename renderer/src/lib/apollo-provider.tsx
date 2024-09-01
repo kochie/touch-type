@@ -2,29 +2,47 @@
 // ^ this file needs the "use client" pragma
 
 import { ApolloLink, HttpLink } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloNextAppProvider,
+  InMemoryCache,
+  SSRMultipartLink,
+} from "@apollo/experimental-nextjs-app-support";
 
 import { createAuthLink } from "aws-appsync-auth-link";
 import { fetchAuthSession } from "aws-amplify/auth";
-import {
-  ApolloClient,
-  InMemoryCache,
-  SSRMultipartLink,
-  ApolloNextAppProvider,
-} from "@apollo/experimental-nextjs-app-support";
+import { fetchAuthSession as fetchAuthSessionSSR } from "aws-amplify/auth/server";
+import { runWithAmplifyServerContext } from "./amplify-utils";
+
 
 // have a function to create a client for you
 function makeClient() {
+
   const authLink = createAuthLink({
     url: process.env.NEXT_PUBLIC_API_URL || "",
     region: "ap-southeast-2",
     auth: {
       type: "AMAZON_COGNITO_USER_POOLS",
-      jwtToken: () =>
-        fetchAuthSession().then(
+      jwtToken: async () => {
+        // console.log("fetching auth session - ssr ==", typeof window === "undefined");
+        // if (typeof window === "undefined") {
+        //   const session = await fetchAuthSession()
+
+        //   console.log("result ==", session);
+        //   return session.tokens?.accessToken.toString() ?? "";
+        // }
+
+        
+        const token = await fetchAuthSession().then(
           (session) => session.tokens?.accessToken.toString() ?? "",
-        ),
+        )
+
+        console.log("result ==", token);
+        return token
+      }
     },
   });
+
 
   const httpLink = new HttpLink({
     // this needs to be an absolute url, as relative urls cannot be used in SSR

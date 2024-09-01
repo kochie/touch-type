@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   deleteUser,
   fetchUserAttributes,
@@ -14,7 +14,6 @@ import { useUser } from "@/lib/user_hook";
 import { useQuery } from "@apollo/client";
 import { GET_SUBSCRIPTION } from "@/transactions/getSubscription";
 import { Plan } from "@/generated/graphql";
-import { shell } from "electron";
 
 enum PlanType {
   FREE = "free",
