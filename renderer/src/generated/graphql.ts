@@ -26,6 +26,25 @@ export type Scalars = {
   Double: { input: any; output: any; }
 };
 
+export type Challenge = {
+  __typename?: 'Challenge';
+  category: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  keyboard: Scalars['String']['output'];
+  level: Scalars['String']['output'];
+};
+
+export type Goal = {
+  __typename?: 'Goal';
+  category: Scalars['String']['output'];
+  complete: Scalars['Boolean']['output'];
+  description: Scalars['String']['output'];
+  keyboard: Scalars['String']['output'];
+  language: Scalars['String']['output'];
+  level: Scalars['String']['output'];
+  requirement: Requirement;
+};
+
 export type InputLeaderboard = {
   keyboard?: InputMaybe<Scalars['String']['input']>;
   language?: InputMaybe<Scalars['String']['input']>;
@@ -70,6 +89,8 @@ export type KeyPressInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   addResult: Result;
+  completeChallenge: Challenge;
+  completeGoal: Goal;
   removeAllResults: Scalars['Boolean']['output'];
   updateSettings: Settings;
 };
@@ -77,6 +98,16 @@ export type Mutation = {
 
 export type MutationAddResultArgs = {
   result: InputResult;
+};
+
+
+export type MutationCompleteChallengeArgs = {
+  category: Scalars['String']['input'];
+};
+
+
+export type MutationCompleteGoalArgs = {
+  category: Scalars['String']['input'];
 };
 
 
@@ -95,15 +126,45 @@ export type Plan = {
 
 export type Query = {
   __typename?: 'Query';
+  challenge: Challenge;
+  goal: Goal;
   leaderboards: Array<Maybe<Scores>>;
+  recommendations: Array<Maybe<Scalars['String']['output']>>;
   results: Array<Result>;
   settings: Settings;
   subscription: Plan;
 };
 
 
+export type QueryChallengeArgs = {
+  category: Scalars['String']['input'];
+};
+
+
+export type QueryGoalArgs = {
+  category: Scalars['String']['input'];
+};
+
+
 export type QueryLeaderboardsArgs = {
   leaderboard?: InputMaybe<InputLeaderboard>;
+};
+
+
+export type QueryRecommendationsArgs = {
+  category: Scalars['String']['input'];
+};
+
+export type Requirement = {
+  __typename?: 'Requirement';
+  capital?: Maybe<Scalars['Boolean']['output']>;
+  correct?: Maybe<Scalars['Int']['output']>;
+  cpm?: Maybe<Scalars['Float']['output']>;
+  incorrect?: Maybe<Scalars['Int']['output']>;
+  numbers?: Maybe<Scalars['Boolean']['output']>;
+  punctuation?: Maybe<Scalars['Boolean']['output']>;
+  score?: Maybe<Scalars['Int']['output']>;
+  time?: Maybe<Scalars['Int']['output']>;
 };
 
 export type Result = {
@@ -231,8 +292,10 @@ export type ResolversTypes = {
   AWSURL: ResolverTypeWrapper<Scalars['AWSURL']['output']>;
   BigInt: ResolverTypeWrapper<Scalars['BigInt']['output']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Challenge: ResolverTypeWrapper<Challenge>;
   Double: ResolverTypeWrapper<Scalars['Double']['output']>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
+  Goal: ResolverTypeWrapper<Goal>;
   InputLeaderboard: InputLeaderboard;
   InputResult: InputResult;
   InputSettings: InputSettings;
@@ -241,6 +304,7 @@ export type ResolversTypes = {
   Mutation: ResolverTypeWrapper<{}>;
   Plan: ResolverTypeWrapper<Plan>;
   Query: ResolverTypeWrapper<{}>;
+  Requirement: ResolverTypeWrapper<Requirement>;
   Result: ResolverTypeWrapper<Result>;
   Scores: ResolverTypeWrapper<Scores>;
   Settings: ResolverTypeWrapper<Settings>;
@@ -259,8 +323,10 @@ export type ResolversParentTypes = {
   AWSURL: Scalars['AWSURL']['output'];
   BigInt: Scalars['BigInt']['output'];
   Boolean: Scalars['Boolean']['output'];
+  Challenge: Challenge;
   Double: Scalars['Double']['output'];
   Float: Scalars['Float']['output'];
+  Goal: Goal;
   InputLeaderboard: InputLeaderboard;
   InputResult: InputResult;
   InputSettings: InputSettings;
@@ -269,6 +335,7 @@ export type ResolversParentTypes = {
   Mutation: {};
   Plan: Plan;
   Query: {};
+  Requirement: Requirement;
   Result: Result;
   Scores: Scores;
   Settings: Settings;
@@ -341,12 +408,33 @@ export interface BigIntScalarConfig extends GraphQLScalarTypeConfig<ResolversTyp
   name: 'BigInt';
 }
 
+export type ChallengeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Challenge'] = ResolversParentTypes['Challenge']> = {
+  category?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export interface DoubleScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Double'], any> {
   name: 'Double';
 }
 
+export type GoalResolvers<ContextType = any, ParentType extends ResolversParentTypes['Goal'] = ResolversParentTypes['Goal']> = {
+  category?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  complete?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  requirement?: Resolver<ResolversTypes['Requirement'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   addResult?: Resolver<ResolversTypes['Result'], ParentType, ContextType, RequireFields<MutationAddResultArgs, 'result'>>;
+  completeChallenge?: Resolver<ResolversTypes['Challenge'], ParentType, ContextType, RequireFields<MutationCompleteChallengeArgs, 'category'>>;
+  completeGoal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<MutationCompleteGoalArgs, 'category'>>;
   removeAllResults?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   updateSettings?: Resolver<ResolversTypes['Settings'], ParentType, ContextType, RequireFields<MutationUpdateSettingsArgs, 'settings'>>;
 };
@@ -361,10 +449,25 @@ export type PlanResolvers<ContextType = any, ParentType extends ResolversParentT
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  challenge?: Resolver<ResolversTypes['Challenge'], ParentType, ContextType, RequireFields<QueryChallengeArgs, 'category'>>;
+  goal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<QueryGoalArgs, 'category'>>;
   leaderboards?: Resolver<Array<Maybe<ResolversTypes['Scores']>>, ParentType, ContextType, Partial<QueryLeaderboardsArgs>>;
+  recommendations?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType, RequireFields<QueryRecommendationsArgs, 'category'>>;
   results?: Resolver<Array<ResolversTypes['Result']>, ParentType, ContextType>;
   settings?: Resolver<ResolversTypes['Settings'], ParentType, ContextType>;
   subscription?: Resolver<ResolversTypes['Plan'], ParentType, ContextType>;
+};
+
+export type RequirementResolvers<ContextType = any, ParentType extends ResolversParentTypes['Requirement'] = ResolversParentTypes['Requirement']> = {
+  capital?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  correct?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  cpm?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  incorrect?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  numbers?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  punctuation?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  score?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  time?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type ResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['Result'] = ResolversParentTypes['Result']> = {
@@ -421,10 +524,13 @@ export type Resolvers<ContextType = any> = {
   AWSTimestamp?: GraphQLScalarType;
   AWSURL?: GraphQLScalarType;
   BigInt?: GraphQLScalarType;
+  Challenge?: ChallengeResolvers<ContextType>;
   Double?: GraphQLScalarType;
+  Goal?: GoalResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Plan?: PlanResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Requirement?: RequirementResolvers<ContextType>;
   Result?: ResultResolvers<ContextType>;
   Scores?: ScoresResolvers<ContextType>;
   Settings?: SettingsResolvers<ContextType>;
