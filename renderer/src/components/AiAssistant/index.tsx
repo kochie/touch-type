@@ -188,15 +188,53 @@ const getChartData = (category) => {
       return data.reverse();
     }
     case "rhythm":
-      return [
-        { name: "Mon", consistency: 65 },
-        { name: "Tue", consistency: 70 },
-        { name: "Wed", consistency: 68 },
-        { name: "Thu", consistency: 75 },
-        { name: "Fri", consistency: 78 },
-        { name: "Sat", consistency: 80 },
-        { name: "Sun", consistency: 82 },
-      ];
+      const intlFormat = new Intl.DateTimeFormat("en-US", { weekday: "long" });
+      const data = Array(7)
+        .fill(0)
+        .map((_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          const dateString = date.toLocaleDateString();
+          const res = resultsByDate.get(dateString);
+          // calculate standard deviation of time for each test
+          if (!res) return { name: intlFormat.format(date), consistency: 0 };
+
+          // for each result, calculate the mean, variance, and standard deviation of the time between keypresses
+          
+          if (res[0].keyPresses[0].timestamp === undefined) return { name: intlFormat.format(date), consistency: 0 };
+
+          const mean = res.reduce(
+            (acc, r) => {
+              return acc + r.keyPresses.reduce((acc, curr, i, arr) => {
+                if (i === 0) return acc;
+                const previous = arr[i - 1];
+                return acc + (curr.timestamp! - previous.timestamp!);
+              }, 0);
+            },
+            0,
+          ) / res.reduce((acc, r) => acc + r.keyPresses.length - 1, 0);
+
+          const variance = res.reduce(
+            (acc, r) => {
+              return acc + r.keyPresses.reduce((acc, curr, i, arr) => {
+                if (i === 0) return acc;
+                const previous = arr[i - 1];
+                return acc + Math.pow((curr.timestamp! - previous.timestamp!) - mean, 2);
+              }, 0);
+            },
+            0,
+          ) / res.reduce((acc, r) => acc + r.keyPresses.length - 1, 0);
+
+          const stdDev = Math.sqrt(variance);
+          
+          return {
+            name: intlFormat.format(date),
+            consistency: stdDev.toFixed(2),
+          };
+        }); 
+
+      console.log("RHYTHM DATA", data);
+      return data.reverse();
   }
 };
 
@@ -466,7 +504,7 @@ export default function AIAssistant() {
                             } else if (category === "practice") {
                               return `${tick} min`;
                             } else if (category === "rhythm") {
-                              return `${tick}%`;
+                              return `${tick}ms`;
                             }
                             return tick;
                           }}
@@ -482,7 +520,7 @@ export default function AIAssistant() {
                             } else if (category === "practice") {
                               return `${props.payload.label}`;
                             } else if (category === "rhythm") {
-                              return `${value}%`;
+                              return `${value}ms`;
                             }
                             return value;
                           }}

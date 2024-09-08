@@ -84,6 +84,7 @@ export type KeyPressInput = {
   correct: Scalars['Boolean']['input'];
   key: Scalars['String']['input'];
   pressedKey?: InputMaybe<Scalars['String']['input']>;
+  timestamp?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type Mutation = {
