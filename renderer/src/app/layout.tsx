@@ -22,7 +22,7 @@ export default function RootLayout({
       <body
         className={clsx(
           !isMac && "dark:text-white text-black dark:bg-zinc-800 bg-zinc-300",
-          "w-screen min-h-screen dark:text-white"
+          "w-full min-h-screen dark:text-white"
         )}
       >
         <Fathom />

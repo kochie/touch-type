@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import { getChartData } from "./getChartData";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { Skeleton } from "../Skeleton";
 
 interface DataCardProps {
   category: Category;
@@ -58,13 +59,21 @@ export function DataCard({ category, icon, label }: DataCardProps) {
           </BarChart>
         </ResponsiveContainer>
       </div>
-
-      {data && (
+      {data ? (
         <ul className="list-disc pl-5 space-y-2">
           {data.recommendations.map((tip, index) => (
             <li key={index}>{tip}</li>
           ))}
         </ul>
+      ) : (
+        <div className="pl-5 space-y-2">
+          <Skeleton className="h-4 w-[500px]" />
+          <Skeleton className="h-4 w-[200px]" />
+          <Skeleton className="h-4 w-[250px]" />
+          <Skeleton className="h-4 w-[100px]" />
+          <Skeleton className="h-4 w-[300px]" />
+          <Skeleton className="h-4 w-[200px]" />
+        </div>
       )}
     </Card>
   );

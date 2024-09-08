@@ -11,12 +11,10 @@ import {
 
 import { createAuthLink } from "aws-appsync-auth-link";
 import { fetchAuthSession } from "aws-amplify/auth";
-import { fetchAuthSession as fetchAuthSessionSSR } from "aws-amplify/auth/server";
-import { runWithAmplifyServerContext } from "./amplify-utils";
 
 
 // have a function to create a client for you
-function makeClient() {
+export function makeClient() {
 
   const authLink = createAuthLink({
     url: process.env.NEXT_PUBLIC_API_URL || "",
@@ -24,20 +22,10 @@ function makeClient() {
     auth: {
       type: "AMAZON_COGNITO_USER_POOLS",
       jwtToken: async () => {
-        // console.log("fetching auth session - ssr ==", typeof window === "undefined");
-        // if (typeof window === "undefined") {
-        //   const session = await fetchAuthSession()
-
-        //   console.log("result ==", session);
-        //   return session.tokens?.accessToken.toString() ?? "";
-        // }
-
-        
         const token = await fetchAuthSession().then(
           (session) => session.tokens?.accessToken.toString() ?? "",
         )
 
-        console.log("result ==", token);
         return token
       }
     },

@@ -111,12 +111,12 @@ export default function AIAssistant() {
                 label={tab.label}
               />
               <GoalCard category={tab.value} />
-              <ChallengeCard
+              {/* <ChallengeCard
                 category={tab.value}
                 startChallenge={() => {}}
                 isChallengeActive={true}
                 challengeTime={0}
-              />
+              /> */}
             </TabPanel>
           ))}
         </TabPanels>

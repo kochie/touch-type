@@ -3,17 +3,20 @@
 import { Goal } from "@/generated/graphql";
 import { Result, useResults } from "@/lib/result-provider";
 import { GET_GOAL } from "@/transactions/getGoal";
-import { useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { useIntersectionObserver, useWindowSize } from "@uidotdev/usehooks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "./Card";
 import Confetti from "react-confetti";
 import { Category } from "./utils";
+import { Skeleton } from "../Skeleton";
+import Button from "../Button";
+import { RESET_GOAL } from "@/transactions/resetGoal";
 
 function Progress({ value }) {
   return (
     <div>
-      <div aria-hidden="true" className="mt-6">
+      <div aria-hidden="true" className="mt-1">
         <div className="overflow-hidden rounded-full bg-gray-200">
           <div
             style={{ width: `${value}%` }}
@@ -73,7 +76,9 @@ export function GoalCard({ category }: { category: Category }) {
     variables: { category },
   });
 
-  const [confetti, setConfetti] = useState(true);
+  const [resetGoal, {data: goalChange}] = useMutation<{newGoal: Goal}>(RESET_GOAL);
+
+  const [confetti, setConfetti] = useState(false);
   const { width, height } = useWindowSize();
   const [ref, entry] = useIntersectionObserver({
     threshold: 0,
@@ -81,28 +86,78 @@ export function GoalCard({ category }: { category: Category }) {
     rootMargin: "0px",
   });
 
-  if (!data || loading) {
-    return <div>Loading...</div>;
-  }
+  const [{ description, progress, goal, unit, current }, setGoal] = useState({
+    description: "",
+    progress: 0,
+    goal: "",
+    unit: "",
+    current: "",
+  });
 
-  const { description, progress, goal, unit, current } = makeGoal(
-    data.goal,
-    results,
-  );
+  useEffect(() => {
+    if (data) {
+      const g = makeGoal(data.goal, results);
+      setGoal(g);
+    }
+    if (goalChange) {
+      const g = makeGoal(goalChange.newGoal, results);
+      setGoal(g);
+    }
+    if (progress >= 100) {
+      setConfetti(true);
+    }
+  }, [data, goalChange, results]);
 
   return (
-    <Card header={<div>Your Goal for {category}</div>}>
+    <Card
+      header={
+        <div>
+          Your Goal for {category[0].toUpperCase()}
+          {category.slice(1)}
+        </div>
+      }
+    >
       <>
         <div className="flex justify-between mb-2 flex-col" ref={ref}>
-          <p className="text-sm">{description}</p>
-          <div className="flex w-full justify-between">
-            <span>
-              Current: {current} {unit}
-            </span>
-            <span>
-              Goal: {goal} {unit}
-            </span>
+          {description ? (
+            <p className="text-base">{description}</p>
+          ) : (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[500px]" />
+              <Skeleton className="h-4 w-[200px]" />
+              <Skeleton className="h-4 w-[250px]" />
+            </div>
+          )}
+
+          <div className="flex justify-between items-center mt-5">
+            <div className="font-semibold">Progress</div>
+            <div className="font-semibold">
+              {Math.min(progress, 100).toFixed(0)}%
+            </div>
           </div>
+          <Progress value={progress} />
+          <div className="flex w-full gap-10 mt-1 items-baseline justify-between">
+            <div>
+              <p className="font-bold text-2xl">
+                {current} {unit.toLowerCase()}
+              </p>
+              <p className="text-sm text-black/55 font-semibold">Current</p>
+            </div>
+            <div className="text-right">
+              <p className="font-bold text-2xl">
+                {goal} {unit}
+              </p>
+              <p className="text-sm text-black/55 font-semibold">Target</p>
+            </div>
+          </div>
+          {progress >= 100 && (
+            <div className="flex justify-between items-center mt-5">
+              <div>Great job! You've achieved this goal! 🎉🎉</div>
+              <div>
+                <Button onClick={() => resetGoal({variables: {category}})}>New Goal</Button>
+              </div>
+            </div>
+          )}
         </div>
         <div className="fixed top-0 left-0">
           {confetti && entry?.isIntersecting && (
@@ -115,8 +170,6 @@ export function GoalCard({ category }: { category: Category }) {
             />
           )}
         </div>
-
-        <Progress value={progress} />
       </>
     </Card>
   );

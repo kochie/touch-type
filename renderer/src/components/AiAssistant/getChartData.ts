@@ -26,7 +26,6 @@ export const getChartData = (category) => {
     return acc;
   }, new Map<string, Result[]>());
 
-  console.log("RESULTS SORTED", resultsByDate);
 
   switch (category) {
     case "speed": {
