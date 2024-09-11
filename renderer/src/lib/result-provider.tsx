@@ -11,6 +11,7 @@ import { KeyboardLayoutNames } from "@/keyboards";
 import { Duration } from "luxon";
 import { GET_RESULTS } from "@/transactions/getResults";
 import { makeClient } from "./apollo-provider";
+import {getCurrentUser} from "aws-amplify/auth"
 
 export interface Result {
   correct: number;
@@ -37,7 +38,14 @@ export function ResultsProvider({ children }) {
   const [uploadResult] = useMutation(PUT_RESULT);
 
   async function syncResults() {
-    //
+    try {
+      await getCurrentUser()
+    } catch (err) {
+      // console.error("No user found", err)
+      console.log("No user found - not syncing")
+      return
+    }
+
 
     const apollo = makeClient();
     const lastSync = localStorage.getItem("lastSync");
@@ -124,6 +132,14 @@ export function ResultsProvider({ children }) {
     for (const result of results) {
       await store.put(result);
     }
+
+    const stored_results = await store.getAll();
+    _setResults(
+      stored_results.sort(
+        (a, b) =>
+          new Date(b.datetime).getTime() - new Date(a.datetime).getTime(),
+      ),
+    );
   }
 
   const putResult = (result: Result) => {

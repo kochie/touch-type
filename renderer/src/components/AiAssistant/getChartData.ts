@@ -87,6 +87,7 @@ export const getChartData = (category) => {
             : 0;
           const duration = res
             ? res.reduce(
+                // TODO: old data breaks this
                 (acc, r) => acc.plus(Duration.fromISO(r.time)),
                 Duration.fromMillis(0),
               )
@@ -189,7 +190,6 @@ export const getChartData = (category) => {
           };
         }); 
 
-      console.log("RHYTHM DATA", data);
       return data.reverse();
   }
 };

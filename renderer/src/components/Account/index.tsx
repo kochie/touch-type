@@ -78,7 +78,8 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   );
 
   if (error) {
-    console.error(error);
+    console.warn("Error fetching subscription", error);
+    return <div></div>
   }
 
   return (
