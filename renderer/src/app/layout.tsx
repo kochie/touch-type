@@ -1,5 +1,4 @@
 import Providers from "./Providers";
-import { Amplify } from "aws-amplify";
 
 const os = require("os");
 
@@ -10,20 +9,8 @@ const isLinux = os.platform() === "linux";
 import "@/styles/globals.css";
 import Fathom from "@/components/Fathom";
 import clsx from "clsx";
+import ConfigureAmplifyClientSide from "@/lib/configure-amplify-client";
 
-
-
-Amplify.configure(
-  {
-    Auth: {
-      Cognito: {
-        userPoolId: process.env.NEXT_PUBLIC_USERPOOL_ID!,
-        userPoolClientId: process.env.NEXT_PUBLIC_USERPOOL_CLIENT_ID!,
-      },
-    },
-  },
-  { ssr: true },
-);
 
 export default function RootLayout({
   children,
@@ -35,10 +22,11 @@ export default function RootLayout({
       <body
         className={clsx(
           !isMac && "dark:text-white text-black dark:bg-zinc-800 bg-zinc-300",
-          "w-screen min-h-screen dark:text-white"
+          "w-full min-h-screen dark:text-white"
         )}
       >
         <Fathom />
+        <ConfigureAmplifyClientSide />
         <Providers>
           {children}
         </Providers>

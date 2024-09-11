@@ -132,9 +132,9 @@ const reducer = (
   state: typeof defaultSettings,
   action: ChangeSettingsAction,
 ) => {
-  if (process.env.NODE_ENV === "development") {
-    console.log("Settings reducer", action);
-  }
+  // if (process.env.NODE_ENV === "development") {
+  //   console.log("Settings reducer", action);
+  // }
 
   switch (action.type) {
     case "LOAD_SETTINGS": {

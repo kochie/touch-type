@@ -26,6 +26,25 @@ export type Scalars = {
   Double: { input: any; output: any; }
 };
 
+export type Challenge = {
+  __typename?: 'Challenge';
+  category: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  keyboard: Scalars['String']['output'];
+  level: Scalars['String']['output'];
+};
+
+export type Goal = {
+  __typename?: 'Goal';
+  category: Scalars['String']['output'];
+  complete: Scalars['Boolean']['output'];
+  description: Scalars['String']['output'];
+  keyboard: Scalars['String']['output'];
+  language: Scalars['String']['output'];
+  level: Scalars['String']['output'];
+  requirement: Requirement;
+};
+
 export type InputLeaderboard = {
   keyboard?: InputMaybe<Scalars['String']['input']>;
   language?: InputMaybe<Scalars['String']['input']>;
@@ -35,6 +54,7 @@ export type InputLeaderboard = {
 export type InputResult = {
   capital: Scalars['Boolean']['input'];
   correct: Scalars['Int']['input'];
+  cpm: Scalars['Float']['input'];
   datetime: Scalars['AWSDateTime']['input'];
   incorrect: Scalars['Int']['input'];
   keyPresses: Array<InputMaybe<KeyPressInput>>;
@@ -60,15 +80,28 @@ export type InputSettings = {
   whatsNewOnStartup: Scalars['Boolean']['input'];
 };
 
+export type KeyPress = {
+  __typename?: 'KeyPress';
+  correct: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  pressedKey?: Maybe<Scalars['String']['output']>;
+  timestamp?: Maybe<Scalars['Float']['output']>;
+};
+
 export type KeyPressInput = {
   correct: Scalars['Boolean']['input'];
   key: Scalars['String']['input'];
   pressedKey?: InputMaybe<Scalars['String']['input']>;
+  timestamp?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   addResult: Result;
+  completeChallenge: Challenge;
+  completeGoal: Goal;
+  newChallenge: Challenge;
+  newGoal: Goal;
   removeAllResults: Scalars['Boolean']['output'];
   updateSettings: Settings;
 };
@@ -79,8 +112,34 @@ export type MutationAddResultArgs = {
 };
 
 
+export type MutationCompleteChallengeArgs = {
+  category: Scalars['String']['input'];
+};
+
+
+export type MutationCompleteGoalArgs = {
+  category: Scalars['String']['input'];
+};
+
+
+export type MutationNewChallengeArgs = {
+  category: Scalars['String']['input'];
+};
+
+
+export type MutationNewGoalArgs = {
+  category: Scalars['String']['input'];
+};
+
+
 export type MutationUpdateSettingsArgs = {
   settings: InputSettings;
+};
+
+export type PaginatedResults = {
+  __typename?: 'PaginatedResults';
+  nextToken?: Maybe<Scalars['String']['output']>;
+  results: Array<Maybe<Result>>;
 };
 
 export type Plan = {
@@ -89,14 +148,28 @@ export type Plan = {
   billing_period?: Maybe<Scalars['String']['output']>;
   billing_plan?: Maybe<Scalars['String']['output']>;
   next_billing_date?: Maybe<Scalars['String']['output']>;
+  status?: Maybe<Scalars['String']['output']>;
 };
 
 export type Query = {
   __typename?: 'Query';
+  challenge: Challenge;
+  goal: Goal;
   leaderboards: Array<Maybe<Scores>>;
-  results: Array<Result>;
+  recommendations: Array<Maybe<Scalars['String']['output']>>;
+  results: PaginatedResults;
   settings: Settings;
   subscription: Plan;
+};
+
+
+export type QueryChallengeArgs = {
+  category: Scalars['String']['input'];
+};
+
+
+export type QueryGoalArgs = {
+  category: Scalars['String']['input'];
 };
 
 
@@ -104,11 +177,38 @@ export type QueryLeaderboardsArgs = {
   leaderboard?: InputMaybe<InputLeaderboard>;
 };
 
+
+export type QueryRecommendationsArgs = {
+  category: Scalars['String']['input'];
+};
+
+
+export type QueryResultsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  nextToken?: InputMaybe<Scalars['String']['input']>;
+  since?: InputMaybe<Scalars['AWSDateTime']['input']>;
+};
+
+export type Requirement = {
+  __typename?: 'Requirement';
+  capital?: Maybe<Scalars['Boolean']['output']>;
+  correct?: Maybe<Scalars['Int']['output']>;
+  cpm?: Maybe<Scalars['Float']['output']>;
+  incorrect?: Maybe<Scalars['Int']['output']>;
+  numbers?: Maybe<Scalars['Boolean']['output']>;
+  punctuation?: Maybe<Scalars['Boolean']['output']>;
+  score?: Maybe<Scalars['Int']['output']>;
+  time?: Maybe<Scalars['Int']['output']>;
+};
+
 export type Result = {
   __typename?: 'Result';
   capital: Scalars['Boolean']['output'];
   correct: Scalars['Int']['output'];
+  cpm: Scalars['Float']['output'];
+  datetime: Scalars['AWSDateTime']['output'];
   incorrect: Scalars['Int']['output'];
+  keyPresses: Array<Maybe<KeyPress>>;
   keyboard: Scalars['String']['output'];
   language: Scalars['String']['output'];
   level: Scalars['String']['output'];
@@ -119,11 +219,15 @@ export type Result = {
 
 export type Scores = {
   __typename?: 'Scores';
+  capital: Scalars['Boolean']['output'];
   correct: Scalars['Int']['output'];
+  cpm: Scalars['Float']['output'];
   datetime: Scalars['AWSDateTime']['output'];
   incorrect: Scalars['Int']['output'];
   keyboard: Scalars['String']['output'];
   level: Scalars['String']['output'];
+  numbers: Scalars['Boolean']['output'];
+  punctuation: Scalars['Boolean']['output'];
   time: Scalars['Int']['output'];
   username: Scalars['String']['output'];
 };
@@ -224,15 +328,21 @@ export type ResolversTypes = {
   AWSURL: ResolverTypeWrapper<Scalars['AWSURL']['output']>;
   BigInt: ResolverTypeWrapper<Scalars['BigInt']['output']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Challenge: ResolverTypeWrapper<Challenge>;
   Double: ResolverTypeWrapper<Scalars['Double']['output']>;
+  Float: ResolverTypeWrapper<Scalars['Float']['output']>;
+  Goal: ResolverTypeWrapper<Goal>;
   InputLeaderboard: InputLeaderboard;
   InputResult: InputResult;
   InputSettings: InputSettings;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  KeyPress: ResolverTypeWrapper<KeyPress>;
   KeyPressInput: KeyPressInput;
   Mutation: ResolverTypeWrapper<{}>;
+  PaginatedResults: ResolverTypeWrapper<PaginatedResults>;
   Plan: ResolverTypeWrapper<Plan>;
   Query: ResolverTypeWrapper<{}>;
+  Requirement: ResolverTypeWrapper<Requirement>;
   Result: ResolverTypeWrapper<Result>;
   Scores: ResolverTypeWrapper<Scores>;
   Settings: ResolverTypeWrapper<Settings>;
@@ -251,15 +361,21 @@ export type ResolversParentTypes = {
   AWSURL: Scalars['AWSURL']['output'];
   BigInt: Scalars['BigInt']['output'];
   Boolean: Scalars['Boolean']['output'];
+  Challenge: Challenge;
   Double: Scalars['Double']['output'];
+  Float: Scalars['Float']['output'];
+  Goal: Goal;
   InputLeaderboard: InputLeaderboard;
   InputResult: InputResult;
   InputSettings: InputSettings;
   Int: Scalars['Int']['output'];
+  KeyPress: KeyPress;
   KeyPressInput: KeyPressInput;
   Mutation: {};
+  PaginatedResults: PaginatedResults;
   Plan: Plan;
   Query: {};
+  Requirement: Requirement;
   Result: Result;
   Scores: Scores;
   Settings: Settings;
@@ -332,14 +448,51 @@ export interface BigIntScalarConfig extends GraphQLScalarTypeConfig<ResolversTyp
   name: 'BigInt';
 }
 
+export type ChallengeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Challenge'] = ResolversParentTypes['Challenge']> = {
+  category?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export interface DoubleScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Double'], any> {
   name: 'Double';
 }
 
+export type GoalResolvers<ContextType = any, ParentType extends ResolversParentTypes['Goal'] = ResolversParentTypes['Goal']> = {
+  category?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  complete?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  requirement?: Resolver<ResolversTypes['Requirement'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type KeyPressResolvers<ContextType = any, ParentType extends ResolversParentTypes['KeyPress'] = ResolversParentTypes['KeyPress']> = {
+  correct?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  key?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  pressedKey?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  timestamp?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   addResult?: Resolver<ResolversTypes['Result'], ParentType, ContextType, RequireFields<MutationAddResultArgs, 'result'>>;
+  completeChallenge?: Resolver<ResolversTypes['Challenge'], ParentType, ContextType, RequireFields<MutationCompleteChallengeArgs, 'category'>>;
+  completeGoal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<MutationCompleteGoalArgs, 'category'>>;
+  newChallenge?: Resolver<ResolversTypes['Challenge'], ParentType, ContextType, RequireFields<MutationNewChallengeArgs, 'category'>>;
+  newGoal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<MutationNewGoalArgs, 'category'>>;
   removeAllResults?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   updateSettings?: Resolver<ResolversTypes['Settings'], ParentType, ContextType, RequireFields<MutationUpdateSettingsArgs, 'settings'>>;
+};
+
+export type PaginatedResultsResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaginatedResults'] = ResolversParentTypes['PaginatedResults']> = {
+  nextToken?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  results?: Resolver<Array<Maybe<ResolversTypes['Result']>>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type PlanResolvers<ContextType = any, ParentType extends ResolversParentTypes['Plan'] = ResolversParentTypes['Plan']> = {
@@ -347,20 +500,39 @@ export type PlanResolvers<ContextType = any, ParentType extends ResolversParentT
   billing_period?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   billing_plan?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   next_billing_date?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  status?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  challenge?: Resolver<ResolversTypes['Challenge'], ParentType, ContextType, RequireFields<QueryChallengeArgs, 'category'>>;
+  goal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<QueryGoalArgs, 'category'>>;
   leaderboards?: Resolver<Array<Maybe<ResolversTypes['Scores']>>, ParentType, ContextType, Partial<QueryLeaderboardsArgs>>;
-  results?: Resolver<Array<ResolversTypes['Result']>, ParentType, ContextType>;
+  recommendations?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType, RequireFields<QueryRecommendationsArgs, 'category'>>;
+  results?: Resolver<ResolversTypes['PaginatedResults'], ParentType, ContextType, Partial<QueryResultsArgs>>;
   settings?: Resolver<ResolversTypes['Settings'], ParentType, ContextType>;
   subscription?: Resolver<ResolversTypes['Plan'], ParentType, ContextType>;
+};
+
+export type RequirementResolvers<ContextType = any, ParentType extends ResolversParentTypes['Requirement'] = ResolversParentTypes['Requirement']> = {
+  capital?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  correct?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  cpm?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  incorrect?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  numbers?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  punctuation?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  score?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  time?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type ResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['Result'] = ResolversParentTypes['Result']> = {
   capital?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   correct?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  cpm?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  datetime?: Resolver<ResolversTypes['AWSDateTime'], ParentType, ContextType>;
   incorrect?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  keyPresses?: Resolver<Array<Maybe<ResolversTypes['KeyPress']>>, ParentType, ContextType>;
   keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -371,11 +543,15 @@ export type ResultResolvers<ContextType = any, ParentType extends ResolversParen
 };
 
 export type ScoresResolvers<ContextType = any, ParentType extends ResolversParentTypes['Scores'] = ResolversParentTypes['Scores']> = {
+  capital?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   correct?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  cpm?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   datetime?: Resolver<ResolversTypes['AWSDateTime'], ParentType, ContextType>;
   incorrect?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   keyboard?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   level?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  numbers?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  punctuation?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   time?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -406,10 +582,15 @@ export type Resolvers<ContextType = any> = {
   AWSTimestamp?: GraphQLScalarType;
   AWSURL?: GraphQLScalarType;
   BigInt?: GraphQLScalarType;
+  Challenge?: ChallengeResolvers<ContextType>;
   Double?: GraphQLScalarType;
+  Goal?: GoalResolvers<ContextType>;
+  KeyPress?: KeyPressResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  PaginatedResults?: PaginatedResultsResolvers<ContextType>;
   Plan?: PlanResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Requirement?: RequirementResolvers<ContextType>;
   Result?: ResultResolvers<ContextType>;
   Scores?: ScoresResolvers<ContextType>;
   Settings?: SettingsResolvers<ContextType>;

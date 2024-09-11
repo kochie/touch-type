@@ -9,6 +9,7 @@ import {
   ipcMain,
   IpcMainInvokeEvent,
   MessageBoxOptions,
+  shell
 } from "electron";
 // import isDev from "electron-is-dev";
 // import isDev from 'electron-is-dev';
@@ -37,6 +38,10 @@ async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
     return new Uint8Array();
   }
 }
+
+
+
+
 
 // Prepare the renderer once the app is ready
 app.on("ready", async () => {
@@ -70,6 +75,11 @@ app.on("ready", async () => {
       preload: join(__dirname, "preload.js"),
     },
   });
+
+  mainWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url); // Open URL in user's browser.
+    return { action: "deny" }; // Prevent the app from opening the URL.
+  })
 
   // mainWindow.setVibrancy("under-window");
   const isDev = await import("electron-is-dev");

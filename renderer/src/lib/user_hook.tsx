@@ -29,6 +29,8 @@ export const UserProvider = ({ children }) => {
     useLayoutEffect(() => {
       getCurrentUser().then((user) => {
         _setUser(user);
+      }).catch((err) => {
+        _setUser(null);
       });
     }, [])
 

@@ -12,6 +12,7 @@ export interface LetterStat {
   key: string;
   correct: boolean;
   pressedKey?: string;
+  timestamp?: number;
 }
 
 export interface StatState {
@@ -25,22 +26,38 @@ export interface StatState {
 
 export const statsReducer = (state: StatState, action: StatAction) => {
   switch (action.type) {
-    case "CORRECT":
+    case "CORRECT": {
       return {
         ...state,
         correct: state.correct + 1,
         time: Interval.fromDateTimes(state.start, DateTime.now()),
         letters: [...state.letters, { key: action.key, correct: true }],
-        immutableLetters: [...state.immutableLetters, { key: action.key, correct: true }],
+        immutableLetters: [
+          ...state.immutableLetters,
+          { key: action.key, correct: true, timestamp: DateTime.now().toMillis()},
+        ],
       };
-    case "INCORRECT":
+    }
+    case "INCORRECT": {
       return {
         ...state,
         incorrect: state.incorrect + 1,
         time: Interval.fromDateTimes(state.start, DateTime.now()),
-        letters: [...state.letters, { key: action.key, correct: false, pressedKey: action.pressedKey }],
-        immutableLetters: [...state.immutableLetters, { key: action.key, correct: false, pressedKey: action.pressedKey }],
+        letters: [
+          ...state.letters,
+          { key: action.key, correct: false, pressedKey: action.pressedKey },
+        ],
+        immutableLetters: [
+          ...state.immutableLetters,
+          {
+            key: action.key,
+            correct: false,
+            timestamp: DateTime.now().toMillis(),
+            pressedKey: action.pressedKey,
+          },
+        ],
       };
+    }
     case "BACKSPACE":
       return {
         ...state,
