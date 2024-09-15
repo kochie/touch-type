@@ -82,6 +82,7 @@
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "@uidotdev/usehooks": "^2.4.1",
     "autoprefixer": "^10.4.20",
     "d3": "^7.9.0",
     "electron": "^32.1.0",
