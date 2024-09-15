@@ -126,6 +126,11 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
+          NEXT_PUBLIC_USERPOOL_ID: ap-southeast-2_eZiuIIaCB
+          NEXT_PUBLIC_USERPOOL_CLIENT_ID: ddodg8qtnqvjhtg876uc9g74c
+          NEXT_PUBLIC_API_URL: https://api-prod.touch-typer.kochie.io/graphql
+          NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
+
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos')
         run: |
