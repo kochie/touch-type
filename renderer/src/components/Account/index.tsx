@@ -307,8 +307,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                       onClick={(event) => {
                         // require('electron').shell.openExternal("https://google.com");
                         event.preventDefault();
-                        // TODO: Replace with actual link
-                        window.open("http://localhost:3000/account", "_blank");
+                        window.open(process.env["NEXT_PUBLIC_ACCOUNT_LINK"], "_blank");
                       }}
                       type="button"
                       disabled={deleteSubmitting}
