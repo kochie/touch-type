@@ -58,7 +58,7 @@ export class Keyboard {
       this.rows[rowNumber].reduce((prev, current) => {
         if (Array.isArray(current))
           return (current[0]?.width ?? this.width) + prev;
-        return prev + current.width ?? this.width;
+        return prev + current.width;
       }, 0) +
       (this.rows[rowNumber].length - 1) * this.gap
     );
