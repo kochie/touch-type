@@ -165,8 +165,8 @@ export function GoalCard({ category }: { category: Category }) {
               tweenDuration={7000}
               numberOfPieces={500}
               recycle={false}
-              width={width}
-              height={height}
+              width={width ?? 0}
+              height={height ?? 0}
             />
           )}
         </div>
