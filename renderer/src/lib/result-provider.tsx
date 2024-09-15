@@ -2,7 +2,7 @@
 
 import { LetterStat } from "@/components/Tracker/reducers";
 import { PUT_RESULT } from "@/transactions/putResult";
-import { useLazyQuery, useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { openDB } from "idb";
 
 import { createContext, useContext, useEffect, useState } from "react";
@@ -89,11 +89,13 @@ export function ResultsProvider({ children }) {
           const results = JSON.parse(oldResults);
           const store = tx.objectStore("results");
           for (const result of results) {
+            const time = Duration.fromISO(result.time) ?? Duration.fromMillis(1_000_000);
             store.put({
               datetime: new Date().toISOString(),
+              time: time.toISO(),
               cpm:
                 (result.correct + result.incorrect) /
-                (Duration.fromISO(result.time).toMillis() / 1000 / 60),
+                (time.toMillis() / 1000 / 60),
               ...result,
             });
           }

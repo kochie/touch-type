@@ -131,10 +131,10 @@ const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps)
         return keys.current.findIndex((i) => i.key === c.key) === index;
       });
 
-      if (currentKey && settings.blinker) {
+      if (!!currentKey && settings.blinker) {
         const t = 1 - (time % 1500) / 1500;
 
-        const x = 255 * -t
+        const x = 255 * t
         keyboard.drawKey(ctx, currentKey.i, currentKey.j, currentKey.current, `rgba(0, 0, ${x}, 0.5)`, false, !settings.punctuation);
       }
 

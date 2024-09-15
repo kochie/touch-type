@@ -14,6 +14,7 @@ import { useUser } from "@/lib/user_hook";
 import { useQuery } from "@apollo/client";
 import { GET_SUBSCRIPTION } from "@/transactions/getSubscription";
 import { Plan } from "@/generated/graphql";
+import { faArrowsRotate } from "@fortawesome/pro-duotone-svg-icons";
 
 enum PlanType {
   FREE = "free",
@@ -28,6 +29,7 @@ const features = {
 export default function Account({ onError, onCancel, onChangePassword }) {
   const [submitting, setSubmitting] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [reloading, setReloading] = useState(false);
   const [attributes, setAttributes] = useState({
     email: "",
     phone_number: "",
@@ -72,15 +74,9 @@ export default function Account({ onError, onCancel, onChangePassword }) {
 
   if (!user) return null;
 
-  const { data, loading, error } = useQuery<{ subscription: Plan }>(
+  const { data, loading, error, refetch } = useQuery<{ subscription: Plan }>(
     GET_SUBSCRIPTION,
-    { pollInterval: 1000 },
   );
-
-  if (error) {
-    console.warn("Error fetching subscription", error);
-    return <div></div>
-  }
 
   return (
     <div className="h-full">
@@ -259,8 +255,14 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                       Control what features are available to you.
                     </p>
 
+                    {error && (
+                      <div className="text-black">
+                        <p>There was an error checking your subscription</p>
+                      </div>
+                    )}
+
                     {loading || !data ? (
-                      <p>Loading...</p>
+                      <p className="text-black">Loading...</p>
                     ) : (
                       <>
                         <p className="text-gray-600 text-sm leading-6">
@@ -288,10 +290,24 @@ export default function Account({ onError, onCancel, onChangePassword }) {
 
                   <div>
                     <button
+                      className="w-12 text-black"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setReloading(true);
+                        refetch().then(()=>setReloading(false));
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faArrowsRotate}
+                        spin={reloading}
+                        size="lg"
+                      />
+                    </button>
+                    <button
                       onClick={(event) => {
                         // require('electron').shell.openExternal("https://google.com");
                         event.preventDefault();
-                        window.open("http://localhost:3000/account", "_blank");
+                        window.open(process.env["NEXT_PUBLIC_ACCOUNT_LINK"], "_blank");
                       }}
                       type="button"
                       disabled={deleteSubmitting}
