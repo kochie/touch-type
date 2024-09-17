@@ -113,10 +113,10 @@ export default function Tracker() {
   };
 
   const keyDown = (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
-    e.preventDefault();
     if (modal !== ModalType.NONE) {
       return;
     }
+    e.preventDefault();
 
     if (e.key === "Shift") return;
 
