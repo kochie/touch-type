@@ -1,5 +1,5 @@
-const MDX = require("@next/mdx");
-const { withSentryConfig } = require("@sentry/nextjs");
+import MDX from "@next/mdx";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const sentryWebpackPluginOptions = {
   // Additional config options for the Sentry Webpack plugin. Keep in mind that
@@ -65,6 +65,6 @@ const withMDX = MDX({
   },
 });
 
-module.exports = withMDX(
+export default withMDX(
   withSentryConfig(nextConfig, sentryWebpackPluginOptions),
 );

@@ -5,7 +5,10 @@ import { join, isAbsolute, normalize } from "path";
 // Packages
 import { app, protocol } from "electron";
 // import isDev from 'electron-is-dev'
-import { resolve } from "app-root-path";
+// import { resolve } from "app-root-path";
+import pkg from 'app-root-path';
+const { resolve } = pkg;
+
 
 interface Directories {
   [key: string]: string;
@@ -96,7 +99,7 @@ export default async (directories: Directories | string, port?: number) => {
 
   const isDev = await import("electron-is-dev");
   if (!isDev.default) {
-    adjustRenderer(directories.production);
+    // adjustRenderer(directories.production);
     return;
   }
 

@@ -1,6 +1,5 @@
 // Native
-import { join } from "path";
-import { format } from "url";
+import { join } from "node:path";
 
 import {
   app,
@@ -9,15 +8,22 @@ import {
   ipcMain,
   IpcMainInvokeEvent,
   MessageBoxOptions,
-  shell
+  shell,
 } from "electron";
 // import isDev from "electron-is-dev";
 // import isDev from 'electron-is-dev';
 import prepareNext from "./electron-next";
-import { autoUpdater } from "electron-updater";
+import {autoUpdater} from 'electron-updater';
+
 import log from "electron-log";
 import { init } from "@sentry/electron/main";
 import { readFile } from "fs/promises";
+import serve from "electron-serve";
+
+// import { fileURLToPath } from "node:url";
+
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
 
 init({
   dsn: "https://b91033c73a0f46a287bfaa7959809d12@o157203.ingest.sentry.io/6633710",
@@ -27,6 +33,7 @@ autoUpdater.logger = log;
 // @ts-ignore
 autoUpdater.logger.transports.file.level = "info";
 log.info("App starting...");
+
 
 async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
   try {
@@ -39,16 +46,15 @@ async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
   }
 }
 
-
-
-
+const loadURL = serve({ directory: "renderer/out" });
 
 // Prepare the renderer once the app is ready
 app.on("ready", async () => {
   ipcMain.handle("getWordSet", handleWordSet);
 
-  await prepareNext("./renderer");
   autoUpdater.checkForUpdatesAndNotify();
+
+  
 
   const mainWindow = new BrowserWindow({
     width: 1280,
@@ -79,24 +85,29 @@ app.on("ready", async () => {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url); // Open URL in user's browser.
     return { action: "deny" }; // Prevent the app from opening the URL.
-  })
+  });
 
   // mainWindow.setVibrancy("under-window");
   const isDev = await import("electron-is-dev");
 
   if (isDev.default) {
     console.log("Running in development");
+
+    await prepareNext("./renderer");
+    await mainWindow.loadURL("http://localhost:8000/");
+  } else {
+    await loadURL(mainWindow);
   }
 
-  const url = isDev.default
-    ? "http://localhost:8000/"
-    : format({
-        pathname: join(__dirname, "../renderer/out/index.html"),
-        protocol: "file:",
-        slashes: true,
-      });
+  // const url = isDev.default
+  //   ? "http://localhost:8000/"
+  //   : format({
+  //       pathname: join(__dirname, "../renderer/out/index.html"),
+  //       protocol: "file:",
+  //       slashes: true,
+  //     });
 
-  mainWindow.loadURL(url);
+  // console.log("Loading URL", url);
 });
 
 setInterval(() => {
