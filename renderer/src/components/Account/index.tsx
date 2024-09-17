@@ -72,7 +72,6 @@ export default function Account({ onError, onCancel, onChangePassword }) {
       });
   }, [user]);
 
-  if (!user) return null;
 
   const { data, loading, error, refetch } = useQuery<{ subscription: Plan }>(
     GET_SUBSCRIPTION,
