@@ -12,6 +12,7 @@ import { Duration } from "luxon";
 import { GET_RESULTS } from "@/transactions/getResults";
 import { makeClient } from "./apollo-provider";
 import {getCurrentUser} from "aws-amplify/auth"
+import { useUser } from "./user_hook";
 
 export interface Result {
   correct: number;
@@ -36,6 +37,7 @@ const ResultsContext = createContext({
 export function ResultsProvider({ children }) {
   const [results, _setResults] = useState<Result[]>([]);
   const [uploadResult] = useMutation(PUT_RESULT);
+  const user = useUser()
 
   async function syncResults() {
     try {
@@ -148,7 +150,9 @@ export function ResultsProvider({ children }) {
     _setResults((prev) => [...prev, result]);
     updateDB(result);
 
-    uploadResult({ variables: { result: result } });
+    if (user) {
+      uploadResult({ variables: { result: result } });
+    }
   };
 
   return (

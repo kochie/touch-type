@@ -9,7 +9,6 @@ const UserContext = createContext<UserContextProps>(null);
 export const UserProvider = ({ children }) => {
   const [user, _setUser] = useState<AuthUser | null>(null);
 
-
   useLayoutEffect(() => {
     const stopCallback = Hub.listen("auth", async ({ payload }) => {
       switch (payload.event) {
@@ -25,14 +24,15 @@ export const UserProvider = ({ children }) => {
     return stopCallback;
   }, []);
 
-  
-    useLayoutEffect(() => {
-      getCurrentUser().then((user) => {
+  useLayoutEffect(() => {
+    getCurrentUser()
+      .then((user) => {
         _setUser(user);
-      }).catch((err) => {
+      })
+      .catch((err) => {
         _setUser(null);
       });
-    }, [])
+  }, []);
 
   return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 };
