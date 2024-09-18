@@ -132,10 +132,6 @@ const reducer = (
   state: typeof defaultSettings,
   action: ChangeSettingsAction,
 ) => {
-  // if (process.env.NODE_ENV === "development") {
-  //   console.log("Settings reducer", action);
-  // }
-
   switch (action.type) {
     case "LOAD_SETTINGS": {
       return {
@@ -167,19 +163,16 @@ const reducer = (
         language: action.language,
       };
     }
-
     case "CHANGE_KEYBOARD":
       return {
         ...state,
         keyboardName: action.keyboardName,
       };
-
     case "CHANGE_LEVEL":
       return {
         ...state,
         levelName: action.levelName,
       };
-
     case "SET_PUBLISH_TO_LEADERBOARD":
       return {
         ...state,

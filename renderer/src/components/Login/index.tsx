@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import Error from "../Errors";
 import { Transition } from "@headlessui/react";
+import { revalidatePath } from 'next/cache'
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -60,6 +61,7 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
                 setSubmitting(false);
                 setStatus("COMPLETE");
                 await new Promise((resolve) => setTimeout(resolve, 1000));
+                
                 onContinue(values);
               } catch (error) {
                 setFormErrors(error);

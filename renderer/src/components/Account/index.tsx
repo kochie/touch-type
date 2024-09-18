@@ -15,6 +15,7 @@ import { useQuery } from "@apollo/client";
 import { GET_SUBSCRIPTION } from "@/transactions/getSubscription";
 import { Plan } from "@/generated/graphql";
 import { faArrowsRotate } from "@fortawesome/pro-duotone-svg-icons";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 enum PlanType {
   FREE = "free",

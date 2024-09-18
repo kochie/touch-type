@@ -104,8 +104,6 @@ export default function BestForEachLevel({ keyboard }: BestForEachLevelProps) {
     return () => {
         setBestLevel(initialState);
     }
-
-    // console.log(bestForEachLevel);
   }, [results, keyboard]);
 
   return (

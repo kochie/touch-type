@@ -85,7 +85,6 @@ export default function Barline({ keyboard }: BarlineProps) {
         cpm: Math.random() * 200,
         level: Levels.LEVEL_0,
       }));
-    // console.log(dummyData)
 
     const data = [
       ...dummyData,
@@ -94,8 +93,6 @@ export default function Barline({ keyboard }: BarlineProps) {
         computedResults.length,
       ),
     ];
-
-    // console.log(data)
 
     const X = map(data, (x, i) => i);
     const Y = map(data, (y) => y.cpm);
