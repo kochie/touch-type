@@ -11,6 +11,7 @@ export const UserProvider = ({ children }) => {
 
   useLayoutEffect(() => {
     const stopCallback = Hub.listen("auth", async ({ payload }) => {
+      console.log("A new auth event has happened: ", payload);
       switch (payload.event) {
         case "signedIn":
           _setUser(payload.data);
