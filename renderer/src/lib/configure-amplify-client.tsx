@@ -1,17 +1,18 @@
 'use client';
 
-import { Amplify } from 'aws-amplify';
+import { Amplify, ResourcesConfig } from 'aws-amplify';
 
-const outputs = {
+const outputs: ResourcesConfig = {
     Auth: {
       Cognito: {
         userPoolId: process.env.NEXT_PUBLIC_USERPOOL_ID!,
         userPoolClientId: process.env.NEXT_PUBLIC_USERPOOL_CLIENT_ID!,
+        userPoolEndpoint: process.env.NEXT_PUBLIC_AUTH_URL,
       },
     },
   };
 
-Amplify.configure(outputs, { ssr: true });
+Amplify.configure(outputs, { ssr: false });
 
 export default function ConfigureAmplifyClientSide() {
   return null;

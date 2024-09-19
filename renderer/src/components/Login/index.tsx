@@ -58,12 +58,14 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
                   password: values.password,
                 });
 
+
                 setSubmitting(false);
                 setStatus("COMPLETE");
                 await new Promise((resolve) => setTimeout(resolve, 1000));
                 
                 onContinue(values);
               } catch (error) {
+                console.error(error);
                 setFormErrors(error);
               }
 

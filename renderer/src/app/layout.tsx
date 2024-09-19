@@ -12,6 +12,8 @@ import clsx from "clsx";
 import ConfigureAmplifyClientSide from "@/lib/configure-amplify-client";
 
 
+console.log("NODE_ENV", process.env.NODE_ENV)
+
 export default function RootLayout({
   children,
 }: {
