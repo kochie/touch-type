@@ -4,7 +4,7 @@
   "author": "Robert Koch <robert@kochie.io>",
   "main": "main/index.js",
   "productName": "Touch Typer",
-  "version": "2.1.1",
+  "version": "2.0.3",
   "files": [
     "main/",
     "renderer/out"
