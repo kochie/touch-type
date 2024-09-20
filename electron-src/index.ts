@@ -20,6 +20,9 @@ import { init } from "@sentry/electron/main";
 import { readFile } from "fs/promises";
 import serve from "electron-serve";
 
+import "./in-app-purchase"
+import { getProducts } from "./in-app-purchase";
+
 // import { fileURLToPath } from "node:url";
 
 // const __filename = fileURLToPath(import.meta.url);
@@ -51,6 +54,7 @@ const loadURL = serve({ directory: "renderer/out" });
 // Prepare the renderer once the app is ready
 app.on("ready", async () => {
   ipcMain.handle("getWordSet", handleWordSet);
+  ipcMain.handle("getProducts", getProducts)
 
   autoUpdater.checkForUpdatesAndNotify();
 

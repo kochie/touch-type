@@ -46,6 +46,19 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     setSubmitting(false);
   };
 
+  const handleProduct = async () => {
+    if (process.mas) {
+      console.log("This is a Mac App Store build");
+      // Handle Mac App Store specific behavior here
+    } else {
+      console.log("This is a non-Mac App Store build");
+      // Handle non-Mac App Store specific behavior here
+    }
+    // @ts-expect-error electronAPI is not defined
+    const products = await window.electronAPI.getProducts() as Electron.Product[];
+    console.log("prodiucts", products)
+  }
+
   const deleteAccount = async () => {
     setDeleteSubmitting(true);
 
@@ -317,6 +330,12 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     </button>
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <Button onClick={handleProduct}>
+                  Get products
+                </Button>
               </div>
 
               <div className="border-b border-gray-900/10 my-6" />

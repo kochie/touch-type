@@ -7,6 +7,7 @@ declare global {
     interface Global {
       ipcRenderer: IpcRenderer;
       getWordSet: () => string[];
+      getProducts: () => Electron.Product[];
     }
   }
 }
@@ -15,4 +16,5 @@ declare global {
 // needed node functionality here
 contextBridge.exposeInMainWorld("electronAPI", {
   getWordSet: (language: string) => ipcRenderer.invoke("getWordSet", language),
+  getProducts: () => ipcRenderer.invoke("getProducts"),
 });
