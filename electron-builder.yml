@@ -1,5 +1,6 @@
 appId: io.kochie.touch-typer
 copyright: "Copyright © 2022 Robert Koch"
+generateUpdatesFilesForAllChannels: true
 mac:
   gatekeeperAssess: false
   hardenedRuntime: true
@@ -23,7 +24,7 @@ mas:
   entitlementsInherit: build/entitlements.mas.inherit.plist
 masDev:
   hardenedRuntime: false
-  provisioningProfile: build/mastouchtyperdev.provisionprofile
+  provisioningProfile: build/mastouchtyper.provisionprofile
   entitlementsLoginHelper: build/entitlements.mas.loginhelper.plist
   entitlements: build/entitlements.mas.plist
   entitlementsInherit: build/entitlements.mas.inherit.plist
