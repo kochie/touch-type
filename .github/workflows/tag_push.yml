@@ -147,8 +147,8 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
           APPLE_API_ISSUER: ${{ secrets.api_key_issuer_id }}
 
-          CSC_LINK: ${{ matrix.csc_link }}
-          CSC_KEY_PASSWORD: ${{ matrix.mac_certs_password }}
+          MAC_LINK: ${{ secrets.csc_link }}
+          MAC_KEY_PASSWORD: ${{ secrets.mac_certs_password }}
 
           BUNDLE_VERSION: ${{ github.run_number }}
           PRE_RELEASE: ${{ github.event.release.prerelease || github.event.inputs.release }}

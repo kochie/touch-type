@@ -25,6 +25,8 @@ const config: Configuration = {
     gatekeeperAssess: false,
     hardenedRuntime: true,
     notarize: true,
+    cscLink: process.env["MAC_LINK"],
+    cscKeyPassword: process.env["MAC_KEY_PASSWORD"],
     bundleVersion: process.env["BUNDLE_VERSION"],
     // provisioningProfile: "build/mas-touchtyper.provisionprofile",
     category: "public.app-category.productivity",
