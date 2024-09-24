@@ -145,6 +145,8 @@ jobs:
 
           MAC_LINK: ${{ secrets.csc_link }}
           MAC_KEY_PASSWORD: ${{ secrets.mac_certs_password }}
+          
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           BUNDLE_VERSION: ${{ github.run_number }}
           PRE_RELEASE: ${{ github.event.release.prerelease || github.event.inputs.release }}
