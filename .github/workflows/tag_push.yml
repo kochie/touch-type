@@ -33,10 +33,6 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        include:
-          - os: macos-latest
-            csc_link: ${{ secrets.mac_certs }}
-            csc_key_password: ${{ secrets.mac_certs_password }}
 
     steps:
       - name: Check out Git repository
