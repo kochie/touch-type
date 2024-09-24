@@ -21,9 +21,11 @@
     "pack-app": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder -mlw",
     "type-check": "tsc -p ./renderer/tsconfig.json && tsc -p ./electron-src/tsconfig.json",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps && npm run replace-info",
+    "replace-info": "sed -i '' 's/com.github.Electron/io.kochie.touch-typer/g' node_modules/electron/dist/Electron.app/Contents/Info.plist",
     "publish": "electron-builder -mlw -p always",
-    "lint": "prettier --write ."
+    "lint": "prettier --write .",
+    "build+release": "electron-builder --config electron-builder.config.ts"
   },
   "dependencies": {
     "@apollo/client": "3.11.8",

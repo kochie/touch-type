@@ -56,7 +56,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     }
     // @ts-expect-error electronAPI is not defined
     const products = await window.electronAPI.getProducts() as Electron.Product[];
-    console.log("prodiucts", products)
+    console.log("products", products)
   }
 
   const deleteAccount = async () => {
