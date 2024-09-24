@@ -97,6 +97,21 @@ jobs:
           mkdir -p private_keys
           echo -n "$API_KEY_BASE64" | base64 --decode --output $API_KEY_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
+      
+      - name: Build Electron app
+        run: |
+          pnpm run build
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+          NEXT_PUBLIC_USERPOOL_ID: ap-southeast-2_eZiuIIaCB
+          NEXT_PUBLIC_USERPOOL_CLIENT_ID: ddodg8qtnqvjhtg876uc9g74c
+          NEXT_PUBLIC_API_URL: https://api-prod.touch-typer.kochie.io/graphql
+          NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
 
       - name: Build/release Electron app
         # uses: kochie/action-electron-builder@1.8.0
@@ -142,11 +157,6 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
-
-          NEXT_PUBLIC_USERPOOL_ID: ap-southeast-2_eZiuIIaCB
-          NEXT_PUBLIC_USERPOOL_CLIENT_ID: ddodg8qtnqvjhtg876uc9g74c
-          NEXT_PUBLIC_API_URL: https://api-prod.touch-typer.kochie.io/graphql
-          NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
 
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos')
