@@ -58,6 +58,15 @@ if (!inAppPurchase.canMakePayments()) {
 }
 
 export async function getProducts(): Promise<Electron.Product[]> {
+
+  if (process.mas) {
+    console.log("This is a Mac App Store build");
+    // Handle Mac App Store specific behavior here
+  } else {
+    console.log("This is a non-Mac App Store build");
+    // Handle non-Mac App Store specific behavior here
+  }
+  
   const products = await inAppPurchase.getProducts(PRODUCT_IDS)
 
   console.log(products)
