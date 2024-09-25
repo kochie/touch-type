@@ -1,20 +1,14 @@
 import { Configuration } from "electron-builder";
 
-const PRE_RELEASE = process.env["PRE_RELEASE"];
-const EDGE = process.env["EDGE"];
-const RELEASE = process.env["RELEASE"];
-
-const snapChannels: string[] = [];
-
-if (EDGE) {
-  console.log("Building edge release");
-  snapChannels.push("edge");
-} else if (PRE_RELEASE) {
-  console.log("Building beta release");
-  snapChannels.push("beta");
-} else { 
-  console.log("Building stable release");
-  snapChannels.push("stable");
+let channel = "stable";
+if (process.env["GITHUB_REF"]?.includes("beta")) {
+  channel = "beta";
+}
+if (process.env["GITHUB_REF"]?.includes("alpha")) {
+  channel = "alpha";
+}
+if (process.env["CHANNEL"]) {
+  channel = process.env["CHANNEL"];
 }
 
 const config: Configuration = {
@@ -83,7 +77,7 @@ const config: Configuration = {
       {
         provider: "snapStore",
         repo: "touch-typer",
-        channels: snapChannels,
+        channels: [channel],
         publishAutoUpdate: true,
       },
     ],
