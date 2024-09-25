@@ -6,15 +6,15 @@ const RELEASE = process.env["RELEASE"];
 
 const snapChannels: string[] = [];
 
-if (RELEASE) {
-  console.log("Building stable release");
-  snapChannels.push("stable");
+if (EDGE) {
+  console.log("Building edge release");
+  snapChannels.push("edge");
 } else if (PRE_RELEASE) {
   console.log("Building beta release");
   snapChannels.push("beta");
-} else {
-  console.log("Building edge release");
-  snapChannels.push("edge");
+} else { 
+  console.log("Building stable release");
+  snapChannels.push("stable");
 }
 
 const config: Configuration = {
