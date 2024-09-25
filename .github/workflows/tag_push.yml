@@ -29,7 +29,20 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+-canary.[0-9]+"
 
 jobs:
+  make_release:
+    name: Make Github Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ncipollo/release-action@v1
+        with:
+          skipIfReleaseExists: true
+          draft: true
+          generateReleaseNotes: true
+          prerelease: ${{ contains(github.ref, 'beta') }}
+
+
   build:
+    name: Build and Upload
     runs-on: ${{ matrix.os }}
 
     strategy:
