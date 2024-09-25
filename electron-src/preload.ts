@@ -8,6 +8,7 @@ declare global {
       ipcRenderer: IpcRenderer;
       getWordSet: () => string[];
       getProducts: () => Electron.Product[];
+      isMas: () => boolean;
     }
   }
 }
@@ -17,4 +18,5 @@ declare global {
 contextBridge.exposeInMainWorld("electronAPI", {
   getWordSet: (language: string) => ipcRenderer.invoke("getWordSet", language),
   getProducts: () => ipcRenderer.invoke("getProducts"),
+  isMas: () => ipcRenderer.invoke("isMas"),
 });

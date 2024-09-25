@@ -49,6 +49,8 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   const handleProduct = async () => {
     // @ts-expect-error electronAPI is not defined
     const products = await window.electronAPI.getProducts() as Electron.Product[];
+    // @ts-expect-error electronAPI is not defined
+    console.log("is MAS", window.electronAPI.isMas())
     console.log("products", products)
   }
 

@@ -55,6 +55,7 @@ const loadURL = serve({ directory: "renderer/out" });
 app.on("ready", async () => {
   ipcMain.handle("getWordSet", handleWordSet);
   ipcMain.handle("getProducts", getProducts)
+  ipcMain.handle("isMas", () => !!process.mas);
 
   autoUpdater.checkForUpdatesAndNotify();
 
