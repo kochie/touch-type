@@ -29,6 +29,9 @@ const config: Configuration = {
     category: "public.app-category.productivity",
     icon: "build/app-icon.icns",
     entitlements: "build/entitlements.mac.plist",
+    extendInfo: {
+      ITSAppUsesNonExemptEncryption: false
+    },
     target: [
       {
         target: "default",

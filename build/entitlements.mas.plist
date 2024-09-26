@@ -18,7 +18,5 @@
     </array>
     <key>com.apple.security.network.client</key>
     <true/>
-    <key>ITSAppUsesNonExemptEncryption</key>
-    <false/>
   </dict>
 </plist>
