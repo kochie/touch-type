@@ -1,11 +1,9 @@
 "use client";
 
-// import { Amplify } from "aws-amplify";
 import { SettingsProvider, useSettings } from "@/lib/settings_hook";
 import { UserProvider } from "@/lib/user_hook";
 import { ApolloWrapper } from "@/lib/apollo-provider";
 import { WordProvider } from "@/lib/word-provider";
-import { Amplify } from "aws-amplify";
 import { ResultsProvider } from "@/lib/result-provider";
 import { useLayoutEffect } from "react";
 import {
@@ -15,22 +13,28 @@ import {
   useModal,
 } from "@/lib/modal-provider";
 import Menu from "@/components/Menu";
+import { MasProvider } from "@/lib/mas_hook";
+import { PlanProvider } from "@/lib/plan_hook";
 
 export default function Providers({ children }) {
   return (
     <UserProvider>
-      <ApolloWrapper>
-        <SettingsProvider>
-          <ResultsProvider>
-            <WordProvider>
-              <ModalProvider>
-                <ModalSetup />
-                {children}
-              </ModalProvider>
-            </WordProvider>
-          </ResultsProvider>
-        </SettingsProvider>
-      </ApolloWrapper>
+      <MasProvider>
+        <ApolloWrapper>
+          <SettingsProvider>
+            <ResultsProvider>
+              <PlanProvider>
+                <WordProvider>
+                  <ModalProvider>
+                    <ModalSetup />
+                    {children}
+                  </ModalProvider>
+                </WordProvider>
+              </PlanProvider>
+            </ResultsProvider>
+          </SettingsProvider>
+        </ApolloWrapper>
+      </MasProvider>
     </UserProvider>
   );
 }

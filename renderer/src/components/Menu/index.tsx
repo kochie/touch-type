@@ -20,6 +20,8 @@ import clsx from "clsx";
 import { defaultSettings, useSettings } from "@/lib/settings_hook";
 import { keyboards } from "../KeyboardSelect";
 import { languages } from "../settings/settings";
+import { useMas } from "@/lib/mas_hook";
+import { usePlan } from "@/lib/plan_hook";
 
 interface MenuProps {
   handleWhatsNew?: () => void;
@@ -34,6 +36,10 @@ export default function Menu({
 }: MenuProps) {
   const pathname = usePathname();
   const settings = useSettings();
+  const isMas = useMas()
+  const plan = usePlan();
+
+  const premium = plan?.billing_plan === "premium";
 
   // This is being done because of hydration errors in the settings hook.
   // Because using the settings hook uses local storage any direct rendering
@@ -83,7 +89,7 @@ export default function Menu({
               />
             </Link>
           </div>
-          <div className="hover:animate-pulse">
+          <div className={clsx("hover:animate-pulse", isMas && !premium && "hidden")}>
             <Link href={"/assistant"}>
               <FontAwesomeIcon
                 icon={faMicrochipAi}
