@@ -16,6 +16,8 @@ import { GET_SUBSCRIPTION } from "@/transactions/getSubscription";
 import { Plan } from "@/generated/graphql";
 import { faArrowsRotate } from "@fortawesome/pro-duotone-svg-icons";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { useMas } from "@/lib/mas_hook";
+import clsx from "clsx";
 
 enum PlanType {
   FREE = "free",
@@ -31,6 +33,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   const [submitting, setSubmitting] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [reloading, setReloading] = useState(false);
+  const isMas = useMas();
   const [attributes, setAttributes] = useState({
     email: "",
     phone_number: "",
@@ -47,12 +50,12 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   };
 
   const handleProduct = async () => {
-    // @ts-expect-error electronAPI is not defined
-    const products = await window.electronAPI.getProducts() as Electron.Product[];
-    // @ts-expect-error electronAPI is not defined
-    console.log("is MAS", window.electronAPI.isMas())
-    console.log("products", products)
-  }
+    
+    const products =
+      // @ts-expect-error electronAPI is not defined
+      (await window.electronAPI.getProducts()) as Electron.Product[];
+    console.log("products", products);
+  };
 
   const deleteAccount = async () => {
     setDeleteSubmitting(true);
@@ -80,7 +83,6 @@ export default function Account({ onError, onCancel, onChangePassword }) {
         onError();
       });
   }, [user]);
-
 
   const { data, loading, error, refetch } = useQuery<{ subscription: Plan }>(
     GET_SUBSCRIPTION,
@@ -250,9 +252,9 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                 )}
               </Formik>
 
-              <div className="border-b border-gray-900/10 my-6" />
+              <div className={clsx(isMas && "hidden")}>
+                <div className="border-b border-gray-900/10 my-6" />
 
-              <div>
                 <h2 className="text-base font-semibold leading-7 text-gray-900">
                   Account Features
                 </h2>
@@ -302,7 +304,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                       onClick={(event) => {
                         event.preventDefault();
                         setReloading(true);
-                        refetch().then(()=>setReloading(false));
+                        refetch().then(() => setReloading(false));
                       }}
                     >
                       <FontAwesomeIcon
@@ -315,7 +317,10 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                       onClick={(event) => {
                         // require('electron').shell.openExternal("https://google.com");
                         event.preventDefault();
-                        window.open(process.env["NEXT_PUBLIC_ACCOUNT_LINK"], "_blank");
+                        window.open(
+                          process.env["NEXT_PUBLIC_ACCOUNT_LINK"],
+                          "_blank",
+                        );
                       }}
                       type="button"
                       disabled={deleteSubmitting}
@@ -325,12 +330,6 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     </button>
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <Button onClick={handleProduct}>
-                  Get products
-                </Button>
               </div>
 
               <div className="border-b border-gray-900/10 my-6" />
