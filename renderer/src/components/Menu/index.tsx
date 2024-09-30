@@ -39,8 +39,7 @@ export default function Menu({
   const isMas = useMas()
   const plan = usePlan();
 
-  const premium = plan?.billing_plan === "premium";
-
+  
   // This is being done because of hydration errors in the settings hook.
   // Because using the settings hook uses local storage any direct rendering
   // of the settings hook will cause a hydration error.
@@ -48,6 +47,8 @@ export default function Menu({
   useLayoutEffect(() => {
     setHydratedSettings((prev) => ({ ...prev, ...settings }));
   }, [settings]);
+
+  const premium = plan?.billing_plan === "premium"
 
   return (
     <div className="top-0 sticky w-full">
