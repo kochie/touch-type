@@ -22,6 +22,8 @@ export const PlanProvider = ({ children }) => {
 
   const fetchPlan = async () => {
     if (!user) {
+  );
+  
       setPlan(null);
       return;
     }
@@ -32,6 +34,7 @@ export const PlanProvider = ({ children }) => {
       .eq('user_id', user.id)
       .single();
 
+  useLayoutEffect(() => {
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching subscription:', error);
       return;
