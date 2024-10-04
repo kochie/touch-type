@@ -1,7 +1,7 @@
 // Main process
 import { Event, inAppPurchase, Transaction } from 'electron'
 // const PRODUCT_IDS = ['io.kochie.touch-typer.monthly', 'io.kochie.touch-typer.yearly']
-const PRODUCT_IDS = ['io.kochie.touch-typer.monthly', 'io.kochie.touch-typer.yearly', 'monthly', 'yearly', '21541593']
+const PRODUCT_IDS = ['io.kochie.touch-typer.monthly', 'io.kochie.touch-typer.yearly']
 
 console.log("In-app purchase is available:", inAppPurchase.canMakePayments())
 
