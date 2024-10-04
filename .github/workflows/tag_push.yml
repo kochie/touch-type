@@ -18,6 +18,10 @@ on:
           - 'beta'
           - 'alpha'
           - 'stable'
+      branch:
+        description: 'Branch to release from'
+        required: false
+        type: string
       
   # release:
   #   types: [created]
@@ -51,7 +55,9 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
 
       - uses: pnpm/action-setup@v2
         with:
