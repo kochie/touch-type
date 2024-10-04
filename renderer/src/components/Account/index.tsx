@@ -231,6 +231,8 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                         </button>
                       </div>
 
+                      <button className="text-black" onClick={handleProduct}>Product</button>
+
                       <div className="w-min gap-6 flex">
                         <button
                           type="button"
