@@ -40,6 +40,7 @@ jobs:
   make_release:
     name: Make Github Release
     runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.release == true || startsWith(github.ref, 'refs/tags') }}
     steps:
       - uses: ncipollo/release-action@v1
         with:
@@ -186,7 +187,14 @@ jobs:
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos')
         run: |
-          version=$(jq -r .version package.json)
+          # Check if the version input is provided; if so, use it, otherwise read from package.json
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            version=${{ github.event.inputs.version }}
+          else
+            version=$(jq -r .version package.json)
+          fi
+
+          echo "Using version: $version"
           xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
           xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
 
