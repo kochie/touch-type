@@ -22,6 +22,10 @@ on:
         description: 'Branch to release from'
         required: false
         type: string
+      version:
+        description: 'Version to release'
+        required: false
+        type: string
       
   # release:
   #   types: [created]
@@ -169,6 +173,7 @@ jobs:
           
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+          SHORT_VERSION: ${{ github.event.inputs.version }}
           BUNDLE_VERSION: ${{ github.run_number }}
           CHANNEL: ${{ github.event.inputs.channel }}
 

@@ -24,7 +24,7 @@ const config: Configuration = {
     cscKeyPassword: process.env["MAC_KEY_PASSWORD"],
     bundleVersion: process.env["BUNDLE_VERSION"],
     // remove beta from version 1.2.3-beta.4 -> 1.2.3.4
-    bundleShortVersion: version.replace(/-beta\.\d+$/, ""),
+    bundleShortVersion: process.env["SHORT_VERSION"] ?? version.replace(/-beta\.\d+$/, ""),
     // provisioningProfile: "build/mas-touchtyper.provisionprofile",
     category: "public.app-category.productivity",
     icon: "build/app-icon.icns",
