@@ -48,7 +48,7 @@ jobs:
           draft: true
           generateReleaseNotes: true
           prerelease: ${{ contains(github.ref, 'beta') }}
-
+          tag: ${{ github.input.version }}
 
   build:
     name: Build and Upload

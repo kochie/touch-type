@@ -16,13 +16,14 @@ const config: Configuration = {
   appId: "io.kochie.touch-typer",
   copyright: "Copyright © 2022 Robert Koch",
   generateUpdatesFilesForAllChannels: true,
+  buildVersion: process.env["BUNDLE_VERSION"],
   mac: {
     gatekeeperAssess: false,
     hardenedRuntime: true,
     notarize: true,
     cscLink: process.env["MAC_LINK"],
     cscKeyPassword: process.env["MAC_KEY_PASSWORD"],
-    bundleVersion: process.env["BUNDLE_VERSION"],
+    // bundleVersion: 
     // remove beta from version 1.2.3-beta.4 -> 1.2.3.4
     bundleShortVersion: process.env["SHORT_VERSION"] ?? version.replace(/-beta\.\d+$/, ""),
     // provisioningProfile: "build/mas-touchtyper.provisionprofile",
