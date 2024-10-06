@@ -1,5 +1,5 @@
 import { Configuration } from "electron-builder";
-import { version } from "./package.json"
+import { version } from "./package.json";
 
 let channel = "stable";
 if (process.env["GITHUB_REF"]?.includes("beta")) {
@@ -12,26 +12,29 @@ if (process.env["CHANNEL"]) {
   channel = process.env["CHANNEL"];
 }
 
-const config: Configuration = {
+const config: Configuration & {version?: string} = {
   appId: "io.kochie.touch-typer",
   copyright: "Copyright © 2022 Robert Koch",
   generateUpdatesFilesForAllChannels: true,
-  buildVersion: process.env["BUNDLE_VERSION"],
+  // buildVersion: process.env["BUNDLE_VERSION"],
+  version: process.env["BUNDLE_VERSION"],
+  productName: "Touch Typer",
   mac: {
     gatekeeperAssess: false,
     hardenedRuntime: true,
     notarize: true,
     cscLink: process.env["MAC_LINK"],
     cscKeyPassword: process.env["MAC_KEY_PASSWORD"],
-    // bundleVersion: 
+    bundleVersion: process.env["BUNDLE_VERSION"],
     // remove beta from version 1.2.3-beta.4 -> 1.2.3.4
-    bundleShortVersion: process.env["SHORT_VERSION"] ?? version.replace(/-beta\.\d+$/, ""),
+    bundleShortVersion:
+      process.env["SHORT_VERSION"] ?? version.replace(/-beta/, ""),
     // provisioningProfile: "build/mas-touchtyper.provisionprofile",
     category: "public.app-category.productivity",
     icon: "build/app-icon.icns",
     entitlements: "build/entitlements.mac.plist",
     extendInfo: {
-      ITSAppUsesNonExemptEncryption: false
+      ITSAppUsesNonExemptEncryption: false,
     },
     target: [
       {
@@ -51,8 +54,8 @@ const config: Configuration = {
     entitlements: "build/entitlements.mas.plist",
     entitlementsInherit: "build/entitlements.mas.inherit.plist",
     extendInfo: {
-      "com.apple.security.inapppurchase": true
-    }
+      "com.apple.security.inapppurchase": true,
+    },
   },
   masDev: {
     hardenedRuntime: false,
@@ -82,16 +85,6 @@ const config: Configuration = {
       },
     ],
   },
-  snap: {
-    publish: [
-      {
-        provider: "snapStore",
-        repo: "touch-typer",
-        channels: [channel],
-        publishAutoUpdate: true,
-      },
-    ],
-  },
   nsis: {
     oneClick: false,
   },
@@ -102,7 +95,13 @@ const config: Configuration = {
       provider: "github",
       owner: "kochie",
       repo: "touch-type",
-    }
+    },
+    {
+      provider: "snapStore",
+      repo: "touch-typer",
+      channels: [channel],
+      publishAutoUpdate: true,
+    },
   ],
 };
 
