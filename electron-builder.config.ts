@@ -52,9 +52,6 @@ const config: Configuration = {
     entitlementsLoginHelper: "build/entitlements.mas.loginhelper.plist",
     entitlements: "build/entitlements.mas.plist",
     entitlementsInherit: "build/entitlements.mas.inherit.plist",
-    extendInfo: {
-      "com.apple.security.inapppurchase": true,
-    },
   },
   masDev: {
     hardenedRuntime: false,
