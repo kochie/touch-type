@@ -27,7 +27,7 @@ const config: Configuration = {
     bundleVersion: process.env["BUNDLE_VERSION"],
     // remove beta from version 1.2.3-beta.4 -> 1.2.3.4
     bundleShortVersion:
-      process.env["SHORT_VERSION"] ?? version.replace(/-beta/, ""),
+      process.env["SHORT_VERSION"] ?? version.replace(/-beta\.\d+$/, ""),
     // provisioningProfile: "build/mas-touchtyper.provisionprofile",
     category: "public.app-category.productivity",
     icon: "build/app-icon.icns",

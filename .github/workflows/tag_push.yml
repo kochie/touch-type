@@ -192,7 +192,7 @@ jobs:
           
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          SHORT_VERSION: ${{ github.event.inputs.version }}
+          # SHORT_VERSION: ${{ github.event.inputs.version }}
           BUNDLE_VERSION: ${{ github.run_number }}
           CHANNEL: ${{ github.event.inputs.channel }}
 
