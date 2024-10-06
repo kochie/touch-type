@@ -12,12 +12,11 @@ if (process.env["CHANNEL"]) {
   channel = process.env["CHANNEL"];
 }
 
-const config: Configuration & {version?: string} = {
+const config: Configuration = {
   appId: "io.kochie.touch-typer",
   copyright: "Copyright © 2022 Robert Koch",
   generateUpdatesFilesForAllChannels: true,
   // buildVersion: process.env["BUNDLE_VERSION"],
-  version: process.env["BUNDLE_VERSION"],
   productName: "Touch Typer",
   mac: {
     gatekeeperAssess: false,
