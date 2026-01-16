@@ -1,24 +1,7 @@
-import { gql } from "@apollo/client";
+// Supabase function call for resetting a goal
+import { newGoal } from "./getGoal";
+import type { Goal } from "@/types/supabase";
 
-export const RESET_GOAL = gql`
-  mutation ($category: String!) {
-    newGoal(category: $category) {
-      description
-      requirement {
-        time
-        score
-        cpm
-        correct
-        incorrect
-        capital
-        punctuation
-        numbers
-      }
-      category
-      language
-      level
-      keyboard
-      complete
-    }
-  }
-`;
+export async function resetGoal(category: string): Promise<Goal> {
+  return newGoal(category);
+}

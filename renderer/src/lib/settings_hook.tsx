@@ -10,10 +10,7 @@ import {
   useReducer,
 } from "react";
 import { KeyboardLayout, KeyboardLayoutNames } from "@/keyboards";
-import { useMutation } from "@apollo/client";
-import { UPDATE_SETTINGS } from "@/transactions/putSettings";
-import { useUser } from "./user_hook";
-import { InputSettings } from "@/generated/graphql";
+import { useSupabase } from "./supabase-provider";
 
 export interface Settings {
   keyboard: KeyboardLayout;
@@ -221,24 +218,81 @@ export const SettingsProvider = ({ children }) => {
     return { ...defaultSettings, ...savedSettings };
   });
 
+  const { supabase, user } = useSupabase();
+
   useLayoutEffect(() => {
     const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
     
     dispatch({type: "LOAD_SETTINGS", settings: savedSettings });
   }, [])
 
-  const [mutateFunction] = useMutation(UPDATE_SETTINGS);
-  const user = useUser();
+  // Sync settings from Supabase when user logs in
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchSettings = async () => {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching settings:', error);
+        return;
+      }
+
+      if (data) {
+        // Convert snake_case from DB to camelCase
+        const dbSettings = {
+          analytics: data.analytics,
+          blinker: data.blinker,
+          capital: data.capital,
+          keyboardName: data.keyboard_name as KeyboardLayoutNames,
+          language: data.language as Languages,
+          levelName: data.level_name as Levels,
+          numbers: data.numbers,
+          publishToLeaderboard: data.publish_to_leaderboard,
+          punctuation: data.punctuation,
+          theme: data.theme as ColorScheme,
+          whatsNewOnStartup: data.whats_new_on_startup,
+        };
+        dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
+      }
+    };
+
+    fetchSettings();
+  }, [user, supabase]);
 
   const saveSettings = useCallback(
-    (safeSettings: InputSettings) => {
+    async (safeSettings: typeof defaultSettings) => {
       if (!user) return;
 
-      mutateFunction({
-        variables: { settings: safeSettings },
-      });
+      // Convert camelCase to snake_case for DB
+      const dbSettings = {
+        user_id: user.id,
+        analytics: safeSettings.analytics,
+        blinker: safeSettings.blinker,
+        capital: safeSettings.capital,
+        keyboard_name: safeSettings.keyboardName,
+        language: safeSettings.language,
+        level_name: safeSettings.levelName,
+        numbers: safeSettings.numbers,
+        publish_to_leaderboard: safeSettings.publishToLeaderboard,
+        punctuation: safeSettings.punctuation,
+        theme: safeSettings.theme,
+        whats_new_on_startup: safeSettings.whatsNewOnStartup,
+      };
+
+      const { error } = await supabase
+        .from('settings')
+        .upsert(dbSettings, { onConflict: 'user_id' });
+
+      if (error) {
+        console.error('Error saving settings:', error);
+      }
     },
-    [user, mutateFunction],
+    [user, supabase],
   );
 
   useLayoutEffect(() => {

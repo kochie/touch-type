@@ -3,14 +3,16 @@ import { useState } from "react";
 import Button from "../Button";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { confirmResetPassword } from "aws-amplify/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import Error from "../Errors";
 import { Transition } from "@headlessui/react";
+import { useSupabaseClient } from "@/lib/supabase-provider";
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
+  password: Yup.string().min(8, "Password must be at least 8 characters").required("Required"),
+  code: Yup.string().length(6, "Code must be 6 characters").required("Required"),
 });
 
 const Spinner = (
@@ -28,6 +30,7 @@ const Tick = (
 
 export function Step02({ email, onContinue }) {
   const [formErrors, setFormErrors] = useState<string>();
+  const supabase = useSupabaseClient();
 
   return (
     <Formik
@@ -39,22 +42,35 @@ export function Step02({ email, onContinue }) {
       initialStatus={"PENDING"}
       validationSchema={SignupSchema}
       onSubmit={async (values, { setSubmitting, setStatus }) => {
-        // alert(JSON.stringify(values, null, 2));
         setFormErrors("");
 
         try {
-          await confirmResetPassword({
-            username: values.email,
-            newPassword: values.password,
-            confirmationCode: values.code,
+          // First verify the OTP
+          const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+            email: values.email,
+            token: values.code,
+            type: 'recovery',
           });
+
+          if (verifyError) {
+            throw verifyError;
+          }
+
+          // Then update the password
+          const { error: updateError } = await supabase.auth.updateUser({
+            password: values.password,
+          });
+
+          if (updateError) {
+            throw updateError;
+          }
 
           setSubmitting(false);
           setStatus("COMPLETE");
           await new Promise((resolve) => setTimeout(resolve, 1000));
           onContinue(values);
-        } catch (error) {
-          setFormErrors(error);
+        } catch (error: any) {
+          setFormErrors(error.message || String(error));
         }
 
         setSubmitting(false);
@@ -137,10 +153,9 @@ export function Step02({ email, onContinue }) {
             <Button
               type="submit"
               disabled={isSubmitting}
-              //   className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               {isSubmitting && status === "PENDING" && Spinner}
-              {!isSubmitting && status === "PENDING" && "Sign In"}
+              {!isSubmitting && status === "PENDING" && "Reset Password"}
               {!isSubmitting && status === "COMPLETE" && Tick}
             </Button>
           </div>

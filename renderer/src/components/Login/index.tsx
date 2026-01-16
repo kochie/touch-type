@@ -1,14 +1,11 @@
 "use client";
-import { useState } from "react";
 import Button from "../Button";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { signIn } from "aws-amplify/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
-import Error from "../Errors";
-import { Transition } from "@headlessui/react";
-import { revalidatePath } from 'next/cache'
+import { useSupabaseClient } from "@/lib/supabase-provider";
+import { toast } from "sonner";
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -29,7 +26,7 @@ const Tick = (
 );
 
 export default function Login({ onSignUp, onContinue, onForgetPassword }) {
-  const [formErrors, setFormErrors] = useState<string>();
+  const supabase = useSupabaseClient();
 
   return (
     <>
@@ -49,44 +46,30 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
             initialStatus={"PENDING"}
             validationSchema={SignupSchema}
             onSubmit={async (values, { setSubmitting, setStatus }) => {
-              // alert(JSON.stringify(values, null, 2));
-              setFormErrors("");
-
               try {
-                const user = await signIn({
-                  username: values.email,
+                const { data, error } = await supabase.auth.signInWithPassword({
+                  email: values.email,
                   password: values.password,
                 });
 
+                if (error) {
+                  throw error;
+                }
 
                 setSubmitting(false);
                 setStatus("COMPLETE");
                 await new Promise((resolve) => setTimeout(resolve, 1000));
                 
                 onContinue(values);
-              } catch (error) {
+              } catch (error: any) {
                 console.error(error);
-                setFormErrors(error);
+                toast.error(error.message || "Failed to sign in");
+                setSubmitting(false);
               }
-
-              setSubmitting(false);
             }}
           >
             {({ isSubmitting, errors, touched, status }) => (
               <Form className="space-y-6">
-                <Transition
-                  as="div"
-                  appear={true}
-                  show={!!formErrors}
-                  enter="transition-opacity duration-100"
-                  enterFrom="opacity-0"
-                  enterTo="opacity-100"
-                  leave="transition-opacity duration-150"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <Error errors={formErrors} />
-                </Transition>
                 <div>
                   <label
                     htmlFor="email"
@@ -139,7 +122,6 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    //   className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
                     {isSubmitting && status === "PENDING" && Spinner}
                     {!isSubmitting && status === "PENDING" && "Sign In"}

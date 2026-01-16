@@ -1,9 +1,6 @@
 "use client";
 
-import { Goal } from "@/generated/graphql";
 import { Result, useResults } from "@/lib/result-provider";
-import { GET_GOAL } from "@/transactions/getGoal";
-import { useMutation, useQuery } from "@apollo/client";
 import { useIntersectionObserver, useWindowSize } from "@uidotdev/usehooks";
 import { useEffect, useState } from "react";
 import { Card } from "./Card";
@@ -11,7 +8,8 @@ import Confetti from "react-confetti";
 import { Category } from "./utils";
 import { Skeleton } from "../Skeleton";
 import Button from "../Button";
-import { RESET_GOAL } from "@/transactions/resetGoal";
+import { getGoal, newGoal } from "@/transactions/getGoal";
+import type { Goal, Requirement } from "@/types/supabase";
 
 function Progress({ value }) {
   return (
@@ -28,7 +26,7 @@ function Progress({ value }) {
   );
 }
 
-function makeGoal(
+function makeGoalDisplay(
   goal: Goal,
   results: Result[],
 ): {
@@ -38,28 +36,22 @@ function makeGoal(
   description: string;
   progress: number;
 } {
-  const isTime = !!goal.requirement.time;
-  const isCorrect = !!goal.requirement.correct;
-  const isIncorrect = !!goal.requirement.incorrect;
-  const isCapital = !!goal.requirement.capital;
-  const isPunctuation = !!goal.requirement.punctuation;
-  const isNumbers = !!goal.requirement.numbers;
-  const isCpm = !!goal.requirement.cpm;
+  const requirement = goal.requirement as Requirement;
+  const isCpm = !!requirement?.cpm;
 
   let progress = 0;
   let target = 0;
   let unit = "";
   let current = 0;
+  
   if (isCpm) {
     // in results find the highest cpm
     const highestCpm = results.reduce((acc, r) => Math.max(acc, r.cpm), 0);
-    progress = (highestCpm / goal.requirement.cpm!) * 100;
-    target = goal.requirement.cpm!;
+    progress = (highestCpm / requirement.cpm!) * 100;
+    target = requirement.cpm!;
     unit = "CPM";
     current = highestCpm;
   }
-
-  // const progress = (current / target) * 100;
 
   return {
     current: current.toFixed(0),
@@ -72,11 +64,10 @@ function makeGoal(
 
 export function GoalCard({ category }: { category: Category }) {
   const { results } = useResults();
-  const { data, loading, error } = useQuery<{ goal: Goal }>(GET_GOAL, {
-    variables: { category },
-  });
-
-  const [resetGoal, {data: goalChange}] = useMutation<{newGoal: Goal}>(RESET_GOAL);
+  const [goal, setGoalData] = useState<Goal | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const [confetti, setConfetti] = useState(false);
   const { width, height } = useWindowSize();
@@ -86,7 +77,7 @@ export function GoalCard({ category }: { category: Category }) {
     rootMargin: "0px",
   });
 
-  const [{ description, progress, goal, unit, current }, setGoal] = useState({
+  const [displayData, setDisplayData] = useState({
     description: "",
     progress: 0,
     goal: "",
@@ -95,18 +86,44 @@ export function GoalCard({ category }: { category: Category }) {
   });
 
   useEffect(() => {
-    if (data) {
-      const g = makeGoal(data.goal, results);
-      setGoal(g);
+    const fetchGoal = async () => {
+      try {
+        setLoading(true);
+        const data = await getGoal(category);
+        setGoalData(data);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGoal();
+  }, [category]);
+
+  useEffect(() => {
+    if (goal) {
+      const g = makeGoalDisplay(goal, results);
+      setDisplayData(g);
+      if (g.progress >= 100) {
+        setConfetti(true);
+      }
     }
-    if (goalChange) {
-      const g = makeGoal(goalChange.newGoal, results);
-      setGoal(g);
+  }, [goal, results]);
+
+  const handleResetGoal = async () => {
+    try {
+      setResetting(true);
+      const newGoalData = await newGoal(category);
+      setGoalData(newGoalData);
+      setConfetti(false);
+    } catch (err: any) {
+      console.error('Error resetting goal:', err);
+    } finally {
+      setResetting(false);
     }
-    if (progress >= 100) {
-      setConfetti(true);
-    }
-  }, [data, goalChange, results]);
+  };
 
   return (
     <Card
@@ -119,8 +136,8 @@ export function GoalCard({ category }: { category: Category }) {
     >
       <>
         <div className="flex justify-between mb-2 flex-col" ref={ref}>
-          {description ? (
-            <p className="text-base">{description}</p>
+          {displayData.description ? (
+            <p className="text-base">{displayData.description}</p>
           ) : (
             <div className="space-y-2">
               <Skeleton className="h-4 w-[500px]" />
@@ -132,29 +149,31 @@ export function GoalCard({ category }: { category: Category }) {
           <div className="flex justify-between items-center mt-5">
             <div className="font-semibold">Progress</div>
             <div className="font-semibold">
-              {Math.min(progress, 100).toFixed(0)}%
+              {Math.min(displayData.progress, 100).toFixed(0)}%
             </div>
           </div>
-          <Progress value={progress} />
+          <Progress value={displayData.progress} />
           <div className="flex w-full gap-10 mt-1 items-baseline justify-between">
             <div>
               <p className="font-bold text-2xl">
-                {current} {unit.toLowerCase()}
+                {displayData.current} {displayData.unit.toLowerCase()}
               </p>
               <p className="text-sm text-black/55 font-semibold">Current</p>
             </div>
             <div className="text-right">
               <p className="font-bold text-2xl">
-                {goal} {unit}
+                {displayData.goal} {displayData.unit}
               </p>
               <p className="text-sm text-black/55 font-semibold">Target</p>
             </div>
           </div>
-          {progress >= 100 && (
+          {displayData.progress >= 100 && (
             <div className="flex justify-between items-center mt-5">
               <div>Great job! You've achieved this goal! 🎉🎉</div>
               <div>
-                <Button onClick={() => resetGoal({variables: {category}})}>New Goal</Button>
+                <Button onClick={handleResetGoal} disabled={resetting}>
+                  {resetting ? 'Loading...' : 'New Goal'}
+                </Button>
               </div>
             </div>
           )}

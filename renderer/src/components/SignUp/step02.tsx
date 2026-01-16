@@ -1,15 +1,12 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-
 import { Transition } from "@headlessui/react";
-
-import { confirmSignUp, getCurrentUser } from "aws-amplify/auth";
 import { useState } from "react";
 import Error from "../Errors";
 import Button from "../Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
-import { useUser } from "@/lib/user_hook";
+import { useSupabaseClient } from "@/lib/supabase-provider";
 
 const SignupSchema = Yup.object().shape({
   code: Yup.string().length(6).required(),
@@ -31,6 +28,7 @@ const Tick = (
 
 export default function Step02({ onContinue, email }) {
   const [formErrors, setFormErrors] = useState<string>();
+  const supabase = useSupabaseClient();
 
   return (
     <Formik
@@ -41,24 +39,25 @@ export default function Step02({ onContinue, email }) {
       initialStatus={"PENDING"}
       validationSchema={SignupSchema}
       onSubmit={async (values, { setSubmitting, setStatus }) => {
-        // alert(JSON.stringify(values, null, 2));
         setFormErrors("");
 
         try {
-          await confirmSignUp({
-            username: values.email,
-            confirmationCode: values.code,
+          // Verify the OTP code sent to email
+          const { data, error } = await supabase.auth.verifyOtp({
+            email: values.email,
+            token: values.code,
+            type: 'signup',
           });
+
+          if (error) {
+            throw error;
+          }
 
           setSubmitting(false);
           setStatus("COMPLETE");
-
-          // await new Promise((resolve) => setTimeout(resolve, 1000));
-
-          const user = await getCurrentUser();
           onContinue();
-        } catch (error) {
-          setFormErrors(error);
+        } catch (error: any) {
+          setFormErrors(error.message || String(error));
         }
 
         setSubmitting(false);
@@ -143,7 +142,6 @@ export default function Step02({ onContinue, email }) {
             <Button
               type="submit"
               disabled={isSubmitting}
-              //   className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               {isSubmitting && status === "PENDING" && Spinner}
               {!isSubmitting && status === "PENDING" && "Confirm Sign Up"}

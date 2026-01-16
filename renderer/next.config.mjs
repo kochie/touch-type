@@ -38,6 +38,19 @@ const nextConfig = {
     return config;
   },
 
+  turbopack: {
+    rules: {
+      "*.ttf": {
+        loaders: ["url-loader"],
+        as: "*.js",
+      },
+      "*.txt": {
+        loaders: ["raw-loader"],
+        as: "*.js",
+      },
+    },
+  },
+
   experimental: {
     mdxRs: true,
   },

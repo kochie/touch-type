@@ -1,23 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  deleteUser,
-  fetchUserAttributes,
-  signOut,
-  updateUserAttributes,
-} from "aws-amplify/auth";
 import Button from "../Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { Formik, Form, Field } from "formik";
-import { useUser } from "@/lib/user_hook";
-import { useQuery } from "@apollo/client";
-import { GET_SUBSCRIPTION } from "@/transactions/getSubscription";
-import { Plan } from "@/generated/graphql";
 import { faArrowsRotate } from "@fortawesome/pro-duotone-svg-icons";
-import { revalidatePath, revalidateTag } from "next/cache";
 import { useMas } from "@/lib/mas_hook";
 import clsx from "clsx";
+import { useSupabase } from "@/lib/supabase-provider";
+import type { Profile, Subscription } from "@/types/supabase";
 
 enum PlanType {
   FREE = "free",
@@ -40,17 +31,20 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     name: "",
     preferred_username: "",
   });
-  const user = useUser();
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const { supabase, user } = useSupabase();
 
   const handleSignOut = async () => {
     setSubmitting(true);
-    await signOut();
+    await supabase.auth.signOut();
     onError();
     setSubmitting(false);
   };
 
   const handleProduct = async () => {
-    
     const products =
       // @ts-expect-error electronAPI is not defined
       (await window.electronAPI.getProducts()) as Electron.Product[];
@@ -65,28 +59,91 @@ export default function Account({ onError, onCancel, onChangePassword }) {
         "For real, this will delete your account and all data associated with it. Are you sure?",
       )
     ) {
-      await deleteUser();
+      // Note: Deleting a user in Supabase typically requires a server-side function
+      // or admin API. For now, we'll sign them out.
+      // You may want to create an Edge Function for actual account deletion.
+      try {
+        // Call an Edge Function to delete the user
+        const { error } = await supabase.functions.invoke('delete-user');
+        if (error) throw error;
+        await supabase.auth.signOut();
+        onError();
+      } catch (err: any) {
+        console.error("Error deleting account:", err);
+        alert("Failed to delete account. Please contact support.");
+      }
     }
     setDeleteSubmitting(false);
+  };
+
+  const fetchUserData = async () => {
+    if (!user) {
+      onError();
+      return;
+    }
+
+    try {
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
+
+      if (profile) {
+        setAttributes({
+          email: user.email || "",
+          phone_number: profile.phone_number || "",
+          name: profile.name || "",
+          preferred_username: profile.preferred_username || "",
+        });
+      } else {
+        setAttributes({
+          email: user.email || "",
+          phone_number: user.user_metadata?.phone_number || "",
+          name: user.user_metadata?.name || "",
+          preferred_username: "",
+        });
+      }
+
+      // Get subscription
+      const { data: sub, error: subError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (subError && subError.code !== 'PGRST116') {
+        throw subError;
+      }
+
+      setSubscription(sub);
+    } catch (err: any) {
+      console.error("Error fetching user data:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (user === null) {
       onError();
+      return;
     }
 
-    fetchUserAttributes()
-      .then((attributes) => {
-        setAttributes((prev) => ({ ...prev, ...attributes }));
-      })
-      .catch((error) => {
-        onError();
-      });
+    fetchUserData();
   }, [user]);
 
-  const { data, loading, error, refetch } = useQuery<{ subscription: Plan }>(
-    GET_SUBSCRIPTION,
-  );
+  const refetch = async () => {
+    setReloading(true);
+    await fetchUserData();
+    setReloading(false);
+  };
 
   return (
     <div className="h-full">
@@ -101,8 +158,6 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                 Change details associated with your account.
               </p>
 
-              {/* <Link href="/account/billing">Billing</Link> */}
-
               <Formik
                 enableReinitialize={true}
                 initialValues={{
@@ -111,15 +166,42 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                   name: attributes.name,
                   username: attributes.preferred_username,
                 }}
-                onSubmit={async (values) => {
-                  await updateUserAttributes({
-                    userAttributes: {
-                      email: values.email,
-                      name: values.name,
-                      phone_number: values.phone,
-                      preferred_username: values.username,
-                    },
-                  });
+                onSubmit={async (values, { setSubmitting }) => {
+                  try {
+                    // Update profile in database
+                    const { error: profileError } = await supabase
+                      .from('profiles')
+                      .upsert({
+                        id: user!.id,
+                        email: values.email,
+                        name: values.name,
+                        phone_number: values.phone,
+                        preferred_username: values.username,
+                      });
+
+                    if (profileError) throw profileError;
+
+                    // Update email if changed
+                    if (values.email !== user?.email) {
+                      const { error: emailError } = await supabase.auth.updateUser({
+                        email: values.email,
+                      });
+                      if (emailError) throw emailError;
+                    }
+
+                    // Update user metadata
+                    const { error: metaError } = await supabase.auth.updateUser({
+                      data: {
+                        name: values.name,
+                        phone_number: values.phone,
+                      },
+                    });
+
+                    if (metaError) throw metaError;
+                  } catch (err: any) {
+                    console.error("Error updating profile:", err);
+                    alert(`Failed to update profile: ${err.message}`);
+                  }
 
                   setSubmitting(false);
                 }}
@@ -271,19 +353,19 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                       </div>
                     )}
 
-                    {loading || !data ? (
+                    {loading || !subscription ? (
                       <p className="text-black">Loading...</p>
                     ) : (
                       <>
                         <p className="text-gray-600 text-sm leading-6">
                           <span>You're currently on the</span>
                           <span className="mx-1 inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                            {data.subscription.billing_plan}
+                            {subscription.billing_plan}
                           </span>
                           <span>plan.</span>
                         </p>
                         <div className="flex gap-1 mt-4">
-                          {features[data.subscription.billing_plan!]?.map(
+                          {features[subscription.billing_plan as PlanType]?.map(
                             (feature) => (
                               <span
                                 key={feature}
@@ -303,8 +385,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                       className="w-12 text-black"
                       onClick={(event) => {
                         event.preventDefault();
-                        setReloading(true);
-                        refetch().then(() => setReloading(false));
+                        refetch();
                       }}
                     >
                       <FontAwesomeIcon
@@ -315,7 +396,6 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     </button>
                     <button
                       onClick={(event) => {
-                        // require('electron').shell.openExternal("https://google.com");
                         event.preventDefault();
                         window.open(
                           process.env["NEXT_PUBLIC_ACCOUNT_LINK"],

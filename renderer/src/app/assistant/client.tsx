@@ -2,22 +2,29 @@
 
 import AIAssistant from "@/components/AiAssistant";
 import Button from "@/components/Button";
-import { Plan } from "@/generated/graphql";
 import { ModalType, useModal } from "@/lib/modal-provider";
-import { useUser } from "@/lib/user_hook";
-import { GET_SUBSCRIPTION } from "@/transactions/getSubscription";
-import { useQuery } from "@apollo/client";
+import { useSupabase } from "@/lib/supabase-provider";
+import { usePlan } from "@/lib/plan_hook";
 import { faSpinnerThird } from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export function ClientAssistant() {
-  const { setModal, modal } = useModal();
-  const user = useUser();
-  const { data, loading, error } = useQuery<{ subscription: Plan }>(
-    GET_SUBSCRIPTION,
-  );
+  const { setModal } = useModal();
+  const { user, isLoading: userLoading } = useSupabase();
+  const plan = usePlan();
 
-  if (error?.networkError || !user) {
+  if (userLoading) {
+    return (
+      <div className="w-full flex justify-center h-full">
+        <div className="text-3xl font-semibold my-20">
+          Loading...{" "}
+          <FontAwesomeIcon icon={faSpinnerThird} spin className="mx-5" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
     return (
       <div className="flex flex-col mx-auto justify-center items-center h-full mt-10 gap-6">
         <span className="text-lg font-semibold">
@@ -31,11 +38,7 @@ export function ClientAssistant() {
     );
   }
 
-  if (error) {
-    return <div>There was an error checking your subscription</div>;
-  }
-
-  if (!data || loading) {
+  if (!plan) {
     return (
       <div className="w-full flex justify-center h-full">
         <div className="text-3xl font-semibold my-20">
@@ -46,7 +49,7 @@ export function ClientAssistant() {
     );
   }
 
-  if (data.subscription.billing_plan === "free") {
+  if (plan.billing_plan === "free") {
     return (
       <div className="flex flex-col mx-auto justify-center items-center h-full mt-10 gap-6">
         <span className="text-lg font-semibold">

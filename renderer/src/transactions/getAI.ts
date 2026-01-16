@@ -1,102 +1,17 @@
-import { gql } from "@apollo/client";
+// Supabase query for getting AI assistant data (goals + recommendations)
+import { getAllGoals, AllGoals } from "./getGoals";
+import { getAllRecommendations, AllRecommendations } from "./getRecommendations";
 
-export const GET_AI_DATA = gql`
-  query {
-    speedGoal: goal(category: "speed") {
-      description
-      requirement {
-        time
-        score
-        cpm
-        correct
-        incorrect
-        capital
-        punctuation
-        numbers
-      }
-      category
-      language
-      level
-      keyboard
-      complete
-    }
-    accuracyGoal: goal(category: "accuracy") {
-      description
-      requirement {
-        time
-        score
-        cpm
-        correct
-        incorrect
-        capital
-        punctuation
-        numbers
-      }
-      category
-      language
-      level
-      keyboard
-      complete
-    }
-    ergonomicsGoal: goal(category: "ergonomics") {
-      description
-      requirement {
-        time
-        score
-        cpm
-        correct
-        incorrect
-        capital
-        punctuation
-        numbers
-      }
-      category
-      language
-      level
-      keyboard
-      complete
-    }
-    practiceGoal: goal(category: "practice") {
-      description
-      requirement {
-        time
-        score
-        cpm
-        correct
-        incorrect
-        capital
-        punctuation
-        numbers
-      }
-      category
-      language
-      level
-      keyboard
-      complete
-    }
-    rhythmGoal: goal(category: "rhythm") {
-      description
-      requirement {
-        time
-        score
-        cpm
-        correct
-        incorrect
-        capital
-        punctuation
-        numbers
-      }
-      category
-      language
-      level
-      keyboard
-      complete
-    }
+export interface AIData extends AllGoals, AllRecommendations {}
 
-    speedRecommendation: recommendations(category: "speed")
-    accuracyRecommendation: recommendations(category: "accuracy")
-    ergonomicsRecommendation: recommendations(category: "ergonomics")
-    practiceRecommendation: recommendations(category: "practice")
-    rhythmRecommendation: recommendations(category: "rhythm")
-  }
-`;
+export async function getAIData(): Promise<AIData> {
+  const [goals, recommendations] = await Promise.all([
+    getAllGoals(),
+    getAllRecommendations(),
+  ]);
+
+  return {
+    ...goals,
+    ...recommendations,
+  };
+}
