@@ -1,18 +1,13 @@
 "use client";
 
 import { LetterStat } from "@/components/Tracker/reducers";
-import { PUT_RESULT } from "@/transactions/putResult";
-import { useMutation } from "@apollo/client";
 import { openDB } from "idb";
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { Languages, Levels } from "./settings_hook";
 import { KeyboardLayoutNames } from "@/keyboards";
 import { Duration } from "luxon";
-import { GET_RESULTS } from "@/transactions/getResults";
-import { makeClient } from "./apollo-provider";
-import {getCurrentUser} from "aws-amplify/auth"
-import { useUser } from "./user_hook";
+import { useSupabase } from "./supabase-provider";
 
 export interface Result {
   correct: number;
@@ -36,43 +31,68 @@ const ResultsContext = createContext({
 
 export function ResultsProvider({ children }) {
   const [results, _setResults] = useState<Result[]>([]);
-  const [uploadResult] = useMutation(PUT_RESULT);
-  const user = useUser()
+  const { supabase, user } = useSupabase();
 
   async function syncResults() {
-    try {
-      await getCurrentUser()
-    } catch (err) {
-      // console.error("No user found", err)
-      console.log("No user found - not syncing")
-      return
+    if (!user) {
+      console.log("No user found - not syncing");
+      return;
     }
 
-
-    const apollo = makeClient();
     const lastSync = localStorage.getItem("lastSync");
     const limit = 100;
-    let nextToken: null | string = null;
+    let hasMore = true;
+    let offset = 0;
 
-    const results: Result[] = [];
+    const allResults: Result[] = [];
 
-    do {
-      const result = await apollo.query<{
-        results: {
-          items: Result[];
-          nextToken?: string;
-        };
-      }>({
-        query: GET_RESULTS,
-        variables: { since: lastSync, limit: limit, nextToken },
-      });
+    while (hasMore) {
+      let query = supabase
+        .from('results')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('datetime', { ascending: false })
+        .range(offset, offset + limit - 1);
 
-      console.log("RESULT", result);
-      results.push(...result.data.results.items);
-      nextToken = result.data.results.nextToken;
-    } while (nextToken);
+      if (lastSync) {
+        query = query.gt('datetime', lastSync);
+      }
 
-    await updateBulkDB(results);
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching results:', error);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        // Convert from DB format to app format
+        const convertedResults = data.map(r => ({
+          correct: r.correct,
+          incorrect: r.incorrect,
+          keyPresses: r.key_presses as LetterStat[],
+          time: r.time,
+          datetime: r.datetime,
+          level: r.level as Levels,
+          keyboard: r.keyboard as KeyboardLayoutNames,
+          language: r.language as Languages,
+          capital: r.capital,
+          punctuation: r.punctuation,
+          numbers: r.numbers,
+          cpm: r.cpm,
+        }));
+        allResults.push(...convertedResults);
+        offset += limit;
+        hasMore = data.length === limit;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    if (allResults.length > 0) {
+      await updateBulkDB(allResults);
+      localStorage.setItem("lastSync", new Date().toISOString());
+    }
   }
 
   async function initializeDB() {
@@ -118,7 +138,7 @@ export function ResultsProvider({ children }) {
 
   useEffect(() => {
     initializeDB().then(syncResults);
-  }, []);
+  }, [user]);
 
   async function updateDB(result: Result) {
     const db = await openDB("touch-type-db", 1);
@@ -146,12 +166,31 @@ export function ResultsProvider({ children }) {
     );
   }
 
-  const putResult = (result: Result) => {
-    _setResults((prev) => [...prev, result]);
+  const putResult = async (result: Result) => {
+    _setResults((prev) => [result, ...prev]);
     updateDB(result);
 
     if (user) {
-      uploadResult({ variables: { result: result } });
+      // Upload to Supabase
+      const { error } = await supabase.from('results').insert({
+        user_id: user.id,
+        correct: result.correct,
+        incorrect: result.incorrect,
+        time: result.time,
+        datetime: result.datetime,
+        level: result.level,
+        keyboard: result.keyboard,
+        language: result.language,
+        capital: result.capital,
+        punctuation: result.punctuation,
+        numbers: result.numbers,
+        cpm: result.cpm,
+        key_presses: result.keyPresses,
+      });
+
+      if (error) {
+        console.error('Error uploading result:', error);
+      }
     }
   };
 

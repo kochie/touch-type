@@ -1,11 +1,31 @@
-import { gql } from "@apollo/client";
+// Supabase query for getting all goals
+import { getGoal } from "./getGoal";
+import type { Goal } from "@/types/supabase";
 
-export const GET_GOALS = gql`
-    query {
-        speed: goal(category: "speed")
-        accuracy: goal(category: "accuracy")
-        ergonomics: goal(category: "ergonomics")
-        practice: goal(category: "practice")
-        rhythm: goal(category: "rhythm")
-    }
-`
+const GOAL_CATEGORIES = ['speed', 'accuracy', 'ergonomics', 'practice', 'rhythm'];
+
+export interface AllGoals {
+  speedGoal: Goal | null;
+  accuracyGoal: Goal | null;
+  ergonomicsGoal: Goal | null;
+  practiceGoal: Goal | null;
+  rhythmGoal: Goal | null;
+}
+
+export async function getAllGoals(): Promise<AllGoals> {
+  const [speedGoal, accuracyGoal, ergonomicsGoal, practiceGoal, rhythmGoal] = await Promise.all([
+    getGoal('speed').catch(() => null),
+    getGoal('accuracy').catch(() => null),
+    getGoal('ergonomics').catch(() => null),
+    getGoal('practice').catch(() => null),
+    getGoal('rhythm').catch(() => null),
+  ]);
+
+  return {
+    speedGoal,
+    accuracyGoal,
+    ergonomicsGoal,
+    practiceGoal,
+    rhythmGoal,
+  };
+}

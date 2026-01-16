@@ -1,3 +1,5 @@
+import clsx from "clsx";
+
 interface ButtonProps {
   onClick?: () => void;
   children?: React.ReactNode;
@@ -14,7 +16,14 @@ export default function Button({
   return (
     <button
       type={type}
-      className="disabled:saturate-50 inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm bg-gradient-to-r button-gradient focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-indigo-600 transition-all transform-gpu duration-500 bg-pos-0 active:bg-pos-50 hover:bg-pos-100 bg-size-300"
+      className={clsx("cursor-pointer disabled:saturate-50 inline-flex w-full", 
+        "justify-center rounded-md px-3 py-2 text-sm font-semibold text-white",
+        "shadow-sm bg-linear-to-r button-gradient focus-visible:outlin", 
+        "focus-visible:outline-2 focus-visible:outline-offset-0", 
+        "focus-visible:outline-indigo-600 transition-all", 
+        "transform-gpu duration-500 bg-pos-0 active:bg-pos-50 hover:bg-pos-100 bg-size-300",
+        "bg-position-[0%] active:bg-position-[50%] hover:bg-position-[100%] bg-size-[300%]"
+      )}
       onClick={onClick}
       disabled={disabled}
     >

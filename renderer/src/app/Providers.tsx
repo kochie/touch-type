@@ -1,8 +1,7 @@
 "use client";
 
 import { SettingsProvider, useSettings } from "@/lib/settings_hook";
-import { UserProvider } from "@/lib/user_hook";
-import { ApolloWrapper } from "@/lib/apollo-provider";
+import { SupabaseProvider } from "@/lib/supabase-provider";
 import { WordProvider } from "@/lib/word-provider";
 import { ResultsProvider } from "@/lib/result-provider";
 import { useLayoutEffect } from "react";
@@ -15,27 +14,27 @@ import {
 import Menu from "@/components/Menu";
 import { MasProvider } from "@/lib/mas_hook";
 import { PlanProvider } from "@/lib/plan_hook";
+import { Toaster } from "sonner";
 
 export default function Providers({ children }) {
   return (
-    <UserProvider>
+    <SupabaseProvider>
       <MasProvider>
-        <ApolloWrapper>
-          <SettingsProvider>
-            <ResultsProvider>
-              <PlanProvider>
-                <WordProvider>
-                  <ModalProvider>
-                    <ModalSetup />
-                    {children}
-                  </ModalProvider>
-                </WordProvider>
-              </PlanProvider>
-            </ResultsProvider>
-          </SettingsProvider>
-        </ApolloWrapper>
+        <SettingsProvider>
+          <ResultsProvider>
+            <PlanProvider>
+              <WordProvider>
+                <ModalProvider>
+                  <Toaster richColors position="top-center" />
+                  <ModalSetup />
+                  {children}
+                </ModalProvider>
+              </WordProvider>
+            </PlanProvider>
+          </ResultsProvider>
+        </SettingsProvider>
       </MasProvider>
-    </UserProvider>
+    </SupabaseProvider>
   );
 }
 

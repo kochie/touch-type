@@ -1,18 +1,68 @@
-import { Plan } from "@/generated/graphql";
-import { GET_SUBSCRIPTION } from "@/transactions/getSubscription";
-import { useQuery } from "@apollo/client";
-import { createContext, useContext } from "react";
+"use client"
+
+import { Subscription } from "@/types/supabase";
+import { createContext, useContext, useEffect, useLayoutEffect, useState } from "react";
+import { useSupabase } from "./supabase-provider";
+
+// Backwards compatible Plan type
+export interface Plan {
+  billing_plan?: string | null;
+  billing_period?: string | null;
+  next_billing_date?: string | null;
+  auto_renew?: boolean | null;
+  status?: string | null;
+}
 
 type PlanContextProps = null | Plan;
 
 const PlanContext = createContext<PlanContextProps>(null);
 
 export const PlanProvider = ({ children }) => {
-  const { data } = useQuery<{ subscription: Plan }>(
-    GET_SUBSCRIPTION,
-  );
+  const [plan, setPlan] = useState<PlanContextProps>(null);
+  const { supabase, user } = useSupabase();
 
-  return <PlanContext.Provider value={data?.subscription ?? null}>{children}</PlanContext.Provider>;
+  const fetchPlan = async () => {
+    if (!user) {
+      setPlan(null);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching subscription:', error);
+      return;
+    }
+
+    if (data) {
+      setPlan({
+        billing_plan: data.billing_plan,
+        billing_period: data.billing_period,
+        next_billing_date: data.next_billing_date,
+        auto_renew: data.auto_renew,
+        status: data.status,
+      });
+    } else {
+      // User doesn't have a subscription yet, set default free plan
+      setPlan({
+        billing_plan: 'free',
+        billing_period: null,
+        next_billing_date: null,
+        auto_renew: false,
+        status: 'active',
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchPlan();
+  }, [user]);
+  
+  return <PlanContext.Provider value={plan}>{children}</PlanContext.Provider>;
 };
 
 export function usePlan() {

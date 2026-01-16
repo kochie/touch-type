@@ -1,0 +1,6 @@
+onlyBuiltDependencies:
+  - '@sentry/cli'
+  - electron
+  - esbuild
+  - sharp
+  - unrs-resolver

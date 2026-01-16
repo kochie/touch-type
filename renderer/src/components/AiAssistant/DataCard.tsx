@@ -1,13 +1,13 @@
 "use client";
 
-import { useQuery } from "@apollo/client";
+import { useEffect, useState } from "react";
 import {
   Category,
   formatTick,
   formatTooltipValue,
   getCategoryDataKey,
 } from "./utils";
-import { GET_RECOMMENDATION } from "@/transactions/getRecommendation";
+import { getRecommendation } from "@/transactions/getRecommendation";
 import { Card } from "./Card";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -30,12 +30,27 @@ interface DataCardProps {
 }
 
 export function DataCard({ category, icon, label }: DataCardProps) {
-  const { data, loading, error } = useQuery<{ recommendations: string[] }>(
-    GET_RECOMMENDATION,
-    {
-      variables: { category },
-    },
-  );
+  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        setLoading(true);
+        const data = await getRecommendation(category);
+        setRecommendations(data);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message);
+        setRecommendations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [category]);
 
   return (
     <Card
@@ -59,9 +74,9 @@ export function DataCard({ category, icon, label }: DataCardProps) {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      {data ? (
+      {!loading && recommendations.length > 0 ? (
         <ul className="list-disc pl-5 space-y-2">
-          {data.recommendations.map((tip, index) => (
+          {recommendations.map((tip, index) => (
             <li key={index}>{tip}</li>
           ))}
         </ul>

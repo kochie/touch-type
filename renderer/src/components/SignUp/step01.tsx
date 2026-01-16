@@ -3,12 +3,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Button from "../Button";
-
-import { signUp } from "aws-amplify/auth";
 import Error from "../Errors";
 import { useState } from "react";
-
 import { Transition } from "@headlessui/react";
+import { useSupabaseClient } from "@/lib/supabase-provider";
 
 const SignupSchema = Yup.object().shape({
   name: Yup.string().max(50, "Too Long!").required("Required"),
@@ -32,6 +30,7 @@ const Tick = (
 
 export default function Step01({ onContinue }) {
   const [formErrors, setFormErrors] = useState<string>();
+  const supabase = useSupabaseClient();
 
   return (
     <Formik
@@ -44,29 +43,30 @@ export default function Step01({ onContinue }) {
       initialStatus={"PENDING"}
       validationSchema={SignupSchema}
       onSubmit={async (values, { setSubmitting, setStatus }) => {
-        // alert(JSON.stringify(values, null, 2));
         setFormErrors("");
 
         try {
-          await signUp({
+          const { data, error } = await supabase.auth.signUp({
+            email: values.email,
+            password: values.password,
             options: {
-              autoSignIn: true,
-              userAttributes: {
-                email: values.email,
-                phone_number: values.phone,
+              data: {
                 name: values.name,
+                phone_number: values.phone,
               },
             },
-            password: values.password,
-            username: values.email,
           });
+
+          if (error) {
+            throw error;
+          }
 
           setSubmitting(false);
           setStatus("COMPLETE");
           await new Promise((resolve) => setTimeout(resolve, 1000));
           onContinue(values);
-        } catch (error) {
-          setFormErrors(error);
+        } catch (error: any) {
+          setFormErrors(error.message || String(error));
         }
 
         setSubmitting(false);
@@ -205,7 +205,6 @@ export default function Step01({ onContinue }) {
             <Button
               type="submit"
               disabled={isSubmitting}
-              //   className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               {isSubmitting && status === "PENDING" && Spinner}
               {!isSubmitting && status === "PENDING" && "Sign Up"}

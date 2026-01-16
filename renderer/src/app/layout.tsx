@@ -9,7 +9,6 @@ const isLinux = os.platform() === "linux";
 import "@/styles/globals.css";
 import Fathom from "@/components/Fathom";
 import clsx from "clsx";
-import ConfigureAmplifyClientSide from "@/lib/configure-amplify-client";
 
 console.log("NODE_ENV", process.env.NODE_ENV)
 
@@ -27,7 +26,6 @@ export default function RootLayout({
         )}
       >
         <Fathom />
-        <ConfigureAmplifyClientSide />
         <Providers>
           {children}
         </Providers>

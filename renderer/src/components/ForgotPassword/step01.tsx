@@ -3,11 +3,11 @@ import { useState } from "react";
 import Button from "../Button";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { resetPassword } from "aws-amplify/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import Error from "../Errors";
 import { Transition } from "@headlessui/react";
+import { useSupabaseClient } from "@/lib/supabase-provider";
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -28,6 +28,7 @@ const Tick = (
 
 export function Step01({ onContinue }) {
   const [formErrors, setFormErrors] = useState<string>();
+  const supabase = useSupabaseClient();
 
   return (
     <Formik
@@ -37,18 +38,26 @@ export function Step01({ onContinue }) {
       initialStatus={"PENDING"}
       validationSchema={SignupSchema}
       onSubmit={async (values, { setSubmitting, setStatus }) => {
-        // alert(JSON.stringify(values, null, 2));
         setFormErrors("");
 
         try {
-          await resetPassword({ username: values.email });
+          const { error } = await supabase.auth.resetPasswordForEmail(
+            values.email,
+            {
+              redirectTo: `${window.location.origin}/auth/reset-password`,
+            }
+          );
+
+          if (error) {
+            throw error;
+          }
 
           setSubmitting(false);
           setStatus("COMPLETE");
           await new Promise((resolve) => setTimeout(resolve, 1000));
           onContinue(values);
-        } catch (error) {
-          setFormErrors(error);
+        } catch (error: any) {
+          setFormErrors(error.message || String(error));
         }
 
         setSubmitting(false);
@@ -92,10 +101,9 @@ export function Step01({ onContinue }) {
             <Button
               type="submit"
               disabled={isSubmitting}
-              //   className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               {isSubmitting && status === "PENDING" && Spinner}
-              {!isSubmitting && status === "PENDING" && "Sign In"}
+              {!isSubmitting && status === "PENDING" && "Send Reset Email"}
               {!isSubmitting && status === "COMPLETE" && Tick}
             </Button>
           </div>
