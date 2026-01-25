@@ -28,6 +28,9 @@
     "build+release": "electron-builder --config electron-builder.config.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.971.0",
+    "@aws-sdk/client-dynamodb": "^3.971.0",
+    "@aws-sdk/util-dynamodb": "^3.971.0",
     "@electron/notarize": "^3.1.1",
     "@electron/osx-sign": "^2.3.0",
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
@@ -50,6 +53,7 @@
     "app-root-path": "^3.1.0",
     "clsx": "^2.1.1",
     "deepmerge": "^4.3.1",
+    "dotenv": "^17.2.3",
     "electron-builder-notarize": "^1.5.2",
     "electron-is-dev": "^3.0.1",
     "electron-log": "^5.4.3",
