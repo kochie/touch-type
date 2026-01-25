@@ -4,7 +4,7 @@ import { SettingsProvider, useSettings } from "@/lib/settings_hook";
 import { SupabaseProvider } from "@/lib/supabase-provider";
 import { WordProvider } from "@/lib/word-provider";
 import { ResultsProvider } from "@/lib/result-provider";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useCallback } from "react";
 import {
   ModalController,
   ModalProvider,
@@ -15,6 +15,7 @@ import Menu from "@/components/Menu";
 import { MasProvider } from "@/lib/mas_hook";
 import { PlanProvider } from "@/lib/plan_hook";
 import { Toaster } from "sonner";
+import { useDeepLink, DeepLinkData } from "@/lib/deep-link-hook";
 
 export default function Providers({ children }) {
   return (
@@ -41,6 +42,19 @@ export default function Providers({ children }) {
 function ModalSetup() {
   const { setModal } = useModal();
   const settings = useSettings();
+
+  // Handle deep links from Electron (e.g., touchtyper://practice?duration=5)
+  const handlePracticeStart = useCallback((data: DeepLinkData) => {
+    console.log("Practice session requested via deep link:", data);
+    // The deep link will navigate to the home page
+    // Additional practice mode handling could be added here
+    // For example, storing the duration in context for the practice component to use
+  }, []);
+
+  // Register deep link handlers
+  useDeepLink({
+    onPracticeStart: handlePracticeStart,
+  });
 
   useLayoutEffect(() => {
     const firstTimeOpen = sessionStorage.getItem("firstTimeOpen") === null;
