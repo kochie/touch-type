@@ -3,9 +3,13 @@ import { join, resolve } from "path";
 import log from "electron-log";
 
 export interface DeepLinkData {
-  action: "practice" | "settings" | "stats";
+  action: "practice" | "settings" | "stats" | "pvp";
   duration?: number;
   mode?: "timed" | "words" | "endless";
+  // PvP specific
+  pvpAction?: "invite" | "challenge";
+  code?: string;
+  challengeId?: string;
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -26,12 +30,41 @@ export function getMainWindow(): BrowserWindow | null {
 
 /**
  * Parse a deep link URL into structured data
- * URL format: touchtyper://practice?duration=5&mode=timed
+ * URL formats:
+ *   - touchtyper://practice?duration=5&mode=timed
+ *   - touchtyper://pvp/invite/{code}
+ *   - touchtyper://pvp/challenge/{id}
  */
 export function parseDeepLink(url: string): DeepLinkData | null {
   try {
     const parsed = new URL(url);
     const action = parsed.hostname as DeepLinkData["action"];
+
+    // Handle PvP links with path segments
+    if (action === "pvp") {
+      const pathParts = parsed.pathname.split("/").filter(Boolean);
+      const pvpAction = pathParts[0] as "invite" | "challenge" | undefined;
+      const codeOrId = pathParts[1];
+
+      if (pvpAction === "invite" && codeOrId) {
+        return {
+          action: "pvp",
+          pvpAction: "invite",
+          code: codeOrId,
+        };
+      }
+
+      if (pvpAction === "challenge" && codeOrId) {
+        return {
+          action: "pvp",
+          pvpAction: "challenge",
+          challengeId: codeOrId,
+        };
+      }
+
+      // Default to PvP hub
+      return { action: "pvp" };
+    }
 
     // Validate action
     if (!["practice", "settings", "stats"].includes(action)) {

@@ -11,7 +11,8 @@ import {
   faChartRadar,
   faMicrochipAi,
 } from "@fortawesome/pro-regular-svg-icons";
-import { faFire, faSparkles } from "@fortawesome/pro-duotone-svg-icons";
+import { faFire, faSparkles, faSwords } from "@fortawesome/pro-duotone-svg-icons";
+import { usePvP } from "@/lib/pvp-provider";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { Suspense, useLayoutEffect, useState } from "react";
@@ -41,6 +42,7 @@ export default function Menu({
   const isMas = useMas()
   const plan = usePlan();
   const { currentStreak, isAtRisk, isLoading: streakLoading } = useStreak();
+  const { pendingCount } = usePvP();
 
   
   // This is being done because of hydration errors in the settings hook.
@@ -103,6 +105,23 @@ export default function Menu({
                 )}
                 size="lg"
               />
+            </Link>
+          </div>
+          <div className="hover:animate-pulse relative" title="PvP Arena">
+            <Link href={"/pvp"}>
+              <FontAwesomeIcon
+                icon={faSwords}
+                className={clsx(
+                  pathname?.startsWith("/pvp") ? "text-yellow-500" : "",
+                  "cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out",
+                )}
+                size="lg"
+              />
+              {pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {pendingCount > 9 ? "9+" : pendingCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>
