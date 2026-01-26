@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSettings, useSettingsDispatch } from "@/lib/settings_hook";
+import { useStreak } from "@/lib/streak_hook";
 import { Field, Label, Description, Switch, Select } from "@headlessui/react";
 import clsx from "clsx";
 
@@ -22,9 +23,23 @@ const DURATIONS = [
   { value: 30, label: "30 minutes" },
 ];
 
+/**
+ * Generate a notification message that includes streak information when relevant
+ */
+function getStreakAwareMessage(currentStreak: number, isAtRisk: boolean, baseMessage: string): string {
+  if (currentStreak > 0 && isAtRisk) {
+    return `Don't break your ${currentStreak}-day streak! ${baseMessage}`;
+  }
+  if (currentStreak >= 7) {
+    return `Keep your ${currentStreak}-day streak going! ${baseMessage}`;
+  }
+  return baseMessage;
+}
+
 export function NotificationSettings() {
   const settings = useSettings();
   const dispatch = useSettingsDispatch();
+  const { currentStreak, isAtRisk } = useStreak();
   const [isScheduling, setIsScheduling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isElectron, setIsElectron] = useState(false);
@@ -33,6 +48,35 @@ export function NotificationSettings() {
   useEffect(() => {
     setIsElectron(typeof window !== "undefined" && !!window.electronAPI);
   }, []);
+
+  // Generate the message that will be shown in notifications
+  const notificationMessage = getStreakAwareMessage(
+    currentStreak,
+    isAtRisk,
+    settings.notificationMessage
+  );
+
+  // Re-schedule notifications when streak changes (to update the message)
+  useEffect(() => {
+    if (!settings.notificationsEnabled || !window.electronAPI) return;
+
+    // Debounce to avoid too many re-schedules
+    const timeoutId = setTimeout(async () => {
+      try {
+        await window.electronAPI.scheduleNotification({
+          enabled: true,
+          time: settings.notificationTime,
+          days: settings.notificationDays,
+          message: notificationMessage,
+          duration: settings.practiceDuration,
+        });
+      } catch (err) {
+        console.error("Failed to update notification with streak:", err);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [currentStreak, isAtRisk]);
 
   const handleToggleNotifications = async (enabled: boolean) => {
     if (!window.electronAPI) return;
@@ -45,7 +89,7 @@ export function NotificationSettings() {
         enabled,
         time: settings.notificationTime,
         days: settings.notificationDays,
-        message: settings.notificationMessage,
+        message: notificationMessage,
         duration: settings.practiceDuration,
       });
 
@@ -73,7 +117,7 @@ export function NotificationSettings() {
           enabled: true,
           time,
           days: settings.notificationDays,
-          message: settings.notificationMessage,
+          message: notificationMessage,
           duration: settings.practiceDuration,
         });
       } catch (err) {
@@ -100,7 +144,7 @@ export function NotificationSettings() {
           enabled: true,
           time: settings.notificationTime,
           days: newDays,
-          message: settings.notificationMessage,
+          message: notificationMessage,
           duration: settings.practiceDuration,
         });
       } catch (err) {
@@ -122,7 +166,7 @@ export function NotificationSettings() {
           enabled: true,
           time: settings.notificationTime,
           days: settings.notificationDays,
-          message: settings.notificationMessage,
+          message: notificationMessage,
           duration,
         });
       } catch (err) {
@@ -273,15 +317,28 @@ export function NotificationSettings() {
 
       {/* Status indicator */}
       {settings.notificationsEnabled && (
-        <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-          <p className="text-sm text-green-400">
-            Reminders are scheduled for {settings.notificationTime} on{" "}
-            {settings.notificationDays.length === 7
-              ? "every day"
-              : settings.notificationDays
-                  .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
-                  .join(", ")}
-          </p>
+        <div className="space-y-3">
+          <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <p className="text-sm text-green-400">
+              Reminders are scheduled for {settings.notificationTime} on{" "}
+              {settings.notificationDays.length === 7
+                ? "every day"
+                : settings.notificationDays
+                    .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
+                    .join(", ")}
+            </p>
+          </div>
+          
+          {/* Notification message preview */}
+          <div className="p-3 bg-white/5 border border-white/10 rounded-lg">
+            <p className="text-xs text-gray-500 mb-1">Message preview:</p>
+            <p className="text-sm text-white italic">"{notificationMessage}"</p>
+            {currentStreak > 0 && (
+              <p className="text-xs text-orange-400 mt-2">
+                🔥 Your {currentStreak}-day streak will be mentioned in notifications
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>

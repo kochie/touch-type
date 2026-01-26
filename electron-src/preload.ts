@@ -22,6 +22,12 @@ export interface DeepLinkData {
   mode?: "timed" | "words" | "endless";
 }
 
+// Types for streak data
+export interface StreakData {
+  currentStreak: number;
+  isAtRisk: boolean;
+}
+
 declare global {
   namespace NodeJS {
     interface Global {
@@ -45,6 +51,8 @@ declare global {
       cancelNotification: () => Promise<ScheduleResult>;
       requestNotificationPermission: () => Promise<boolean>;
       getNotificationStatus: () => Promise<boolean>;
+      // Streak
+      updateStreakData: (data: StreakData) => void;
     };
   }
 }
@@ -79,4 +87,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   getNotificationStatus: (): Promise<boolean> =>
     ipcRenderer.invoke("getNotificationStatus"),
+
+  // Streak - send streak data to main process for tray display
+  updateStreakData: (data: StreakData): void => {
+    ipcRenderer.send("updateStreakData", data);
+  },
 });
