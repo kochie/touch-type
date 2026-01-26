@@ -254,6 +254,12 @@ export type Database = {
           keyboard_name: string | null
           language: string | null
           level_name: string | null
+          notifications_enabled: boolean | null
+          notification_time: string | null
+          notification_days: string[] | null
+          notification_message: string | null
+          practice_duration: number | null
+          schedule_enabled: boolean | null
           numbers: boolean | null
           publish_to_leaderboard: boolean | null
           punctuation: boolean | null
@@ -271,6 +277,12 @@ export type Database = {
           keyboard_name?: string | null
           language?: string | null
           level_name?: string | null
+          notifications_enabled?: boolean | null
+          notification_time?: string | null
+          notification_days?: string[] | null
+          notification_message?: string | null
+          practice_duration?: number | null
+          schedule_enabled?: boolean | null
           numbers?: boolean | null
           publish_to_leaderboard?: boolean | null
           punctuation?: boolean | null
@@ -288,6 +300,12 @@ export type Database = {
           keyboard_name?: string | null
           language?: string | null
           level_name?: string | null
+          notifications_enabled?: boolean | null
+          notification_time?: string | null
+          notification_days?: string[] | null
+          notification_message?: string | null
+          practice_duration?: number | null
+          schedule_enabled?: boolean | null
           numbers?: boolean | null
           publish_to_leaderboard?: boolean | null
           punctuation?: boolean | null

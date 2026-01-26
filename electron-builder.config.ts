@@ -16,6 +16,14 @@ const config: Configuration = {
   appId: "io.kochie.touch-typer",
   copyright: "Copyright © 2022 Robert Koch",
   generateUpdatesFilesForAllChannels: true,
+  // Register custom URL protocol for deep linking
+  protocols: [
+    {
+      name: "Touch Typer",
+      schemes: ["touchtyper"],
+      role: "Viewer",
+    },
+  ],
   mac: {
     gatekeeperAssess: false,
     hardenedRuntime: true,
@@ -66,6 +74,7 @@ const config: Configuration = {
   linux: {
     icon: "build/app-logo-linux.png",
     category: "Utility",
+    mimeTypes: ["x-scheme-handler/touchtyper"],
   },
   win: {
     icon: "build/app-logo-win.png",

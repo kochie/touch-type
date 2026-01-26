@@ -58,6 +58,13 @@ const SettingsContext = createContext({
   punctuation: false,
   numbers: false,
   capital: false,
+  // Notification settings
+  notificationsEnabled: false,
+  notificationTime: "09:00",
+  notificationDays: ["mon", "tue", "wed", "thu", "fri"] as string[],
+  notificationMessage: "Time to practice your typing!",
+  practiceDuration: 5,
+  scheduleEnabled: false,
 });
 
 export const defaultSettings = {
@@ -72,6 +79,13 @@ export const defaultSettings = {
   punctuation: false,
   numbers: false,
   capital: false,
+  // Notification settings
+  notificationsEnabled: false,
+  notificationTime: "09:00",
+  notificationDays: ["mon", "tue", "wed", "thu", "fri"] as string[],
+  notificationMessage: "Time to practice your typing!",
+  practiceDuration: 5,
+  scheduleEnabled: false,
 };
 
 type ChangeSettingsAction =
@@ -122,8 +136,32 @@ type ChangeSettingsAction =
   | {
       type: "SET_CAPITAL";
       capital: boolean;
+    }
+  | {
+      type: "SET_NOTIFICATIONS_ENABLED";
+      enabled: boolean;
+    }
+  | {
+      type: "SET_NOTIFICATION_TIME";
+      time: string;
+    }
+  | {
+      type: "SET_NOTIFICATION_DAYS";
+      days: string[];
+    }
+  | {
+      type: "SET_NOTIFICATION_MESSAGE";
+      message: string;
+    }
+  | {
+      type: "SET_PRACTICE_DURATION";
+      duration: number;
+    }
+  | {
+      type: "SET_SCHEDULE_ENABLED";
+      enabled: boolean;
     };
-  
+
 
 const reducer = (
   state: typeof defaultSettings,
@@ -200,6 +238,42 @@ const reducer = (
         capital: action.capital,
       };
 
+    case "SET_NOTIFICATIONS_ENABLED":
+      return {
+        ...state,
+        notificationsEnabled: action.enabled,
+      };
+
+    case "SET_NOTIFICATION_TIME":
+      return {
+        ...state,
+        notificationTime: action.time,
+      };
+
+    case "SET_NOTIFICATION_DAYS":
+      return {
+        ...state,
+        notificationDays: action.days,
+      };
+
+    case "SET_NOTIFICATION_MESSAGE":
+      return {
+        ...state,
+        notificationMessage: action.message,
+      };
+
+    case "SET_PRACTICE_DURATION":
+      return {
+        ...state,
+        practiceDuration: action.duration,
+      };
+
+    case "SET_SCHEDULE_ENABLED":
+      return {
+        ...state,
+        scheduleEnabled: action.enabled,
+      };
+
     default:
       return { ...state };
   }
@@ -256,6 +330,13 @@ export const SettingsProvider = ({ children }) => {
           punctuation: data.punctuation,
           theme: data.theme as ColorScheme,
           whatsNewOnStartup: data.whats_new_on_startup,
+          // Notification settings
+          notificationsEnabled: data.notifications_enabled ?? false,
+          notificationTime: data.notification_time ?? "09:00",
+          notificationDays: data.notification_days ?? ["mon", "tue", "wed", "thu", "fri"],
+          notificationMessage: data.notification_message ?? "Time to practice your typing!",
+          practiceDuration: data.practice_duration ?? 5,
+          scheduleEnabled: data.schedule_enabled ?? false,
         };
         dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
       }
@@ -282,6 +363,13 @@ export const SettingsProvider = ({ children }) => {
         punctuation: safeSettings.punctuation,
         theme: safeSettings.theme,
         whats_new_on_startup: safeSettings.whatsNewOnStartup,
+        // Notification settings
+        notifications_enabled: safeSettings.notificationsEnabled,
+        notification_time: safeSettings.notificationTime,
+        notification_days: safeSettings.notificationDays,
+        notification_message: safeSettings.notificationMessage,
+        practice_duration: safeSettings.practiceDuration,
+        schedule_enabled: safeSettings.scheduleEnabled,
       };
 
       const { error } = await supabase

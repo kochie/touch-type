@@ -23,6 +23,11 @@ import serve from "electron-serve";
 import "./in-app-purchase"
 import { getProducts } from "./in-app-purchase";
 
+// Deep linking, notifications, and tray support
+import { setupDeepLinkHandlers, setMainWindow, handleInitialDeepLink } from "./deep-link";
+import { setupNotificationScheduler } from "./notification-scheduler";
+import { setupTray, setIsQuitting } from "./tray";
+
 // import { fileURLToPath } from "node:url";
 
 // const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +42,13 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = "info";
 log.info("App starting...");
 
+// Setup deep link handlers before app is ready
+// This returns false if another instance is running
+const shouldContinue = setupDeepLinkHandlers();
+if (!shouldContinue) {
+  // Another instance is already running, quit this one
+  process.exit(0);
+}
 
 async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
   try {
@@ -92,6 +104,15 @@ app.on("ready", async () => {
     return { action: "deny" }; // Prevent the app from opening the URL.
   });
 
+  // Set the main window reference for deep linking
+  setMainWindow(mainWindow);
+
+  // Setup system tray
+  setupTray(mainWindow);
+
+  // Setup notification scheduler IPC handlers
+  setupNotificationScheduler(mainWindow);
+
   // mainWindow.setVibrancy("under-window");
   const isDev = await import("electron-is-dev");
 
@@ -103,6 +124,11 @@ app.on("ready", async () => {
   } else {
     await loadURL(mainWindow);
   }
+
+  // Handle deep link if app was launched with one
+  mainWindow.webContents.once("did-finish-load", () => {
+    handleInitialDeepLink();
+  });
 
   // const url = isDev.default
   //   ? "http://localhost:8000/"
@@ -145,5 +171,15 @@ autoUpdater.on("error", (message) => {
   console.error(message);
 });
 
-// Quit the app once all windows are closed
-app.on("window-all-closed", app.quit);
+// Handle window-all-closed event
+// On macOS, the app stays in the tray; on other platforms, quit
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+
+// Properly quit when the user explicitly quits
+app.on("before-quit", () => {
+  setIsQuitting(true);
+});
