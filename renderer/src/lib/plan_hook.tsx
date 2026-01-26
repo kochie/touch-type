@@ -1,7 +1,6 @@
 "use client"
 
-import { Subscription } from "@/types/supabase";
-import { createContext, useContext, useEffect, useLayoutEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useSupabase } from "./supabase-provider";
 
 // Backwards compatible Plan type
