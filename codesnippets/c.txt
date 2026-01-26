@@ -1,0 +1,215 @@
+// SNIPPET
+int main(void) {
+    printf("Hello, World!\n");
+    return 0;
+}
+// SNIPPET
+for (int i = 0; i < 10; i++) {
+    printf("%d\n", i);
+}
+// SNIPPET
+int sum = 0;
+for (int i = 1; i <= 100; i++) {
+    sum += i;
+}
+printf("Sum: %d\n", sum);
+// SNIPPET
+if (x > 0) {
+    printf("Positive\n");
+} else if (x < 0) {
+    printf("Negative\n");
+} else {
+    printf("Zero\n");
+}
+// SNIPPET
+while (count < 10) {
+    printf("%d\n", count);
+    count++;
+}
+// SNIPPET
+int factorial(int n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+// SNIPPET
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+// SNIPPET
+struct Point {
+    int x;
+    int y;
+};
+// SNIPPET
+int *ptr = &value;
+printf("Value: %d\n", *ptr);
+printf("Address: %p\n", (void*)ptr);
+// SNIPPET
+char name[50];
+printf("Enter name: ");
+scanf("%s", name);
+printf("Hello, %s!\n", name);
+// SNIPPET
+int arr[5] = {1, 2, 3, 4, 5};
+for (int i = 0; i < 5; i++) {
+    printf("%d ", arr[i]);
+}
+// SNIPPET
+switch (choice) {
+    case 1:
+        printf("Option 1\n");
+        break;
+    case 2:
+        printf("Option 2\n");
+        break;
+    default:
+        printf("Invalid\n");
+        break;
+}
+// SNIPPET
+FILE *fp = fopen("data.txt", "r");
+if (fp == NULL) {
+    printf("Error opening file\n");
+    return 1;
+}
+fclose(fp);
+// SNIPPET
+int *arr = malloc(10 * sizeof(int));
+if (arr == NULL) {
+    return 1;
+}
+free(arr);
+// SNIPPET
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+// SNIPPET
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+// SNIPPET
+#define MAX_SIZE 100
+#define PI 3.14159
+// SNIPPET
+do {
+    printf("Enter a number: ");
+    scanf("%d", &num);
+} while (num <= 0);
+// SNIPPET
+char str1[50] = "Hello, ";
+char str2[] = "World!";
+strcat(str1, str2);
+printf("%s\n", str1);
+// SNIPPET
+int len = strlen(str);
+for (int i = 0; i < len; i++) {
+    printf("%c", str[i]);
+}
+// SNIPPET
+typedef struct {
+    char name[50];
+    int age;
+    float salary;
+} Employee;
+// SNIPPET
+enum Color {
+    RED,
+    GREEN,
+    BLUE
+};
+// SNIPPET
+int matrix[3][3] = {
+    {1, 2, 3},
+    {4, 5, 6},
+    {7, 8, 9}
+};
+// SNIPPET
+static int counter = 0;
+counter++;
+printf("Count: %d\n", counter);
+// SNIPPET
+const int MAX = 100;
+int values[MAX];
+// SNIPPET
+int main(int argc, char *argv[]) {
+    for (int i = 0; i < argc; i++) {
+        printf("Arg %d: %s\n", i, argv[i]);
+    }
+    return 0;
+}
+// SNIPPET
+size_t size = sizeof(int);
+printf("Size of int: %zu bytes\n", size);
+// SNIPPET
+int a = 5, b = 3;
+printf("AND: %d\n", a & b);
+printf("OR: %d\n", a | b);
+printf("XOR: %d\n", a ^ b);
+// SNIPPET
+int isPrime(int n) {
+    if (n <= 1) return 0;
+    for (int i = 2; i * i <= n; i++) {
+        if (n % i == 0) return 0;
+    }
+    return 1;
+}
+// SNIPPET
+void printArray(int arr[], int size) {
+    for (int i = 0; i < size; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+// SNIPPET
+int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+// SNIPPET
+double power(double base, int exp) {
+    double result = 1.0;
+    for (int i = 0; i < exp; i++) {
+        result *= base;
+    }
+    return result;
+}
+// SNIPPET
+void reverseString(char *str) {
+    int len = strlen(str);
+    for (int i = 0; i < len / 2; i++) {
+        char temp = str[i];
+        str[i] = str[len - 1 - i];
+        str[len - 1 - i] = temp;
+    }
+}
+// SNIPPET
+int binarySearch(int arr[], int size, int target) {
+    int left = 0, right = size - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (arr[mid] == target) return mid;
+        if (arr[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1;
+}
+// SNIPPET
+void bubbleSort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
