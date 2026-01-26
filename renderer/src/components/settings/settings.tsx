@@ -17,6 +17,7 @@ import { NotificationSettings } from "./NotificationSettings";
 import { CalendarSettings } from "./CalendarSettings";
 import { StartupSettings } from "./StartupSettings";
 import { DebugSettings } from "./DebugSettings";
+import { CodeSettings } from "./CodeSettings";
 
 export const languages = [
   {
@@ -228,6 +229,13 @@ const Settings = () => {
           description="Blink the key being typed."
         />
       </form>
+      </div>
+
+      {/* Code Mode Section */}
+      <hr className="border-white/10" />
+      
+      <div className="grid grid-cols-2 gap-10">
+        <CodeSettings />
       </div>
 
       {/* Scheduling Section */}

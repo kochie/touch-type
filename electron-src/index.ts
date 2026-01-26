@@ -63,6 +63,39 @@ async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
   }
 }
 
+async function handleGetCodeSnippets(event: IpcMainInvokeEvent, lang: string) {
+  try {
+    const file = await readFile(
+      join(__dirname, "../codesnippets/", `${lang}.txt`),
+    );
+    return file;
+  } catch (error) {
+    log.error("Error loading code snippets:", error);
+    return new Uint8Array();
+  }
+}
+
+async function handleLoadUserCodeFile(event: IpcMainInvokeEvent, filePath: string) {
+  try {
+    const content = await readFile(filePath, "utf-8");
+    return content;
+  } catch (error) {
+    log.error("Error loading user code file:", error);
+    return null;
+  }
+}
+
+async function handleShowOpenDialog() {
+  const result = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [
+      { name: "Code Files", extensions: ["c", "h", "py", "js", "ts", "txt", "cpp", "hpp", "java", "go", "rs"] },
+      { name: "All Files", extensions: ["*"] },
+    ],
+  });
+  return result;
+}
+
 const loadURL = serve({ directory: "renderer/out" });
 
 // Prepare the renderer once the app is ready
@@ -75,8 +108,13 @@ app.on("ready", async () => {
   isDevMode = isDev.default;
 
   ipcMain.handle("getWordSet", handleWordSet);
-  ipcMain.handle("getProducts", getProducts)
+  ipcMain.handle("getProducts", getProducts);
   ipcMain.handle("isMas", () => !!process.mas);
+  
+  // Code mode IPC handlers
+  ipcMain.handle("getCodeSnippets", handleGetCodeSnippets);
+  ipcMain.handle("loadUserCodeFile", handleLoadUserCodeFile);
+  ipcMain.handle("showOpenDialog", handleShowOpenDialog);
 
   // Drives native chrome (titlebar, vibrancy, mica) to match the user's
   // in-app theme choice. Without this, the window frame stays in the macOS

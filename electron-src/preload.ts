@@ -79,6 +79,12 @@ declare global {
     }
   }
 
+  // Types for file dialog result
+  interface OpenDialogResult {
+    canceled: boolean;
+    filePaths: string[];
+  }
+
   interface Window {
     electronAPI: {
       getWordSet: (language: string) => Promise<Uint8Array>;
@@ -108,6 +114,10 @@ declare global {
       // Streak data — renderer pushes the latest streak so the tray menu can
       // surface it without holding a Supabase session itself.
       updateStreakData: (data: StreakData) => void;
+      // Code mode
+      getCodeSnippets: (lang: string) => Promise<Uint8Array>;
+      loadUserCodeFile: (filePath: string) => Promise<string | null>;
+      showOpenDialog: () => Promise<OpenDialogResult>;
     };
   }
 }
@@ -186,4 +196,14 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // renderer's selected theme.
   setThemeSource: (source: "system" | "light" | "dark"): Promise<void> =>
     ipcRenderer.invoke("setThemeSource", source),
+
+  // Code mode - load code snippets and user files
+  getCodeSnippets: (lang: string): Promise<Uint8Array> =>
+    ipcRenderer.invoke("getCodeSnippets", lang),
+
+  loadUserCodeFile: (filePath: string): Promise<string | null> =>
+    ipcRenderer.invoke("loadUserCodeFile", filePath),
+
+  showOpenDialog: (): Promise<{ canceled: boolean; filePaths: string[] }> =>
+    ipcRenderer.invoke("showOpenDialog"),
 });
