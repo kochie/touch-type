@@ -14,6 +14,30 @@ export interface NotificationConfig {
 export interface ScheduleResult {
   success: boolean;
   error?: string;
+  pushToken?: string;
+  channelUri?: string;
+  platform?: string;
+}
+
+export interface PushRegistrationResult {
+  success: boolean;
+  platform: "macos" | "windows" | "linux";
+  token?: string;
+  channelUri?: string;
+  error?: string;
+}
+
+export interface PushTokenData {
+  platform: "macos" | "windows" | "linux";
+  token?: string;
+  channelUri?: string;
+}
+
+export interface PushNotificationPayload {
+  action?: string;
+  duration?: number;
+  title?: string;
+  body?: string;
 }
 
 export interface DeepLinkData {
@@ -40,7 +64,13 @@ declare global {
       // Deep linking
       onDeepLink: (callback: (data: DeepLinkData) => void) => void;
       onNavigate: (callback: (path: string) => void) => void;
-      // Notifications
+      // Push notifications
+      registerPushNotifications: () => Promise<PushRegistrationResult>;
+      unregisterPushNotifications: () => Promise<ScheduleResult>;
+      onPushNotification: (callback: (payload: PushNotificationPayload) => void) => void;
+      isPushSupported: () => Promise<boolean>;
+      getPushPlatform: () => Promise<PushTokenData>;
+      // Notifications (legacy + Linux fallback)
       scheduleNotification: (config: NotificationConfig) => Promise<ScheduleResult>;
       cancelNotification: () => Promise<ScheduleResult>;
       requestNotificationPermission: () => Promise<boolean>;
@@ -67,7 +97,24 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.on("navigate", (_, path: string) => callback(path));
   },
 
-  // Notification scheduling
+  // Push notifications (APNS/WNS)
+  registerPushNotifications: (): Promise<PushRegistrationResult> =>
+    ipcRenderer.invoke("registerPushNotifications"),
+
+  unregisterPushNotifications: (): Promise<ScheduleResult> =>
+    ipcRenderer.invoke("unregisterPushNotifications"),
+
+  onPushNotification: (callback: (payload: PushNotificationPayload) => void) => {
+    ipcRenderer.on("push-notification", (_, payload: PushNotificationPayload) => callback(payload));
+  },
+
+  isPushSupported: (): Promise<boolean> =>
+    ipcRenderer.invoke("isPushSupported"),
+
+  getPushPlatform: (): Promise<PushTokenData> =>
+    ipcRenderer.invoke("getPushPlatform"),
+
+  // Notification scheduling (Linux fallback)
   scheduleNotification: (config: NotificationConfig): Promise<ScheduleResult> =>
     ipcRenderer.invoke("scheduleNotification", config),
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSettings, useSettingsDispatch } from "@/lib/settings_hook";
+import { useSupabase, useUser } from "@/lib/supabase-provider";
 import { Field, Label, Description, Switch, Select } from "@headlessui/react";
 import clsx from "clsx";
 
@@ -22,17 +23,97 @@ const DURATIONS = [
   { value: 30, label: "30 minutes" },
 ];
 
+type Platform = "macos" | "windows" | "linux";
+
 export function NotificationSettings() {
   const settings = useSettings();
   const dispatch = useSettingsDispatch();
+  const { supabase } = useSupabase();
+  const { user } = useUser();
   const [isScheduling, setIsScheduling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isElectron, setIsElectron] = useState(false);
+  const [platform, setPlatform] = useState<Platform>("linux");
+  const [isPushSupported, setIsPushSupported] = useState(false);
 
-  // Check if we're in Electron environment
+  // Check if we're in Electron environment and get platform info
   useEffect(() => {
-    setIsElectron(typeof window !== "undefined" && !!window.electronAPI);
+    const checkEnvironment = async () => {
+      if (typeof window !== "undefined" && window.electronAPI) {
+        setIsElectron(true);
+        
+        try {
+          const platformInfo = await window.electronAPI.getPushPlatform();
+          setPlatform(platformInfo.platform);
+          
+          const pushSupported = await window.electronAPI.isPushSupported();
+          setIsPushSupported(pushSupported);
+        } catch (err) {
+          console.error("Failed to get platform info:", err);
+        }
+      }
+    };
+    
+    checkEnvironment();
   }, []);
+
+  // Save device token to Supabase
+  const saveDeviceToken = useCallback(async (
+    tokenPlatform: Platform,
+    token?: string,
+    channelUri?: string
+  ) => {
+    if (!user) {
+      console.warn("No user logged in, cannot save device token");
+      return;
+    }
+
+    try {
+      // Upsert the device token
+      const { error: upsertError } = await supabase
+        .from("device_tokens")
+        .upsert(
+          {
+            user_id: user.id,
+            platform: tokenPlatform,
+            token: token || "",
+            channel_uri: channelUri || null,
+          },
+          {
+            onConflict: "user_id,platform",
+          }
+        );
+
+      if (upsertError) {
+        console.error("Failed to save device token:", upsertError);
+        throw upsertError;
+      }
+
+      console.log("Device token saved successfully");
+    } catch (err) {
+      console.error("Error saving device token:", err);
+      throw err;
+    }
+  }, [user, supabase]);
+
+  // Remove device token from Supabase
+  const removeDeviceToken = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { error: deleteError } = await supabase
+        .from("device_tokens")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("platform", platform);
+
+      if (deleteError) {
+        console.error("Failed to remove device token:", deleteError);
+      }
+    } catch (err) {
+      console.error("Error removing device token:", err);
+    }
+  }, [user, supabase, platform]);
 
   const handleToggleNotifications = async (enabled: boolean) => {
     if (!window.electronAPI) return;
@@ -41,18 +122,45 @@ export function NotificationSettings() {
     setError(null);
 
     try {
-      const result = await window.electronAPI.scheduleNotification({
-        enabled,
-        time: settings.notificationTime,
-        days: settings.notificationDays,
-        message: settings.notificationMessage,
-        duration: settings.practiceDuration,
-      });
+      if (enabled) {
+        // For macOS/Windows: Register for push notifications
+        if (platform !== "linux" && isPushSupported) {
+          const result = await window.electronAPI.registerPushNotifications();
+          
+          if (result.success) {
+            // Save token to Supabase
+            await saveDeviceToken(result.platform, result.token, result.channelUri);
+            dispatch({ type: "SET_NOTIFICATIONS_ENABLED", enabled: true });
+          } else {
+            setError(result.error || "Failed to register for push notifications");
+            return;
+          }
+        } else {
+          // Linux: Use local scheduler
+          const result = await window.electronAPI.scheduleNotification({
+            enabled: true,
+            time: settings.notificationTime,
+            days: settings.notificationDays,
+            message: settings.notificationMessage,
+            duration: settings.practiceDuration,
+          });
 
-      if (result.success) {
-        dispatch({ type: "SET_NOTIFICATIONS_ENABLED", enabled });
+          if (result.success) {
+            dispatch({ type: "SET_NOTIFICATIONS_ENABLED", enabled: true });
+          } else {
+            setError(result.error || "Failed to schedule notifications");
+            return;
+          }
+        }
       } else {
-        setError(result.error || "Failed to schedule notifications");
+        // Disable notifications
+        if (platform !== "linux") {
+          await window.electronAPI.unregisterPushNotifications();
+          await removeDeviceToken();
+        } else {
+          await window.electronAPI.cancelNotification();
+        }
+        dispatch({ type: "SET_NOTIFICATIONS_ENABLED", enabled: false });
       }
     } catch (err) {
       setError("Failed to update notification settings");
@@ -64,24 +172,8 @@ export function NotificationSettings() {
 
   const handleTimeChange = async (time: string) => {
     dispatch({ type: "SET_NOTIFICATION_TIME", time });
-
-    // Re-schedule if enabled
-    if (settings.notificationsEnabled && window.electronAPI) {
-      setIsScheduling(true);
-      try {
-        await window.electronAPI.scheduleNotification({
-          enabled: true,
-          time,
-          days: settings.notificationDays,
-          message: settings.notificationMessage,
-          duration: settings.practiceDuration,
-        });
-      } catch (err) {
-        console.error("Failed to reschedule:", err);
-      } finally {
-        setIsScheduling(false);
-      }
-    }
+    // Settings are synced to Supabase via settings_hook
+    // The server will use the updated time for scheduling
   };
 
   const handleDaysChange = async (day: string) => {
@@ -92,8 +184,8 @@ export function NotificationSettings() {
 
     dispatch({ type: "SET_NOTIFICATION_DAYS", days: newDays });
 
-    // Re-schedule if enabled
-    if (settings.notificationsEnabled && window.electronAPI) {
+    // For Linux, re-schedule with new days
+    if (platform === "linux" && settings.notificationsEnabled && window.electronAPI) {
       setIsScheduling(true);
       try {
         await window.electronAPI.scheduleNotification({
@@ -113,24 +205,7 @@ export function NotificationSettings() {
 
   const handleDurationChange = async (duration: number) => {
     dispatch({ type: "SET_PRACTICE_DURATION", duration });
-
-    // Re-schedule if enabled
-    if (settings.notificationsEnabled && window.electronAPI) {
-      setIsScheduling(true);
-      try {
-        await window.electronAPI.scheduleNotification({
-          enabled: true,
-          time: settings.notificationTime,
-          days: settings.notificationDays,
-          message: settings.notificationMessage,
-          duration,
-        });
-      } catch (err) {
-        console.error("Failed to reschedule:", err);
-      } finally {
-        setIsScheduling(false);
-      }
-    }
+    // Settings are synced to Supabase via settings_hook
   };
 
   // Show a message if not in Electron
@@ -145,6 +220,31 @@ export function NotificationSettings() {
     );
   }
 
+  // Show login required message
+  if (!user) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-white">Practice Reminders</h3>
+        <p className="text-sm text-gray-400">
+          Please sign in to enable push notifications.
+        </p>
+      </div>
+    );
+  }
+
+  const getPlatformDescription = () => {
+    switch (platform) {
+      case "macos":
+        return "Push notifications via Apple Push Notification Service";
+      case "windows":
+        return "Push notifications via Windows Notification Service";
+      case "linux":
+        return "Local reminders via system scheduler";
+      default:
+        return "Get notified to practice your typing";
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -152,7 +252,7 @@ export function NotificationSettings() {
           Practice Reminders
         </h3>
         <p className="text-sm text-gray-400">
-          Get notified to practice your typing, even when the app is closed.
+          {getPlatformDescription()}
         </p>
       </div>
 
@@ -161,6 +261,18 @@ export function NotificationSettings() {
           {error}
         </div>
       )}
+
+      {/* Platform indicator */}
+      <div className="flex items-center gap-2 text-xs text-gray-500">
+        <span className="inline-flex items-center px-2 py-1 rounded bg-white/5">
+          {platform === "macos" && "macOS (APNS)"}
+          {platform === "windows" && "Windows (WNS)"}
+          {platform === "linux" && "Linux (Local)"}
+        </span>
+        {isPushSupported && platform !== "linux" && (
+          <span className="text-green-500">Push supported</span>
+        )}
+      </div>
 
       {/* Enable/Disable Toggle */}
       <Field as="div" className="flex items-center justify-between">
@@ -200,7 +312,7 @@ export function NotificationSettings() {
             Reminder Time
           </Label>
           <Description className="text-sm text-gray-500">
-            When should we remind you?
+            When should we remind you? (UTC)
           </Description>
         </span>
         <input
@@ -275,12 +387,25 @@ export function NotificationSettings() {
       {settings.notificationsEnabled && (
         <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
           <p className="text-sm text-green-400">
-            Reminders are scheduled for {settings.notificationTime} on{" "}
-            {settings.notificationDays.length === 7
-              ? "every day"
-              : settings.notificationDays
-                  .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
-                  .join(", ")}
+            {platform === "linux" ? (
+              <>
+                Local reminders scheduled for {settings.notificationTime} on{" "}
+                {settings.notificationDays.length === 7
+                  ? "every day"
+                  : settings.notificationDays
+                      .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
+                      .join(", ")}
+              </>
+            ) : (
+              <>
+                Push notifications enabled for {settings.notificationTime} (UTC) on{" "}
+                {settings.notificationDays.length === 7
+                  ? "every day"
+                  : settings.notificationDays
+                      .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
+                      .join(", ")}
+              </>
+            )}
           </p>
         </div>
       )}

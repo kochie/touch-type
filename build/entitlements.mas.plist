@@ -18,5 +18,7 @@
     </array>
     <key>com.apple.security.network.client</key>
     <true/>
+    <key>aps-environment</key>
+    <string>production</string>
   </dict>
 </plist>

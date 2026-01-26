@@ -1,9 +1,26 @@
+/**
+ * Notification Scheduler
+ * 
+ * Handles push notification registration and scheduling:
+ * - macOS: APNS (Apple Push Notification Service)
+ * - Windows: WNS (Windows Notification Service)
+ * - Linux: Local cron scheduler (fallback)
+ */
+
 import { Notification, ipcMain, BrowserWindow, app } from "electron";
-import { writeFile, unlink, mkdir } from "fs/promises";
 import { join } from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
 import log from "electron-log";
+import {
+  registerForPushNotifications,
+  unregisterFromPushNotifications,
+  setPushNotificationHandler,
+  isPushSupported,
+  getPushPlatform,
+  PushRegistrationResult,
+  PushNotificationPayload,
+} from "./push-registration";
 
 const execAsync = promisify(exec);
 
@@ -18,9 +35,21 @@ export interface NotificationConfig {
 export interface ScheduleResult {
   success: boolean;
   error?: string;
+  pushToken?: string;
+  channelUri?: string;
+  platform?: string;
 }
 
-// Path to LaunchAgent plist on macOS
+export interface PushTokenData {
+  platform: 'macos' | 'windows' | 'linux';
+  token?: string;
+  channelUri?: string;
+}
+
+// Store the main window reference for deep linking
+let mainWindow: BrowserWindow | null = null;
+
+// Linux fallback scheduler constants
 const LAUNCH_AGENT_LABEL = "io.kochie.touch-typer-reminder";
 const getLaunchAgentPath = () =>
   join(
@@ -29,24 +58,80 @@ const getLaunchAgentPath = () =>
     `${LAUNCH_AGENT_LABEL}.plist`
   );
 
-// Task name for Windows
-const WINDOWS_TASK_NAME = "TouchTyperReminder";
-
 /**
  * Setup notification scheduler IPC handlers
  */
-export function setupNotificationScheduler(mainWindow: BrowserWindow): void {
-  // Handle notification scheduling from renderer
+export function setupNotificationScheduler(window: BrowserWindow): void {
+  mainWindow = window;
+
+  // Set up push notification handler
+  setPushNotificationHandler((payload: PushNotificationPayload) => {
+    handlePushNotification(payload);
+  });
+
+  // Register for push notifications (get device token)
+  ipcMain.handle("registerPushNotifications", async (): Promise<PushRegistrationResult> => {
+    try {
+      const result = await registerForPushNotifications();
+      log.info("Push registration result:", result);
+      return result;
+    } catch (error) {
+      log.error("Push registration error:", error);
+      return {
+        success: false,
+        platform: getPushPlatform(),
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  });
+
+  // Unregister from push notifications
+  ipcMain.handle("unregisterPushNotifications", async (): Promise<ScheduleResult> => {
+    try {
+      await unregisterFromPushNotifications();
+      return { success: true };
+    } catch (error) {
+      log.error("Push unregistration error:", error);
+      return { success: false, error: String(error) };
+    }
+  });
+
+  // Schedule notification (for Linux fallback or future use)
   ipcMain.handle(
     "scheduleNotification",
     async (_, config: NotificationConfig): Promise<ScheduleResult> => {
       try {
-        if (config.enabled) {
-          await installSystemScheduler(config);
-        } else {
-          await removeSystemScheduler();
+        const platform = process.platform;
+
+        // For macOS and Windows, push notifications are handled server-side
+        // We only need to ensure the device token is registered
+        if (platform === "darwin" || platform === "win32") {
+          if (config.enabled) {
+            const result = await registerForPushNotifications();
+            return {
+              success: result.success,
+              error: result.error,
+              pushToken: result.token,
+              channelUri: result.channelUri,
+              platform: result.platform,
+            };
+          } else {
+            await unregisterFromPushNotifications();
+            return { success: true };
+          }
         }
-        return { success: true };
+
+        // Linux uses local scheduler
+        if (platform === "linux") {
+          if (config.enabled) {
+            await installLinuxScheduler(config);
+          } else {
+            await removeLinuxScheduler();
+          }
+          return { success: true, platform: "linux" };
+        }
+
+        return { success: false, error: "Unsupported platform" };
       } catch (error) {
         log.error("Failed to schedule notification:", error);
         return { success: false, error: String(error) };
@@ -54,9 +139,16 @@ export function setupNotificationScheduler(mainWindow: BrowserWindow): void {
     }
   );
 
+  // Cancel notification
   ipcMain.handle("cancelNotification", async (): Promise<ScheduleResult> => {
     try {
-      await removeSystemScheduler();
+      await unregisterFromPushNotifications();
+      
+      // Also remove Linux scheduler if present
+      if (process.platform === "linux") {
+        await removeLinuxScheduler();
+      }
+      
       return { success: true };
     } catch (error) {
       log.error("Failed to cancel notification:", error);
@@ -64,261 +156,68 @@ export function setupNotificationScheduler(mainWindow: BrowserWindow): void {
     }
   });
 
+  // Check notification permission/support
   ipcMain.handle("requestNotificationPermission", async (): Promise<boolean> => {
-    // Check if notifications are supported
     return Notification.isSupported();
   });
 
+  // Get notification status
   ipcMain.handle("getNotificationStatus", async (): Promise<boolean> => {
-    // Check if scheduler is installed
     try {
       const platform = process.platform;
-      switch (platform) {
-        case "darwin":
-          return await isMacOSSchedulerInstalled();
-        case "win32":
-          return await isWindowsSchedulerInstalled();
-        case "linux":
-          return await isLinuxSchedulerInstalled();
-        default:
-          return false;
+      
+      if (platform === "linux") {
+        return await isLinuxSchedulerInstalled();
       }
+      
+      // For macOS/Windows, check if push is supported
+      return isPushSupported();
     } catch {
       return false;
     }
   });
+
+  // Get push platform info
+  ipcMain.handle("getPushPlatform", async (): Promise<PushTokenData> => {
+    return {
+      platform: getPushPlatform(),
+    };
+  });
+
+  // Check if push is supported
+  ipcMain.handle("isPushSupported", async (): Promise<boolean> => {
+    return isPushSupported();
+  });
 }
 
 /**
- * Install the system-level scheduler based on platform
+ * Handle incoming push notification
  */
-async function installSystemScheduler(config: NotificationConfig): Promise<void> {
-  const platform = process.platform;
+function handlePushNotification(payload: PushNotificationPayload): void {
+  log.info("Handling push notification:", payload);
 
-  switch (platform) {
-    case "darwin":
-      await installMacOSScheduler(config);
-      break;
-    case "win32":
-      await installWindowsScheduler(config);
-      break;
-    case "linux":
-      await installLinuxScheduler(config);
-      break;
-    default:
-      throw new Error(`Unsupported platform: ${platform}`);
+  // Show and focus the window
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.show();
+    mainWindow.focus();
+
+    // Send to renderer process
+    mainWindow.webContents.send("push-notification", payload);
+
+    // If action is practice, navigate to practice
+    if (payload.action === "practice") {
+      mainWindow.webContents.send("deep-link", {
+        action: "practice",
+        duration: payload.duration,
+      });
+    }
   }
 }
 
-/**
- * Remove the system-level scheduler based on platform
- */
-async function removeSystemScheduler(): Promise<void> {
-  const platform = process.platform;
-
-  switch (platform) {
-    case "darwin":
-      await removeMacOSScheduler();
-      break;
-    case "win32":
-      await removeWindowsScheduler();
-      break;
-    case "linux":
-      await removeLinuxScheduler();
-      break;
-  }
-}
-
-// ============ macOS Implementation ============
-
-async function installMacOSScheduler(config: NotificationConfig): Promise<void> {
-  const [hour, minute] = config.time.split(":").map(Number);
-
-  // First, unload any existing scheduler
-  await removeMacOSScheduler();
-
-  // Create the reminder script that shows notification and opens app
-  const scriptPath = join(app.getPath("userData"), "reminder.scpt");
-  const appPath = app.getPath("exe");
-  const deepLink = `touchtyper://practice?duration=${config.duration}`;
-
-  // AppleScript to show notification and open the app
-  const script = `
-display notification "${config.message}" with title "Touch Typer" sound name "default"
-delay 0.5
-do shell script "open '${deepLink}'"
-`;
-
-  await writeFile(scriptPath, script, "utf-8");
-
-  // Build calendar intervals for each selected day
-  // macOS uses 1=Sunday, 2=Monday, ..., 7=Saturday
-  const dayMap: Record<string, number> = {
-    sun: 1,
-    mon: 2,
-    tue: 3,
-    wed: 4,
-    thu: 5,
-    fri: 6,
-    sat: 7,
-  };
-
-  const calendarIntervals = config.days
-    .filter((day) => dayMap[day] !== undefined)
-    .map(
-      (day) => `
-      <dict>
-        <key>Hour</key>
-        <integer>${hour}</integer>
-        <key>Minute</key>
-        <integer>${minute}</integer>
-        <key>Weekday</key>
-        <integer>${dayMap[day]}</integer>
-      </dict>`
-    )
-    .join("\n");
-
-  const plist = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>${LAUNCH_AGENT_LABEL}</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/usr/bin/osascript</string>
-    <string>${scriptPath}</string>
-  </array>
-  <key>StartCalendarInterval</key>
-  <array>
-${calendarIntervals}
-  </array>
-  <key>RunAtLoad</key>
-  <false/>
-</dict>
-</plist>`;
-
-  // Ensure LaunchAgents directory exists
-  const launchAgentsDir = join(app.getPath("home"), "Library/LaunchAgents");
-  await mkdir(launchAgentsDir, { recursive: true });
-
-  // Write the LaunchAgent plist
-  const plistPath = getLaunchAgentPath();
-  await writeFile(plistPath, plist, "utf-8");
-
-  // Load the LaunchAgent
-  try {
-    await execAsync(`launchctl load "${plistPath}"`);
-    log.info("macOS notification scheduler installed successfully");
-  } catch (error) {
-    log.error("Failed to load LaunchAgent:", error);
-    throw error;
-  }
-}
-
-async function removeMacOSScheduler(): Promise<void> {
-  const plistPath = getLaunchAgentPath();
-
-  try {
-    // Unload the LaunchAgent (ignore errors if not loaded)
-    await execAsync(`launchctl unload "${plistPath}" 2>/dev/null || true`);
-  } catch {
-    // Ignore unload errors
-  }
-
-  try {
-    // Remove the plist file
-    await unlink(plistPath);
-  } catch {
-    // File might not exist, ignore
-  }
-
-  // Also clean up the script
-  try {
-    await unlink(join(app.getPath("userData"), "reminder.scpt"));
-  } catch {
-    // Ignore
-  }
-
-  log.info("macOS notification scheduler removed");
-}
-
-async function isMacOSSchedulerInstalled(): Promise<boolean> {
-  try {
-    const { stdout } = await execAsync(
-      `launchctl list | grep "${LAUNCH_AGENT_LABEL}" || true`
-    );
-    return stdout.includes(LAUNCH_AGENT_LABEL);
-  } catch {
-    return false;
-  }
-}
-
-// ============ Windows Implementation ============
-
-async function installWindowsScheduler(config: NotificationConfig): Promise<void> {
-  const [hour, minute] = config.time.split(":");
-
-  // First, remove any existing task
-  await removeWindowsScheduler();
-
-  // Map days to Windows format
-  const dayMap: Record<string, string> = {
-    sun: "SUN",
-    mon: "MON",
-    tue: "TUE",
-    wed: "WED",
-    thu: "THU",
-    fri: "FRI",
-    sat: "SAT",
-  };
-
-  const days = config.days
-    .filter((d) => dayMap[d])
-    .map((d) => dayMap[d])
-    .join(",");
-
-  if (!days) {
-    throw new Error("No valid days selected");
-  }
-
-  const appPath = app.getPath("exe");
-  const deepLink = `touchtyper://practice?duration=${config.duration}`;
-
-  // Create scheduled task using schtasks
-  // The task will launch the app with the deep link URL
-  const command = `schtasks /create /tn "${WINDOWS_TASK_NAME}" /tr "\\"${appPath}\\" \\"${deepLink}\\"" /sc weekly /d ${days} /st ${hour}:${minute} /f`;
-
-  try {
-    await execAsync(command);
-    log.info("Windows notification scheduler installed successfully");
-  } catch (error) {
-    log.error("Failed to create Windows scheduled task:", error);
-    throw error;
-  }
-}
-
-async function removeWindowsScheduler(): Promise<void> {
-  try {
-    await execAsync(`schtasks /delete /tn "${WINDOWS_TASK_NAME}" /f 2>nul || exit 0`);
-    log.info("Windows notification scheduler removed");
-  } catch {
-    // Task might not exist, ignore
-  }
-}
-
-async function isWindowsSchedulerInstalled(): Promise<boolean> {
-  try {
-    const { stdout } = await execAsync(
-      `schtasks /query /tn "${WINDOWS_TASK_NAME}" 2>nul || exit 0`
-    );
-    return stdout.includes(WINDOWS_TASK_NAME);
-  } catch {
-    return false;
-  }
-}
-
-// ============ Linux Implementation ============
+// ============ Linux Fallback Implementation ============
 
 async function installLinuxScheduler(config: NotificationConfig): Promise<void> {
   const [hour, minute] = config.time.split(":");
@@ -395,5 +294,22 @@ export function showNotification(title: string, body: string): void {
       icon: join(__dirname, "../build/app-icon.icns"),
     });
     notification.show();
+  }
+}
+
+/**
+ * Clean up old macOS LaunchAgent if it exists (migration from local scheduler)
+ */
+export async function cleanupLegacyScheduler(): Promise<void> {
+  if (process.platform === "darwin") {
+    const plistPath = getLaunchAgentPath();
+    try {
+      await execAsync(`launchctl unload "${plistPath}" 2>/dev/null || true`);
+      await unlink(plistPath);
+      await unlink(join(app.getPath("userData"), "reminder.scpt"));
+      log.info("Legacy macOS scheduler cleaned up");
+    } catch {
+      // Ignore - might not exist
+    }
   }
 }
