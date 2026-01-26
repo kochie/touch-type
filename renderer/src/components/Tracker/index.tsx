@@ -15,12 +15,14 @@ import {
   faDungeon,
   faPercentage,
   faPersonRunning,
+  faCode,
 } from "@fortawesome/pro-duotone-svg-icons";
 import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/keyboards/key";
 import sample from "lodash.sample";
 import { useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
+import { useCode } from "@/lib/code-provider";
 import { lookupKeyboard } from "@/keyboards";
 import { Result, useResults } from "@/lib/result-provider";
 import { ModalType, useModal } from "@/lib/modal-provider";
@@ -55,12 +57,42 @@ function sign(num: number): string {
   return "";
 }
 
+/**
+ * Render a character with visual indicators for special characters
+ */
+function renderChar(char: string, isTyped: boolean, isCorrect: boolean, isCurrent: boolean): React.ReactNode {
+  const baseClass = isTyped
+    ? isCorrect
+      ? "text-gray-400"
+      : "bg-red-500 text-white"
+    : isCurrent
+    ? "bg-yellow-600 font-bold text-gray-200"
+    : "";
+
+  // Handle special characters with visual indicators
+  if (char === "\n") {
+    return (
+      <span className={clsx(baseClass, "text-gray-500")}>
+        {"↵"}
+        <br />
+      </span>
+    );
+  }
+
+  if (char === " ") {
+    return <span className={baseClass}>{" "}</span>;
+  }
+
+  return <span className={baseClass}>{char}</span>;
+}
+
 export default function Tracker() {
   const settings = useSettings();
   const { modal } = useModal();
 
   const [words, setWords] = useState("");
   const [wordList] = useWords();
+  const { currentSnippet, nextSnippet } = useCode();
   const [showChange, setShowChange] = useState(false);
 
   const [wordMetric, setWordMetric] = useState("cpm");
@@ -72,15 +104,23 @@ export default function Tracker() {
     statsDispatch,
   ] = useReducer(statsReducer, initialStat);
 
-  const resetWords = useCallback(async () => {
-    const selected: string[] = [];
-    for (let i = 0; i < 15; i++) {
-      selected.push(sample(wordList)!);
-    }
+  // Get the current text based on mode
+  const currentText = settings.codeMode ? currentSnippet : words;
 
-    const pinned = selected.join(" ").replaceAll("  ", "");
-    setWords(pinned);
-  }, [wordList]);
+  const resetWords = useCallback(async () => {
+    if (settings.codeMode) {
+      // In code mode, get next snippet from the provider
+      nextSnippet();
+    } else {
+      // In word mode, generate random words
+      const selected: string[] = [];
+      for (let i = 0; i < 15; i++) {
+        selected.push(sample(wordList)!);
+      }
+      const pinned = selected.join(" ").replaceAll("  ", "");
+      setWords(pinned);
+    }
+  }, [wordList, settings.codeMode, nextSnippet]);
 
   useEffect(() => {
     resetWords();
@@ -90,12 +130,18 @@ export default function Tracker() {
   const [currentKey, setCurrentKey] = useState<CurrentKeyRef>();
 
   useLayoutEffect(() => {
-    if (words.length === 0) return;
-    if (!keyboard.keyExists(words[letters.length].toLowerCase())) return;
-    const key = keyboard.findKey(words[letters.length].toLowerCase());
-    const [i, j] = keyboard.findIndex(words[letters.length].toLowerCase());
+    if (currentText.length === 0) return;
+    const currentChar = currentText[letters.length];
+    if (!currentChar) return;
+    
+    // For special characters like newline, don't try to find on keyboard
+    if (currentChar === "\n" || currentChar === "\t") return;
+    
+    if (!keyboard.keyExists(currentChar.toLowerCase())) return;
+    const key = keyboard.findKey(currentChar.toLowerCase());
+    const [i, j] = keyboard.findIndex(currentChar.toLowerCase());
     setCurrentKey({ current: key, i, j });
-  }, [letters.length, words]);
+  }, [letters.length, currentText]);
 
   const d = (time as Interval).toDuration();
   const total = correct + incorrect;
@@ -131,31 +177,97 @@ export default function Tracker() {
       statsDispatch({ type: "RESET" });
       return;
     }
-    if (!keyboard.keyExists(e.key.toLowerCase())) return;
+
+    const expectedChar = currentText[letters.length];
+    if (!expectedChar) return;
+
+    // In code mode, handle special keys
+    if (settings.codeMode) {
+      // Handle Enter key for newlines
+      if (e.key === "Enter" && expectedChar === "\n") {
+        if (letters.length === 0) {
+          statsDispatch({ type: "START" });
+          setShowChange(false);
+        }
+        statsDispatch({ type: "CORRECT", key: "\n" });
+        checkCompletion();
+        return;
+      }
+
+      // Handle Tab key - convert to spaces based on tabWidth
+      if (e.key === "Tab") {
+        // Check if we're expecting spaces (indentation)
+        const tabSpaces = " ".repeat(settings.tabWidth);
+        const remainingText = currentText.substring(letters.length);
+        
+        if (remainingText.startsWith(tabSpaces)) {
+          if (letters.length === 0) {
+            statsDispatch({ type: "START" });
+            setShowChange(false);
+          }
+          // Type all the spaces that make up the tab
+          for (let i = 0; i < settings.tabWidth; i++) {
+            statsDispatch({ type: "CORRECT", key: " " });
+          }
+          checkCompletion();
+          return;
+        } else if (expectedChar === " ") {
+          // Just type a single space
+          if (letters.length === 0) {
+            statsDispatch({ type: "START" });
+            setShowChange(false);
+          }
+          statsDispatch({ type: "CORRECT", key: " " });
+          checkCompletion();
+          return;
+        }
+      }
+    }
+
+    // For regular keys, check if the key exists on keyboard
+    // Special handling for newlines and spaces in code mode
+    const isSpecialCodeChar = settings.codeMode && (expectedChar === "\n" || expectedChar === " ");
+    
+    if (!isSpecialCodeChar && !keyboard.keyExists(e.key.toLowerCase())) return;
 
     if (letters.length === 0) {
       statsDispatch({ type: "START" });
       setShowChange(false);
     }
 
-    const key = keyboard.findKey(e.key.toLowerCase());
-    const [i, j] = keyboard.findIndex(e.key.toLowerCase());
+    // Handle the key press
+    let key: Key | null = null;
+    let i = 0, j = 0;
 
-    if (key.isInert) return;
+    if (keyboard.keyExists(e.key.toLowerCase())) {
+      key = keyboard.findKey(e.key.toLowerCase());
+      [i, j] = keyboard.findIndex(e.key.toLowerCase());
+      if (key.isInert) return;
+    }
 
-    if (e.key === words[letters.length]) {
-      statsDispatch({ type: "CORRECT", key: words[letters.length] });
-      keys.current.push({ key: key, ttl: 255, i, j, correct: true });
+    if (e.key === expectedChar) {
+      statsDispatch({ type: "CORRECT", key: expectedChar });
+      if (key) {
+        keys.current.push({ key: key, ttl: 255, i, j, correct: true });
+        keyboard.drawKey(ctx, i, j, key, "rgba(0, 255, 0, 0.5)");
+      }
     } else {
       statsDispatch({
         type: "INCORRECT",
-        key: words[letters.length],
+        key: expectedChar,
         pressedKey: e.key,
       });
-      keys.current.push({ key: key, ttl: 255, i, j, correct: false });
+      if (key) {
+        keys.current.push({ key: key, ttl: 255, i, j, correct: false });
+        keyboard.drawKey(ctx, i, j, key, "rgba(255, 0, 0, 0.5)");
+      }
     }
 
-    if (letters.length === words.length - 1) {
+    checkCompletion();
+  };
+
+  const checkCompletion = () => {
+    if (letters.length === currentText.length - 1) {
       setShowChange(true);
       const results: Result = {
         correct,
@@ -170,17 +282,13 @@ export default function Tracker() {
         punctuation: settings.punctuation,
         numbers: settings.numbers,
         cpm: (correct + incorrect) / (time.toDuration().toMillis() / 1000 / 60),
+        codeMode: settings.codeMode,
+        codeLang: settings.codeMode ? settings.codeLang : undefined,
       };
 
       putResult(results);
       resetWords();
       statsDispatch({ type: "RESET" });
-    }
-
-    if (e.key === words[letters.length]) {
-      keyboard.drawKey(ctx, i, j, key, "rgba(0, 255, 0, 0.5)");
-    } else {
-      keyboard.drawKey(ctx, i, j, key, "rgba(255, 0, 0, 0.5)");
     }
   };
 
@@ -217,11 +325,96 @@ export default function Tracker() {
     let accuracyDiff = acc1 - acc2;
   }
 
+  // Render the text display based on mode
+  const renderTextDisplay = () => {
+    if (settings.codeMode) {
+      // Code mode: multi-line display with special character handling
+      return (
+        <pre className="font-['Roboto_Mono'] text-left p-6 whitespace-pre bg-gray-900/50 rounded-lg mx-auto max-w-[700px] overflow-x-auto text-sm leading-relaxed">
+          {/* Line numbers */}
+          <code>
+            {currentText.split("").map((char, i) => {
+              const isTyped = i < letters.length;
+              const isCorrect = isTyped ? letters[i]?.correct : false;
+              const isCurrent = i === letters.length;
+
+              if (char === "\n") {
+                return (
+                  <span
+                    key={i}
+                    className={clsx(
+                      isTyped
+                        ? isCorrect
+                          ? "text-gray-500"
+                          : "bg-red-500 text-white"
+                        : isCurrent
+                        ? "bg-yellow-600/50"
+                        : "text-gray-500",
+                    )}
+                  >
+                    {isCurrent ? "↵" : ""}
+                    {"\n"}
+                  </span>
+                );
+              }
+
+              if (char === " " && isCurrent) {
+                return (
+                  <span
+                    key={i}
+                    className="bg-yellow-600 font-bold"
+                  >
+                    {"·"}
+                  </span>
+                );
+              }
+
+              return (
+                <span
+                  key={i}
+                  className={clsx(
+                    isTyped
+                      ? isCorrect
+                        ? "text-gray-400"
+                        : "bg-red-500 text-white"
+                      : isCurrent
+                      ? "bg-yellow-600 font-bold text-gray-200"
+                      : "",
+                  )}
+                >
+                  {char}
+                </span>
+              );
+            })}
+          </code>
+        </pre>
+      );
+    } else {
+      // Word mode: single line display (original behavior)
+      return (
+        <p className="font-['Roboto_Mono'] text-center p-10 whitespace-pre-wrap">
+          {letters.map((letter, i) => (
+            <span
+              key={i}
+              className={letter.correct ? "text-gray-400" : "bg-red-500"}
+            >
+              {letter.key}
+            </span>
+          ))}
+          <span className="bg-yellow-600 font-bold text-gray-200">
+            {currentText[letters.length]}
+          </span>
+          {currentText.substring(letters.length + 1, currentText.length)}
+        </p>
+      );
+    }
+  };
+
   return (
     <div className="">
       <div className="flex gap-10 justify-between pt-10 font-mono mx-auto w-[600px]">
         <div className="flex items-center">
-          <FontAwesomeIcon icon={faDungeon} size="3x" />
+          <FontAwesomeIcon icon={settings.codeMode ? faCode : faDungeon} size="3x" />
           <div className="ml-5">
             <p className="text-4xl">{incorrect}</p>
             <p className="text-sm text-gray-400">typos</p>
@@ -283,20 +476,17 @@ export default function Tracker() {
           ) : null}
         </div>
       </div>
-      <p className="font-['Roboto_Mono'] text-center p-10 whitespace-pre-wrap">
-        {letters.map((letter, i) => (
-          <span
-            key={i}
-            className={letter.correct ? "text-gray-400" : "bg-red-500"}
-          >
-            {letter.key}
+      
+      {/* Code mode indicator */}
+      {settings.codeMode && (
+        <div className="text-center text-sm text-gray-500 mt-4">
+          <span className="bg-gray-800 px-3 py-1 rounded-full">
+            Code Mode: {settings.codeLang.toUpperCase()} | Press Tab for indent, Enter for newline
           </span>
-        ))}
-        <span className="bg-yellow-600 font-bold text-gray-200">
-          {words[letters.length]}
-        </span>
-        {words.substring(letters.length + 1, words.length)}
-      </p>
+        </div>
+      )}
+      
+      {renderTextDisplay()}
 
       <Canvas
         letters={letters}

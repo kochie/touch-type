@@ -46,6 +46,18 @@ export enum Languages {
   MAORI = "mi",
 }
 
+export enum CodeLanguages {
+  C = "c",
+  PYTHON = "python",
+  JAVASCRIPT = "javascript",
+}
+
+export enum SnippetSource {
+  BUNDLED = "bundled",
+  GENERATED = "generated",
+  FILE = "file",
+}
+
 const SettingsContext = createContext({
   language: Languages.ENGLISH,
   analytics: true,
@@ -65,6 +77,12 @@ const SettingsContext = createContext({
   notificationMessage: "Time to practice your typing!",
   practiceDuration: 5,
   scheduleEnabled: false,
+  // Code mode settings
+  codeMode: false,
+  codeLang: CodeLanguages.C,
+  codeSnippetSource: SnippetSource.BUNDLED,
+  customCodePath: "",
+  tabWidth: 4,
 });
 
 export const defaultSettings = {
@@ -86,6 +104,12 @@ export const defaultSettings = {
   notificationMessage: "Time to practice your typing!",
   practiceDuration: 5,
   scheduleEnabled: false,
+  // Code mode settings
+  codeMode: false,
+  codeLang: CodeLanguages.C,
+  codeSnippetSource: SnippetSource.BUNDLED,
+  customCodePath: "",
+  tabWidth: 4,
 };
 
 type ChangeSettingsAction =
@@ -160,6 +184,26 @@ type ChangeSettingsAction =
   | {
       type: "SET_SCHEDULE_ENABLED";
       enabled: boolean;
+    }
+  | {
+      type: "SET_CODE_MODE";
+      enabled: boolean;
+    }
+  | {
+      type: "SET_CODE_LANG";
+      codeLang: CodeLanguages;
+    }
+  | {
+      type: "SET_CODE_SNIPPET_SOURCE";
+      source: SnippetSource;
+    }
+  | {
+      type: "SET_CUSTOM_CODE_PATH";
+      path: string;
+    }
+  | {
+      type: "SET_TAB_WIDTH";
+      width: number;
     };
 
 
@@ -274,6 +318,36 @@ const reducer = (
         scheduleEnabled: action.enabled,
       };
 
+    case "SET_CODE_MODE":
+      return {
+        ...state,
+        codeMode: action.enabled,
+      };
+
+    case "SET_CODE_LANG":
+      return {
+        ...state,
+        codeLang: action.codeLang,
+      };
+
+    case "SET_CODE_SNIPPET_SOURCE":
+      return {
+        ...state,
+        codeSnippetSource: action.source,
+      };
+
+    case "SET_CUSTOM_CODE_PATH":
+      return {
+        ...state,
+        customCodePath: action.path,
+      };
+
+    case "SET_TAB_WIDTH":
+      return {
+        ...state,
+        tabWidth: action.width,
+      };
+
     default:
       return { ...state };
   }
@@ -337,6 +411,12 @@ export const SettingsProvider = ({ children }) => {
           notificationMessage: data.notification_message ?? "Time to practice your typing!",
           practiceDuration: data.practice_duration ?? 5,
           scheduleEnabled: data.schedule_enabled ?? false,
+          // Code mode settings
+          codeMode: data.code_mode ?? false,
+          codeLang: (data.code_lang as CodeLanguages) ?? CodeLanguages.C,
+          codeSnippetSource: (data.code_snippet_source as SnippetSource) ?? SnippetSource.BUNDLED,
+          customCodePath: data.custom_code_path ?? "",
+          tabWidth: data.tab_width ?? 4,
         };
         dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
       }
@@ -370,6 +450,12 @@ export const SettingsProvider = ({ children }) => {
         notification_message: safeSettings.notificationMessage,
         practice_duration: safeSettings.practiceDuration,
         schedule_enabled: safeSettings.scheduleEnabled,
+        // Code mode settings
+        code_mode: safeSettings.codeMode,
+        code_lang: safeSettings.codeLang,
+        code_snippet_source: safeSettings.codeSnippetSource,
+        custom_code_path: safeSettings.customCodePath,
+        tab_width: safeSettings.tabWidth,
       };
 
       const { error } = await supabase

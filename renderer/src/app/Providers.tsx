@@ -3,6 +3,7 @@
 import { SettingsProvider, useSettings } from "@/lib/settings_hook";
 import { SupabaseProvider } from "@/lib/supabase-provider";
 import { WordProvider } from "@/lib/word-provider";
+import { CodeProvider } from "@/lib/code-provider";
 import { ResultsProvider } from "@/lib/result-provider";
 import { useLayoutEffect, useCallback } from "react";
 import {
@@ -29,11 +30,13 @@ export default function Providers({ children }) {
               <StreakProvider>
                 <PvPProvider>
                   <WordProvider>
-                    <ModalProvider>
-                      <Toaster richColors position="top-center" />
-                      <ModalSetup />
-                      {children}
-                    </ModalProvider>
+                    <CodeProvider>
+                      <ModalProvider>
+                        <Toaster richColors position="top-center" />
+                        <ModalSetup />
+                        {children}
+                      </ModalProvider>
+                    </CodeProvider>
                   </WordProvider>
                 </PvPProvider>
               </StreakProvider>

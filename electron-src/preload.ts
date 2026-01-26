@@ -38,6 +38,12 @@ declare global {
     }
   }
 
+  // Types for file dialog result
+  interface OpenDialogResult {
+    canceled: boolean;
+    filePaths: string[];
+  }
+
   interface Window {
     electronAPI: {
       getWordSet: (language: string) => Promise<Uint8Array>;
@@ -53,6 +59,10 @@ declare global {
       getNotificationStatus: () => Promise<boolean>;
       // Streak
       updateStreakData: (data: StreakData) => void;
+      // Code mode
+      getCodeSnippets: (lang: string) => Promise<Uint8Array>;
+      loadUserCodeFile: (filePath: string) => Promise<string | null>;
+      showOpenDialog: () => Promise<OpenDialogResult>;
     };
   }
 }
@@ -92,4 +102,14 @@ contextBridge.exposeInMainWorld("electronAPI", {
   updateStreakData: (data: StreakData): void => {
     ipcRenderer.send("updateStreakData", data);
   },
+
+  // Code mode - load code snippets and user files
+  getCodeSnippets: (lang: string): Promise<Uint8Array> =>
+    ipcRenderer.invoke("getCodeSnippets", lang),
+
+  loadUserCodeFile: (filePath: string): Promise<string | null> =>
+    ipcRenderer.invoke("loadUserCodeFile", filePath),
+
+  showOpenDialog: (): Promise<{ canceled: boolean; filePaths: string[] }> =>
+    ipcRenderer.invoke("showOpenDialog"),
 });

@@ -15,6 +15,7 @@ import KeyboardSelect from "../KeyboardSelect";
 import clsx from "clsx";
 import { NotificationSettings } from "./NotificationSettings";
 import { CalendarSettings } from "./CalendarSettings";
+import { CodeSettings } from "./CodeSettings";
 
 export const languages = [
   {
@@ -226,6 +227,13 @@ const Settings = () => {
           description="Blink the key being typed."
         />
       </form>
+      </div>
+
+      {/* Code Mode Section */}
+      <hr className="border-white/10" />
+      
+      <div className="grid grid-cols-2 gap-10">
+        <CodeSettings />
       </div>
 
       {/* Scheduling Section */}
