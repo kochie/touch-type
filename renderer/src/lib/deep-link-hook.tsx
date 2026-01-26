@@ -4,9 +4,13 @@ import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 export interface DeepLinkData {
-  action: "practice" | "settings" | "stats";
+  action: "practice" | "settings" | "stats" | "pvp";
   duration?: number;
   mode?: "timed" | "words" | "endless";
+  // PvP specific
+  pvpAction?: "invite" | "challenge";
+  code?: string;
+  challengeId?: string;
 }
 
 export interface DeepLinkHandlers {
@@ -40,6 +44,17 @@ export function useDeepLink(handlers?: DeepLinkHandlers): void {
 
         case "stats":
           router.push("/stats");
+          break;
+
+        case "pvp":
+          // Handle PvP deep links
+          if (data.pvpAction === "invite" && data.code) {
+            router.push(`/pvp/invite/${data.code}`);
+          } else if (data.pvpAction === "challenge" && data.challengeId) {
+            router.push(`/pvp/${data.challengeId}`);
+          } else {
+            router.push("/pvp");
+          }
           break;
 
         default:

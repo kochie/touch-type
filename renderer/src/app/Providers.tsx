@@ -14,6 +14,7 @@ import {
 import Menu from "@/components/Menu";
 import { MasProvider } from "@/lib/mas_hook";
 import { PlanProvider } from "@/lib/plan_hook";
+import { PvPProvider } from "@/lib/pvp-provider";
 import { Toaster } from "sonner";
 import { useDeepLink, DeepLinkData } from "@/lib/deep-link-hook";
 import { StreakProvider } from "@/lib/streak_hook";
@@ -28,13 +29,15 @@ export default function Providers({ children }) {
           <ResultsProvider>
             <PlanProvider>
               <StreakProvider>
-                <WordProvider>
-                  <ModalProvider>
-                    <Toaster richColors position="top-center" />
-                    <ModalSetup />
-                    {children}
-                  </ModalProvider>
-                </WordProvider>
+                <PvPProvider>
+                  <WordProvider>
+                    <ModalProvider>
+                      <Toaster richColors position="top-center" />
+                      <ModalSetup />
+                      {children}
+                    </ModalProvider>
+                  </WordProvider>
+                </PvPProvider>
               </StreakProvider>
             </PlanProvider>
           </ResultsProvider>

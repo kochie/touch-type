@@ -58,7 +58,7 @@ export interface Result {
 
 const ResultsContext = createContext({
   results: [] as Result[],
-  putResult: (result: Result) => {},
+  putResult: async (_result: Result): Promise<{ id: string } | null> => null,
 });
 
 export function ResultsProvider({ children }) {
@@ -198,32 +198,40 @@ export function ResultsProvider({ children }) {
     );
   }
 
-  const putResult = async (result: Result) => {
+  const putResult = async (
+    result: Result,
+  ): Promise<{ id: string } | null> => {
     _setResults((prev) => [result, ...prev]);
     updateDB(result);
 
     if (user) {
-      // Upload to Supabase
-      const { error } = await supabase.from('results').insert({
-        user_id: user.id,
-        correct: result.correct,
-        incorrect: result.incorrect,
-        time: result.time,
-        datetime: result.datetime,
-        level: result.level,
-        keyboard: result.keyboard,
-        language: result.language,
-        capital: result.capital,
-        punctuation: result.punctuation,
-        numbers: result.numbers,
-        cpm: result.cpm,
-        key_presses: letterStatsToJson(result.keyPresses),
-      });
+      const { data, error } = await supabase
+        .from('results')
+        .insert({
+          user_id: user.id,
+          correct: result.correct,
+          incorrect: result.incorrect,
+          time: result.time,
+          datetime: result.datetime,
+          level: result.level,
+          keyboard: result.keyboard,
+          language: result.language,
+          capital: result.capital,
+          punctuation: result.punctuation,
+          numbers: result.numbers,
+          cpm: result.cpm,
+          key_presses: letterStatsToJson(result.keyPresses),
+        })
+        .select('id')
+        .single();
 
       if (error) {
         console.error('Error uploading result:', error);
+        return null;
       }
+      return data;
     }
+    return null;
   };
 
   return (
