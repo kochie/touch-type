@@ -49,6 +49,7 @@
     "@tailwindcss/forms": "^0.5.11",
     "app-root-path": "^3.1.0",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "deepmerge": "^4.3.1",
     "electron-builder-notarize": "^1.5.2",
     "electron-is-dev": "^3.0.1",
@@ -73,6 +74,7 @@
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.11.1",
+    "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/app-root-path": "^3.1.0",
     "@types/d3": "^7.4.3",

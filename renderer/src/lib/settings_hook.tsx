@@ -46,6 +46,18 @@ export enum Languages {
   MAORI = "mi",
 }
 
+export enum CodeLanguages {
+  C = "c",
+  PYTHON = "python",
+  JAVASCRIPT = "javascript",
+}
+
+export enum SnippetSource {
+  BUNDLED = "bundled",
+  GENERATED = "generated",
+  FILE = "file",
+}
+
 const SettingsContext = createContext({
   language: Languages.ENGLISH,
   analytics: true,
@@ -58,6 +70,19 @@ const SettingsContext = createContext({
   punctuation: false,
   numbers: false,
   capital: false,
+  // Notification settings
+  notificationsEnabled: false,
+  notificationTime: "09:00",
+  notificationDays: ["mon", "tue", "wed", "thu", "fri"] as string[],
+  notificationMessage: "Time to practice your typing!",
+  practiceDuration: 5,
+  scheduleEnabled: false,
+  // Code mode settings
+  codeMode: false,
+  codeLang: CodeLanguages.C,
+  codeSnippetSource: SnippetSource.BUNDLED,
+  customCodePath: "",
+  tabWidth: 4,
 });
 
 export const defaultSettings = {
@@ -72,6 +97,19 @@ export const defaultSettings = {
   punctuation: false,
   numbers: false,
   capital: false,
+  // Notification settings
+  notificationsEnabled: false,
+  notificationTime: "09:00",
+  notificationDays: ["mon", "tue", "wed", "thu", "fri"] as string[],
+  notificationMessage: "Time to practice your typing!",
+  practiceDuration: 5,
+  scheduleEnabled: false,
+  // Code mode settings
+  codeMode: false,
+  codeLang: CodeLanguages.C,
+  codeSnippetSource: SnippetSource.BUNDLED,
+  customCodePath: "",
+  tabWidth: 4,
 };
 
 type ChangeSettingsAction =
@@ -122,8 +160,52 @@ type ChangeSettingsAction =
   | {
       type: "SET_CAPITAL";
       capital: boolean;
+    }
+  | {
+      type: "SET_NOTIFICATIONS_ENABLED";
+      enabled: boolean;
+    }
+  | {
+      type: "SET_NOTIFICATION_TIME";
+      time: string;
+    }
+  | {
+      type: "SET_NOTIFICATION_DAYS";
+      days: string[];
+    }
+  | {
+      type: "SET_NOTIFICATION_MESSAGE";
+      message: string;
+    }
+  | {
+      type: "SET_PRACTICE_DURATION";
+      duration: number;
+    }
+  | {
+      type: "SET_SCHEDULE_ENABLED";
+      enabled: boolean;
+    }
+  | {
+      type: "SET_CODE_MODE";
+      enabled: boolean;
+    }
+  | {
+      type: "SET_CODE_LANG";
+      codeLang: CodeLanguages;
+    }
+  | {
+      type: "SET_CODE_SNIPPET_SOURCE";
+      source: SnippetSource;
+    }
+  | {
+      type: "SET_CUSTOM_CODE_PATH";
+      path: string;
+    }
+  | {
+      type: "SET_TAB_WIDTH";
+      width: number;
     };
-  
+
 
 const reducer = (
   state: typeof defaultSettings,
@@ -200,6 +282,72 @@ const reducer = (
         capital: action.capital,
       };
 
+    case "SET_NOTIFICATIONS_ENABLED":
+      return {
+        ...state,
+        notificationsEnabled: action.enabled,
+      };
+
+    case "SET_NOTIFICATION_TIME":
+      return {
+        ...state,
+        notificationTime: action.time,
+      };
+
+    case "SET_NOTIFICATION_DAYS":
+      return {
+        ...state,
+        notificationDays: action.days,
+      };
+
+    case "SET_NOTIFICATION_MESSAGE":
+      return {
+        ...state,
+        notificationMessage: action.message,
+      };
+
+    case "SET_PRACTICE_DURATION":
+      return {
+        ...state,
+        practiceDuration: action.duration,
+      };
+
+    case "SET_SCHEDULE_ENABLED":
+      return {
+        ...state,
+        scheduleEnabled: action.enabled,
+      };
+
+    case "SET_CODE_MODE":
+      return {
+        ...state,
+        codeMode: action.enabled,
+      };
+
+    case "SET_CODE_LANG":
+      return {
+        ...state,
+        codeLang: action.codeLang,
+      };
+
+    case "SET_CODE_SNIPPET_SOURCE":
+      return {
+        ...state,
+        codeSnippetSource: action.source,
+      };
+
+    case "SET_CUSTOM_CODE_PATH":
+      return {
+        ...state,
+        customCodePath: action.path,
+      };
+
+    case "SET_TAB_WIDTH":
+      return {
+        ...state,
+        tabWidth: action.width,
+      };
+
     default:
       return { ...state };
   }
@@ -256,6 +404,19 @@ export const SettingsProvider = ({ children }) => {
           punctuation: data.punctuation,
           theme: data.theme as ColorScheme,
           whatsNewOnStartup: data.whats_new_on_startup,
+          // Notification settings
+          notificationsEnabled: data.notifications_enabled ?? false,
+          notificationTime: data.notification_time ?? "09:00",
+          notificationDays: data.notification_days ?? ["mon", "tue", "wed", "thu", "fri"],
+          notificationMessage: data.notification_message ?? "Time to practice your typing!",
+          practiceDuration: data.practice_duration ?? 5,
+          scheduleEnabled: data.schedule_enabled ?? false,
+          // Code mode settings
+          codeMode: data.code_mode ?? false,
+          codeLang: (data.code_lang as CodeLanguages) ?? CodeLanguages.C,
+          codeSnippetSource: (data.code_snippet_source as SnippetSource) ?? SnippetSource.BUNDLED,
+          customCodePath: data.custom_code_path ?? "",
+          tabWidth: data.tab_width ?? 4,
         };
         dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
       }
@@ -282,6 +443,19 @@ export const SettingsProvider = ({ children }) => {
         punctuation: safeSettings.punctuation,
         theme: safeSettings.theme,
         whats_new_on_startup: safeSettings.whatsNewOnStartup,
+        // Notification settings
+        notifications_enabled: safeSettings.notificationsEnabled,
+        notification_time: safeSettings.notificationTime,
+        notification_days: safeSettings.notificationDays,
+        notification_message: safeSettings.notificationMessage,
+        practice_duration: safeSettings.practiceDuration,
+        schedule_enabled: safeSettings.scheduleEnabled,
+        // Code mode settings
+        code_mode: safeSettings.codeMode,
+        code_lang: safeSettings.codeLang,
+        code_snippet_source: safeSettings.codeSnippetSource,
+        custom_code_path: safeSettings.customCodePath,
+        tab_width: safeSettings.tabWidth,
       };
 
       const { error } = await supabase

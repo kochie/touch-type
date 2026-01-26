@@ -13,6 +13,9 @@ import { Description, Field, Label, Select, Switch } from "@headlessui/react";
 import { platform } from "os";
 import KeyboardSelect from "../KeyboardSelect";
 import clsx from "clsx";
+import { NotificationSettings } from "./NotificationSettings";
+import { CalendarSettings } from "./CalendarSettings";
+import { CodeSettings } from "./CodeSettings";
 
 export const languages = [
   {
@@ -69,7 +72,9 @@ const Settings = () => {
   const dispatchSettings = useSettingsDispatch();
 
   return (
-    <div className="grid p-9 grid-cols-2 gap-10">
+    <div className="p-9 space-y-10">
+      {/* General Settings */}
+      <div className="grid grid-cols-2 gap-10">
       <form className="flex flex-col gap-6">
         <KeyboardSelect />
 
@@ -222,6 +227,22 @@ const Settings = () => {
           description="Blink the key being typed."
         />
       </form>
+      </div>
+
+      {/* Code Mode Section */}
+      <hr className="border-white/10" />
+      
+      <div className="grid grid-cols-2 gap-10">
+        <CodeSettings />
+      </div>
+
+      {/* Scheduling Section */}
+      <hr className="border-white/10" />
+      
+      <div className="grid grid-cols-2 gap-10">
+        <NotificationSettings />
+        <CalendarSettings />
+      </div>
     </div>
   );
 };
