@@ -93,6 +93,9 @@ jobs:
         run: pnpm install
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+          APPLE_API_KEY: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
+          APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
+          APPLE_API_ISSUER: ${{ secrets.api_key_issuer_id }}
 
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v1
