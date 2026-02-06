@@ -38,7 +38,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-          NEXT_PUBLIC_USERPOOL_ID: ap-southeast-2_eZiuIIaCB
-          NEXT_PUBLIC_USERPOOL_CLIENT_ID: ddodg8qtnqvjhtg876uc9g74c
-          NEXT_PUBLIC_API_URL: https://api-prod.touch-typer.kochie.io/graphql
+
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.supabase_anon_key }}
           NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
