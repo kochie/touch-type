@@ -27,6 +27,7 @@ import { getProducts } from "./in-app-purchase";
 import { setupDeepLinkHandlers, setMainWindow, handleInitialDeepLink } from "./deep-link";
 import { setupNotificationScheduler } from "./notification-scheduler";
 import { setupTray, setIsQuitting } from "./tray";
+import { setupStartupHandlers, shouldStartMinimized } from "./startup";
 
 // import { fileURLToPath } from "node:url";
 
@@ -64,20 +65,41 @@ async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
 const loadURL = serve({ directory: "renderer/out" });
 
 // Prepare the renderer once the app is ready
+// Store isDev status globally after import
+let isDevMode = false;
+
 app.on("ready", async () => {
+  // Import isDev at app ready to avoid issues
+  const isDev = await import("electron-is-dev");
+  isDevMode = isDev.default;
+
   ipcMain.handle("getWordSet", handleWordSet);
   ipcMain.handle("getProducts", getProducts)
   ipcMain.handle("isMas", () => !!process.mas);
+  
+  // Debug info handler
+  ipcMain.handle("getDebugInfo", () => ({
+    isDev: isDevMode,
+    platform: process.platform,
+    electronVersion: process.versions.electron,
+    nodeVersion: process.versions.node,
+  }));
+
+  // Setup startup handlers for launch at login
+  setupStartupHandlers();
 
   autoUpdater.checkForUpdatesAndNotify();
 
-  
+  // Check if we should start minimized (hidden in tray)
+  const startHidden = shouldStartMinimized();
+  log.info("Starting app:", { startHidden });
 
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 1280,
     autoHideMenuBar: true,
+    show: !startHidden, // Don't show window if starting minimized
     // transparent: true,
     // frame: false,
     vibrancy: "under-window",
@@ -113,10 +135,11 @@ app.on("ready", async () => {
   // Setup notification scheduler IPC handlers
   setupNotificationScheduler(mainWindow);
 
-  // mainWindow.setVibrancy("under-window");
-  const isDev = await import("electron-is-dev");
+  // Note: Even when starting hidden, we keep the dock icon visible on macOS
+  // (like Slack). Clicking the dock icon will show the window.
 
-  if (isDev.default) {
+  // mainWindow.setVibrancy("under-window");
+  if (isDevMode) {
     console.log("Running in development");
 
     await prepareNext("./renderer");
@@ -172,11 +195,11 @@ autoUpdater.on("error", (message) => {
 });
 
 // Handle window-all-closed event
-// On macOS, the app stays in the tray; on other platforms, quit
+// On all platforms, the app stays running in the tray when windows are closed
+// The app only quits when the user explicitly quits from the tray menu
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+  // Don't quit - the app continues running in the system tray
+  // Users can quit explicitly from the tray context menu
 });
 
 // Properly quit when the user explicitly quits

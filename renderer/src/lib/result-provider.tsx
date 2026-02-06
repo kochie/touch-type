@@ -8,6 +8,38 @@ import { Languages, Levels } from "./settings_hook";
 import { KeyboardLayoutNames } from "@/keyboards";
 import { Duration } from "luxon";
 import { useSupabase } from "./supabase-provider";
+/**
+ * Converts a JSON value from Supabase to a LetterStat array.
+ * Validates the structure and provides defaults for missing optional fields.
+ */
+function convertToLetterStats(json: unknown): LetterStat[] {
+  if (!json || !Array.isArray(json)) {
+    return [];
+  }
+
+  return json
+    .filter((item): item is Record<string, unknown> => 
+      typeof item === "object" && item !== null && !Array.isArray(item)
+    )
+    .map((item) => ({
+      key: typeof item.key === "string" ? item.key : "",
+      correct: typeof item.correct === "boolean" ? item.correct : false,
+      pressedKey: typeof item.pressedKey === "string" ? item.pressedKey : undefined,
+      timestamp: typeof item.timestamp === "number" ? item.timestamp : undefined,
+    }));
+}
+
+/**
+ * Converts LetterStat array to a JSON-compatible format for Supabase.
+ */
+function letterStatsToJson(stats: LetterStat[]): { [key: string]: string | number | boolean | undefined }[] {
+  return stats.map((stat) => ({
+    key: stat.key,
+    correct: stat.correct,
+    pressedKey: stat.pressedKey,
+    timestamp: stat.timestamp,
+  }));
+}
 
 export interface Result {
   correct: number;
@@ -70,15 +102,15 @@ export function ResultsProvider({ children }) {
         const convertedResults = data.map(r => ({
           correct: r.correct,
           incorrect: r.incorrect,
-          keyPresses: r.key_presses as LetterStat[],
+          keyPresses: convertToLetterStats(r.key_presses),
           time: r.time,
           datetime: r.datetime,
           level: r.level as Levels,
           keyboard: r.keyboard as KeyboardLayoutNames,
           language: r.language as Languages,
-          capital: r.capital,
-          punctuation: r.punctuation,
-          numbers: r.numbers,
+          capital: !!r.capital,
+          punctuation: !!r.punctuation,
+          numbers: !!r.numbers,
           cpm: r.cpm,
         }));
         allResults.push(...convertedResults);
@@ -185,7 +217,7 @@ export function ResultsProvider({ children }) {
         punctuation: result.punctuation,
         numbers: result.numbers,
         cpm: result.cpm,
-        key_presses: result.keyPresses,
+        key_presses: letterStatsToJson(result.keyPresses),
       });
 
       if (error) {

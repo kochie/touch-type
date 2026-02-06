@@ -1,9 +1,11 @@
-import { Tray, Menu, nativeImage, app, BrowserWindow } from "electron";
+import { Tray, Menu, nativeImage, app, BrowserWindow, powerSaveBlocker } from "electron";
 import { join } from "path";
 import log from "electron-log";
 
 let tray: Tray | null = null;
 let isQuitting = false;
+let hasShownTrayNotification = false;
+let powerSaveBlockerId: number | null = null;
 
 /**
  * Mark the app as quitting to allow window close
@@ -139,23 +141,46 @@ export function setupTray(mainWindow: BrowserWindow): Tray {
     }
   });
 
-  // Handle window close - minimize to tray instead of quitting
+  // Handle window close - hide window but keep app running (like Slack)
   mainWindow.on("close", (event) => {
     if (!isQuitting) {
       event.preventDefault();
       mainWindow.hide();
       
-      // On macOS, also hide from dock when minimized to tray
-      if (process.platform === "darwin") {
-        app.dock?.hide();
+      // Prevent App Nap on macOS to keep APNS connection alive
+      // This ensures push notifications can be received while in the tray
+      if (process.platform === "darwin" && powerSaveBlockerId === null) {
+        powerSaveBlockerId = powerSaveBlocker.start("prevent-app-suspension");
+        log.info("Started power save blocker to prevent App Nap, id:", powerSaveBlockerId);
+      }
+      
+      // On Windows, show a balloon notification the first time
+      // to let users know the app is still running in the tray
+      if (process.platform === "win32" && !hasShownTrayNotification && tray) {
+        hasShownTrayNotification = true;
+        tray.displayBalloon({
+          title: "Touch Typer",
+          content: "The app is still running in the system tray. You'll receive notifications for practice reminders.",
+          iconType: "info",
+        });
       }
     }
   });
 
-  // Show dock icon again when window is shown
+  // When window is shown, we can allow App Nap again
   mainWindow.on("show", () => {
-    if (process.platform === "darwin") {
-      app.dock?.show();
+    if (powerSaveBlockerId !== null && powerSaveBlocker.isStarted(powerSaveBlockerId)) {
+      powerSaveBlocker.stop(powerSaveBlockerId);
+      log.info("Stopped power save blocker, id:", powerSaveBlockerId);
+      powerSaveBlockerId = null;
+    }
+  });
+
+  // On macOS, clicking the dock icon when window is hidden should show it
+  app.on("activate", () => {
+    if (!mainWindow.isVisible()) {
+      mainWindow.show();
+      mainWindow.focus();
     }
   });
 
@@ -191,4 +216,22 @@ export function destroyTray(): void {
  */
 export function getTray(): Tray | null {
   return tray;
+}
+
+/**
+ * Check if window is currently visible (not hidden in tray)
+ */
+export function isWindowVisible(window: BrowserWindow): boolean {
+  return window.isVisible() && !window.isMinimized();
+}
+
+/**
+ * Show window from tray and bring to front
+ */
+export function showWindowFromTray(window: BrowserWindow): void {
+  if (window.isMinimized()) {
+    window.restore();
+  }
+  window.show();
+  window.focus();
 }

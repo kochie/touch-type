@@ -65,6 +65,9 @@ const SettingsContext = createContext({
   notificationMessage: "Time to practice your typing!",
   practiceDuration: 5,
   scheduleEnabled: false,
+  // Startup settings
+  launchAtStartup: false,
+  startMinimized: false,
 });
 
 export const defaultSettings = {
@@ -86,12 +89,15 @@ export const defaultSettings = {
   notificationMessage: "Time to practice your typing!",
   practiceDuration: 5,
   scheduleEnabled: false,
+  // Startup settings
+  launchAtStartup: false,
+  startMinimized: false,
 };
 
 type ChangeSettingsAction =
   | {
       type: "LOAD_SETTINGS";
-      settings: typeof defaultSettings;
+      settings: Partial<typeof defaultSettings>;
     }
   | {
       type: "SET_ANALYTICS";
@@ -159,6 +165,14 @@ type ChangeSettingsAction =
     }
   | {
       type: "SET_SCHEDULE_ENABLED";
+      enabled: boolean;
+    }
+  | {
+      type: "SET_LAUNCH_AT_STARTUP";
+      enabled: boolean;
+    }
+  | {
+      type: "SET_START_MINIMIZED";
       enabled: boolean;
     };
 
@@ -274,6 +288,18 @@ const reducer = (
         scheduleEnabled: action.enabled,
       };
 
+    case "SET_LAUNCH_AT_STARTUP":
+      return {
+        ...state,
+        launchAtStartup: action.enabled,
+      };
+
+    case "SET_START_MINIMIZED":
+      return {
+        ...state,
+        startMinimized: action.enabled,
+      };
+
     default:
       return { ...state };
   }
@@ -284,21 +310,17 @@ const SettingsDispatchContext = createContext<Dispatch<ChangeSettingsAction>>(
 );
 
 export const SettingsProvider = ({ children }) => {
-  const [settings, dispatch] = useReducer(reducer, null, () => {
-    if (typeof localStorage === "undefined") return { ...defaultSettings };
-
-    const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
-
-    return { ...defaultSettings, ...savedSettings };
-  });
+  const [settings, dispatch] = useReducer(reducer, defaultSettings);
 
   const { supabase, user } = useSupabase();
 
+  // Load settings from localStorage after hydration (client-side only)
   useLayoutEffect(() => {
-    const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
+    if (typeof window === "undefined") return;
     
-    dispatch({type: "LOAD_SETTINGS", settings: savedSettings });
-  }, [])
+    const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
+    dispatch({ type: "LOAD_SETTINGS", settings: savedSettings });
+  }, []);
 
   // Sync settings from Supabase when user logs in
   useEffect(() => {
@@ -319,17 +341,17 @@ export const SettingsProvider = ({ children }) => {
       if (data) {
         // Convert snake_case from DB to camelCase
         const dbSettings = {
-          analytics: data.analytics,
-          blinker: data.blinker,
-          capital: data.capital,
+          analytics: !!data.analytics,
+          blinker: !!data.blinker,
+          capital: !!data.capital,
           keyboardName: data.keyboard_name as KeyboardLayoutNames,
           language: data.language as Languages,
           levelName: data.level_name as Levels,
-          numbers: data.numbers,
-          publishToLeaderboard: data.publish_to_leaderboard,
-          punctuation: data.punctuation,
+          numbers: !!data.numbers,
+          publishToLeaderboard: !!data.publish_to_leaderboard,
+          punctuation: !!data.punctuation,
           theme: data.theme as ColorScheme,
-          whatsNewOnStartup: data.whats_new_on_startup,
+          whatsNewOnStartup: !!data.whats_new_on_startup,
           // Notification settings
           notificationsEnabled: data.notifications_enabled ?? false,
           notificationTime: data.notification_time ?? "09:00",
@@ -337,6 +359,8 @@ export const SettingsProvider = ({ children }) => {
           notificationMessage: data.notification_message ?? "Time to practice your typing!",
           practiceDuration: data.practice_duration ?? 5,
           scheduleEnabled: data.schedule_enabled ?? false,
+          // Startup settings are NOT included - they're machine-specific
+          // and will be preserved from localStorage via the reducer merge
         };
         dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
       }
@@ -370,6 +394,8 @@ export const SettingsProvider = ({ children }) => {
         notification_message: safeSettings.notificationMessage,
         practice_duration: safeSettings.practiceDuration,
         schedule_enabled: safeSettings.scheduleEnabled,
+        // Startup settings are NOT saved to DB - they're machine-specific
+        // and managed by Electron's startup module
       };
 
       const { error } = await supabase
@@ -384,6 +410,8 @@ export const SettingsProvider = ({ children }) => {
   );
 
   useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    
     if (
       settings.theme === ColorScheme.DARK ||
       (settings.theme === ColorScheme.SYSTEM &&
@@ -396,6 +424,8 @@ export const SettingsProvider = ({ children }) => {
   }, [settings.theme]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    
     const safeSettings = {
       ...settings,
     };

@@ -2,6 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
+    <!-- Required for development builds to run -->
+    <key>com.apple.security.get-task-allow</key>
+    <true/>
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
@@ -10,9 +13,15 @@
     <true/>
     <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <key>com.apple.security.application-groups</key>
+    <array>
+      <string>SJ9U6MWNZK.io.kochie.touch-typer</string>
+    </array>
     <key>com.apple.security.network.client</key>
     <true/>
     <key>com.apple.developer.aps-environment</key>
-    <string>production</string>
+    <string>development</string>
   </dict>
 </plist>

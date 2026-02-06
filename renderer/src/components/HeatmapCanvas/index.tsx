@@ -224,6 +224,9 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
       .domain(generateDomain());
 
     keyResults.forEach((value, k) => {
+      // Skip keys that don't exist on the current keyboard layout
+      if (!k || !keyboard.keyExists(k)) return;
+      
       const [i, j] = keyboard.findIndex(k);
       const key = keyboard.findKey(k);
       keyboard.drawKey(ctx, i, j, key, colorScale(value.incorrect));

@@ -1,79 +1,54 @@
 // Supabase query for getting a goal - uses Edge Function for complex logic
 import { getSupabaseClient } from "@/lib/supabase-client";
-import type { Goal } from "@/types/supabase";
+import { Tables } from "@/types/supabase";
 
-export async function getGoal(category: string): Promise<Goal | null> {
+export async function getGoal(category: string): Promise<Tables<"goals"> | null> {
   const supabase = getSupabaseClient();
 
-  // Use query params by making a fetch call
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) {
-    return null;
-  }
-  
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/goals?category=${category}`,
-    {
-      headers: {
-        Authorization: `Bearer ${session?.access_token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  const {data, error} = await supabase.functions.invoke('goals', {
+    body: {
+      category: category,
+    },
+  });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'Failed to fetch goal');
+  if (error) {
+    throw error;
   }
 
-  return response.json();
+  return data;
 }
 
-export async function completeGoal(category: string): Promise<Goal> {
+export async function completeGoal(category: string): Promise<Tables<"goals">> {
   const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/goals?category=${category}`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ action: 'complete' }),
-    }
-  );
+  const {data, error} = await supabase.functions.invoke('goals', {
+    body: {
+      category: category,
+      action: 'complete',
+    },
+  });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'Failed to complete goal');
+  if (error) {
+    throw error;
   }
 
-  return response.json();
+  return data;
 }
 
-export async function newGoal(category: string, targetCpm?: number): Promise<Goal> {
+export async function newGoal(category: string, targetCpm?: number): Promise<Tables<"goals">> {
   const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/goals?category=${category}`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ action: 'new', targetCpm }),
-    }
-  );
+  const {data, error} = await supabase.functions.invoke('goals', {
+    body: {
+      category: category,
+      action: 'new',
+      targetCpm: targetCpm,
+    },
+  });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'Failed to create new goal');
+  if (error) {
+    throw error;
   }
 
-  return response.json();
+  return data;
 }

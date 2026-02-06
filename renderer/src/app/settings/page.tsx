@@ -3,7 +3,7 @@ import Settings from "@/components/settings/settings";
 
 const SettingsPage = () => {
   return (
-    <div className="w-screen h-screen dark:text-white ">
+    <div className="w-full min-h-screen dark:text-white overflow-x-hidden">
 
       <Settings />
     </div>

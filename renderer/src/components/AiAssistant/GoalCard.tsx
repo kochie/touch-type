@@ -9,7 +9,7 @@ import { Category } from "./utils";
 import { Skeleton } from "../Skeleton";
 import Button from "../Button";
 import { getGoal, newGoal } from "@/transactions/getGoal";
-import type { Goal, Requirement } from "@/types/supabase";
+import { Tables } from "@/types/supabase";
 
 function Progress({ value }) {
   return (
@@ -27,7 +27,7 @@ function Progress({ value }) {
 }
 
 function makeGoalDisplay(
-  goal: Goal,
+  goal: Tables<"goals">,
   results: Result[],
 ): {
   current: string;
@@ -36,7 +36,9 @@ function makeGoalDisplay(
   description: string;
   progress: number;
 } {
-  const requirement = goal.requirement as Requirement;
+  const requirement = goal.requirement as Tables<"goals">["requirement"] as {
+    cpm?: number;
+  };
   const isCpm = !!requirement?.cpm;
 
   let progress = 0;
@@ -64,7 +66,7 @@ function makeGoalDisplay(
 
 export function GoalCard({ category }: { category: Category }) {
   const { results } = useResults();
-  const [goal, setGoalData] = useState<Goal | null>(null);
+  const [goal, setGoalData] = useState<Tables<"goals"> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);

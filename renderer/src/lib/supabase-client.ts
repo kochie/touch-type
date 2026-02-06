@@ -1,14 +1,27 @@
 // Browser-side Supabase client
-import { createBrowserClient } from '@supabase/ssr';
-import { SupabaseClient } from '@supabase/supabase-js';
+// Note: Using createClient from @supabase/supabase-js instead of @supabase/ssr
+// because @supabase/ssr uses cookies which don't work properly in Electron apps.
+// The standard client uses localStorage for session persistence.
+import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
 export type TypedSupabaseClient = SupabaseClient<Database>;
 
 export function createClient(): TypedSupabaseClient {
-  return createBrowserClient<Database>(
+  return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        // Use localStorage for session persistence (works in Electron)
+        persistSession: true,
+        storageKey: 'touch-typer-auth',
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        // Auto-refresh tokens
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    }
   );
 }
 

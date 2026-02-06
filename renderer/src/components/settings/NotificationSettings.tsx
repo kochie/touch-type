@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSettings, useSettingsDispatch } from "@/lib/settings_hook";
 import { useSupabase, useUser } from "@/lib/supabase-provider";
-import { Field, Label, Description, Switch, Select } from "@headlessui/react";
+import { Field, Label, Description, Switch } from "@headlessui/react";
 import clsx from "clsx";
 
 const DAYS = [
@@ -16,12 +16,7 @@ const DAYS = [
   { id: "sun", label: "Sun" },
 ];
 
-const DURATIONS = [
-  { value: 5, label: "5 minutes" },
-  { value: 10, label: "10 minutes" },
-  { value: 15, label: "15 minutes" },
-  { value: 30, label: "30 minutes" },
-];
+const DEFAULT_REMINDER_DURATION = 5; // minutes, used for deep link when opening from reminder
 
 type Platform = "macos" | "windows" | "linux";
 
@@ -142,7 +137,7 @@ export function NotificationSettings() {
             time: settings.notificationTime,
             days: settings.notificationDays,
             message: settings.notificationMessage,
-            duration: settings.practiceDuration,
+            duration: DEFAULT_REMINDER_DURATION,
           });
 
           if (result.success) {
@@ -193,7 +188,7 @@ export function NotificationSettings() {
           time: settings.notificationTime,
           days: newDays,
           message: settings.notificationMessage,
-          duration: settings.practiceDuration,
+          duration: DEFAULT_REMINDER_DURATION,
         });
       } catch (err) {
         console.error("Failed to reschedule:", err);
@@ -201,11 +196,6 @@ export function NotificationSettings() {
         setIsScheduling(false);
       }
     }
-  };
-
-  const handleDurationChange = async (duration: number) => {
-    dispatch({ type: "SET_PRACTICE_DURATION", duration });
-    // Settings are synced to Supabase via settings_hook
   };
 
   // Show a message if not in Electron
@@ -352,35 +342,6 @@ export function NotificationSettings() {
             </button>
           ))}
         </div>
-      </Field>
-
-      {/* Practice Duration */}
-      <Field as="div" className="flex items-center justify-between">
-        <span className="flex flex-grow flex-col">
-          <Label className="text-sm font-medium text-white">
-            Practice Duration
-          </Label>
-          <Description className="text-sm text-gray-500">
-            How long should each session be?
-          </Description>
-        </span>
-        <Select
-          value={settings.practiceDuration}
-          onChange={(e) => handleDurationChange(Number(e.target.value))}
-          disabled={!settings.notificationsEnabled || isScheduling}
-          className={clsx(
-            "block w-32 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
-            "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
-            "*:text-black",
-            (!settings.notificationsEnabled || isScheduling) && "opacity-50"
-          )}
-        >
-          {DURATIONS.map((d) => (
-            <option key={d.value} value={d.value}>
-              {d.label}
-            </option>
-          ))}
-        </Select>
       </Field>
 
       {/* Status indicator */}

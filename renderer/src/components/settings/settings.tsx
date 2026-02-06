@@ -15,6 +15,8 @@ import KeyboardSelect from "../KeyboardSelect";
 import clsx from "clsx";
 import { NotificationSettings } from "./NotificationSettings";
 import { CalendarSettings } from "./CalendarSettings";
+import { StartupSettings } from "./StartupSettings";
+import { DebugSettings } from "./DebugSettings";
 
 export const languages = [
   {
@@ -235,6 +237,16 @@ const Settings = () => {
         <NotificationSettings />
         <CalendarSettings />
       </div>
+
+      {/* Startup Section */}
+      <hr className="border-white/10" />
+      
+      <div className="grid grid-cols-2 gap-10">
+        <StartupSettings />
+      </div>
+
+      {/* Debug Section - Only visible in dev mode */}
+      <DebugSettings />
     </div>
   );
 };

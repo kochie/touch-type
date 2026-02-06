@@ -14,7 +14,7 @@ import {
 import { faSparkles } from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
-import { Suspense, useLayoutEffect, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { defaultSettings, useSettings } from "@/lib/settings_hook";
@@ -50,9 +50,29 @@ export default function Menu({
 
   const premium = plan?.billing_plan === "premium"
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Check initial scroll position
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <div className="top-0 sticky w-full">
-      <div className="flex justify-between pt-8 mx-8">
+    <div
+      className={clsx(
+        "top-0 sticky w-full z-50 transition-all duration-300 ease-in-out",
+        isScrolled
+          ? "bg-[#2a2b2d]/95 backdrop-blur-sm shadow-lg"
+          : "bg-transparent"
+      )}
+    >
+      <div className="flex justify-between pt-8 mx-8 pb-4">
         <div className="flex gap-4">
           <div className="hover:animate-pulse" title="Stats">
             <Link href={"/stats"}>

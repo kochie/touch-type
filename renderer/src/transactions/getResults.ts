@@ -2,7 +2,7 @@
 // This file is kept for reference but results are now fetched directly in result-provider.tsx
 
 import { getSupabaseClient } from "@/lib/supabase-client";
-import type { Result } from "@/types/supabase";
+import { Tables } from "@/types/supabase";
 
 export interface GetResultsParams {
   since?: string;
@@ -11,7 +11,7 @@ export interface GetResultsParams {
 }
 
 export interface GetResultsResponse {
-  results: Result[];
+  results: Tables<"results">[];
   hasMore: boolean;
 }
 

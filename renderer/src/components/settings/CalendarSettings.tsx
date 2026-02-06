@@ -234,7 +234,7 @@ export function CalendarSettings() {
             onClick={handleDownloadICS}
             disabled={days.length === 0 || isDownloading}
             className={clsx(
-              "flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-white transition-colors",
+              "cursor-pointer flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-white transition-colors",
               days.length > 0
                 ? "bg-white/10 hover:bg-white/20"
                 : "bg-white/5 opacity-50 cursor-not-allowed"
@@ -248,7 +248,7 @@ export function CalendarSettings() {
             onClick={handleGoogleCalendar}
             disabled={days.length === 0}
             className={clsx(
-              "flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-white transition-colors",
+              "cursor-pointer flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-white transition-colors",
               days.length > 0
                 ? "bg-blue-600 hover:bg-blue-700"
                 : "bg-blue-600/50 opacity-50 cursor-not-allowed"
@@ -262,7 +262,7 @@ export function CalendarSettings() {
             onClick={handleOutlookCalendar}
             disabled={days.length === 0}
             className={clsx(
-              "flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-white transition-colors",
+              "cursor-pointer flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-white transition-colors",
               days.length > 0
                 ? "bg-[#0078d4] hover:bg-[#106ebe]"
                 : "bg-[#0078d4]/50 opacity-50 cursor-not-allowed"

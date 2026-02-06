@@ -64,6 +64,36 @@ export async function registerForPushNotifications(): Promise<PushRegistrationRe
 }
 
 /**
+ * Check if the app is running in a development/unsigned environment
+ * where APNS won't work due to bundle identifier mismatch
+ */
+function isUnsignedBuild(): boolean {
+  // Check if running in development mode (not packaged at all)
+  const isDev = !app.isPackaged;
+  
+  // Check if MAS build - these always work with APNS
+  const isMas = !!process.mas;
+  
+  log.info(`APNS environment check - isPackaged: ${app.isPackaged}, isDev: ${isDev}, isMas: ${isMas}`);
+  
+  // APNS definitely works in:
+  // 1. MAS builds (always sandboxed and signed)
+  if (isMas) {
+    return false; // Not unsigned, APNS will work
+  }
+  
+  // 2. Development mode (not packaged) - APNS won't work
+  if (isDev) {
+    return true;
+  }
+  
+  // 3. For packaged non-MAS builds, we can't easily detect if it's signed
+  // We'll attempt APNS and let it fail gracefully with a helpful error
+  // The error handler below will catch "Bundle identifier mismatch"
+  return false;
+}
+
+/**
  * Register for Apple Push Notification Service (macOS)
  */
 async function registerAPNS(): Promise<PushRegistrationResult> {
@@ -80,8 +110,20 @@ async function registerAPNS(): Promise<PushRegistrationResult> {
         return;
       }
 
+      // Check if running unsigned - APNS won't work
+      if (isUnsignedBuild()) {
+        log.warn('APNS not available in unsigned/development builds - bundle identifier mismatch will occur');
+        log.info('For local development, use local notifications instead');
+        resolve({
+          success: false,
+          platform: 'macos',
+          error: 'APNS requires a signed build. Push notifications are not available in development mode.',
+        });
+        return;
+      }
+
       // Set up event handlers before registering
-      pushNotifications.on('received-apns-notification', (event, userInfo) => {
+      pushNotifications.on('received-apns-notification', (_event, userInfo) => {
         log.info('Received APNS notification:', userInfo);
         
         const payload: PushNotificationPayload = {
@@ -91,20 +133,18 @@ async function registerAPNS(): Promise<PushRegistrationResult> {
           body: userInfo.aps?.alert?.body,
         };
 
-        // Show notification if app is in background
-        if (!app.isHidden || app.isHidden()) {
-          showLocalNotification(
-            payload.title || 'Touch Typer',
-            payload.body || 'Time to practice!'
-          );
-        }
-
+        // Always trigger the notification handler
+        // The handler will show a system notification and handle user interaction
         if (onPushNotificationReceived) {
           onPushNotificationReceived(payload);
         }
       });
 
+      // Check current notification permission status
+      log.info('Notification supported:', Notification.isSupported());
+
       // Register for APNS
+      log.info('Registering for APNS notifications...');
       pushNotifications.registerForAPNSNotifications().then((token) => {
         log.info('APNS registration successful, token:', token.substring(0, 20) + '...');
         resolve({
@@ -113,11 +153,22 @@ async function registerAPNS(): Promise<PushRegistrationResult> {
           token,
         });
       }).catch((error) => {
+        const errorStr = error.message || String(error);
         log.error('APNS registration failed:', error);
+        
+        // Provide helpful error message for common issues
+        let userFriendlyError = errorStr;
+        if (errorStr.includes('Bundle identifier mismatch') || errorStr.includes('NSOSStatusErrorDomain')) {
+          userFriendlyError = 'Push notifications require a properly signed app. ' +
+            'This error is expected for unsigned/development builds. ' +
+            'To test push notifications, build with a valid code signing identity and provisioning profile.';
+          log.info('Bundle identifier mismatch - this is expected for unsigned builds');
+        }
+        
         resolve({
           success: false,
           platform: 'macos',
-          error: error.message || String(error),
+          error: userFriendlyError,
         });
       });
     } catch (error) {
@@ -205,20 +256,6 @@ export async function unregisterFromPushNotifications(): Promise<void> {
   }
   
   // WNS doesn't have an explicit unregister - just stop sending to the channel
-}
-
-/**
- * Show a local notification (used when push is received while app is in background)
- */
-function showLocalNotification(title: string, body: string): void {
-  if (Notification.isSupported()) {
-    const notification = new Notification({
-      title,
-      body,
-      silent: false,
-    });
-    notification.show();
-  }
 }
 
 /**

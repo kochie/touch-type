@@ -40,6 +40,24 @@ export interface PushNotificationPayload {
   body?: string;
 }
 
+export interface LoginItemSettings {
+  openAtLogin: boolean;
+  openAsHidden: boolean;
+  startMinimized: boolean;
+}
+
+export interface StartupResult {
+  success: boolean;
+  error?: string;
+}
+
+export interface DebugInfo {
+  isDev: boolean;
+  platform: NodeJS.Platform;
+  electronVersion: string;
+  nodeVersion: string;
+}
+
 export interface DeepLinkData {
   action: "practice" | "settings" | "stats";
   duration?: number;
@@ -75,6 +93,13 @@ declare global {
       cancelNotification: () => Promise<ScheduleResult>;
       requestNotificationPermission: () => Promise<boolean>;
       getNotificationStatus: () => Promise<boolean>;
+      // Startup settings
+      getLoginItemSettings: () => Promise<LoginItemSettings>;
+      setLaunchAtStartup: (enabled: boolean) => Promise<StartupResult>;
+      setStartMinimized: (enabled: boolean) => Promise<StartupResult>;
+      getStartMinimized: () => Promise<boolean>;
+      // Debug/Dev mode
+      getDebugInfo: () => Promise<DebugInfo>;
     };
   }
 }
@@ -126,4 +151,21 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   getNotificationStatus: (): Promise<boolean> =>
     ipcRenderer.invoke("getNotificationStatus"),
+
+  // Startup settings
+  getLoginItemSettings: (): Promise<LoginItemSettings> =>
+    ipcRenderer.invoke("getLoginItemSettings"),
+
+  setLaunchAtStartup: (enabled: boolean): Promise<StartupResult> =>
+    ipcRenderer.invoke("setLaunchAtStartup", enabled),
+
+  setStartMinimized: (enabled: boolean): Promise<StartupResult> =>
+    ipcRenderer.invoke("setStartMinimized", enabled),
+
+  getStartMinimized: (): Promise<boolean> =>
+    ipcRenderer.invoke("getStartMinimized"),
+
+  // Debug/Dev mode
+  getDebugInfo: (): Promise<DebugInfo> =>
+    ipcRenderer.invoke("getDebugInfo"),
 });

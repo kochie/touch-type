@@ -151,7 +151,12 @@ jobs:
           echo "Pre-release: ${{ github.event.release.prerelease }}"
           echo "Run number: ${{ github.run_number }}"
 
-          pnpm run build+release 
+          # Use platform-specific build commands to specify targets explicitly
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            pnpm run build+release:mac
+          else
+            pnpm run build+release
+          fi
         env:
           # macOS notarization API key
           APPLE_API_KEY: private_keys/AuthKey_${{ secrets.api_key_id }}.p8

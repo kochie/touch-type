@@ -21,6 +21,7 @@ import {
   PushRegistrationResult,
   PushNotificationPayload,
 } from "./push-registration";
+import { isWindowVisible, showWindowFromTray } from "./tray";
 
 const execAsync = promisify(exec);
 
@@ -65,9 +66,7 @@ export function setupNotificationScheduler(window: BrowserWindow): void {
   mainWindow = window;
 
   // Set up push notification handler
-  setPushNotificationHandler((payload: PushNotificationPayload) => {
-    handlePushNotification(payload);
-  });
+  setPushNotificationHandler(handlePushNotification);
 
   // Register for push notifications (get device token)
   ipcMain.handle("registerPushNotifications", async (): Promise<PushRegistrationResult> => {
@@ -192,28 +191,53 @@ export function setupNotificationScheduler(window: BrowserWindow): void {
 
 /**
  * Handle incoming push notification
+ * Shows a system notification - only brings app to front when user clicks it
  */
 function handlePushNotification(payload: PushNotificationPayload): void {
   log.info("Handling push notification:", payload);
 
-  // Show and focus the window
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) {
-      mainWindow.restore();
-    }
-    mainWindow.show();
-    mainWindow.focus();
-
-    // Send to renderer process
+  // If window is visible and focused, send directly to renderer
+  // Otherwise show a system notification
+  if (mainWindow && isWindowVisible(mainWindow) && mainWindow.isFocused()) {
+    log.info("Window is visible and focused, sending to renderer");
     mainWindow.webContents.send("push-notification", payload);
+    return;
+  }
 
-    // If action is practice, navigate to practice
-    if (payload.action === "practice") {
-      mainWindow.webContents.send("deep-link", {
-        action: "practice",
-        duration: payload.duration,
-      });
-    }
+  // Show a system notification (app is minimized to tray or not focused)
+  if (Notification.isSupported()) {
+    const notification = new Notification({
+      title: payload.title || "Touch Typer",
+      body: payload.body || "Time to practice your typing!",
+      // icon: join(__dirname, "../build/app-icon.icns"),
+
+      silent: false,
+    });
+
+    
+    // Show and focus the window when user clicks the notification
+    notification.on("click", () => {
+      log.info("User clicked notification, bringing app to front");
+      if (mainWindow) {
+        showWindowFromTray(mainWindow);
+
+        // Send to renderer process
+        mainWindow.webContents.send("push-notification", payload);
+
+        // If action is practice, navigate to practice
+        if (payload.action === "practice") {
+          mainWindow.webContents.send("deep-link", {
+            action: "practice",
+            duration: payload.duration,
+          });
+        }
+      }
+    });
+
+    notification.show();
+    log.info("Displayed system notification (app was in tray or background)");
+  } else {
+    log.warn("Notifications not supported on this system");
   }
 }
 
