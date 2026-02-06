@@ -70,7 +70,10 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          # Use copy so electron-builder can read package.json in .pnpm (avoids ENOENT when resolving symlinks to store)
+          echo "package-import-method=copy" >> .npmrc
+          pnpm install
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
           APPLE_API_KEY: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
