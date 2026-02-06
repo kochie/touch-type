@@ -2,14 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Field, Label, Description } from "@headlessui/react";
+import type { DebugInfo } from "../../../types/electron";
 import Button from "../Button";
-
-interface DebugInfo {
-  isDev: boolean;
-  platform: string;
-  electronVersion: string;
-  nodeVersion: string;
-}
 
 export function DebugSettings() {
   const [isElectron, setIsElectron] = useState(false);

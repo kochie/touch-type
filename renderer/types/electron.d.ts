@@ -43,6 +43,13 @@ export interface DeepLinkData {
   mode?: "timed" | "words" | "endless";
 }
 
+export interface DebugInfo {
+  isDev: boolean;
+  platform: string;
+  electronVersion: string;
+  nodeVersion: string;
+}
+
 export interface LoginItemSettings {
   openAtLogin: boolean;
   openAsHidden: boolean;
@@ -58,6 +65,7 @@ export interface ElectronAPI {
   getWordSet: (language: string) => Promise<Uint8Array>;
   getProducts: () => Promise<Electron.Product[]>;
   isMas: () => Promise<boolean>;
+  getDebugInfo: () => Promise<DebugInfo>;
   // Deep linking
   onDeepLink: (callback: (data: DeepLinkData) => void) => void;
   onNavigate: (callback: (path: string) => void) => void;
