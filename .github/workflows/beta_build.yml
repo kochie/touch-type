@@ -134,6 +134,7 @@ jobs:
           NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
 
       - name: Build/Release Electron app (beta channel, publish always)
+        shell: bash
         run: |
           echo "Building for ${{ matrix.os }}, CHANNEL=beta, publish=always"
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
