@@ -35,7 +35,6 @@ jobs:
 
       - name: Set beta version
         run: |
-          RUN_NUM="${{ github.run_number }}"
           node -e "
             const fs = require('fs');
             const p = require('./package.json');
