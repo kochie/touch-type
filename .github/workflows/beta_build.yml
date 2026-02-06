@@ -139,7 +139,7 @@ jobs:
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             pnpm exec electron-builder --config electron-builder.ts --mac default --mac mas --publish always
           else
-            pnpm exec electron-builder --config electron-builder.ts -mlw --publish always
+            pnpm exec electron-builder --config electron-builder.ts -lw --publish always
           fi
         env:
           APPLE_API_KEY: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
