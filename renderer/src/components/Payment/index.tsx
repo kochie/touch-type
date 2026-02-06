@@ -16,20 +16,14 @@ export function StripeCheckout() {
   const supabase = useSupabaseClient();
 
   const fetchClientSecret = useCallback(async () => {
-    // Get the access token from Supabase
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token ?? "";
 
-    // Create a Checkout Session using Supabase Edge Function
-    return fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-checkout-session`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => data.clientSecret);
+    const {data, error} = await supabase.functions.invoke('create-checkout-session');
+
+    if (error) {
+      throw error;
+    }
+
+    return data.clientSecret;
   }, [supabase]);
 
   const options = {fetchClientSecret};

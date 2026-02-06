@@ -1,8 +1,8 @@
 // Supabase mutation for adding a result
 import { getSupabaseClient } from "@/lib/supabase-client";
-import type { ResultInsert, Result } from "@/types/supabase";
+import { Tables } from "@/types/supabase";
 
-export async function putResult(result: Omit<ResultInsert, 'user_id'>): Promise<Result> {
+export async function putResult(result: Omit<Tables<"results">, 'user_id'>): Promise<Tables<"results">> {
   const supabase = getSupabaseClient();
 
   const { data: { user } } = await supabase.auth.getUser();

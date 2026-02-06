@@ -23,6 +23,12 @@ import serve from "electron-serve";
 import "./in-app-purchase"
 import { getProducts } from "./in-app-purchase";
 
+// Deep linking, notifications, and tray support
+import { setupDeepLinkHandlers, setMainWindow, handleInitialDeepLink } from "./deep-link";
+import { setupNotificationScheduler } from "./notification-scheduler";
+import { setupTray, setIsQuitting } from "./tray";
+import { setupStartupHandlers, shouldStartMinimized } from "./startup";
+
 // import { fileURLToPath } from "node:url";
 
 // const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +43,13 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = "info";
 log.info("App starting...");
 
+// Setup deep link handlers before app is ready
+// This returns false if another instance is running
+const shouldContinue = setupDeepLinkHandlers();
+if (!shouldContinue) {
+  // Another instance is already running, quit this one
+  process.exit(0);
+}
 
 async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
   try {
@@ -52,20 +65,49 @@ async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
 const loadURL = serve({ directory: "renderer/out" });
 
 // Prepare the renderer once the app is ready
+// Store isDev status globally after import
+let isDevMode = false;
+
 app.on("ready", async () => {
+  // Import isDev at app ready to avoid issues
+  const isDev = await import("electron-is-dev");
+  isDevMode = isDev.default;
+
   ipcMain.handle("getWordSet", handleWordSet);
   ipcMain.handle("getProducts", getProducts)
   ipcMain.handle("isMas", () => !!process.mas);
+  
+  // Debug info handler
+  ipcMain.handle("getDebugInfo", () => ({
+    isDev: isDevMode,
+    platform: process.platform,
+    electronVersion: process.versions.electron,
+    nodeVersion: process.versions.node,
+  }));
+
+  // Setup startup handlers for launch at login
+  setupStartupHandlers();
+
+  // Use beta/alpha update channel when app version is a prerelease
+  const appVersion = app.getVersion();
+  if (appVersion.includes("-beta")) {
+    autoUpdater.channel = "beta";
+  } else if (appVersion.includes("-alpha")) {
+    autoUpdater.channel = "alpha";
+  }
 
   autoUpdater.checkForUpdatesAndNotify();
 
-  
+  // Check if we should start minimized (hidden in tray)
+  const startHidden = shouldStartMinimized();
+  log.info("Starting app:", { startHidden });
 
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 1280,
     autoHideMenuBar: true,
+    show: !startHidden, // Don't show window if starting minimized
     // transparent: true,
     // frame: false,
     vibrancy: "under-window",
@@ -92,10 +134,20 @@ app.on("ready", async () => {
     return { action: "deny" }; // Prevent the app from opening the URL.
   });
 
-  // mainWindow.setVibrancy("under-window");
-  const isDev = await import("electron-is-dev");
+  // Set the main window reference for deep linking
+  setMainWindow(mainWindow);
 
-  if (isDev.default) {
+  // Setup system tray
+  setupTray(mainWindow);
+
+  // Setup notification scheduler IPC handlers
+  setupNotificationScheduler(mainWindow);
+
+  // Note: Even when starting hidden, we keep the dock icon visible on macOS
+  // (like Slack). Clicking the dock icon will show the window.
+
+  // mainWindow.setVibrancy("under-window");
+  if (isDevMode) {
     console.log("Running in development");
 
     await prepareNext("./renderer");
@@ -103,6 +155,11 @@ app.on("ready", async () => {
   } else {
     await loadURL(mainWindow);
   }
+
+  // Handle deep link if app was launched with one
+  mainWindow.webContents.once("did-finish-load", () => {
+    handleInitialDeepLink();
+  });
 
   // const url = isDev.default
   //   ? "http://localhost:8000/"
@@ -145,5 +202,15 @@ autoUpdater.on("error", (message) => {
   console.error(message);
 });
 
-// Quit the app once all windows are closed
-app.on("window-all-closed", app.quit);
+// Handle window-all-closed event
+// On all platforms, the app stays running in the tray when windows are closed
+// The app only quits when the user explicitly quits from the tray menu
+app.on("window-all-closed", () => {
+  // Don't quit - the app continues running in the system tray
+  // Users can quit explicitly from the tray context menu
+});
+
+// Properly quit when the user explicitly quits
+app.on("before-quit", () => {
+  setIsQuitting(true);
+});

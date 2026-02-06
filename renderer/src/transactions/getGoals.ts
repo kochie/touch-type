@@ -1,15 +1,15 @@
 // Supabase query for getting all goals
+import { Tables } from "@/types/supabase";
 import { getGoal } from "./getGoal";
-import type { Goal } from "@/types/supabase";
 
 const GOAL_CATEGORIES = ['speed', 'accuracy', 'ergonomics', 'practice', 'rhythm'];
 
 export interface AllGoals {
-  speedGoal: Goal | null;
-  accuracyGoal: Goal | null;
-  ergonomicsGoal: Goal | null;
-  practiceGoal: Goal | null;
-  rhythmGoal: Goal | null;
+  speedGoal: Tables<"goals"> | null;
+  accuracyGoal: Tables<"goals"> | null;
+  ergonomicsGoal: Tables<"goals"> | null;
+  practiceGoal: Tables<"goals"> | null;
+  rhythmGoal: Tables<"goals"> | null;
 }
 
 export async function getAllGoals(): Promise<AllGoals> {

@@ -67,6 +67,39 @@ export type Database = {
         }
         Relationships: []
       }
+      device_tokens: {
+        Row: {
+          channel_uri: string | null
+          created_at: string
+          device_name: string | null
+          id: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_uri?: string | null
+          created_at?: string
+          device_name?: string | null
+          id?: string
+          platform: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_uri?: string | null
+          created_at?: string
+          device_name?: string | null
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           category: string
@@ -119,6 +152,7 @@ export type Database = {
           id: string
           incorrect: number
           keyboard: string
+          language: string | null
           level: string
           numbers: boolean | null
           punctuation: boolean | null
@@ -135,6 +169,7 @@ export type Database = {
           id?: string
           incorrect: number
           keyboard: string
+          language?: string | null
           level: string
           numbers?: boolean | null
           punctuation?: boolean | null
@@ -151,6 +186,7 @@ export type Database = {
           id?: string
           incorrect?: number
           keyboard?: string
+          language?: string | null
           level?: string
           numbers?: boolean | null
           punctuation?: boolean | null
@@ -254,9 +290,15 @@ export type Database = {
           keyboard_name: string | null
           language: string | null
           level_name: string | null
+          notification_days: string[] | null
+          notification_message: string | null
+          notification_time: string | null
+          notifications_enabled: boolean | null
           numbers: boolean | null
+          practice_duration: number | null
           publish_to_leaderboard: boolean | null
           punctuation: boolean | null
+          schedule_enabled: boolean | null
           theme: string | null
           updated_at: string | null
           user_id: string
@@ -271,9 +313,15 @@ export type Database = {
           keyboard_name?: string | null
           language?: string | null
           level_name?: string | null
+          notification_days?: string[] | null
+          notification_message?: string | null
+          notification_time?: string | null
+          notifications_enabled?: boolean | null
           numbers?: boolean | null
+          practice_duration?: number | null
           publish_to_leaderboard?: boolean | null
           punctuation?: boolean | null
+          schedule_enabled?: boolean | null
           theme?: string | null
           updated_at?: string | null
           user_id: string
@@ -288,9 +336,15 @@ export type Database = {
           keyboard_name?: string | null
           language?: string | null
           level_name?: string | null
+          notification_days?: string[] | null
+          notification_message?: string | null
+          notification_time?: string | null
+          notifications_enabled?: boolean | null
           numbers?: boolean | null
+          practice_duration?: number | null
           publish_to_leaderboard?: boolean | null
           punctuation?: boolean | null
+          schedule_enabled?: boolean | null
           theme?: string | null
           updated_at?: string | null
           user_id?: string
@@ -304,9 +358,12 @@ export type Database = {
           auto_renew: boolean | null
           billing_period: string | null
           billing_plan: string | null
+          billing_service: string | null
           created_at: string | null
           id: string
           next_billing_date: string | null
+          payment_status: string | null
+          session_id: string | null
           status: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -318,9 +375,12 @@ export type Database = {
           auto_renew?: boolean | null
           billing_period?: string | null
           billing_plan?: string | null
+          billing_service?: string | null
           created_at?: string | null
           id?: string
           next_billing_date?: string | null
+          payment_status?: string | null
+          session_id?: string | null
           status?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -332,13 +392,37 @@ export type Database = {
           auto_renew?: boolean | null
           billing_period?: string | null
           billing_plan?: string | null
+          billing_service?: string | null
           created_at?: string | null
           id?: string
           next_billing_date?: string | null
+          payment_status?: string | null
+          session_id?: string | null
           status?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          transaction_id?: string
           user_id?: string
         }
         Relationships: []
@@ -368,7 +452,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      trigger_send_notifications: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

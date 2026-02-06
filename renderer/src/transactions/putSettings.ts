@@ -1,6 +1,6 @@
 // Supabase mutation for updating settings
 import { getSupabaseClient } from "@/lib/supabase-client";
-import type { SettingsUpdate, Settings } from "@/types/supabase";
+import { Tables } from "@/types/supabase";
 
 export interface InputSettings {
   analytics: boolean;
@@ -16,7 +16,7 @@ export interface InputSettings {
   whatsNewOnStartup: boolean;
 }
 
-export async function updateSettings(settings: InputSettings): Promise<Settings> {
+export async function updateSettings(settings: InputSettings): Promise<Tables<"settings">> {
   const supabase = getSupabaseClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -25,7 +25,7 @@ export async function updateSettings(settings: InputSettings): Promise<Settings>
   }
 
   // Convert camelCase to snake_case
-  const dbSettings: SettingsUpdate = {
+  const dbSettings = {
     user_id: user.id,
     analytics: settings.analytics,
     blinker: settings.blinker,

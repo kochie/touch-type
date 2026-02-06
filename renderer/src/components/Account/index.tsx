@@ -8,7 +8,7 @@ import { faArrowsRotate } from "@fortawesome/pro-duotone-svg-icons";
 import { useMas } from "@/lib/mas_hook";
 import clsx from "clsx";
 import { useSupabase } from "@/lib/supabase-provider";
-import type { Profile, Subscription } from "@/types/supabase";
+import { Tables } from "@/types/supabase";
 
 enum PlanType {
   FREE = "free",
@@ -31,7 +31,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     name: "",
     preferred_username: "",
   });
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscription, setSubscription] = useState<Tables<"subscriptions"> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   

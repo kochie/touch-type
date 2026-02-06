@@ -1,6 +1,5 @@
 // Supabase query for getting subscription
 import { getSupabaseClient } from "@/lib/supabase-client";
-import type { Subscription } from "@/types/supabase";
 
 export interface Plan {
   billing_plan?: string | null;
