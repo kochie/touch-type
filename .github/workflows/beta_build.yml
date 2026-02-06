@@ -89,8 +89,8 @@ jobs:
       - name: Set up Xcode
         if: startsWith(matrix.os, 'macos')
         run: |
-          # Use Xcode 16.2 - newer versions (26.x) have ibtoold crashes during MAS asset catalog compilation
-          # sudo xcode-select -s /Applications/Xcode_16.2.app
+          # electron-builder 26.x requires actool 26+ (Xcode 26) for .icon asset catalog compilation
+          sudo xcode-select -s /Applications/Xcode_26.2.app
           xcodebuild -runFirstLaunch
 
       - name: Prepare for app notarization
