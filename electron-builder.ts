@@ -199,6 +199,8 @@ const config: Configuration = {
       provider: "github",
       owner: "kochie",
       repo: "touch-type",
+      channel,
+      releaseType: channel === "beta" || channel === "alpha" ? "prerelease" : "release",
     }
   ],
 };

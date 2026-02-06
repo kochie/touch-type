@@ -1,46 +1,24 @@
-name: Building Release
+name: Beta Build
 
 on:
+  push:
+    branches:
+      - beta
+      - develop
   workflow_dispatch:
     inputs:
-      release:
-        description: 'Release the app'
+      branch:
+        description: "Branch or ref to build"
+        required: true
+        default: "beta"
+        type: string
+      upload_to_stores:
+        description: "Upload to App Store Connect / Windows Dev Center"
         required: false
         default: false
         type: boolean
-      channel:
-        description: 'Channel to release to'
-        required: false
-        default: 'edge'
-        type: choice
-        options:
-          - 'edge'
-          - 'beta'
-          - 'alpha'
-          - 'stable'
-      
-  # release:
-  #   types: [created]
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+-canary.[0-9]+"
 
 jobs:
-  make_release:
-    name: Make Github Release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ncipollo/release-action@v1
-        with:
-          skipIfReleaseExists: true
-          draft: true
-          generateReleaseNotes: true
-          prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
-
-
   build:
     name: Build and Upload
     runs-on: ${{ matrix.os }}
@@ -51,15 +29,31 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
 
-      - uses: pnpm/action-setup@v2
+      - name: Set beta version
+        run: |
+          RUN_NUM="${{ github.run_number }}"
+          node -e "
+            const fs = require('fs');
+            const p = require('./package.json');
+            const base = p.version.replace(/-beta\.\d+$|-alpha\.\d+$/,'');
+            p.version = base + '-beta.' + process.env.RUN_NUM;
+            fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
+            console.log('Set version to', p.version);
+          "
+        env:
+          RUN_NUM: ${{ github.run_number }}
+
+      - uses: pnpm/action-setup@v4
         with:
           version: latest
           run_install: false
 
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v3
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: latest
           cache: pnpm
@@ -73,7 +67,7 @@ jobs:
           {
             echo 'STORE_PATH<<EOF'
             pnpm store path --silent
-            echo EOF 
+            echo EOF
           } >> $GITHUB_ENV
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
@@ -90,12 +84,9 @@ jobs:
       - uses: actions/cache@v4
         name: Setup cache for next.js
         with:
-          # See here for caching with `yarn` https://github.com/actions/cache/blob/main/examples.md#node---yarn or you can leverage caching with actions/setup-node https://github.com/actions/setup-node
           path: |
             ${{ github.workspace }}/.next/cache
-          # Generate a new cache whenever packages or source files change.
           key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
-          # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
 
@@ -106,7 +97,6 @@ jobs:
 
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v1
-        # Only install Snapcraft on Ubuntu
         if: startsWith(matrix.os, 'ubuntu')
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
@@ -123,54 +113,41 @@ jobs:
           PP_PATH: build/mas-touchtyper.provisionprofile
           API_KEY_BASE64: ${{ secrets.api_key }}
           API_KEY_PATH: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
-        # Import Apple API key for app notarization on macOS
         run: |
           mkdir -p private_keys
           echo -n "$API_KEY_BASE64" | base64 --decode --output $API_KEY_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
-      
+
       - name: Build Electron app
-        run: |
-          pnpm run build
+        run: pnpm run build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
-
           NEXT_PUBLIC_USERPOOL_ID: ap-southeast-2_eZiuIIaCB
           NEXT_PUBLIC_USERPOOL_CLIENT_ID: ddodg8qtnqvjhtg876uc9g74c
           NEXT_PUBLIC_API_URL: https://api-prod.touch-typer.kochie.io/graphql
           NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
 
-      - name: Build/Release Electron app
+      - name: Build/Release Electron app (beta channel, publish always)
         run: |
-          echo "Building for ${{ matrix.os }}"
-          echo "Release: ${{ startsWith(github.ref, 'refs/tags') }}"
-          echo "Pre-release: ${{ github.event.release.prerelease }}"
-          echo "Run number: ${{ github.run_number }}"
-
-          # Use platform-specific build commands to specify targets explicitly
+          echo "Building for ${{ matrix.os }}, CHANNEL=beta, publish=always"
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            pnpm run build+release:mac
+            pnpm exec electron-builder --config electron-builder.ts --mac default --mac mas --publish always
           else
-            pnpm run build+release
+            pnpm exec electron-builder --config electron-builder.ts -mlw --publish always
           fi
         env:
-          # macOS notarization API key
           APPLE_API_KEY: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
           APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
           APPLE_API_ISSUER: ${{ secrets.api_key_issuer_id }}
-
           MAC_LINK: ${{ secrets.mac_certs }}
           MAC_KEY_PASSWORD: ${{ secrets.mac_certs_password }}
-          
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
           BUNDLE_VERSION: ${{ github.run_number }}
-          CHANNEL: ${{ github.event.inputs.channel || (contains(github.ref, 'beta') && 'beta') || (contains(github.ref, 'alpha') && 'alpha') || 'stable' }}
-
+          CHANNEL: beta
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
@@ -178,14 +155,14 @@ jobs:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
       - name: Upload to App Store Connect
-        if: startsWith(matrix.os, 'macos')
+        if: startsWith(matrix.os, 'macos') && github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_stores == 'true'
         run: |
           version=$(jq -r .version package.json)
-          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }} 
+          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
           xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
 
       - name: Upload to Windows Dev Center
-        if: startsWith(matrix.os, 'windows')
+        if: startsWith(matrix.os, 'windows') && github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_stores == 'true'
         run: |
           $jsonContent = Get-Content -Path "$env:GITHUB_WORKSPACE\package.json" -Raw
           $jsonObject = $jsonContent | ConvertFrom-Json
@@ -199,7 +176,7 @@ jobs:
           $credential = New-Object System.Management.Automation.PSCredential $env:APPX_UPLOAD_USERNAME, $password
           Set-StoreBrokerAuthentication -TenantId $env:APPX_UPLOAD_TENANT_ID -Credential $credential
 
-          New-SubmissionPackage -ConfigPath build\store_broker\SBConfig.json -AppxPath $appx 
+          New-SubmissionPackage -ConfigPath build\store_broker\SBConfig.json -AppxPath $appx
 
           Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath "build/submission.zip" -Force -ReplacePackages -UpdatePublishModeAndVisibility
         env:

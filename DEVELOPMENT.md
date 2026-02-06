@@ -356,6 +356,10 @@ If your build fails, verify:
 - [ ] Node version is 18+ (`node --version`)
 - [ ] No previous build artifacts causing issues (`pnpm clean`)
 
+## Notification System (Windows, macOS, Linux)
+
+For building and testing the notification system (APNS, WNS, and Linux cron) on each platform, see **[docs/NOTIFICATION_SYSTEM.md](docs/NOTIFICATION_SYSTEM.md)**.
+
 ## Local Supabase Development
 
 ### Starting Supabase Locally
@@ -455,6 +459,16 @@ pnpm dev
 ```shell
 pnpm build
 ```
+
+## Beta Builds on Branches
+
+Beta installers can be built from the `beta` or `develop` branch (or any branch via manual run) without creating a tag. These builds are published as **GitHub pre-releases** and use the **beta** update channel so they do not replace the "Latest release."
+
+- **Trigger**: Push to `beta` or `develop`, or **Actions → Beta Build → Run workflow** and choose a branch.
+- **Version**: Set automatically to e.g. `2.1.0-beta.<run_number>`.
+- **Store uploads**: Skipped by default; enable **Upload to App Store Connect / Windows Dev Center** in the manual workflow run when you want to push a specific build to TestFlight or the Windows Store.
+
+See **[docs/BETA_BUILDS.md](docs/BETA_BUILDS.md)** for full details (versioning, pre-releases, update channel, and store uploads).
 
 ## Creating a Release
 

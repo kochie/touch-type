@@ -88,6 +88,14 @@ app.on("ready", async () => {
   // Setup startup handlers for launch at login
   setupStartupHandlers();
 
+  // Use beta/alpha update channel when app version is a prerelease
+  const appVersion = app.getVersion();
+  if (appVersion.includes("-beta")) {
+    autoUpdater.channel = "beta";
+  } else if (appVersion.includes("-alpha")) {
+    autoUpdater.channel = "alpha";
+  }
+
   autoUpdater.checkForUpdatesAndNotify();
 
   // Check if we should start minimized (hidden in tray)
