@@ -167,6 +167,12 @@ const config: Configuration = {
     icon: "build/app-logo-linux.png",
     category: "Utility",
     mimeTypes: ["x-scheme-handler/touchtyper"],
+    publish: {
+      provider: "snapStore",
+      repo: "touch-typer",
+      channels: [channel],
+      publishAutoUpdate: true,
+    }
   },
   win: {
     icon: "build/app-logo-win.png",
@@ -179,16 +185,7 @@ const config: Configuration = {
       },
     ],
   },
-  snap: {
-    publish: [
-      {
-        provider: "snapStore",
-        repo: "touch-typer",
-        channels: [channel],
-        publishAutoUpdate: true,
-      },
-    ],
-  },
+
   nsis: {
     oneClick: false,
   },
