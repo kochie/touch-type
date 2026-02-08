@@ -37,31 +37,31 @@ function isDevBuild(): boolean {
   return isDev;
 }
 
+function isCIBuild(): boolean {
+  return process.env["CI"] === "true";
+}
+
 /**
  * Determine notarization settings based on available credentials
- * 
+ *
+ * Notarization applies only to the mac "default" target (dmg/dir). electron-builder
+ * skips notarization for the MAS target automatically, so we enable it whenever
+ * credentials are present when building --mac default (with or without --mac mas).
+ *
  * For notarization to work, you need EITHER:
  * 1. Apple API Key (recommended):
  *    - APPLE_API_KEY: path to .p8 file
  *    - APPLE_API_KEY_ID: key ID from App Store Connect
  *    - APPLE_API_ISSUER: issuer ID from App Store Connect
- * 
+ *
  * 2. Legacy Apple ID method:
  *    - APPLE_ID: your Apple ID email
  *    - APPLE_APP_SPECIFIC_PASSWORD: app-specific password
  *    - APPLE_TEAM_ID: your team ID
- * 
+ *
  * If neither is set, notarization is disabled for local development.
- * 
- * NOTE: MAS/mas-dev builds should NEVER be notarized - they use App Store review.
  */
 function shouldNotarize(): boolean {
-  // MAS builds should never be notarized
-  if (isMasBuild()) {
-    console.log("Notarization: Disabled (MAS builds use App Store review, not notarization)");
-    return false;
-  }
-
   if (isDevBuild()) {
     console.log("Notarization: Disabled (development build, doesn't need notarization)");
     return false;
@@ -94,6 +94,7 @@ function shouldNotarize(): boolean {
 const notarizeConfig = shouldNotarize();
 const buildingMas = isMasBuild();
 const buildingDev = isDevBuild();
+const isCI = isCIBuild();
 
 const config: Configuration = {
   appId: "io.kochie.touch-typer",
@@ -113,8 +114,8 @@ const config: Configuration = {
     hardenedRuntime: !buildingMas,
     notarize: notarizeConfig,
     // These are for CI/CD signing of non-MAS builds only
-    cscLink: buildingMas ? undefined : process.env["MAC_LINK"],
-    cscKeyPassword: buildingMas ? undefined : process.env["MAC_KEY_PASSWORD"],
+    cscLink: isCI ? process.env["MAC_LINK"] : undefined,
+    cscKeyPassword: isCI ? process.env["MAC_KEY_PASSWORD"] : undefined,
 
     bundleVersion: process.env["BUNDLE_VERSION"],
     // remove beta from version 1.2.3-beta.4 -> 1.2.3.4
@@ -138,21 +139,23 @@ const config: Configuration = {
     //   CI all targets:     electron-builder build --mac default --mac mas
   },
   mas: {
+    notarize: false,
     // MAS builds use App Sandbox, not hardened runtime
     hardenedRuntime: false,
     // Explicitly specify identity to use App Store distribution certificate
-    identity: "3rd Party Mac Developer Application",
+    // identity: "3rd Party Mac Developer Application",
     provisioningProfile: "build/mas-touchtyper.provisionprofile",
     entitlementsLoginHelper: "build/entitlements.mas.loginhelper.plist",
     entitlements: "build/entitlements.mas.plist",
     entitlementsInherit: "build/entitlements.mas.inherit.plist",
   },
   masDev: {
+    notarize: false,
     // MAS builds use App Sandbox, not hardened runtime
     hardenedRuntime: false,
     // Explicitly specify identity to use "Apple Development" certificate
     // This overrides any auto-discovery and ensures correct certificate is used
-    identity: "Apple Development",
+    // identity: "Apple Development",
     provisioningProfile: "build/mas-touchtyper-dev.provisionprofile",
     entitlementsLoginHelper: "build/entitlements.mas-dev.loginhelper.plist",
     entitlements: "build/entitlements.mas-dev.plist",
