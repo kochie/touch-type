@@ -131,18 +131,23 @@ jobs:
             pnpm exec electron-builder --config electron-builder.ts -l --publish always
           fi
         env:
-          APPLE_API_KEY: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
-          APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
-          APPLE_API_ISSUER: ${{ secrets.api_key_issuer_id }}
-          MAC_LINK: ${{ secrets.mac_certs }}
-          MAC_KEY_PASSWORD: ${{ secrets.mac_certs_password }}
+          # macOS builds
+          APPLE_API_KEY: ${{ startsWith(matrix.os, 'macos') && format('private_keys/AuthKey_{0}.p8', secrets.api_key_id) || '' }}
+          APPLE_API_KEY_ID: ${{ startsWith(matrix.os, 'macos') && secrets.api_key_id || '' }}
+          APPLE_API_ISSUER: ${{ startsWith(matrix.os, 'macos') && secrets.api_key_issuer_id || '' }}
+          MAC_LINK: ${{ startsWith(matrix.os, 'macos') && secrets.mac_certs || '' }}
+          MAC_KEY_PASSWORD: ${{ startsWith(matrix.os, 'macos') && secrets.mac_certs_password || '' }}
+
+          # Ubuntu builds
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
+
+          # Common builds
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUNDLE_VERSION: ${{ github.run_number }}
           CHANNEL: beta
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
       - name: Upload to App Store Connect

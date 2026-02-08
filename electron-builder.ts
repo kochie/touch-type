@@ -168,6 +168,9 @@ const config: Configuration = {
     icon: "build/app-logo-linux.png",
     category: "Utility",
     mimeTypes: ["x-scheme-handler/touchtyper"],
+    // Build only snap when publishing to Snap Store. Building AppImage + snap can cause
+    // snapcraft to receive the wrong file (AppImage) and fail with SQUASHFS superblock error.
+    target: ["snap", "AppImage"],
     publish: {
       provider: "snapStore",
       repo: "touch-typer",
