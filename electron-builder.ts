@@ -1,4 +1,4 @@
-import { Configuration, publish } from "electron-builder";
+import { Configuration } from "electron-builder";
 import { version } from "./package.json"
 
 let channel = "stable";
