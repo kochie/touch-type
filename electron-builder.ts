@@ -111,7 +111,7 @@ const config: Configuration = {
   ],
   mac: {
     gatekeeperAssess: false,
-    hardenedRuntime: !buildingMas,
+    hardenedRuntime: true,
     notarize: notarizeConfig,
     // These are for CI/CD signing of non-MAS builds only
     cscLink: isCI ? process.env["MAC_LINK"] : undefined,
