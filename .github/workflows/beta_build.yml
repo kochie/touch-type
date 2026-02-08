@@ -19,8 +19,13 @@ on:
         type: boolean
 
 jobs:
+  reserve_build_number:
+    name: Reserve App Store build number
+    uses: ./.github/workflows/reserve-app-store-build-number.yml
+
   build:
     name: Build and Upload
+    needs: reserve_build_number
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -152,7 +157,8 @@ jobs:
 
           # Common builds
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUNDLE_VERSION: ${{ github.run_number }}
+          # macOS/App Store requires a globally incrementing build number (repository variable)
+          BUNDLE_VERSION: ${{ (matrix.os == 'macos-26' && needs.reserve_build_number.outputs.build_number) || github.run_number }}
           CHANNEL: beta
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
