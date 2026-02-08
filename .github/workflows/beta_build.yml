@@ -161,8 +161,9 @@ jobs:
 
       - name: Upload to Snap Store
         if: startsWith(matrix.os, 'ubuntu')
-        run: 
-          snapcraft upload dist/Touch\ Typer-*.snap --release=beta
+        run: |
+          version=$(jq -r .version package.json)
+          snapcraft upload "dist/Touch Typer_${version}_amd64.snap" --release=beta
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
 
