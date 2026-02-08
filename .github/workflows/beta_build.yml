@@ -146,6 +146,7 @@ jobs:
 
           # Ubuntu builds
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
+          DEBUG: ${{ startsWith(matrix.os, 'ubuntu') && '@malept/flatpak-bundler' || '' }}
 
           # Common builds
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -160,6 +161,8 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: 
           snapcraft upload --release=beta
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
 
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos') && github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_stores == 'true'
