@@ -132,7 +132,7 @@ jobs:
         run: |
           echo "Building for ${{ matrix.os }}, CHANNEL=beta, publish=always"
           if [[ "${{ matrix.os }}" == macos* ]]; then
-            pnpm exec electron-builder --config electron-builder.ts --mac default --mac mas --publish always
+            pnpm exec electron-builder --config electron-builder.ts --mac default --mac mas --universal --publish always
           elif [[ "${{ matrix.os }}" == windows* ]]; then
             pnpm exec electron-builder --config electron-builder.ts -w --publish always
           else
