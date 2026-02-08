@@ -74,9 +74,9 @@ jobs:
           pnpm install
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
-          APPLE_API_KEY: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
-          APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
-          APPLE_API_ISSUER: ${{ secrets.api_key_issuer_id }}
+          APPLE_API_KEY: ${{ startsWith(matrix.os, 'macos') && format('private_keys/AuthKey_{0}.p8', secrets.api_key_id) || '' }}
+          APPLE_API_KEY_ID: ${{ startsWith(matrix.os, 'macos') && secrets.api_key_id || '' }}
+          APPLE_API_ISSUER: ${{ startsWith(matrix.os, 'macos') && secrets.api_key_issuer_id || '' }}
 
       - name: Rebuild native deps for Electron
         run: pnpm exec electron-builder install-app-deps
@@ -149,6 +149,19 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+      - name: Upload Flatpak to GitHub Release
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          version=$(jq -r .version package.json)
+          tag="$version"
+          for f in dist/*.flatpak; do
+            if [ -f "$f" ]; then
+              gh release upload "$tag" "$f" --repo ${{ github.repository }} --clobber
+            fi
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos') && github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_stores == 'true'

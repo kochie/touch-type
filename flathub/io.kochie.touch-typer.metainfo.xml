@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.kochie.touch-typer</id>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Touch Typer</name>
+  <summary>A cool little app to help your touch typing skills</summary>
+  <description>
+    <p>Touch Typer helps you learn and practice touch typing with lessons, tests, and progress tracking.</p>
+  </description>
+  <developer_name>Robert Koch</developer_name>
+  <url type="homepage">https://github.com/kochie/touch-type</url>
+  <url type="bugtracker">https://github.com/kochie/touch-type/issues</url>
+  <releases>
+    <release version="2.1.0" date="2025-01-01"/>
+  </releases>
+</component>

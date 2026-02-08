@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Touch Typer
+Comment=A cool little app to help your touch typing skills
+Exec=touch-typer %U
+Icon=io.kochie.touch-typer
+Terminal=false
+Type=Application
+Categories=Utility;Education;
+MimeType=x-scheme-handler/touchtyper
+StartupWMClass=Touch Typer

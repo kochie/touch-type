@@ -1,4 +1,4 @@
-import { Configuration } from "electron-builder";
+import { Configuration, publish } from "electron-builder";
 import { version } from "./package.json"
 
 let channel = "stable";
@@ -171,15 +171,24 @@ const config: Configuration = {
     icon: "build/app-logo-linux.png",
     category: "Utility",
     mimeTypes: ["x-scheme-handler/touchtyper"],
-    // Build only snap when publishing to Snap Store. Building AppImage + snap can cause
-    // snapcraft to receive the wrong file (AppImage) and fail with SQUASHFS superblock error.
-    target: ["snap", "AppImage"],
-    publish: {
-      provider: "snapStore",
-      repo: "touch-typer",
-      channels: [channel],
-      publishAutoUpdate: true,
-    }
+    target: ["snap", "AppImage", "flatpak"],
+    // Publish only for Linux: GitHub (releases) + Snap Store. Flatpak has no built-in publisher;
+    // the .flatpak artifact is built and can be published to Flathub via CI or manually.
+    publish: [
+      {
+        provider: "github",
+        owner: "kochie",
+        repo: "touch-type",
+        channel,
+        releaseType: channel === "beta" || channel === "alpha" ? "prerelease" : "release",
+      },
+      {
+        provider: "snapStore",
+        repo: "touch-typer",
+        channels: [channel],
+        publishAutoUpdate: true,
+      },
+    ],
   },
   win: {
     icon: "build/app-logo-win.png",
@@ -198,6 +207,7 @@ const config: Configuration = {
   },
   asar: true,
   files: ["main", "renderer/out", "wordsets"],
+  // Mac and Windows use this; Linux uses linux.publish (GitHub + snapStore + flatpak build only)
   publish: [
     {
       provider: "github",
@@ -205,7 +215,7 @@ const config: Configuration = {
       repo: "touch-type",
       channel,
       releaseType: channel === "beta" || channel === "alpha" ? "prerelease" : "release",
-    }
+    },
   ],
 };
 

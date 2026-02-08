@@ -109,8 +109,5 @@
     "typescript": "^5.9.3",
     "url-loader": "^4.1.1",
     "yup": "^1.7.1"
-  },
-  "optionalDependencies": {
-    "dmg-license": "^1.0.11"
   }
 }
