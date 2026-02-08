@@ -231,6 +231,10 @@ importers:
       yup:
         specifier: ^1.7.1
         version: 1.7.1
+    optionalDependencies:
+      dmg-license:
+        specifier: ^1.0.11
+        version: 1.0.11
 
 packages:
 
