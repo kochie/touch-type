@@ -87,6 +87,12 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
 
+      - name: Install Flatpak
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+
       - name: Set up Xcode
         if: startsWith(matrix.os, 'macos')
         run: |
@@ -153,7 +159,7 @@ jobs:
       - name: Upload to Snap Store
         if: startsWith(matrix.os, 'ubuntu')
         run: 
-          pnpm exec snapcraft upload --release=beta
+          snapcraft upload --release=beta
 
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos') && github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_stores == 'true'
