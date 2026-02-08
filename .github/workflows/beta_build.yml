@@ -111,7 +111,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
@@ -122,9 +122,9 @@ jobs:
         shell: bash
         run: |
           echo "Building for ${{ matrix.os }}, CHANNEL=beta, publish=always"
-          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+          if [[ "${{ matrix.os }}" == macos* ]]; then
             pnpm exec electron-builder --config electron-builder.ts --mac default --mac mas --publish always
-          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          elif [[ "${{ matrix.os }}" == windows* ]]; then
             pnpm exec electron-builder --config electron-builder.ts -w --publish always
           else
             pnpm exec electron-builder --config electron-builder.ts -l --publish always
@@ -141,7 +141,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
       - name: Upload to App Store Connect
