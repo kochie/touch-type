@@ -148,7 +148,7 @@ jobs:
 
           # Ubuntu builds
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
-          DEBUG: ${{ startsWith(matrix.os, 'ubuntu') && '@malept/flatpak-bundler' || '' }}
+          # DEBUG: ${{ startsWith(matrix.os, 'ubuntu') && '@malept/flatpak-bundler' || '' }}
 
           # Common builds
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -162,7 +162,7 @@ jobs:
       - name: Upload to Snap Store
         if: startsWith(matrix.os, 'ubuntu')
         run: 
-          snapcraft upload --release=beta
+          snapcraft upload dist/Touch\ Typer-*.snap --release=beta
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
 
