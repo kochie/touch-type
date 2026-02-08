@@ -98,6 +98,7 @@ const buildingDev = isDevBuild();
 const config: Configuration = {
   appId: "io.kochie.touch-typer",
   copyright: "Copyright © 2022 Robert Koch",
+  npmRebuild: true,
   generateUpdatesFilesForAllChannels: true,
   // Register custom URL protocol for deep linking
   protocols: [

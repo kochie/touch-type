@@ -71,9 +71,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Keep pnpm store inside workspace so resolved paths stay in project (helps electron-builder on CI)
-          echo "store-dir=node_modules/.pnpm-store" >> .npmrc
-          pnpm install --ignore-scripts
+          pnpm install
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
           APPLE_API_KEY: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
