@@ -172,23 +172,6 @@ const config: Configuration = {
     category: "Utility",
     mimeTypes: ["x-scheme-handler/touchtyper"],
     target: ["snap", "AppImage", "flatpak"],
-    // Publish only for Linux: GitHub (releases) + Snap Store. Flatpak has no built-in publisher;
-    // the .flatpak artifact is built and can be published to Flathub via CI or manually.
-    publish: [
-      {
-        provider: "github",
-        owner: "kochie",
-        repo: "touch-type",
-        channel,
-        releaseType: channel === "beta" || channel === "alpha" ? "prerelease" : "release",
-      },
-      {
-        provider: "snapStore",
-        repo: "touch-typer",
-        channels: [channel],
-        publishAutoUpdate: true,
-      },
-    ],
   },
   win: {
     icon: "build/app-logo-win.png",

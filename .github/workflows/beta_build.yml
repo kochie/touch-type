@@ -150,18 +150,10 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
-      - name: Upload Flatpak to GitHub Release
+      - name: Upload to Snap Store
         if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          version=$(jq -r .version package.json)
-          tag="$version"
-          for f in dist/*.flatpak; do
-            if [ -f "$f" ]; then
-              gh release upload "$tag" "$f" --repo ${{ github.repository }} --clobber
-            fi
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: 
+          pnpm exec snapcraft upload --release=beta
 
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos') && github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_stores == 'true'
