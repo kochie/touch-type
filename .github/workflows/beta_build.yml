@@ -71,14 +71,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Use copy so electron-builder can read package.json in .pnpm (avoids ENOENT when resolving symlinks to store)
-          echo "package-import-method=copy" >> .npmrc
-          pnpm install
+          # Keep pnpm store inside workspace so resolved paths stay in project (helps electron-builder on CI)
+          echo "store-dir=node_modules/.pnpm-store" >> .npmrc
+          pnpm install --ignore-scripts
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
           APPLE_API_KEY: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
           APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
           APPLE_API_ISSUER: ${{ secrets.api_key_issuer_id }}
+
+      - name: Rebuild native deps for Electron
+        run: pnpm exec electron-builder install-app-deps
 
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v1
