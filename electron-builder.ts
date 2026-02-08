@@ -172,8 +172,6 @@ const config: Configuration = {
     category: "Utility",
     mimeTypes: ["x-scheme-handler/touchtyper"],
     target: ["snap", "AppImage", "flatpak"],
-    // Use supported runtime (20.08 is EoL); required for CI flatpak build (Flathub remote)
-    
   },
   flatpak: {
     runtimeVersion: "25.08",
