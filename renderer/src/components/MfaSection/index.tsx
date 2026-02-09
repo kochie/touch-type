@@ -20,7 +20,8 @@ export default function MfaSection() {
 
   const loadFactors = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
-    setFactors(data?.factors?.totp ?? []);
+    const totpFactors = data?.all?.filter((f) => f.factor_type === "totp") ?? [];
+    setFactors(totpFactors);
     setLoading(false);
   };
 

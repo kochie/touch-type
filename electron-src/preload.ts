@@ -108,6 +108,8 @@ declare global {
       getStartMinimized: () => Promise<boolean>;
       // Debug/Dev mode
       getDebugInfo: () => Promise<DebugInfo>;
+      // Tray streak display
+      updateStreakData: (data: { currentStreak: number; isAtRisk: boolean }) => void;
     };
   }
 }
@@ -183,4 +185,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Debug/Dev mode
   getDebugInfo: (): Promise<DebugInfo> =>
     ipcRenderer.invoke("getDebugInfo"),
+
+  // Tray streak display
+  updateStreakData: (data: { currentStreak: number; isAtRisk: boolean }) => {
+    ipcRenderer.send("updateStreakData", data);
+  },
 });

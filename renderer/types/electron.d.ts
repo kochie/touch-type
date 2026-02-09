@@ -87,6 +87,8 @@ export interface ElectronAPI {
   setLaunchAtStartup: (enabled: boolean) => Promise<StartupResult>;
   setStartMinimized: (enabled: boolean) => Promise<StartupResult>;
   getStartMinimized: () => Promise<boolean>;
+  // Tray streak display
+  updateStreakData: (data: { currentStreak: number; isAtRisk: boolean }) => void;
 }
 
 declare global {

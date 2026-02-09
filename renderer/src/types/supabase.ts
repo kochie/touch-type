@@ -290,10 +290,10 @@ export type Database = {
           keyboard_name: string | null
           language: string | null
           level_name: string | null
-          notifications_enabled: boolean | null
-          notification_time: string | null
           notification_days: string[] | null
           notification_message: string | null
+          notification_time: string | null
+          notifications_enabled: boolean | null
           numbers: boolean | null
           practice_duration: number | null
           publish_to_leaderboard: boolean | null
@@ -313,10 +313,10 @@ export type Database = {
           keyboard_name?: string | null
           language?: string | null
           level_name?: string | null
-          notifications_enabled?: boolean | null
-          notification_time?: string | null
           notification_days?: string[] | null
           notification_message?: string | null
+          notification_time?: string | null
+          notifications_enabled?: boolean | null
           numbers?: boolean | null
           practice_duration?: number | null
           publish_to_leaderboard?: boolean | null
@@ -336,10 +336,10 @@ export type Database = {
           keyboard_name?: string | null
           language?: string | null
           level_name?: string | null
-          notifications_enabled?: boolean | null
-          notification_time?: string | null
           notification_days?: string[] | null
           notification_message?: string | null
+          notification_time?: string | null
+          notifications_enabled?: boolean | null
           numbers?: boolean | null
           practice_duration?: number | null
           publish_to_leaderboard?: boolean | null
@@ -349,6 +349,45 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           whats_new_on_startup?: boolean | null
+        }
+        Relationships: []
+      }
+      streaks: {
+        Row: {
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          last_activity_date: string | null
+          last_freeze_refresh: string | null
+          longest_streak: number | null
+          streak_freeze_count: number | null
+          streak_freeze_used_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          last_freeze_refresh?: string | null
+          longest_streak?: number | null
+          streak_freeze_count?: number | null
+          streak_freeze_used_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          last_freeze_refresh?: string | null
+          longest_streak?: number | null
+          streak_freeze_count?: number | null
+          streak_freeze_used_at?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -410,18 +449,24 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          product_id: string | null
+          streak_freeze_credited: boolean | null
           transaction_id: string
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
+          product_id?: string | null
+          streak_freeze_credited?: boolean | null
           transaction_id: string
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
+          product_id?: string | null
+          streak_freeze_credited?: boolean | null
           transaction_id?: string
           user_id?: string
         }
