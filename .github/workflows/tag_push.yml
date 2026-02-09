@@ -32,6 +32,8 @@ jobs:
   reserve_build_number:
     name: Reserve App Store build number
     uses: ./.github/workflows/reserve-app-store-build-number.yml
+    secrets:
+      REPO_VARIABLES_PAT: ${{ secrets.REPO_VARIABLES_PAT }}
 
   make_release:
     name: Make Github Release

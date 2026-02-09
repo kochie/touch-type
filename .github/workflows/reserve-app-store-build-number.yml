@@ -18,6 +18,10 @@ name: Reserve App Store Build Number
 
 on:
   workflow_call:
+    secrets:
+      REPO_VARIABLES_PAT:
+        required: true
+        description: "PAT with permission to read/write repository variables"
     outputs:
       build_number:
         value: ${{ jobs.reserve.outputs.build_number }}
@@ -38,7 +42,7 @@ jobs:
         env:
           REPO: ${{ github.repository }}
           VAR_NAME: APP_STORE_BUILD_NUMBER
-          PAT: ${{ secrets.GH_TOKEN_FOR_VARIABLES }}
+          PAT: ${{ secrets.REPO_VARIABLES_PAT }}
         run: |
           set -e
           API_VAR="https://api.github.com/repos/${REPO}/actions/variables/${VAR_NAME}"

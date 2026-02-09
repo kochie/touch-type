@@ -22,6 +22,8 @@ jobs:
   reserve_build_number:
     name: Reserve App Store build number
     uses: ./.github/workflows/reserve-app-store-build-number.yml
+    secrets:
+      REPO_VARIABLES_PAT: ${{ secrets.GH_TOKEN_FOR_VARIABLES }}
 
   build:
     name: Build and Upload
