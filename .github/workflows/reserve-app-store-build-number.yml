@@ -38,36 +38,33 @@ jobs:
         env:
           REPO: ${{ github.repository }}
           VAR_NAME: APP_STORE_BUILD_NUMBER
+          PAT: ${{ secrets.GH_TOKEN_FOR_VARIABLES }}
         run: |
           set -e
           API_VAR="https://api.github.com/repos/${REPO}/actions/variables/${VAR_NAME}"
           API_VARS="https://api.github.com/repos/${REPO}/actions/variables"
-          # Use Bearer for both classic and fine-grained PATs
-          AUTH_HEADER="Authorization: Bearer ${{ secrets.GH_TOKEN_FOR_VARIABLES }}"
 
-          # Get current value
-          RESP=$(curl -s -w "\n%{http_code}" \
-            -H "$AUTH_HEADER" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "$API_VAR")
+          # Get current value (curl format that works with fine-grained PAT)
+          RESP=$(curl -s -w "\n%{http_code}" --request GET --url "$API_VAR" \
+            --header "authorization: Bearer $PAT" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28")
           HTTP_BODY=$(echo "$RESP" | head -n -1)
           HTTP_CODE=$(echo "$RESP" | tail -n 1)
 
           if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
-            echo "::error::Variables API returned $HTTP_CODE. Check GH_TOKEN_FOR_VARIABLES: valid token and permission to read/write repository variables (e.g. Administration for fine-grained PAT)."
+            echo "::error::Variables API returned $HTTP_CODE. Check REPO_VARIABLES_PAT: valid token and permission to read/write repository variables (e.g. Administration for fine-grained PAT)."
             echo "Response: $HTTP_BODY"
             exit 1
           fi
 
           if [ "$HTTP_CODE" = "404" ]; then
             NEW_NUM=1
-            CREATE_RESP=$(curl -s -w "\n%{http_code}" -X POST \
-              -H "$AUTH_HEADER" \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "$API_VARS" \
-              -d "{\"name\":\"${VAR_NAME}\",\"value\":\"1\"}")
+            CREATE_RESP=$(curl -s -w "\n%{http_code}" --request POST --url "$API_VARS" \
+              --header "authorization: Bearer $PAT" \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              --data "{\"name\":\"${VAR_NAME}\",\"value\":\"1\"}")
             CREATE_CODE=$(echo "$CREATE_RESP" | tail -n 1)
             if [ "$CREATE_CODE" != "201" ]; then
               echo "::error::Failed to create variable (HTTP $CREATE_CODE). Response: $(echo "$CREATE_RESP" | head -n -1)"
@@ -85,12 +82,11 @@ jobs:
               exit 1
             fi
             NEW_NUM=$((CURRENT + 1))
-            PATCH_RESP=$(curl -s -w "\n%{http_code}" -X PATCH \
-              -H "$AUTH_HEADER" \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "$API_VAR" \
-              -d "{\"value\":\"${NEW_NUM}\"}")
+            PATCH_RESP=$(curl -s -w "\n%{http_code}" --request PATCH --url "$API_VAR" \
+              --header "authorization: Bearer $PAT" \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              --data "{\"value\":\"${NEW_NUM}\"}")
             PATCH_CODE=$(echo "$PATCH_RESP" | tail -n 1)
             if [ "$PATCH_CODE" != "204" ]; then
               echo "::error::Failed to update variable (HTTP $PATCH_CODE). Response: $(echo "$PATCH_RESP" | head -n -1)"
