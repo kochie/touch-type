@@ -49,7 +49,8 @@ jobs:
             --header "authorization: Bearer $PAT" \
             --header "Accept: application/vnd.github+json" \
             --header "X-GitHub-Api-Version: 2022-11-28")
-          HTTP_BODY=$(echo "$RESP" | head -n -1)
+          # Portable: macOS head doesn't support -n -1; sed '$d' = drop last line
+          HTTP_BODY=$(echo "$RESP" | sed '$d')
           HTTP_CODE=$(echo "$RESP" | tail -n 1)
 
           if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
@@ -67,7 +68,7 @@ jobs:
               --data "{\"name\":\"${VAR_NAME}\",\"value\":\"1\"}")
             CREATE_CODE=$(echo "$CREATE_RESP" | tail -n 1)
             if [ "$CREATE_CODE" != "201" ]; then
-              echo "::error::Failed to create variable (HTTP $CREATE_CODE). Response: $(echo "$CREATE_RESP" | head -n -1)"
+              echo "::error::Failed to create variable (HTTP $CREATE_CODE). Response: $(echo "$CREATE_RESP" | sed '$d')"
               exit 1
             fi
             echo "Created ${VAR_NAME}=1"
@@ -89,7 +90,7 @@ jobs:
               --data "{\"value\":\"${NEW_NUM}\"}")
             PATCH_CODE=$(echo "$PATCH_RESP" | tail -n 1)
             if [ "$PATCH_CODE" != "204" ]; then
-              echo "::error::Failed to update variable (HTTP $PATCH_CODE). Response: $(echo "$PATCH_RESP" | head -n -1)"
+              echo "::error::Failed to update variable (HTTP $PATCH_CODE). Response: $(echo "$PATCH_RESP" | sed '$d')"
               exit 1
             fi
             echo "Updated ${VAR_NAME}: ${CURRENT} -> ${NEW_NUM}"
