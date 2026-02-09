@@ -403,7 +403,7 @@ export const SettingsProvider = ({ children }) => {
         .upsert(dbSettings, { onConflict: 'user_id' });
 
       if (error) {
-        console.error('Error saving settings:', error);
+        console.error('Error saving settings:', error.message ?? error.code ?? error, error);
       }
     },
     [user, supabase],

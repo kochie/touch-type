@@ -19,7 +19,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { getChartData } from "./getChartData";
+import { getChartData, type ChartDataDays } from "./getChartData";
+import { useResults } from "@/lib/result-provider";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Skeleton } from "../Skeleton";
 
@@ -27,9 +28,11 @@ interface DataCardProps {
   category: Category;
   icon: IconProp;
   label: string;
+  days?: ChartDataDays;
 }
 
-export function DataCard({ category, icon, label }: DataCardProps) {
+export function DataCard({ category, icon, label, days = 7 }: DataCardProps) {
+  const { results } = useResults();
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +55,8 @@ export function DataCard({ category, icon, label }: DataCardProps) {
     fetchRecommendations();
   }, [category]);
 
+  const chartData = getChartData(category, results, days);
+
   return (
     <Card
       header={
@@ -65,9 +70,14 @@ export function DataCard({ category, icon, label }: DataCardProps) {
     >
       <div className="mb-6 h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={getChartData(category)}>
+          <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
+            <XAxis
+              dataKey="dateString"
+              interval={0}
+              tick={{ fontSize: 9 }}
+              tickFormatter={(_, i) => (chartData[i] as { name?: string })?.name ?? ""}
+            />
             <YAxis tickFormatter={formatTick(category)} />
             <Tooltip formatter={formatTooltipValue(category)} />
             <Bar dataKey={getCategoryDataKey(category)} fill="#8884d8" />

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Result } from "@/lib/result-provider";
 import { KeyboardLayoutNames } from "@/keyboards";
 import { useResults } from "@/lib/result-provider";
 import {
@@ -16,30 +17,20 @@ import {
 import { Duration } from "luxon";
 import { useEffect, useRef, useState } from "react";
 
-interface Result {
-  correct: number;
-  incorrect: number;
-  cpm: number;
-  level: number;
-  keyboard: string;
-  language: string;
-  datetime: Date;
-  time: Duration;
-}
-
 const margin = { top: 10, right: 30, bottom: 30, left: 60 };
-// const   width = 460 - margin.left - margin.right,
-// height = 400 - margin.top - margin.bottom;
 
 interface LineChartProps {
   keyboard: KeyboardLayoutNames;
 }
 
-export default function LineChart({keyboard}: LineChartProps) {
+export default function LineChart({ keyboard }: LineChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const {results} = useResults()
-  const [computedResults, setComputedResults] = useState<Result[]>([]);
+  const { results } = useResults();
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
+
+  const computedResults = results
+    .filter((r) => r.keyboard === keyboard)
+    .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
 
   useEffect(() => {
     const resize = () => {
@@ -50,84 +41,69 @@ export default function LineChart({keyboard}: LineChartProps) {
     };
     window.addEventListener("resize", resize);
     resize();
-
-    return () => {
-      window.removeEventListener("resize", resize);
-    };
+    return () => window.removeEventListener("resize", resize);
   }, []);
 
   useEffect(() => {
-    if (!svgRef.current) return;
+    if (!svgRef.current || width === 0 || height === 0) return;
 
-    const computed = results
-      .filter(result => result.keyboard === keyboard)
+    const minMax = extent(computedResults, (d) => new Date(d.datetime));
+    if (minMax[0] == null || minMax[1] == null) return;
 
-    const minMax = extent(results, function (d) {
-      return new Date(d.datetime);
-    });
-    if (minMax[0] === undefined || minMax[1] === undefined) return;
     const x = scaleTime().domain(minMax).range([0, width]);
+    const maxTime = max(computedResults, (d) =>
+      Duration.fromISO(d.time).toMillis() / 1000
+    );
+    const maxIncorrect = max(computedResults, (d) => Number(d.incorrect));
+    if (maxTime == null || maxIncorrect == null) return;
 
-    const svg = select(svgRef.current)
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    svg
-      .append("g")
-      .attr("transform", `translate(0, ${height})`)
-      .call(axisBottom(x));
-
-    // Add Y axis
-    const maxTime = max(computed, function (d) {
-      return Duration.fromISO(d.time).toMillis() / 1000
-    });
-    if (maxTime === undefined) return;
     const y = scaleLinear().domain([0, maxTime]).range([height, 0]);
-    svg.append("g").call(axisLeft(y));
-
-    const maxIncorrect = max(computed, function (d) {
-      return +d.incorrect;
-    });
-    if (maxIncorrect === undefined) return;
     const y2 = scaleLinear()
       .domain([0, maxIncorrect * 1.7])
       .range([height, 0]);
-    svg
-      .append("g")
-      .call(axisRight(y2))
-      .attr("transform", `translate(${width}, 0)`);
 
-    // Add the line
+    const svg = select(svgRef.current);
     svg
-      .append("path")
-      .datum(computed)
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);
+    svg.selectAll("*").remove();
+
+    const g = svg
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    g.append("g")
+      .attr("transform", `translate(0, ${height})`)
+      .call(axisBottom(x));
+
+    g.append("g").call(axisLeft(y));
+
+    g.append("g")
+      .attr("transform", `translate(${width}, 0)`)
+      .call(axisRight(y2));
+
+    const timeLine = line<Result>()
+      .x((d) => x(new Date(d.datetime)))
+      .y((d) => y(Duration.fromISO(d.time).toMillis() / 1000));
+
+    const incorrectLine = line<Result>()
+      .x((d) => x(new Date(d.datetime)))
+      .y((d) => y2(d.incorrect));
+
+    g.append("path")
+      .datum(computedResults)
       .attr("fill", "none")
       .attr("stroke", "steelblue")
       .attr("stroke-width", 3.5)
-      .attr(
-        "d",
-        line(
-          (d) => x(new Date(d.datetime)),
-          (d) => y(Duration.fromISO(d.time).toMillis() / 1000),
-        ),
-      );
+      .attr("d", timeLine);
 
-    svg
-      .append("path")
-      .datum(computed)
+    g.append("path")
+      .datum(computedResults)
       .attr("fill", "none")
       .attr("stroke", "red")
       .attr("stroke-width", 3.5)
-      .attr(
-        "d",
-        line(
-          (d ) => x(new Date(d.datetime)),
-          (d ) => y2(d.incorrect),
-        ),
-      );
-  }, [results, width, height]);
+      .attr("d", incorrectLine);
+  }, [results, keyboard, width, height]);
 
   return <svg ref={svgRef} className="mx-auto" />;
 }

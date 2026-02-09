@@ -120,9 +120,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   getProducts: () => ipcRenderer.invoke("getProducts"),
   purchaseProduct: (productId: string, quantity?: number) =>
     ipcRenderer.invoke("purchaseProduct", productId, quantity ?? 1),
-  onIAPPurchaseComplete: (callback: (transactionId: string) => void) => {
-    ipcRenderer.on("iap-purchase-complete", (_, transactionId: string) =>
-      callback(transactionId)
+  onIAPPurchaseComplete: (callback: (transactionId: string, productId?: string) => void) => {
+    ipcRenderer.on("iap-purchase-complete", (_, transactionId: string, productId?: string) =>
+      callback(transactionId, productId)
     );
   },
   isMas: () => ipcRenderer.invoke("isMas"),

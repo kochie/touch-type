@@ -8,7 +8,7 @@
  */
 
 import { Notification, ipcMain, BrowserWindow, app } from "electron";
-import { writeFile, unlink, mkdir } from "fs/promises";
+import { unlink } from "fs/promises";
 import { join } from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -146,12 +146,20 @@ export function setupNotificationScheduler(window: BrowserWindow): void {
   ipcMain.handle("cancelNotification", async (): Promise<ScheduleResult> => {
     try {
       await unregisterFromPushNotifications();
-      
-      // Also remove Linux scheduler if present
-      if (process.platform === "linux") {
-        await removeLinuxScheduler();
+
+      // Remove any local scheduler (legacy or Linux fallback)
+      switch (process.platform) {
+        case "darwin":
+          await removeMacOSScheduler();
+          break;
+        case "win32":
+          await removeWindowsScheduler();
+          break;
+        case "linux":
+          await removeLinuxScheduler();
+          break;
       }
-      
+
       return { success: true };
     } catch (error) {
       log.error("Failed to cancel notification:", error);
@@ -176,60 +184,14 @@ export function setupNotificationScheduler(window: BrowserWindow): void {
         case "win32":
           return await isWindowsSchedulerInstalled();
         case "linux":
-      if (platform === "linux") {
           return await isLinuxSchedulerInstalled();
         default:
           return false;
       }
-      
-      // For macOS/Windows, check if push is supported
-      return isPushSupported();
     } catch {
       return false;
     }
   });
-}
-
-/**
- * Install the system-level scheduler based on platform
- */
-async function installSystemScheduler(config: NotificationConfig): Promise<void> {
-  const platform = process.platform;
-
-  switch (platform) {
-    case "darwin":
-      await installMacOSScheduler(config);
-      break;
-    case "win32":
-      await installWindowsScheduler(config);
-      break;
-    case "linux":
-      await installLinuxScheduler(config);
-      break;
-    default:
-      throw new Error(`Unsupported platform: ${platform}`);
-  }
-}
-
-/**
- * Remove the system-level scheduler based on platform
- */
-async function removeSystemScheduler(): Promise<void> {
-  const platform = process.platform;
-
-  switch (platform) {
-    case "darwin":
-      await removeMacOSScheduler();
-      break;
-    case "win32":
-      await removeWindowsScheduler();
-      break;
-    case "linux":
-      await removeLinuxScheduler();
-      break;
-  }
-}
-
 
   // Get push platform info
   ipcMain.handle("getPushPlatform", async (): Promise<PushTokenData> => {
@@ -297,91 +259,7 @@ function handlePushNotification(payload: PushNotificationPayload): void {
 }
 
 // ============ macOS Implementation ============
-
-async function installMacOSScheduler(config: NotificationConfig): Promise<void> {
-  const [hour, minute] = config.time.split(":").map(Number);
-
-  // First, unload any existing scheduler
-  await removeMacOSScheduler();
-
-  // Create the reminder script that shows notification and opens app
-  const scriptPath = join(app.getPath("userData"), "reminder.scpt");
-  const appPath = app.getPath("exe");
-  const deepLink = `touchtyper://practice?duration=${config.duration}`;
-
-  // AppleScript to show notification and open the app
-  const script = `
-display notification "${config.message}" with title "Touch Typer" sound name "default"
-delay 0.5
-do shell script "open '${deepLink}'"
-`;
-
-  await writeFile(scriptPath, script, "utf-8");
-
-  // Build calendar intervals for each selected day
-  // macOS uses 1=Sunday, 2=Monday, ..., 7=Saturday
-  const dayMap: Record<string, number> = {
-    sun: 1,
-    mon: 2,
-    tue: 3,
-    wed: 4,
-    thu: 5,
-    fri: 6,
-    sat: 7,
-  };
-
-  const calendarIntervals = config.days
-    .filter((day) => dayMap[day] !== undefined)
-    .map(
-      (day) => `
-      <dict>
-        <key>Hour</key>
-        <integer>${hour}</integer>
-        <key>Minute</key>
-        <integer>${minute}</integer>
-        <key>Weekday</key>
-        <integer>${dayMap[day]}</integer>
-      </dict>`
-    )
-    .join("\n");
-
-  const plist = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>${LAUNCH_AGENT_LABEL}</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/usr/bin/osascript</string>
-    <string>${scriptPath}</string>
-  </array>
-  <key>StartCalendarInterval</key>
-  <array>
-${calendarIntervals}
-  </array>
-  <key>RunAtLoad</key>
-  <false/>
-</dict>
-</plist>`;
-
-  // Ensure LaunchAgents directory exists
-  const launchAgentsDir = join(app.getPath("home"), "Library/LaunchAgents");
-  await mkdir(launchAgentsDir, { recursive: true });
-
-  // Write the LaunchAgent plist
-  const plistPath = getLaunchAgentPath();
-  await writeFile(plistPath, plist, "utf-8");
-
-  // Load the LaunchAgent
-  try {
-    await execAsync(`launchctl load "${plistPath}"`);
-    log.info("macOS notification scheduler installed successfully");
-  } catch (error) {
-    log.error("Failed to load LaunchAgent:", error);
-    throw error;
-  }
-}
+// macOS uses push notifications; remove/isInstalled used for status and cleanup.
 
 async function removeMacOSScheduler(): Promise<void> {
   const plistPath = getLaunchAgentPath();
@@ -422,53 +300,7 @@ async function isMacOSSchedulerInstalled(): Promise<boolean> {
 }
 
 // ============ Windows Implementation ============
-
-async function installWindowsScheduler(config: NotificationConfig): Promise<void> {
-  const [hour, minute] = config.time.split(":");
-
-  // First, remove any existing task
-  await removeWindowsScheduler();
-
-  // Map days to Windows format
-  const dayMap: Record<string, string> = {
-    sun: "SUN",
-    mon: "MON",
-    tue: "TUE",
-    wed: "WED",
-    thu: "THU",
-    fri: "FRI",
-    sat: "SAT",
-  };
-
-  const days = config.days
-    .filter((d) => dayMap[d])
-    .map((d) => dayMap[d])
-    .join(",");
-
-  if (!days) {
-    throw new Error("No valid days selected");
-      title: payload.title || "Touch Typer",
-      body: payload.body || "Time to practice your typing!",
-  }
-
-  const appPath = app.getPath("exe");
-  const deepLink = `touchtyper://practice?duration=${config.duration}`;
-
-  // Create scheduled task using schtasks
-  // The task will launch the app with the deep link URL
-  const command = `schtasks /create /tn "${WINDOWS_TASK_NAME}" /tr "\\"${appPath}\\" \\"${deepLink}\\"" /sc weekly /d ${days} /st ${hour}:${minute} /f`;
-      log.info("User clicked notification, bringing app to front");
-      if (mainWindow) {
-        showWindowFromTray(mainWindow);
-
-  try {
-    await execAsync(command);
-    log.info("Windows notification scheduler installed successfully");
-  } catch (error) {
-    log.error("Failed to create Windows scheduled task:", error);
-    throw error;
-  }
-}
+// Windows uses push notifications; remove/isInstalled used for status and cleanup.
 
 async function removeWindowsScheduler(): Promise<void> {
   try {

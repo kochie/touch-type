@@ -22,7 +22,9 @@ import { Card } from "./Card";
 import { GoalCard } from "./GoalCard";
 import { ChallengeCard } from "./ChallengeCard";
 import { DataCard } from "./DataCard";
+import { WeeklyProgressSummary } from "./WeeklyProgressSummary";
 import { Category } from "./utils";
+import type { ChartDataDays } from "./getChartData";
 
 const tabs = [
   {
@@ -53,6 +55,7 @@ const tabs = [
 ];
 
 export default function AIAssistant() {
+  const [chartDays, setChartDays] = useState<ChartDataDays>(7);
   const [challengeTime, setChallengeTime] = useState(120); // 2 minutes in seconds
   const [isChallengeActive, setIsChallengeActive] = useState(false);
 
@@ -90,6 +93,36 @@ export default function AIAssistant() {
         </p>
       </Card>
 
+      <div className="my-6">
+        <WeeklyProgressSummary />
+      </div>
+
+      <div className="flex items-center justify-end gap-2 my-2">
+        <span className="text-sm text-gray-600 dark:text-gray-400">Chart range:</span>
+        <button
+          type="button"
+          onClick={() => setChartDays(7)}
+          className={`rounded-full py-1 px-3 text-sm font-medium ${
+            chartDays === 7
+              ? "bg-white/20 text-white"
+              : "bg-white/5 text-gray-400 hover:bg-white/10"
+          }`}
+        >
+          Last 7 days
+        </button>
+        <button
+          type="button"
+          onClick={() => setChartDays(30)}
+          className={`rounded-full py-1 px-3 text-sm font-medium ${
+            chartDays === 30
+              ? "bg-white/20 text-white"
+              : "bg-white/5 text-gray-400 hover:bg-white/10"
+          }`}
+        >
+          Last 30 days
+        </button>
+      </div>
+
       <TabGroup defaultValue="speed">
         <TabList className="flex gap-4 mx-auto my-4">
           {tabs.map((tab, index) => (
@@ -109,6 +142,7 @@ export default function AIAssistant() {
                 category={tab.value}
                 icon={tab.icon}
                 label={tab.label}
+                days={chartDays}
               />
               <GoalCard category={tab.value} />
               {/* <ChallengeCard

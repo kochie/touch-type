@@ -81,10 +81,10 @@ export const PlanProvider = ({ children }) => {
     if (typeof window === "undefined" || !window.electronAPI?.onIAPPurchaseComplete) {
       return;
     }
-    window.electronAPI.onIAPPurchaseComplete(async (transactionId: string) => {
+    window.electronAPI.onIAPPurchaseComplete(async (transactionId: string, productId?: string) => {
       try {
         await supabaseRef.current.functions.invoke("map-transaction", {
-          body: { transactionId },
+          body: { transactionId, productId },
         });
         await fetchPlanRef.current();
       } catch (err) {

@@ -10,6 +10,7 @@ import { Skeleton } from "../Skeleton";
 import Button from "../Button";
 import { getGoal, newGoal } from "@/transactions/getGoal";
 import { Tables } from "@/types/supabase";
+import { Duration } from "luxon";
 
 function Progress({ value }) {
   return (
@@ -38,28 +39,50 @@ function makeGoalDisplay(
 } {
   const requirement = goal.requirement as Tables<"goals">["requirement"] as {
     cpm?: number;
+    accuracy?: number;
+    minutes?: number;
   };
   const isCpm = !!requirement?.cpm;
+  const isAccuracy = !!requirement?.accuracy;
+  const isMinutes = !!requirement?.minutes;
 
   let progress = 0;
   let target = 0;
   let unit = "";
   let current = 0;
-  
+
   if (isCpm) {
-    // in results find the highest cpm
     const highestCpm = results.reduce((acc, r) => Math.max(acc, r.cpm), 0);
-    progress = (highestCpm / requirement.cpm!) * 100;
+    progress = requirement.cpm! > 0 ? (highestCpm / requirement.cpm!) * 100 : 0;
     target = requirement.cpm!;
     unit = "CPM";
     current = highestCpm;
+  } else if (isAccuracy) {
+    const bestAccuracy = results.reduce((acc, r) => {
+      const total = r.correct + r.incorrect;
+      const accPct = total > 0 ? (r.correct / total) * 100 : 0;
+      return Math.max(acc, accPct);
+    }, 0);
+    progress = requirement.accuracy! > 0 ? (bestAccuracy / requirement.accuracy!) * 100 : 0;
+    target = requirement.accuracy!;
+    unit = "%";
+    current = bestAccuracy;
+  } else if (isMinutes) {
+    const totalMinutes = results.reduce(
+      (acc, r) => acc + Duration.fromISO(r.time).as("minutes"),
+      0
+    );
+    progress = requirement.minutes! > 0 ? (totalMinutes / requirement.minutes!) * 100 : 0;
+    target = requirement.minutes!;
+    unit = "min";
+    current = totalMinutes;
   }
 
   return {
-    current: current.toFixed(0),
+    current: typeof current === "number" && unit === "%" ? current.toFixed(1) : current.toFixed(0),
     goal: target.toFixed(0),
     unit,
-    description: goal.description,
+    description: goal.description ?? "",
     progress,
   };
 }

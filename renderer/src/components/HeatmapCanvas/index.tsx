@@ -57,11 +57,14 @@ const resizer = (state: ResizerState, action: ResizerAction) => {
   }
 };
 
+export type HeatmapMode = "errors" | "accuracy";
+
 interface HeatmapCanvasProps {
   keyboardName: KeyboardLayoutNames;
+  mode?: HeatmapMode;
 }
 
-export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
+export function HeatmapCanvas({ keyboardName, mode = "errors" }: HeatmapCanvasProps) {
   // create a ref elemebt for the canvas to be used in the component
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scaleRef = useRef<HTMLCanvasElement>(null);
@@ -119,8 +122,12 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
         return acc;
       }, new Map<string, { correct: number; incorrect: number }>());
 
-    return [0, max(Array.from(keyResults.values()).map((v) => v.incorrect))!];
-  }, [results, keyboardName]);
+    if (mode === "accuracy") {
+      return [0, 100] as [number, number];
+    }
+    const maxIncorrect = max(Array.from(keyResults.values()).map((v) => v.incorrect));
+    return [0, maxIncorrect ?? 1] as [number, number];
+  }, [results, keyboardName, mode]);
 
   // Draw the keyboard on the canvas
   useLayoutEffect(() => {
@@ -139,7 +146,7 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
     return () => {
       ctx.clearRect(0, 0, width * pr, height * pr);
     };
-  }, [width, height, pr, fontLoaded, keyboardLayout, results]);
+  }, [width, height, pr, fontLoaded, keyboardLayout, results, mode]);
 
   useLayoutEffect(() => {
     // Draw the scale
@@ -151,34 +158,38 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
     scaleRef.current.width = 1000 * pr;
     scaleRef.current.height = 50 * pr;
 
-    const colorScale = scaleSequential()
-      .interpolator(interpolateRgb("rgba(0,0,0,0.5)", "rgba(255,0,0,1)"))
-      .domain([0, 100]);
+    const domain = generateDomain();
+    if (domain[1] === undefined) return;
+
+    const colorScale =
+      mode === "accuracy"
+        ? scaleSequential()
+            .interpolator(interpolateRgb("rgba(255,0,0,0.8)", "rgba(0,200,0,0.9)"))
+            .domain(domain)
+        : scaleSequential()
+            .interpolator(interpolateRgb("rgba(0,0,0,0.5)", "rgba(255,0,0,1)"))
+            .domain(domain);
 
     const gradient = ctx.createLinearGradient(0, 0, 1000 * pr, 0);
     for (let i = 0; i <= 100; i++) {
-      gradient.addColorStop(i / 100, colorScale(i));
+      const t = i / 100;
+      const v = domain[0] + t * (domain[1] - domain[0]);
+      gradient.addColorStop(t, colorScale(v));
     }
-
-    const domain = generateDomain()
-    if (domain[1] === undefined) return
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 1000 * pr, 50 * pr);
 
-    const axisScale = scaleLinear()
-      .domain(domain)
-      .range([0, 1000]);
-
+    const axisScale = scaleLinear().domain(domain).range([0, 1000]);
 
     const axis = axisBottom(axisScale)
-      .tickValues([0, domain[1]*0.25, domain[1]*0.5, domain[1]*0.75, domain[1]])
-      .tickFormat((d) => `${d}`);
+      .tickValues([domain[0], domain[1] * 0.25, domain[1] * 0.5, domain[1] * 0.75, domain[1]])
+      .tickFormat((d) => (mode === "accuracy" ? `${Math.round(Number(d))}%` : `${d}`));
 
     const svg = select(axisRef.current);
     svg.attr("width", 1050).attr("height", 20);
 
-    svg.select(".axis").remove(); // Remove previous axis if any
+    svg.select(".axis").remove();
     svg
       .append("g")
       .attr("class", "axis")
@@ -188,8 +199,8 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
     return () => {
       ctx.clearRect(0, 0, 1000 * pr, 50 * pr);
       svg.selectAll("*").remove();
-    }
-  }, [generateDomain]);
+    };
+  }, [generateDomain, mode]);
 
   return (
     <>
@@ -218,18 +229,29 @@ export function HeatmapCanvas({ keyboardName }: HeatmapCanvasProps) {
         return acc;
       }, new Map<string, { correct: number; incorrect: number }>());
 
-    const colorScale = scaleSequential()
-      .interpolator(interpolateRgb("rgba(0,0,0,0.5)", "rgba(255,0,0,1)"))
-      // This needs to be the scale of correct vs incorrect
-      .domain(generateDomain());
+    const domain = generateDomain();
+    const colorScale =
+      mode === "accuracy"
+        ? scaleSequential()
+            .interpolator(interpolateRgb("rgba(255,0,0,0.8)", "rgba(0,200,0,0.9)"))
+            .domain(domain)
+        : scaleSequential()
+            .interpolator(interpolateRgb("rgba(0,0,0,0.5)", "rgba(255,0,0,1)"))
+            .domain(domain);
 
     keyResults.forEach((value, k) => {
-      // Skip keys that don't exist on the current keyboard layout
       if (!k || !keyboard.keyExists(k)) return;
-      
+
       const [i, j] = keyboard.findIndex(k);
       const key = keyboard.findKey(k);
-      keyboard.drawKey(ctx, i, j, key, colorScale(value.incorrect));
+      const total = value.correct + value.incorrect;
+      const heatValue =
+        mode === "accuracy"
+          ? total > 0
+            ? (value.correct / total) * 100
+            : 0
+          : value.incorrect;
+      keyboard.drawKey(ctx, i, j, key, colorScale(heatValue));
     });
   }
 

@@ -33,16 +33,25 @@ const marginBottom = 100; // the bottom margin, in pixels
 const marginLeft = 40;
 
 interface BarlineProps {
-  keyboard: string;
+  /** Single keyboard (e.g. for heatmap page) */
+  keyboard?: string;
+  /** Multiple keyboards: combined stats from all selected (e.g. stats page) */
+  keyboards?: string[];
 }
 
-export default function Barline({ keyboard }: BarlineProps) {
+export default function Barline({ keyboard, keyboards }: BarlineProps) {
   const { results } = useResults();
   const [computedResults, setComputedResults] = useState<Result[]>([]);
 
   const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
 
   const svgRef = useRef<SVGSVGElement>(null);
+
+  const effectiveKeyboards = keyboards?.length
+    ? keyboards
+    : keyboard
+      ? [keyboard]
+      : [];
 
   useEffect(() => {
     const resize = () => {
@@ -54,8 +63,9 @@ export default function Barline({ keyboard }: BarlineProps) {
     window.addEventListener("resize", resize);
     resize();
 
+    const keySet = new Set(effectiveKeyboards);
     const computed = results
-      .filter((res) => res.keyboard === keyboard)
+      .filter((res) => keySet.has(res.keyboard))
       .sort((a, b) => Date.parse(a.datetime) - Date.parse(b.datetime));
 
     setComputedResults(computed);
@@ -63,7 +73,7 @@ export default function Barline({ keyboard }: BarlineProps) {
     return () => {
       window.removeEventListener("resize", resize);
     };
-  }, [results, keyboard]);
+  }, [results, effectiveKeyboards.join(",")]);
 
   useEffect(() => {
     if (!svgRef.current) return;

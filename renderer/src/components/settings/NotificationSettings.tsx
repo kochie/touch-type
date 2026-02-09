@@ -17,6 +17,14 @@ const DAYS = [
   { id: "sun", label: "Sun" },
 ];
 
+const DURATIONS = [
+  { value: 5, label: "5 min" },
+  { value: 10, label: "10 min" },
+  { value: 15, label: "15 min" },
+  { value: 20, label: "20 min" },
+  { value: 30, label: "30 min" },
+];
+
 const DEFAULT_REMINDER_DURATION = 5; // minutes, used for deep link when opening from reminder
 
 type Platform = "macos" | "windows" | "linux";
@@ -123,8 +131,9 @@ export function NotificationSettings() {
     } catch (err) {
       console.error("Error removing device token:", err);
     }
+  }, [user, supabase, platform]);
 
-	const notificationMessage = getStreakAwareMessage(
+  const notificationMessage = getStreakAwareMessage(
       currentStreak,
       isAtRisk,
     settings.notificationMessage
@@ -132,12 +141,13 @@ export function NotificationSettings() {
 
   // Re-schedule notifications when streak changes (to update the message)
   useEffect(() => {
-    if (!settings.notificationsEnabled || !window.electronAPI) return;
+    const api = window.electronAPI;
+    if (!settings.notificationsEnabled || !api) return;
 
     // Debounce to avoid too many re-schedules
     const timeoutId = setTimeout(async () => {
       try {
-        await window.electronAPI.scheduleNotification({
+        await api.scheduleNotification({
           enabled: true,
           time: settings.notificationTime,
           days: settings.notificationDays,

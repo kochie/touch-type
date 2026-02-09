@@ -4,7 +4,6 @@ import Button from "../Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { Formik, Form, Field } from "formik";
-import { faArrowsRotate } from "@fortawesome/pro-duotone-svg-icons";
 import { useMas } from "@/lib/mas_hook";
 import clsx from "clsx";
 import { useSupabase } from "@/lib/supabase-provider";
@@ -35,10 +34,149 @@ function openAccountLink() {
   }
 }
 
+function PremiumSubscriptionDetails({
+  subscription,
+  supabase,
+  switchingInterval,
+  setSwitchingInterval,
+  portalLoading,
+  setPortalLoading,
+  onSubscriptionChange,
+}: {
+  subscription: Tables<"subscriptions">;
+  supabase: ReturnType<typeof useSupabase>["supabase"];
+  switchingInterval: string | null;
+  setSwitchingInterval: (v: string | null) => void;
+  portalLoading: boolean;
+  setPortalLoading: (v: boolean) => void;
+  onSubscriptionChange: () => Promise<void>;
+}) {
+  const isYearly = Boolean(
+    subscription.billing_period &&
+      (subscription.billing_period === "premium_yearly" ||
+        subscription.billing_period === "yearly" ||
+        String(subscription.billing_period).toLowerCase().includes("year"))
+  );
+
+  const handleSwitchInterval = async (interval: "monthly" | "yearly") => {
+    if (subscription.billing_service !== "STRIPE" || !subscription.stripe_subscription_id) return;
+    try {
+      setSwitchingInterval(interval);
+      const { error } = await supabase.functions.invoke("update-subscription-interval", {
+        body: { interval },
+      });
+      if (error) throw error;
+      await onSubscriptionChange();
+    } catch (err) {
+      console.error("Switch interval error:", err);
+      alert(err instanceof Error ? err.message : "Could not change billing interval");
+    } finally {
+      setSwitchingInterval(null);
+    }
+  };
+
+  const handleOpenBillingPortal = async () => {
+    try {
+      setPortalLoading(true);
+      const { data, error } = await supabase.functions.invoke("billing-portal");
+      if (error) throw error;
+      if (data?.url && typeof window !== "undefined") {
+        window.open(data.url, "_blank");
+      }
+    } catch (err) {
+      console.error("Billing portal error:", err);
+      alert(err instanceof Error ? err.message : "Could not open billing portal");
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  const isStripe = subscription.billing_service === "STRIPE";
+
+  return (
+    <div className="flex flex-col gap-4">
+      {isStripe && (
+        <>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-gray-700">Billing cycle</span>
+            <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 p-0.5">
+              <button
+                type="button"
+                onClick={() => handleSwitchInterval("monthly")}
+                disabled={!!switchingInterval}
+                className={clsx(
+                  "flex-1 min-w-0 rounded px-3 py-1.5 text-sm font-medium",
+                  !isYearly
+                    ? "bg-purple-600 text-white"
+                    : "text-gray-700 hover:bg-gray-50"
+                )}
+              >
+                {switchingInterval === "monthly" ? (
+                  <FontAwesomeIcon icon={faSpinner} spin size="sm" />
+                ) : (
+                  "Monthly"
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchInterval("yearly")}
+                disabled={!!switchingInterval}
+                className={clsx(
+                  "flex-1 min-w-0 rounded px-3 py-1.5 text-sm font-medium",
+                  isYearly
+                    ? "bg-purple-600 text-white"
+                    : "text-gray-700 hover:bg-gray-50"
+                )}
+              >
+                {switchingInterval === "yearly" ? (
+                  <FontAwesomeIcon icon={faSpinner} spin size="sm" />
+                ) : (
+                  "Yearly"
+                )}
+              </button>
+            </div>
+          </div>
+          {subscription.next_billing_date && (
+            <p className="text-sm text-gray-600">
+              Next payment:{" "}
+              {new Date(subscription.next_billing_date).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          )}
+          {subscription.auto_renew === false && (
+            <p className="text-sm text-amber-600">Auto-renewal is off</p>
+          )}
+        </>
+      )}
+      <button
+        onClick={handleOpenBillingPortal}
+        disabled={portalLoading || !isStripe}
+        type="button"
+        className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 disabled:opacity-50"
+      >
+        {portalLoading ? (
+          <FontAwesomeIcon icon={faSpinner} spin size="sm" />
+        ) : (
+          "Manage subscription"
+        )}
+      </button>
+      {!isStripe && (
+        <p className="text-xs text-gray-500 max-w-[200px]">
+          Cancel or update payment in App Store settings.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function Account({ onError, onCancel, onChangePassword }) {
   const [submitting, setSubmitting] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
-  const [reloading, setReloading] = useState(false);
+  const [switchingInterval, setSwitchingInterval] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
   const isMas = useMas();
   const [attributes, setAttributes] = useState({
     email: "",
@@ -50,7 +188,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
-  const [stripeLookupKey, setStripeLookupKey] = useState(STRIPE_LOOKUP_KEYS.monthly);
+  const [stripeLookupKey, setStripeLookupKey] = useState<string>(STRIPE_LOOKUP_KEYS.monthly);
   const [iapProducts, setIapProducts] = useState<Electron.Product[]>([]);
   const [iapLoading, setIapLoading] = useState(false);
   const [iapPurchasing, setIapPurchasing] = useState<string | null>(null);
@@ -83,7 +221,8 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     setIapPurchasing(productId);
     try {
       await window.electronAPI.purchaseProduct(productId, 1);
-      await refetch();
+      await refetchPlan();
+      await fetchUserData();
     } catch (err) {
       console.error("IAP purchase failed:", err);
     } finally {
@@ -179,28 +318,53 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     fetchUserData();
   }, [user]);
 
+  // Realtime subscription for subscription changes
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`subscriptions:${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "subscriptions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            setSubscription(null);
+            refetchPlan();
+          } else if (payload.new) {
+            setSubscription(payload.new as Tables<"subscriptions">);
+            refetchPlan();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, supabase, refetchPlan]);
+
   useEffect(() => {
     if (isMas && subscription?.billing_plan === "free") {
       fetchIapProducts();
     }
   }, [isMas, subscription?.billing_plan]);
 
-  const refetch = async () => {
-    setReloading(true);
-    await fetchUserData();
-    setReloading(false);
-  };
-
   const handleStripeComplete = async () => {
     await refetchPlan();
-    await refetch();
+    await fetchUserData();
     setShowStripeCheckout(false);
   };
 
   return (
     <div className="h-full">
-      <div className="flex min-h-full max-h-[80vh] max-w-7xl">
-        <div className="flex flex-1 flex-col justify-center mx-8 my-12">
+      <div className="flex max-w-7xl">
+        <div className="flex flex-1 flex-col mx-8 my-12">
           <div className="mx-auto w-full">
             <div>
               <h2 className="text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -393,8 +557,8 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                   Account Features
                 </h2>
 
-                <div className="flex gap-12 justify-between">
-                  <div>
+                <div className="flex flex-col sm:flex-row sm:items-stretch gap-6 sm:gap-12">
+                  <div className="flex flex-col flex-1 min-w-0 justify-between">
                     <p className="mt-1 text-sm leading-6 text-gray-600">
                       Control what features are available to you.
                     </p>
@@ -408,7 +572,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     {loading || !subscription ? (
                       <p className="text-black">Loading...</p>
                     ) : (
-                      <>
+                      <div className="mt-auto pt-4">
                         <p className="text-gray-600 text-sm leading-6">
                           <span>You're currently on the</span>
                           <span className="mx-1 inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
@@ -416,7 +580,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                           </span>
                           <span>plan.</span>
                         </p>
-                        <div className="flex gap-1 mt-4">
+                        <div className="flex flex-wrap gap-2 mt-3">
                           {features[subscription.billing_plan as PlanType]?.map(
                             (feature) => (
                               <span
@@ -428,26 +592,11 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                             ),
                           )}
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      className="w-12 text-black"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        refetch();
-                      }}
-                      type="button"
-                      aria-label="Refresh subscription"
-                    >
-                      <FontAwesomeIcon
-                        icon={faArrowsRotate}
-                        spin={reloading}
-                        size="lg"
-                      />
-                    </button>
+                  <div className="flex items-start gap-2 flex-wrap sm:flex-nowrap sm:flex-col sm:shrink-0">
                     {subscription?.billing_plan === "free" && !isMas && !showStripeCheckout && (
                       <>
                         <button
@@ -501,17 +650,18 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                       </>
                     )}
                     {subscription?.billing_plan === "premium" && !isMas && (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          openAccountLink();
-                        }}
-                        type="button"
-                        disabled={deleteSubmitting}
-                        className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500"
-                      >
-                        Change Plan
-                      </button>
+                      <PremiumSubscriptionDetails
+                        subscription={subscription}
+                        supabase={supabase}
+                        switchingInterval={switchingInterval}
+                        setSwitchingInterval={setSwitchingInterval}
+                        portalLoading={portalLoading}
+                        setPortalLoading={setPortalLoading}
+                        onSubscriptionChange={async () => {
+                        await refetchPlan();
+                        await fetchUserData();
+                      }}
+                      />
                     )}
                     {subscription?.billing_plan === "premium" && isMas && (
                       <button
@@ -527,6 +677,8 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     )}
                   </div>
                 </div>
+
+
                 {showStripeCheckout && !isMas && (
                   <div className="mt-6 border rounded-lg p-4 bg-gray-50">
                     <div className="flex gap-2 mb-3">

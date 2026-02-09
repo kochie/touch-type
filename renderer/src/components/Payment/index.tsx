@@ -65,3 +65,31 @@ export function StripeCheckout({ lookupKey, onComplete }: StripeCheckoutProps) {
     </div>
   );
 }
+
+/** One-off payment checkout for streak freeze purchase (Stripe). */
+export function StreakFreezeCheckout({ onComplete }: { onComplete?: () => void }) {
+  const supabase = useSupabaseClient();
+
+  const fetchClientSecret = useCallback(async () => {
+    const { data, error } = await supabase.functions.invoke(
+      "create-streak-freeze-checkout",
+      { method: "POST" }
+    );
+    if (error) throw error;
+    return data?.clientSecret ?? null;
+  }, [supabase]);
+
+  return (
+    <div id="streak-freeze-checkout">
+      <EmbeddedCheckoutProvider
+        stripe={stripePromise}
+        options={{
+          fetchClientSecret,
+          ...(onComplete && { onComplete }),
+        }}
+      >
+        <EmbeddedCheckout />
+      </EmbeddedCheckoutProvider>
+    </div>
+  );
+}

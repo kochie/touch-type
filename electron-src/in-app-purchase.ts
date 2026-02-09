@@ -1,7 +1,11 @@
 // Main process – Mac App Store in-app purchase
 import { BrowserWindow, Event, inAppPurchase, Transaction } from "electron";
 
-const PRODUCT_IDS = ["io.kochie.touch-typer.monthly", "io.kochie.touch-typer.yearly"];
+const PRODUCT_IDS = [
+  "io.kochie.touch-typer.monthly",
+  "io.kochie.touch-typer.yearly",
+  "io.kochie.touch-typer.streak-freeze",
+];
 
 let iapWindow: BrowserWindow | null = null;
 
@@ -9,9 +13,9 @@ export function setIAPWindow(window: BrowserWindow | null) {
   iapWindow = window;
 }
 
-function sendPurchaseCompleteToRenderer(transactionId: string) {
+function sendPurchaseCompleteToRenderer(transactionId: string, productId?: string) {
   if (iapWindow && !iapWindow.isDestroyed()) {
-    iapWindow.webContents.send("iap-purchase-complete", transactionId);
+    iapWindow.webContents.send("iap-purchase-complete", transactionId, productId);
   }
 }
 
@@ -34,7 +38,7 @@ inAppPurchase.on(
           console.log(`${payment.productIdentifier} purchased.`);
           const transactionId = transaction.transactionIdentifier;
           if (transactionId) {
-            sendPurchaseCompleteToRenderer(transactionId);
+            sendPurchaseCompleteToRenderer(transactionId, payment.productIdentifier);
           }
           inAppPurchase.finishTransactionByDate(transaction.transactionDate);
           break;
@@ -46,7 +50,7 @@ inAppPurchase.on(
         case "restored":
           console.log(`The purchase of ${payment.productIdentifier} has been restored.`);
           if (transaction.transactionIdentifier) {
-            sendPurchaseCompleteToRenderer(transaction.transactionIdentifier);
+            sendPurchaseCompleteToRenderer(transaction.transactionIdentifier, payment.productIdentifier);
           }
           break;
         case "deferred":

@@ -153,7 +153,7 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
   const plan = usePlan();
   const { results } = useResults();
 
-  const isPremium = plan?.billing_plan !== "free" && plan?.status === "active";
+  const isPremium = plan?.billing_plan === "premium";
 
   // Calculate streak from local results as fallback
   const calculateFromResults = useCallback(() => {
@@ -194,11 +194,14 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) {
         // PGRST116 = no rows found, 42P01 = table doesn't exist
         if (error.code === "PGRST116" || error.code === "42P01" || error.message?.includes("does not exist")) {
-          console.log("Streaks table not available, calculating from results");
           calculateFromResults();
           return;
         }
-        console.error("Error fetching streak:", error);
+        // Log with explicit properties (Supabase errors can serialize as {})
+        const errCode = (error as { code?: string }).code;
+        const errMsg = (error as { message?: string }).message;
+        const detail = errCode || errMsg || "unknown";
+        console.warn("Streak fetch failed, using local results:", detail);
         calculateFromResults();
         return;
       }
@@ -230,49 +233,36 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
         calculateFromResults();
       }
     } catch (error) {
-      console.error("Error fetching streak:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg && errMsg !== "{}") {
+        console.warn("Streak fetch failed, using local results:", errMsg);
+      }
       calculateFromResults();
     }
   }, [user, supabase, isPremium, calculateFromResults]);
 
-  // Refresh freeze count for premium users (weekly)
+  // Refresh freeze count for premium users (monthly) - calls Edge Function for secure server-side grant
   const refreshFreezes = useCallback(async () => {
     if (!user || !isPremium) return;
 
     try {
-      const { data, error } = await supabase
-        .from("streaks")
-        .select("last_freeze_refresh, streak_freeze_count")
-        .eq("user_id", user.id)
-        .single();
+      const { data, error } = await supabase.functions.invoke("refresh-streak-freezes");
 
-      if (error || !data) return;
+      if (error) {
+        console.error("Error refreshing freezes:", error);
+        return;
+      }
 
-      const lastRefresh = data.last_freeze_refresh
-        ? DateTime.fromISO(data.last_freeze_refresh)
-        : null;
-      const now = DateTime.now();
-
-      // Check if it's been a week since last refresh
-      const shouldRefresh =
-        !lastRefresh || now.diff(lastRefresh, "days").days >= 7;
-
-      if (shouldRefresh && data.streak_freeze_count < 1) {
-        // Grant 1 freeze per week for premium users
-        const { error: updateError } = await supabase
-          .from("streaks")
-          .update({
-            streak_freeze_count: 1,
-            last_freeze_refresh: now.toISODate(),
-          })
-          .eq("user_id", user.id);
-
-        if (!updateError) {
-          setStreak((prev) => ({
-            ...prev,
-            freezesAvailable: 1,
-          }));
-        }
+      if (data?.granted && typeof data.freezesAvailable === "number") {
+        setStreak((prev) => ({
+          ...prev,
+          freezesAvailable: data.freezesAvailable,
+        }));
+      } else if (data?.freezesAvailable !== undefined) {
+        setStreak((prev) => ({
+          ...prev,
+          freezesAvailable: data.freezesAvailable,
+        }));
       }
     } catch (error) {
       console.error("Error refreshing freezes:", error);
