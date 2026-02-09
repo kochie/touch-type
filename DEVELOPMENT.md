@@ -59,7 +59,7 @@ When building for distribution, you need to set these environment variables:
 | `MAC_KEY_PASSWORD` | Password for the .p12 certificate | Signed builds (CI) |
 | `BUNDLE_VERSION` | Build number (CI: from repo variable `APP_STORE_BUILD_NUMBER`) | App Store builds |
 
-**App Store build number (CI):** Uploads to App Store Connect require a single, globally incrementing build number across all workflows. The repo stores this in **Settings → Actions → Variables** as `APP_STORE_BUILD_NUMBER`. The workflows `beta_build` and `tag_push` reserve the next number via `.github/workflows/reserve-app-store-build-number.yml` before building. Optional: add the variable with your last uploaded build number; if missing, the first run creates it at 1.
+**App Store build number (CI):** Uploads to App Store Connect require a single, globally incrementing build number across all workflows. The number is stored in a repository variable `APP_STORE_BUILD_NUMBER` (Settings → Actions → Variables). The workflows `beta_build` and `tag_push` reserve the next number via `.github/workflows/reserve-app-store-build-number.yml`. You must add a secret **REPO_VARIABLES_PAT** (a PAT with permission to read/write repository variables: Classic PAT with `repo` scope, or Fine-grained PAT with Administration → Read and write). Optional: add variable `APP_STORE_BUILD_NUMBER` with your last uploaded build number; if missing, the first run creates it at 1.
 
 **Notarization credentials (choose one method):**
 
