@@ -3,9 +3,11 @@ import { join, resolve } from "path";
 import log from "electron-log";
 
 export interface DeepLinkData {
-  action: "practice" | "settings" | "stats";
+  action: "practice" | "settings" | "stats" | "auth-callback";
   duration?: number;
   mode?: "timed" | "words" | "endless";
+  access_token?: string;
+  refresh_token?: string;
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -34,18 +36,29 @@ export function parseDeepLink(url: string): DeepLinkData | null {
     const action = parsed.hostname as DeepLinkData["action"];
 
     // Validate action
-    if (!["practice", "settings", "stats"].includes(action)) {
+    if (!["practice", "settings", "stats", "auth-callback"].includes(action)) {
       log.warn("Unknown deep link action:", action);
       return null;
     }
 
-    return {
-      action,
+    const data: DeepLinkData = {
+      action: action as DeepLinkData["action"],
       duration: parsed.searchParams.get("duration")
         ? parseInt(parsed.searchParams.get("duration")!, 10)
         : undefined,
       mode: parsed.searchParams.get("mode") as DeepLinkData["mode"] | undefined,
     };
+
+    if (action === "auth-callback") {
+      const accessToken = parsed.searchParams.get("access_token");
+      const refreshToken = parsed.searchParams.get("refresh_token");
+      if (accessToken && refreshToken) {
+        data.access_token = accessToken;
+        data.refresh_token = refreshToken;
+      }
+    }
+
+    return data;
   } catch (error) {
     log.error("Failed to parse deep link:", error);
     return null;

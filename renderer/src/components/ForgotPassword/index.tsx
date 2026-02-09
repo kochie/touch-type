@@ -3,7 +3,6 @@
 import { useReducer } from "react";
 import { Step01 } from "./step01";
 import { Step02 } from "./step02";
-import Step03 from "./step03";
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -42,14 +41,10 @@ export default function ForgetPassword({ onSignUp, onContinue, onSignIn }) {
           )}
           {stage === "STEP_02" && (
             <Step02
-              onContinue={() => {
-                dispatch({ type: "STEP_03" });
-              }}
               email={email}
+              onSignIn={onSignIn}
+              onClose={onContinue}
             />
-          )}
-          {stage === "STEP_03" && (
-            <Step03 onSignIn={onSignIn} onClose={onContinue} />
           )}
           <p className="mt-10 text-center text-sm text-gray-500">
             Not a member?{" "}

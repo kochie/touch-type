@@ -58,7 +58,10 @@ export function ClientAssistant() {
         <div className="flex gap-6 w-96">
           <Button
             onClick={() => {
-              window.open(process.env["NEXT_PUBLIC_ACCOUNT_LINK"], "_blank");
+              const url =
+                process.env["NEXT_PUBLIC_ACCOUNT_LINK"] ||
+                "https://touch-typer.kochie.io/account";
+              if (url.startsWith("http")) window.open(url, "_blank");
             }}
           >
             Account Settings

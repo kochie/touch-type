@@ -59,9 +59,11 @@ export interface DebugInfo {
 }
 
 export interface DeepLinkData {
-  action: "practice" | "settings" | "stats";
+  action: "practice" | "settings" | "stats" | "auth-callback";
   duration?: number;
   mode?: "timed" | "words" | "endless";
+  access_token?: string;
+  refresh_token?: string;
 }
 
 declare global {
@@ -110,6 +112,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Existing APIs
   getWordSet: (language: string) => ipcRenderer.invoke("getWordSet", language),
   getProducts: () => ipcRenderer.invoke("getProducts"),
+  purchaseProduct: (productId: string, quantity?: number) =>
+    ipcRenderer.invoke("purchaseProduct", productId, quantity ?? 1),
+  onIAPPurchaseComplete: (callback: (transactionId: string) => void) => {
+    ipcRenderer.on("iap-purchase-complete", (_, transactionId: string) =>
+      callback(transactionId)
+    );
+  },
   isMas: () => ipcRenderer.invoke("isMas"),
 
   // Deep linking - listen for deep link events from main process

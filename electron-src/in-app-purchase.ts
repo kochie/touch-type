@@ -1,102 +1,76 @@
-// Main process
-import { Event, inAppPurchase, Transaction } from 'electron'
-const PRODUCT_IDS = ['io.kochie.touch-typer.monthly', 'io.kochie.touch-typer.yearly']
-// const PRODUCT_IDS = ['monthly', 'yearly']
+// Main process – Mac App Store in-app purchase
+import { BrowserWindow, Event, inAppPurchase, Transaction } from "electron";
 
-console.log("In-app purchase is available:", inAppPurchase.canMakePayments())
+const PRODUCT_IDS = ["io.kochie.touch-typer.monthly", "io.kochie.touch-typer.yearly"];
+
+let iapWindow: BrowserWindow | null = null;
+
+export function setIAPWindow(window: BrowserWindow | null) {
+  iapWindow = window;
+}
+
+function sendPurchaseCompleteToRenderer(transactionId: string) {
+  if (iapWindow && !iapWindow.isDestroyed()) {
+    iapWindow.webContents.send("iap-purchase-complete", transactionId);
+  }
+}
 
 // Listen for transactions as soon as possible.
-inAppPurchase.on('transactions-updated', (event: Event, transactions: Transaction[]) => {
-  if (!Array.isArray(transactions)) {
-    return
-  }
+inAppPurchase.on(
+  "transactions-updated",
+  (event: Event, transactions: Transaction[]) => {
+    if (!Array.isArray(transactions)) {
+      return;
+    }
 
-  // Check each transaction.
-  for (const transaction of transactions) {
-    const payment = transaction.payment
+    for (const transaction of transactions) {
+      const payment = transaction.payment;
 
-    switch (transaction.transactionState) {
-      case 'purchasing':
-        console.log(`Purchasing ${payment.productIdentifier}...`)
-        break
-      case 'purchased': {
-        console.log(`${payment.productIdentifier} purchased.`)
-        // Get the receipt url.
-        const receiptURL = inAppPurchase.getReceiptURL()
-        console.log(`Receipt URL: ${receiptURL}`)
-
-        // Submit the receipt file to the server and check if it is valid.
-        // @see https://developer.apple.com/library/content/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateRemotely.html
-        // ...
-        // If the receipt is valid, the product is purchased
-        // ...
-        // Finish the transaction.
-        inAppPurchase.finishTransactionByDate(transaction.transactionDate)
-        break
+      switch (transaction.transactionState) {
+        case "purchasing":
+          console.log(`Purchasing ${payment.productIdentifier}...`);
+          break;
+        case "purchased": {
+          console.log(`${payment.productIdentifier} purchased.`);
+          const transactionId = transaction.transactionIdentifier;
+          if (transactionId) {
+            sendPurchaseCompleteToRenderer(transactionId);
+          }
+          inAppPurchase.finishTransactionByDate(transaction.transactionDate);
+          break;
+        }
+        case "failed":
+          console.log(`Failed to purchase ${payment.productIdentifier}.`);
+          inAppPurchase.finishTransactionByDate(transaction.transactionDate);
+          break;
+        case "restored":
+          console.log(`The purchase of ${payment.productIdentifier} has been restored.`);
+          if (transaction.transactionIdentifier) {
+            sendPurchaseCompleteToRenderer(transaction.transactionIdentifier);
+          }
+          break;
+        case "deferred":
+          console.log(`The purchase of ${payment.productIdentifier} has been deferred.`);
+          break;
+        default:
+          break;
       }
-      case 'failed':
-        console.log(`Failed to purchase ${payment.productIdentifier}.`)
-        // Finish the transaction.
-        inAppPurchase.finishTransactionByDate(transaction.transactionDate)
-        break
-      case 'restored':
-        console.log(`The purchase of ${payment.productIdentifier} has been restored.`)
-        break
-      case 'deferred':
-        console.log(`The purchase of ${payment.productIdentifier} has been deferred.`)
-        break
-      default:
-        break
     }
   }
-})
+);
 
-
-// Check if the user is allowed to make in-app purchase.
 if (!inAppPurchase.canMakePayments()) {
-  console.log('The user is not allowed to make in-app purchase.')
+  console.log("The user is not allowed to make in-app purchase.");
 }
 
 export async function getProducts(): Promise<Electron.Product[]> {
-
-  if (process.mas) {
-    console.log("This is a Mac App Store build");
-    // Handle Mac App Store specific behavior here
-  } else {
-    console.log("This is a non-Mac App Store build");
-    // Handle non-Mac App Store specific behavior here
-  }
-  
-  const products = await inAppPurchase.getProducts(PRODUCT_IDS)
-
-  console.log(products)
-  return products
+  const products = await inAppPurchase.getProducts(PRODUCT_IDS);
+  return products;
 }
 
-// Retrieve and display the product descriptions.
-inAppPurchase.getProducts(PRODUCT_IDS).then(products => {
-  // Check the parameters.
-  if (!Array.isArray(products) || products.length <= 0) {
-    console.log('Unable to retrieve the product information.')
-    return
-  }
-
-  // Display the name and price of each product.
-  for (const product of products) {
-    console.log(`The price of ${product.localizedTitle} is ${product.formattedPrice}.`)
-  }
-
-  // Ask the user which product they want to purchase.
-  const selectedProduct = products[0]
-  const selectedQuantity = 1
-
-  // Purchase the selected product.
-  inAppPurchase.purchaseProduct(selectedProduct.productIdentifier, selectedQuantity).then(isProductValid => {
-    if (!isProductValid) {
-      console.log('The product is not valid.')
-      return
-    }
-
-    console.log('The payment has been added to the payment queue.')
-  })
-})
+export async function purchaseProduct(
+  productId: string,
+  quantity: number = 1
+): Promise<boolean> {
+  return inAppPurchase.purchaseProduct(productId, quantity);
+}

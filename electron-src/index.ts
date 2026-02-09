@@ -20,8 +20,8 @@ import { init } from "@sentry/electron/main";
 import { readFile } from "fs/promises";
 import serve from "electron-serve";
 
-import "./in-app-purchase"
-import { getProducts } from "./in-app-purchase";
+import "./in-app-purchase";
+import { getProducts, purchaseProduct, setIAPWindow } from "./in-app-purchase";
 
 // Deep linking, notifications, and tray support
 import { setupDeepLinkHandlers, setMainWindow, handleInitialDeepLink } from "./deep-link";
@@ -74,7 +74,10 @@ app.on("ready", async () => {
   isDevMode = isDev.default;
 
   ipcMain.handle("getWordSet", handleWordSet);
-  ipcMain.handle("getProducts", getProducts)
+  ipcMain.handle("getProducts", getProducts);
+  ipcMain.handle("purchaseProduct", (_event, productId: string, quantity: number) =>
+    purchaseProduct(productId, quantity ?? 1)
+  );
   ipcMain.handle("isMas", () => !!process.mas);
   
   // Debug info handler
@@ -130,12 +133,31 @@ app.on("ready", async () => {
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url); // Open URL in user's browser.
-    return { action: "deny" }; // Prevent the app from opening the URL.
+    const url = details.url?.trim();
+    const isValid =
+      url &&
+      (url.startsWith("http://") || url.startsWith("https://")) &&
+      url !== "undefined" &&
+      url !== "null";
+    if (isValid) {
+      shell.openExternal(url).catch((err) => {
+        log.warn("Could not open external URL:", err?.message ?? err);
+        dialog.showMessageBox(mainWindow, {
+          type: "info",
+          title: "Open in browser",
+          message: "Copy this link and open it in your browser:",
+          detail: url,
+        });
+      });
+    } else {
+      log.warn("Blocked invalid or missing URL:", url || "(empty)");
+    }
+    return { action: "deny" }; // Prevent the app from opening the URL in-app.
   });
 
-  // Set the main window reference for deep linking
+  // Set the main window reference for deep linking and IAP
   setMainWindow(mainWindow);
+  setIAPWindow(mainWindow);
 
   // Setup system tray
   setupTray(mainWindow);

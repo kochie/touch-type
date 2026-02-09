@@ -64,6 +64,8 @@ export interface StartupResult {
 export interface ElectronAPI {
   getWordSet: (language: string) => Promise<Uint8Array>;
   getProducts: () => Promise<Electron.Product[]>;
+  purchaseProduct: (productId: string, quantity?: number) => Promise<boolean>;
+  onIAPPurchaseComplete: (callback: (transactionId: string) => void) => void;
   isMas: () => Promise<boolean>;
   getDebugInfo: () => Promise<DebugInfo>;
   // Deep linking

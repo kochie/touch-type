@@ -1,4 +1,5 @@
 import Account from "@/components/Account";
+import ChangePassword from "@/components/ChangePassword";
 import ForgetPassword from "@/components/ForgotPassword";
 import Login from "@/components/Login";
 import Modal from "@/components/Modal";
@@ -18,6 +19,7 @@ export enum ModalType {
   SIGN_IN = "SIGN_IN",
   SIGN_UP = "SIGN_UP",
   RECOVER_ACCOUNT = "RECOVER_ACCOUNT",
+  CHANGE_PASSWORD = "CHANGE_PASSWORD",
   ACCOUNT = "ACCOUNT",
   WHATS_NEW = "WHATS_NEW",
   NONE = "NONE",
@@ -66,6 +68,10 @@ export function ModalController() {
         />
       </Modal>
 
+      <Modal open={modal === ModalType.CHANGE_PASSWORD} onClose={closeModal}>
+        <ChangePassword onClose={closeModal} onSuccess={closeModal} />
+      </Modal>
+
       <Modal open={modal === ModalType.SIGN_UP} onClose={closeModal}>
         <SignUp
           toSignIn={() => setModal(ModalType.SIGN_IN)}
@@ -85,7 +91,7 @@ export function ModalController() {
       <Modal open={modal === ModalType.ACCOUNT} onClose={closeModal}>
         <Suspense fallback={<Loading />}>
           <Account
-            onChangePassword={() => setModal(ModalType.RECOVER_ACCOUNT)}
+            onChangePassword={() => setModal(ModalType.CHANGE_PASSWORD)}
             onError={closeModal}
             onCancel={closeModal}
           />

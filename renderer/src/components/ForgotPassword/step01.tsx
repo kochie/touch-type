@@ -44,7 +44,7 @@ export function Step01({ onContinue }) {
           const { error } = await supabase.auth.resetPasswordForEmail(
             values.email,
             {
-              redirectTo: `${window.location.origin}/auth/reset-password`,
+              redirectTo: "https://touch-typer.kochie.io/auth/callback?next=/auth/set-password",
             }
           );
 

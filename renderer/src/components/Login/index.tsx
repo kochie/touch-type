@@ -1,4 +1,6 @@
 "use client";
+
+import { useState } from "react";
 import Button from "../Button";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
@@ -6,6 +8,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useSupabaseClient } from "@/lib/supabase-provider";
 import { toast } from "sonner";
+
+const MAGIC_LINK_CALLBACK = "https://touch-typer.kochie.io/auth/callback";
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -27,6 +31,8 @@ const Tick = (
 
 export default function Login({ onSignUp, onContinue, onForgetPassword }) {
   const supabase = useSupabaseClient();
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
 
   return (
     <>
@@ -38,6 +44,22 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
         </div>
 
         <div className="mt-10 mx-auto w-full max-w-lg">
+          {magicLinkSent ? (
+            <div className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-green-800">
+                  We sent a sign-in link to <strong>{magicLinkEmail}</strong>. Open the link in your browser to sign in, then you can use &quot;Open in app&quot; there or sign in here with your password.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMagicLinkSent(false)}
+                className="text-sm text-indigo-600 hover:text-indigo-500"
+              >
+                Sign in with password instead
+              </button>
+            </div>
+          ) : (
           <Formik
             initialValues={{
               password: "",
@@ -128,9 +150,37 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
                     {!isSubmitting && status === "COMPLETE" && Tick}
                   </Button>
                 </div>
+                <div className="mt-2 text-center">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const email = (document.getElementById("email") as HTMLInputElement)?.value;
+                      if (!email) {
+                        toast.error("Enter your email first");
+                        return;
+                      }
+                      try {
+                        const { error } = await supabase.auth.signInWithOtp({
+                          email,
+                          options: { emailRedirectTo: MAGIC_LINK_CALLBACK },
+                        });
+                        if (error) throw error;
+                        setMagicLinkEmail(email);
+                        setMagicLinkSent(true);
+                        toast.success("Check your email for the sign-in link.");
+                      } catch (err: unknown) {
+                        toast.error(err instanceof Error ? err.message : "Failed to send link");
+                      }
+                    }}
+                    className="text-sm text-indigo-600 hover:text-indigo-500"
+                  >
+                    Email me a link instead
+                  </button>
+                </div>
               </Form>
             )}
           </Formik>
+          )}
 
           <p className="mt-10 text-center text-sm text-gray-500">
             Not a member?{" "}

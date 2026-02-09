@@ -4,14 +4,17 @@ import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 export interface DeepLinkData {
-  action: "practice" | "settings" | "stats";
+  action: "practice" | "settings" | "stats" | "auth-callback";
   duration?: number;
   mode?: "timed" | "words" | "endless";
+  access_token?: string;
+  refresh_token?: string;
 }
 
 export interface DeepLinkHandlers {
   onPracticeStart?: (data: DeepLinkData) => void;
   onNavigate?: (path: string) => void;
+  onAuthCallback?: (accessToken: string, refreshToken: string) => void;
 }
 
 /**
@@ -40,6 +43,12 @@ export function useDeepLink(handlers?: DeepLinkHandlers): void {
 
         case "stats":
           router.push("/stats");
+          break;
+
+        case "auth-callback":
+          if (data.access_token && data.refresh_token) {
+            handlers?.onAuthCallback?.(data.access_token, data.refresh_token);
+          }
           break;
 
         default:

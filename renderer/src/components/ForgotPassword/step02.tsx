@@ -1,166 +1,20 @@
 "use client";
-import { useState } from "react";
+
 import Button from "../Button";
-import { Formik, Form, Field } from "formik";
-import * as Yup from "yup";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
-import Error from "../Errors";
-import { Transition } from "@headlessui/react";
-import { useSupabaseClient } from "@/lib/supabase-provider";
 
-const SignupSchema = Yup.object().shape({
-  email: Yup.string().email("Invalid email").required("Required"),
-  password: Yup.string().min(8, "Password must be at least 8 characters").required("Required"),
-  code: Yup.string().length(6, "Code must be 6 characters").required("Required"),
-});
-
-const Spinner = (
-  <FontAwesomeIcon
-    icon={faSpinner}
-    className="text-white"
-    spin={true}
-    size="xl"
-  />
-);
-
-const Tick = (
-  <FontAwesomeIcon icon={faCheck} className="text-white" size="xl" />
-);
-
-export function Step02({ email, onContinue }) {
-  const [formErrors, setFormErrors] = useState<string>();
-  const supabase = useSupabaseClient();
-
+export function Step02({ email, onSignIn, onClose }) {
   return (
-    <Formik
-      initialValues={{
-        email: email,
-        code: "",
-        password: "",
-      }}
-      initialStatus={"PENDING"}
-      validationSchema={SignupSchema}
-      onSubmit={async (values, { setSubmitting, setStatus }) => {
-        setFormErrors("");
-
-        try {
-          // First verify the OTP
-          const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-            email: values.email,
-            token: values.code,
-            type: 'recovery',
-          });
-
-          if (verifyError) {
-            throw verifyError;
-          }
-
-          // Then update the password
-          const { error: updateError } = await supabase.auth.updateUser({
-            password: values.password,
-          });
-
-          if (updateError) {
-            throw updateError;
-          }
-
-          setSubmitting(false);
-          setStatus("COMPLETE");
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          onContinue(values);
-        } catch (error: any) {
-          setFormErrors(error.message || String(error));
-        }
-
-        setSubmitting(false);
-      }}
-    >
-      {({ isSubmitting, errors, touched, status }) => (
-        <Form className="space-y-6">
-          <Transition
-            as="div"
-            appear={true}
-            show={!!formErrors}
-            enter="transition-opacity duration-100"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="transition-opacity duration-150"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Error errors={formErrors} />
-          </Transition>
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              Email address
-            </label>
-            <div className="mt-2">
-              <Field
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                disabled
-                required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              New Password
-            </label>
-            <div className="mt-2">
-              <Field
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="password"
-                required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="code"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              Recovery Code
-            </label>
-            <div className="mt-2">
-              <Field
-                id="code"
-                name="code"
-                type="text"
-                autoComplete="otp"
-                required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-            >
-              {isSubmitting && status === "PENDING" && Spinner}
-              {!isSubmitting && status === "PENDING" && "Reset Password"}
-              {!isSubmitting && status === "COMPLETE" && Tick}
-            </Button>
-          </div>
-        </Form>
-      )}
-    </Formik>
+    <div className="space-y-6">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <h3 className="text-sm font-medium text-green-800">Check your email</h3>
+        <p className="mt-1 text-sm text-green-700">
+          We sent a password reset link to <strong>{email}</strong>. Open the link in your browser to set a new password, then sign in here.
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={onSignIn}>Sign In</Button>
+        <Button onClick={onClose}>Close</Button>
+      </div>
+    </div>
   );
 }

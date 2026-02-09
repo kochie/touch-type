@@ -1,41 +1,67 @@
 "use client"
 
-import {loadStripe} from '@stripe/stripe-js';
+import { loadStripe } from "@stripe/stripe-js";
 import {
   EmbeddedCheckoutProvider,
-  EmbeddedCheckout
-} from '@stripe/react-stripe-js';
-import { useCallback } from 'react';
-import { useSupabaseClient } from '@/lib/supabase-provider';
+  EmbeddedCheckout,
+} from "@stripe/react-stripe-js";
+import { useCallback } from "react";
+import { useSupabaseClient } from "@/lib/supabase-provider";
 
-// Make sure to call `loadStripe` outside of a component's render to avoid
-// recreating the `Stripe` object on every render.
-const stripePromise = loadStripe('pk_test_51LYouDIsLeqpVAzJK9MonFdeWzOoVDmYW3FfDcJRbGHt9Nx2Km5FCvC7kPtHedlLTfsgvmmYlxpcsn54Gkfx5ZHT00P73XEu2v');
+const stripePublishableKey =
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+  "pk_test_51LYouDIsLeqpVAzJK9MonFdeWzOoVDmYW3FfDcJRbGHt9Nx2Km5FCvC7kPtHedlLTfsgvmmYlxpcsn54Gkfx5ZHT00P73XEu2v";
+const stripePromise = loadStripe(stripePublishableKey);
 
-export function StripeCheckout() {
+export const STRIPE_LOOKUP_KEYS = {
+  monthly: "premium_monthly",
+  yearly: "premium_yearly",
+} as const;
+
+interface StripeCheckoutProps {
+  /** Stripe price lookup key (e.g. premium_monthly, premium_yearly) */
+  lookupKey: string;
+  /** Called when checkout completes successfully; use to refetch plan */
+  onComplete?: () => void;
+}
+
+export function StripeCheckout({ lookupKey, onComplete }: StripeCheckoutProps) {
   const supabase = useSupabaseClient();
 
   const fetchClientSecret = useCallback(async () => {
-
-    const {data, error} = await supabase.functions.invoke('create-checkout-session');
+    const { data, error } = await supabase.functions.invoke(
+      "create-checkout-session",
+      { body: { lookup_key: lookupKey } }
+    );
 
     if (error) {
       throw error;
     }
 
-    return data.clientSecret;
-  }, [supabase]);
+    return data?.clientSecret ?? null;
+  }, [supabase, lookupKey]);
 
-  const options = {fetchClientSecret};
+  const handleComplete = useCallback(async () => {
+    try {
+      await supabase.functions.invoke("confirm-checkout-session", {
+        method: "POST",
+      });
+    } catch (err) {
+      console.error("Failed to confirm checkout session:", err);
+    }
+    onComplete?.();
+  }, [supabase, onComplete]);
+
+  const options = {
+    fetchClientSecret,
+    ...(onComplete && { onComplete: handleComplete }),
+  };
 
   return (
     <div id="checkout">
-      <EmbeddedCheckoutProvider
-        stripe={stripePromise}
-        options={options}
-      >
+      <EmbeddedCheckoutProvider stripe={stripePromise} options={options}>
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>
     </div>
-  )
+  );
 }

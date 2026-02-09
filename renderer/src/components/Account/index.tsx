@@ -8,7 +8,13 @@ import { faArrowsRotate } from "@fortawesome/pro-duotone-svg-icons";
 import { useMas } from "@/lib/mas_hook";
 import clsx from "clsx";
 import { useSupabase } from "@/lib/supabase-provider";
+import { useRefetchPlan } from "@/lib/plan_hook";
 import { Tables } from "@/types/supabase";
+import MfaSection from "@/components/MfaSection";
+import {
+  StripeCheckout,
+  STRIPE_LOOKUP_KEYS,
+} from "@/components/Payment";
 
 enum PlanType {
   FREE = "free",
@@ -19,6 +25,15 @@ const features = {
   [PlanType.FREE]: ["Settings Sync", "Cloud Saves", "Leaderboard Access"],
   [PlanType.PREMIUM]: ["AI Tutor", "Progress Reports"],
 };
+
+const ACCOUNT_LINK =
+  process.env["NEXT_PUBLIC_ACCOUNT_LINK"] ?? "https://touch-typer.kochie.io/account";
+
+function openAccountLink() {
+  if (ACCOUNT_LINK.startsWith("http")) {
+    window.open(ACCOUNT_LINK, "_blank");
+  }
+}
 
 export default function Account({ onError, onCancel, onChangePassword }) {
   const [submitting, setSubmitting] = useState(false);
@@ -34,8 +49,14 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   const [subscription, setSubscription] = useState<Tables<"subscriptions"> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
+  const [stripeLookupKey, setStripeLookupKey] = useState(STRIPE_LOOKUP_KEYS.monthly);
+  const [iapProducts, setIapProducts] = useState<Electron.Product[]>([]);
+  const [iapLoading, setIapLoading] = useState(false);
+  const [iapPurchasing, setIapPurchasing] = useState<string | null>(null);
+
   const { supabase, user } = useSupabase();
+  const refetchPlan = useRefetchPlan();
 
   const handleSignOut = async () => {
     setSubmitting(true);
@@ -44,11 +65,30 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     setSubmitting(false);
   };
 
-  const handleProduct = async () => {
-    const products =
-      // @ts-expect-error electronAPI is not defined
-      (await window.electronAPI.getProducts()) as Electron.Product[];
-    console.log("products", products);
+  const fetchIapProducts = async () => {
+    if (typeof window === "undefined" || !window.electronAPI?.getProducts) return;
+    setIapLoading(true);
+    try {
+      const products = await window.electronAPI.getProducts();
+      setIapProducts(products ?? []);
+    } catch (err) {
+      console.error("Failed to fetch IAP products:", err);
+    } finally {
+      setIapLoading(false);
+    }
+  };
+
+  const handleIapPurchase = async (productId: string) => {
+    if (!window.electronAPI?.purchaseProduct) return;
+    setIapPurchasing(productId);
+    try {
+      await window.electronAPI.purchaseProduct(productId, 1);
+      await refetch();
+    } catch (err) {
+      console.error("IAP purchase failed:", err);
+    } finally {
+      setIapPurchasing(null);
+    }
   };
 
   const deleteAccount = async () => {
@@ -139,10 +179,22 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     fetchUserData();
   }, [user]);
 
+  useEffect(() => {
+    if (isMas && subscription?.billing_plan === "free") {
+      fetchIapProducts();
+    }
+  }, [isMas, subscription?.billing_plan]);
+
   const refetch = async () => {
     setReloading(true);
     await fetchUserData();
     setReloading(false);
+  };
+
+  const handleStripeComplete = async () => {
+    await refetchPlan();
+    await refetch();
+    setShowStripeCheckout(false);
   };
 
   return (
@@ -334,7 +386,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                 )}
               </Formik>
 
-              <div className={clsx(isMas && "hidden")}>
+              <div>
                 <div className="border-b border-gray-900/10 my-6" />
 
                 <h2 className="text-base font-semibold leading-7 text-gray-900">
@@ -380,13 +432,15 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     )}
                   </div>
 
-                  <div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       className="w-12 text-black"
                       onClick={(event) => {
                         event.preventDefault();
                         refetch();
                       }}
+                      type="button"
+                      aria-label="Refresh subscription"
                     >
                       <FontAwesomeIcon
                         icon={faArrowsRotate}
@@ -394,23 +448,133 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                         size="lg"
                       />
                     </button>
-                    <button
-                      onClick={(event) => {
-                        event.preventDefault();
-                        window.open(
-                          process.env["NEXT_PUBLIC_ACCOUNT_LINK"],
-                          "_blank",
-                        );
-                      }}
-                      type="button"
-                      disabled={deleteSubmitting}
-                      className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
-                    >
-                      Change Plan
-                    </button>
+                    {subscription?.billing_plan === "free" && !isMas && !showStripeCheckout && (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setShowStripeCheckout(true);
+                          }}
+                          type="button"
+                          className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+                        >
+                          Upgrade to Premium
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openAccountLink();
+                          }}
+                          type="button"
+                          className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                        >
+                          Manage on Web
+                        </button>
+                      </>
+                    )}
+                    {subscription?.billing_plan === "free" && isMas && (
+                      <>
+                        {iapLoading ? (
+                          <span className="text-sm text-gray-500">Loading plans…</span>
+                        ) : (
+                          iapProducts.map((product) => (
+                            <button
+                              key={product.productIdentifier}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleIapPurchase(product.productIdentifier);
+                              }}
+                              type="button"
+                              disabled={iapPurchasing !== null}
+                              className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 disabled:opacity-70"
+                            >
+                              {iapPurchasing === product.productIdentifier ? (
+                                <FontAwesomeIcon icon={faSpinner} spin size="sm" className="mr-1" />
+                              ) : null}
+                              {product.localizedTitle} – {product.formattedPrice}
+                            </button>
+                          ))
+                        )}
+                        {!iapLoading && iapProducts.length === 0 && (
+                          <span className="text-sm text-gray-500">No plans available</span>
+                        )}
+                      </>
+                    )}
+                    {subscription?.billing_plan === "premium" && !isMas && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          openAccountLink();
+                        }}
+                        type="button"
+                        disabled={deleteSubmitting}
+                        className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500"
+                      >
+                        Change Plan
+                      </button>
+                    )}
+                    {subscription?.billing_plan === "premium" && isMas && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          openAccountLink();
+                        }}
+                        type="button"
+                        className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                      >
+                        Manage Subscription
+                      </button>
+                    )}
                   </div>
                 </div>
+                {showStripeCheckout && !isMas && (
+                  <div className="mt-6 border rounded-lg p-4 bg-gray-50">
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setStripeLookupKey(STRIPE_LOOKUP_KEYS.monthly)}
+                        className={clsx(
+                          "rounded px-3 py-1 text-sm font-medium",
+                          stripeLookupKey === STRIPE_LOOKUP_KEYS.monthly
+                            ? "bg-purple-600 text-white"
+                            : "bg-white border border-gray-300 text-gray-700"
+                        )}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStripeLookupKey(STRIPE_LOOKUP_KEYS.yearly)}
+                        className={clsx(
+                          "rounded px-3 py-1 text-sm font-medium",
+                          stripeLookupKey === STRIPE_LOOKUP_KEYS.yearly
+                            ? "bg-purple-600 text-white"
+                            : "bg-white border border-gray-300 text-gray-700"
+                        )}
+                      >
+                        Yearly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowStripeCheckout(false)}
+                        className="rounded px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <div key={stripeLookupKey}>
+                      <StripeCheckout
+                        lookupKey={stripeLookupKey}
+                        onComplete={handleStripeComplete}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
+
+              <div className="border-b border-gray-900/10 my-6" />
+
+              <MfaSection />
 
               <div className="border-b border-gray-900/10 my-6" />
 
