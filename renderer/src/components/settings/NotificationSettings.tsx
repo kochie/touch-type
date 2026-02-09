@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSettings, useSettingsDispatch } from "@/lib/settings_hook";
+import { useStreak } from "@/lib/streak_hook";
 import { useSupabase, useUser } from "@/lib/supabase-provider";
-import { Field, Label, Description, Switch } from "@headlessui/react";
+import { Field, Label, Description, Switch, Select } from "@headlessui/react";
 import clsx from "clsx";
 
 const DAYS = [
@@ -20,10 +21,24 @@ const DEFAULT_REMINDER_DURATION = 5; // minutes, used for deep link when opening
 
 type Platform = "macos" | "windows" | "linux";
 
+/**
+ * Generate a notification message that includes streak information when relevant
+ */
+function getStreakAwareMessage(currentStreak: number, isAtRisk: boolean, baseMessage: string): string {
+  if (currentStreak > 0 && isAtRisk) {
+    return `Don't break your ${currentStreak}-day streak! ${baseMessage}`;
+  }
+  if (currentStreak >= 7) {
+    return `Keep your ${currentStreak}-day streak going! ${baseMessage}`;
+  }
+  return baseMessage;
+}
+
 export function NotificationSettings() {
   const settings = useSettings();
   const dispatch = useSettingsDispatch();
   const { supabase } = useSupabase();
+  const { currentStreak, isAtRisk } = useStreak();
   const { user } = useUser();
   const [isScheduling, setIsScheduling] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +123,34 @@ export function NotificationSettings() {
     } catch (err) {
       console.error("Error removing device token:", err);
     }
-  }, [user, supabase, platform]);
+
+	const notificationMessage = getStreakAwareMessage(
+      currentStreak,
+      isAtRisk,
+    settings.notificationMessage
+  );
+
+  // Re-schedule notifications when streak changes (to update the message)
+  useEffect(() => {
+    if (!settings.notificationsEnabled || !window.electronAPI) return;
+
+    // Debounce to avoid too many re-schedules
+    const timeoutId = setTimeout(async () => {
+      try {
+        await window.electronAPI.scheduleNotification({
+          enabled: true,
+          time: settings.notificationTime,
+          days: settings.notificationDays,
+          message: notificationMessage,
+          duration: settings.practiceDuration,
+        });
+      } catch (err) {
+        console.error("Failed to update notification with streak:", err);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [currentStreak, isAtRisk]);
 
   const handleToggleNotifications = async (enabled: boolean) => {
     if (!window.electronAPI) return;
@@ -167,8 +209,24 @@ export function NotificationSettings() {
 
   const handleTimeChange = async (time: string) => {
     dispatch({ type: "SET_NOTIFICATION_TIME", time });
-    // Settings are synced to Supabase via settings_hook
-    // The server will use the updated time for scheduling
+
+    // Re-schedule if enabled
+    if (settings.notificationsEnabled && window.electronAPI) {
+      setIsScheduling(true);
+      try {
+        await window.electronAPI.scheduleNotification({
+          enabled: true,
+          time,
+          days: settings.notificationDays,
+          message: notificationMessage,
+          duration: settings.practiceDuration,
+        });
+      } catch (err) {
+        console.error("Failed to reschedule:", err);
+      } finally {
+        setIsScheduling(false);
+      }
+    }
   };
 
   const handleDaysChange = async (day: string) => {
@@ -189,6 +247,28 @@ export function NotificationSettings() {
           days: newDays,
           message: settings.notificationMessage,
           duration: DEFAULT_REMINDER_DURATION,
+        });
+      } catch (err) {
+        console.error("Failed to reschedule:", err);
+      } finally {
+        setIsScheduling(false);
+      }
+    }
+  };
+
+  const handleDurationChange = async (duration: number) => {
+    dispatch({ type: "SET_PRACTICE_DURATION", duration });
+
+    // Re-schedule if enabled
+    if (settings.notificationsEnabled && window.electronAPI) {
+      setIsScheduling(true);
+      try {
+        await window.electronAPI.scheduleNotification({
+          enabled: true,
+          time: settings.notificationTime,
+          days: settings.notificationDays,
+          message: notificationMessage,
+          duration,
         });
       } catch (err) {
         console.error("Failed to reschedule:", err);
@@ -302,7 +382,7 @@ export function NotificationSettings() {
             Reminder Time
           </Label>
           <Description className="text-sm text-gray-500">
-            When should we remind you? (UTC)
+            When should we remind you?
           </Description>
         </span>
         <input
@@ -342,6 +422,35 @@ export function NotificationSettings() {
             </button>
           ))}
         </div>
+      </Field>
+
+      {/* Practice Duration */}
+      <Field as="div" className="flex items-center justify-between">
+        <span className="flex flex-grow flex-col">
+          <Label className="text-sm font-medium text-white">
+            Practice Duration
+          </Label>
+          <Description className="text-sm text-gray-500">
+            How long should each session be?
+          </Description>
+        </span>
+        <Select
+          value={settings.practiceDuration}
+          onChange={(e) => handleDurationChange(Number(e.target.value))}
+          disabled={!settings.notificationsEnabled || isScheduling}
+          className={clsx(
+            "block w-32 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+            "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
+            "*:text-black",
+            (!settings.notificationsEnabled || isScheduling) && "opacity-50"
+          )}
+        >
+          {DURATIONS.map((d) => (
+            <option key={d.value} value={d.value}>
+              {d.label}
+            </option>
+          ))}
+        </Select>
       </Field>
 
       {/* Status indicator */}

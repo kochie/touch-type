@@ -66,6 +66,12 @@ export interface DeepLinkData {
   refresh_token?: string;
 }
 
+// Types for streak data
+export interface StreakData {
+  currentStreak: number;
+  isAtRisk: boolean;
+}
+
 declare global {
   namespace NodeJS {
     interface Global {

@@ -11,7 +11,7 @@ import {
   faChartRadar,
   faMicrochipAi,
 } from "@fortawesome/pro-regular-svg-icons";
-import { faSparkles } from "@fortawesome/pro-duotone-svg-icons";
+import { faFire, faSparkles } from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { Suspense, useEffect, useLayoutEffect, useState } from "react";
@@ -22,6 +22,8 @@ import { keyboards } from "../KeyboardSelect";
 import { languages } from "../settings/settings";
 import { useMas } from "@/lib/mas_hook";
 import { usePlan } from "@/lib/plan_hook";
+import { useStreak } from "@/lib/streak_hook";
+
 
 interface MenuProps {
   handleWhatsNew?: () => void;
@@ -38,6 +40,7 @@ export default function Menu({
   const settings = useSettings();
   const isMas = useMas()
   const plan = usePlan();
+  const { currentStreak, isAtRisk, isLoading: streakLoading } = useStreak();
 
   
   // This is being done because of hydration errors in the settings hook.
@@ -155,7 +158,25 @@ export default function Menu({
           </div>
         ) : null}
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+          {/* Streak Display */}
+          {!streakLoading && (
+            <Link 
+              href="/streak" 
+              className={clsx(
+                "flex items-center gap-1.5 px-2 py-1 rounded-full text-sm font-medium transition-colors",
+                currentStreak === 0
+                  ? "text-gray-500"
+                  : isAtRisk
+                  ? "text-orange-400 animate-pulse"
+                  : "text-orange-400 hover:text-orange-300"
+              )}
+              title={isAtRisk && currentStreak > 0 ? "Practice today to keep your streak!" : `${currentStreak} day streak`}
+            >
+              <FontAwesomeIcon icon={faFire} size="lg" />
+              <span>{currentStreak}</span>
+            </Link>
+          )}
           <Suspense
             fallback={
               <FontAwesomeIcon

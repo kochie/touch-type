@@ -168,7 +168,6 @@ app.on("ready", async () => {
   // Note: Even when starting hidden, we keep the dock icon visible on macOS
   // (like Slack). Clicking the dock icon will show the window.
 
-  // mainWindow.setVibrancy("under-window");
   if (isDevMode) {
     console.log("Running in development");
 
@@ -225,11 +224,12 @@ autoUpdater.on("error", (message) => {
 });
 
 // Handle window-all-closed event
-// On all platforms, the app stays running in the tray when windows are closed
+// On macOS, the app stays in the tray; on other platforms, quit
 // The app only quits when the user explicitly quits from the tray menu
 app.on("window-all-closed", () => {
-  // Don't quit - the app continues running in the system tray
-  // Users can quit explicitly from the tray context menu
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
 
 // Properly quit when the user explicitly quits
