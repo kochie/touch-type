@@ -10,6 +10,7 @@ import { useSupabase } from "@/lib/supabase-provider";
 import { useRefetchPlan } from "@/lib/plan_hook";
 import { Tables } from "@/types/supabase";
 import MfaSection from "@/components/MfaSection";
+import Modal from "@/components/Modal";
 import {
   StripeCheckout,
   STRIPE_LOOKUP_KEYS,
@@ -42,6 +43,7 @@ function PremiumSubscriptionDetails({
   portalLoading,
   setPortalLoading,
   onSubscriptionChange,
+  isMas,
 }: {
   subscription: Tables<"subscriptions">;
   supabase: ReturnType<typeof useSupabase>["supabase"];
@@ -50,6 +52,7 @@ function PremiumSubscriptionDetails({
   portalLoading: boolean;
   setPortalLoading: (v: boolean) => void;
   onSubscriptionChange: () => Promise<void>;
+  isMas: boolean;
 }) {
   const isYearly = Boolean(
     subscription.billing_period &&
@@ -152,18 +155,18 @@ function PremiumSubscriptionDetails({
         </>
       )}
       <button
-        onClick={handleOpenBillingPortal}
-        disabled={portalLoading || !isStripe}
+        onClick={isStripe ? handleOpenBillingPortal : openAccountLink}
+        disabled={portalLoading && isStripe}
         type="button"
         className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 disabled:opacity-50"
       >
         {portalLoading ? (
           <FontAwesomeIcon icon={faSpinner} spin size="sm" />
         ) : (
-          "Manage subscription"
+          isStripe ? "Manage subscription" : "Manage on Web"
         )}
       </button>
-      {!isStripe && (
+      {!isStripe && isMas && (
         <p className="text-xs text-gray-500 max-w-[200px]">
           Cancel or update payment in App Store settings.
         </p>
@@ -658,9 +661,10 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                         portalLoading={portalLoading}
                         setPortalLoading={setPortalLoading}
                         onSubscriptionChange={async () => {
-                        await refetchPlan();
-                        await fetchUserData();
-                      }}
+                          await refetchPlan();
+                          await fetchUserData();
+                        }}
+                        isMas={isMas}
                       />
                     )}
                     {subscription?.billing_plan === "premium" && isMas && (
@@ -680,47 +684,53 @@ export default function Account({ onError, onCancel, onChangePassword }) {
 
 
                 {showStripeCheckout && !isMas && (
-                  <div className="mt-6 border rounded-lg p-4 bg-gray-50">
-                    <div className="flex gap-2 mb-3">
-                      <button
-                        type="button"
-                        onClick={() => setStripeLookupKey(STRIPE_LOOKUP_KEYS.monthly)}
-                        className={clsx(
-                          "rounded px-3 py-1 text-sm font-medium",
-                          stripeLookupKey === STRIPE_LOOKUP_KEYS.monthly
-                            ? "bg-purple-600 text-white"
-                            : "bg-white border border-gray-300 text-gray-700"
-                        )}
-                      >
-                        Monthly
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setStripeLookupKey(STRIPE_LOOKUP_KEYS.yearly)}
-                        className={clsx(
-                          "rounded px-3 py-1 text-sm font-medium",
-                          stripeLookupKey === STRIPE_LOOKUP_KEYS.yearly
-                            ? "bg-purple-600 text-white"
-                            : "bg-white border border-gray-300 text-gray-700"
-                        )}
-                      >
-                        Yearly
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowStripeCheckout(false)}
-                        className="rounded px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
-                      >
-                        Cancel
-                      </button>
+                  <Modal
+                    open={showStripeCheckout}
+                    onClose={() => setShowStripeCheckout(false)}
+                    className="w-full max-w-2xl"
+                  >
+                    <div className="p-4">
+                      <div className="flex gap-2 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => setStripeLookupKey(STRIPE_LOOKUP_KEYS.monthly)}
+                          className={clsx(
+                            "rounded px-3 py-1 text-sm font-medium",
+                            stripeLookupKey === STRIPE_LOOKUP_KEYS.monthly
+                              ? "bg-purple-600 text-white"
+                              : "bg-white border border-gray-300 text-gray-700"
+                          )}
+                        >
+                          Monthly
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStripeLookupKey(STRIPE_LOOKUP_KEYS.yearly)}
+                          className={clsx(
+                            "rounded px-3 py-1 text-sm font-medium",
+                            stripeLookupKey === STRIPE_LOOKUP_KEYS.yearly
+                              ? "bg-purple-600 text-white"
+                              : "bg-white border border-gray-300 text-gray-700"
+                          )}
+                        >
+                          Yearly
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowStripeCheckout(false)}
+                          className="rounded px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      <div key={stripeLookupKey}>
+                        <StripeCheckout
+                          lookupKey={stripeLookupKey}
+                          onComplete={handleStripeComplete}
+                        />
+                      </div>
                     </div>
-                    <div key={stripeLookupKey}>
-                      <StripeCheckout
-                        lookupKey={stripeLookupKey}
-                        onComplete={handleStripeComplete}
-                      />
-                    </div>
-                  </div>
+                  </Modal>
                 )}
               </div>
 
