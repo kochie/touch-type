@@ -217,6 +217,15 @@ Scheduled delivery for macOS and Windows is done by your backend, not the deskto
 
 Example: the `touch-type-backend` repo includes a Supabase Edge Function `send-notifications` that queries users with `notifications_enabled` and matching `notification_time` and `notification_days`, then sends via APNS and WNS. For testing APNS from the backend, use `scripts/test-push-notification.ts` with the device token obtained from the app (see “macOS → Push (APNS) end-to-end” above).
 
+### Obtaining WNS credentials (backend)
+
+The `send-notifications` function needs **WNS_PACKAGE_SID** and **WNS_CLIENT_SECRET** to send Windows push notifications. Both come from **Microsoft Partner Center** (not a generic Azure app):
+
+1. **Package SID**: Partner Center → your app → **Product management** → **Product identity**. Copy the **Package SID**.
+2. **Client secret**: Partner Center → your app → **App management** → **WNS/MPNS** → open the **Live Services site** link. On that page you'll see the **Application Secret** (client secret). Create or copy it; store it securely (e.g. Supabase Edge Function secrets).
+
+Full step-by-step instructions, including where to set these in local and production env: **touch-type-backend** repo → `docs/WNS_CREDENTIALS.md`.
+
 ---
 
 ## Summary

@@ -9,8 +9,7 @@ import { useCallback } from "react";
 import { useSupabaseClient } from "@/lib/supabase-provider";
 
 const stripePublishableKey =
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
-  "pk_test_51LYouDIsLeqpVAzJK9MonFdeWzOoVDmYW3FfDcJRbGHt9Nx2Km5FCvC7kPtHedlLTfsgvmmYlxpcsn54Gkfx5ZHT00P73XEu2v";
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 const stripePromise = loadStripe(stripePublishableKey);
 
 export const STRIPE_LOOKUP_KEYS = {

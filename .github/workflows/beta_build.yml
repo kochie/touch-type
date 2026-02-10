@@ -132,7 +132,9 @@ jobs:
 
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.supabase_anon_key }}
-          NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
+          NEXT_PUBLIC_ACCOUNT_LINK: ${{ vars.next_public_account_link }}
+          NEXT_PUBLIC_RESET_PASSWORD_URL: ${{ vars.next_public_reset_password_url }}
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ vars.next_public_stripe_publishable_key }}
 
       - name: Build/Release Electron app (beta channel, publish always)
         shell: bash
