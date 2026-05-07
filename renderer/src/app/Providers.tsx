@@ -16,21 +16,26 @@ import { MasProvider } from "@/lib/mas_hook";
 import { PlanProvider } from "@/lib/plan_hook";
 import { Toaster } from "sonner";
 import { useDeepLink, DeepLinkData } from "@/lib/deep-link-hook";
+import { StreakProvider } from "@/lib/streak_hook";
+import { ProfileTimezoneSync } from "@/lib/profile-timezone-sync";
 
 export default function Providers({ children }) {
   return (
     <SupabaseProvider>
+      <ProfileTimezoneSync />
       <MasProvider>
         <SettingsProvider>
           <ResultsProvider>
             <PlanProvider>
-              <WordProvider>
-                <ModalProvider>
-                  <Toaster richColors position="top-center" />
-                  <ModalSetup />
-                  {children}
-                </ModalProvider>
-              </WordProvider>
+              <StreakProvider>
+                <WordProvider>
+                  <ModalProvider>
+                    <Toaster richColors position="top-center" />
+                    <ModalSetup />
+                    {children}
+                  </ModalProvider>
+                </WordProvider>
+              </StreakProvider>
             </PlanProvider>
           </ResultsProvider>
         </SettingsProvider>
