@@ -30,7 +30,9 @@
     "package:mac-unsigned": "electron-builder build --config electron-builder.ts --mac -c.mac.identity=null --publish never",
     "package:mac-mas-dev": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder build --config electron-builder.ts --mac mas-dev --publish never",
     "package:mac-default": "electron-builder build --config electron-builder.ts --mac default --publish never",
-    "package:mac-default-dev": "MAC_DEV=true electron-builder build --config electron-builder.ts --mac default --publish never"
+    "package:mac-default-dev": "MAC_DEV=true electron-builder build --config electron-builder.ts --mac default --publish never",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
     "@sentry/electron": "^7.6.0",
@@ -51,6 +53,7 @@
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "@next/mdx": "^16.1.4",
+    "@playwright/test": "^1.59.1",
     "@sentry/core": "^10.36.0",
     "@sentry/nextjs": "^10.36.0",
     "@stripe/react-stripe-js": "^5.4.1",
@@ -65,6 +68,7 @@
     "@types/luxon": "^3.7.1",
     "@types/naughty-words": "^1.2.3",
     "@types/node": "^25.0.10",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "@uidotdev/usehooks": "^2.4.1",
@@ -93,6 +97,7 @@
     "luxon": "^3.7.2",
     "naughty-words": "^1.2.0",
     "next": "16.1.4",
+    "pg": "^8.20.0",
     "postcss": "^8.5.6",
     "prettier": "^3.8.1",
     "raw-loader": "^4.0.2",
