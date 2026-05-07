@@ -87,7 +87,7 @@ export default function ChallengeCard({
   const status = statusConfig[challenge.status];
 
   const handlePlay = () => {
-    router.push(`/pvp/${challenge.id}`);
+    router.push(`/pvp/challenge?id=${challenge.id}`);
   };
 
   const handleAccept = async () => {
@@ -103,7 +103,7 @@ export default function ChallengeCard({
   };
 
   const handleViewResults = () => {
-    router.push(`/pvp/${challenge.id}`);
+    router.push(`/pvp/challenge?id=${challenge.id}`);
   };
 
   if (compact) {

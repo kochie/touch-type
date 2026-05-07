@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { usePvP, PvPChallenge } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -14,8 +14,8 @@ import {
 } from "@fortawesome/pro-duotone-svg-icons";
 import clsx from "clsx";
 
-export default function InvitePage() {
-  const params = useParams();
+function InvitePageInner() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useSupabase();
   const { acceptChallengeByInvite, getChallengeByCode } = usePvP();
@@ -26,9 +26,8 @@ export default function InvitePage() {
   const [error, setError] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
 
-  const code = params.code as string;
+  const code = searchParams.get("code");
 
-  // Fetch challenge info on mount
   useEffect(() => {
     const fetchChallenge = async () => {
       if (!code) {
@@ -58,19 +57,18 @@ export default function InvitePage() {
 
   const handleAccept = async () => {
     if (!user) {
-      // TODO: Show sign in modal or redirect
       setError("Please sign in to accept this challenge");
       return;
     }
+    if (!code) return;
 
     setIsAccepting(true);
     try {
       const result = await acceptChallengeByInvite(code);
       if (result) {
         setAccepted(true);
-        // Redirect to the challenge page after a brief delay
         setTimeout(() => {
-          router.push(`/pvp/${result.id}`);
+          router.push(`/pvp/challenge?id=${result.id}`);
         }, 1500);
       } else {
         setError("Failed to accept challenge");
@@ -162,7 +160,7 @@ export default function InvitePage() {
           Share this link with a friend so they can accept it.
         </p>
         <button
-          onClick={() => router.push(`/pvp/${challenge.id}`)}
+          onClick={() => router.push(`/pvp/challenge?id=${challenge.id}`)}
           className={clsx(
             "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium",
             "bg-blue-500 hover:bg-blue-600 text-white transition-colors"
@@ -192,7 +190,6 @@ export default function InvitePage() {
         </p>
       </div>
 
-      {/* Challenge details */}
       <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl mb-6">
         {challenge.message && (
           <p className="text-center text-gray-700 dark:text-gray-300 italic mb-4">
@@ -218,7 +215,6 @@ export default function InvitePage() {
         </div>
       </div>
 
-      {/* Not logged in */}
       {!user && (
         <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg mb-6">
           <p className="text-sm text-yellow-700 dark:text-yellow-300 text-center">
@@ -227,7 +223,6 @@ export default function InvitePage() {
         </div>
       )}
 
-      {/* Accept button */}
       <button
         data-testid="pvp-accept-invite"
         onClick={handleAccept}
@@ -263,5 +258,22 @@ export default function InvitePage() {
         Decline
       </button>
     </div>
+  );
+}
+
+export default function InvitePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <FontAwesomeIcon
+            icon={faSpinner}
+            className="w-8 h-8 text-gray-400 animate-spin"
+          />
+        </div>
+      }
+    >
+      <InvitePageInner />
+    </Suspense>
   );
 }

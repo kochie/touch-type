@@ -605,7 +605,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           action: {
             label: "Play",
             onClick: () => {
-              window.location.href = `/pvp/${newData.id}`;
+              window.location.href = `/pvp/challenge?id=${newData.id}`;
             },
           },
         });
@@ -624,7 +624,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
             action: {
               label: "View Results",
               onClick: () => {
-                window.location.href = `/pvp/${newData.id}`;
+                window.location.href = `/pvp/challenge?id=${newData.id}`;
               },
             },
           });
@@ -634,7 +634,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
             action: {
               label: "View Results",
               onClick: () => {
-                window.location.href = `/pvp/${newData.id}`;
+                window.location.href = `/pvp/challenge?id=${newData.id}`;
               },
             },
           });

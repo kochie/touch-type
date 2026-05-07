@@ -141,10 +141,10 @@ test.describe("pvp", () => {
         try {
           ({ challengeId, inviteCode } = await getInviteCode(client, challengerId));
 
-          // ----- User B: accept via /pvp/invite/{inviteCode} -----
+          // ----- User B: accept via /pvp/invite?code={inviteCode} -----
           await pageB.goto("/");
           await signInUI(pageB, opponentEmail, opponentPassword);
-          await pageB.goto(`/pvp/invite/${inviteCode}`);
+          await pageB.goto(`/pvp/invite?code=${inviteCode}`);
 
           await expect(
             pageB.getByRole("heading", { name: /You've Been Challenged/ }),
@@ -186,7 +186,7 @@ test.describe("pvp", () => {
     });
   });
 
-  // (d.1) Cancel — challenger cancels via /pvp/{challengeId}
+  // (d.1) Cancel — challenger cancels via /pvp/challenge?id={challengeId}
   test.describe("cancel by challenger", () => {
     const email = uniqueEmail("e2e-pvp-cancel");
     const password = uniquePassword();
@@ -218,7 +218,7 @@ test.describe("pvp", () => {
         // Sign in and navigate to the challenge detail page
         await page.goto("/");
         await signInUI(page, email, password);
-        await page.goto(`/pvp/${challengeId}`);
+        await page.goto(`/pvp/challenge?id=${challengeId}`);
 
         await page.getByTestId("pvp-card-cancel").click();
 

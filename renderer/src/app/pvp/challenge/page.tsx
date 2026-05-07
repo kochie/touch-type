@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { PvPChallenge, usePvP, isUsersTurn } from "@/lib/pvp-provider";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { PvPChallenge, usePvP } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import PvPMatch from "@/components/PvP/PvPMatch";
 import ChallengeCard from "@/components/PvP/ChallengeCard";
@@ -10,17 +10,17 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner, faExclamationTriangle } from "@fortawesome/pro-duotone-svg-icons";
 import clsx from "clsx";
 
-export default function ChallengePage() {
-  const params = useParams();
+function ChallengePageInner() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useSupabase();
   const { getChallengeById } = usePvP();
-  
+
   const [challenge, setChallenge] = useState<PvPChallenge | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const challengeId = params.challengeId as string;
+  const challengeId = searchParams.get("id");
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -105,12 +105,10 @@ export default function ChallengePage() {
     );
   }
 
-  // Check if user is a participant
   const isChallenger = challenge.challenger_id === user.id;
   const isOpponent = challenge.opponent_id === user.id;
   const isParticipant = isChallenger || isOpponent;
 
-  // User is not a participant - maybe they're accepting via code
   if (!isParticipant && challenge.status === "pending") {
     return (
       <div className="max-w-md mx-auto py-12">
@@ -122,7 +120,6 @@ export default function ChallengePage() {
     );
   }
 
-  // User is not a participant and challenge is not pending
   if (!isParticipant) {
     return (
       <div className="max-w-md mx-auto py-12 text-center">
@@ -136,7 +133,6 @@ export default function ChallengePage() {
     );
   }
 
-  // Challenge is still pending (waiting for opponent)
   if (challenge.status === "pending") {
     return (
       <div className="max-w-md mx-auto py-12">
@@ -145,7 +141,6 @@ export default function ChallengePage() {
     );
   }
 
-  // Challenge is expired or declined
   if (challenge.status === "expired" || challenge.status === "declined") {
     return (
       <div className="max-w-md mx-auto py-12">
@@ -154,6 +149,22 @@ export default function ChallengePage() {
     );
   }
 
-  // Challenge is active or completed - show the match component
   return <PvPMatch challenge={challenge} />;
+}
+
+export default function ChallengePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <FontAwesomeIcon
+            icon={faSpinner}
+            className="w-8 h-8 text-gray-400 animate-spin"
+          />
+        </div>
+      }
+    >
+      <ChallengePageInner />
+    </Suspense>
+  );
 }
