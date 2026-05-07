@@ -411,7 +411,7 @@ export const SettingsProvider = ({ children }) => {
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
-    
+
     if (
       settings.theme === ColorScheme.DARK ||
       (settings.theme === ColorScheme.SYSTEM &&
@@ -421,6 +421,10 @@ export const SettingsProvider = ({ children }) => {
     } else {
       document.documentElement.classList.remove("dark");
     }
+
+    // Drive Electron's native chrome (titlebar, vibrancy, mica) to match.
+    // ColorScheme values map 1:1 to nativeTheme.themeSource.
+    window.electronAPI?.setThemeSource?.(settings.theme);
   }, [settings.theme]);
 
   useEffect(() => {

@@ -92,6 +92,8 @@ export interface ElectronAPI {
   getStartMinimized: () => Promise<boolean>;
   // Streak
   updateStreakData: (data: StreakData) => void;
+  // Theme
+  setThemeSource: (source: "system" | "light" | "dark") => Promise<void>;
 }
 
 declare global {
