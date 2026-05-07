@@ -253,8 +253,30 @@ export function PvPProvider({ children }: { children: ReactNode }) {
 
         return { ...data, invite_code: inviteCode } as PvPChallenge;
       } catch (err) {
-        console.error("Error creating challenge:", err);
-        setError(err instanceof Error ? err.message : "Failed to create challenge");
+        if (isPvPSchemaUnavailable(err as { code?: string; message?: string })) {
+          const msg =
+            "PvP isn't available yet — apply the latest migrations to your Supabase before creating challenges.";
+          console.warn(msg, err);
+          toast.error(msg);
+          setError(msg);
+          return null;
+        }
+        const detail =
+          err && typeof err === "object"
+            ? {
+                code: (err as { code?: string }).code,
+                message: (err as { message?: string }).message,
+                details: (err as { details?: string }).details,
+                hint: (err as { hint?: string }).hint,
+              }
+            : err;
+        console.error("Error creating challenge:", detail);
+        const message =
+          err instanceof Error
+            ? err.message
+            : (detail as { message?: string })?.message ??
+              "Failed to create challenge";
+        setError(message);
         return null;
       }
     },

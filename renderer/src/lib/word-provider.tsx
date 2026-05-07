@@ -84,7 +84,15 @@ export const WordProvider = ({ children }) => {
   const [wordList, setWordList] = useState([""]);
 
   const getWordList = useCallback(async () => {
-    // @ts-expect-error
+    if (typeof window === "undefined" || !window.electronAPI?.getWordSet) {
+      // Renderer is running outside Electron (e.g. `pnpm dev:next`) or the
+      // preload bridge isn't ready yet during HMR. Render an empty list
+      // rather than crashing the provider tree with an unhandled rejection.
+      console.warn("electronAPI.getWordSet is not available — skipping word load.");
+      setWordList([""]);
+      return;
+    }
+
     const buffer = (await window.electronAPI.getWordSet(
       settings.language,
     )) as Uint8Array;

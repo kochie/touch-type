@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
-import { createClient, type TypedSupabaseClient } from './supabase-client';
+import { getSupabaseClient, type TypedSupabaseClient } from './supabase-client';
 
 interface SupabaseContextType {
   supabase: TypedSupabaseClient;
@@ -14,7 +14,7 @@ interface SupabaseContextType {
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
-  const [supabase] = useState(() => createClient());
+  const [supabase] = useState(() => getSupabaseClient());
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
