@@ -9,7 +9,7 @@
     "jsx": "preserve",
     "lib": ["dom", "es2017"],
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmit": false,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,

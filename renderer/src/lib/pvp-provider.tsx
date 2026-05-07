@@ -437,7 +437,11 @@ export function PvPProvider({ children }: { children: ReactNode }) {
         }
 
         const isChallenger = challenge.challenger_id === user.id;
-        const updateData: Record<string, string> = {};
+        const updateData: {
+          challenger_result_id?: string;
+          opponent_result_id?: string;
+          status?: PvPChallengeStatus;
+        } = {};
 
         if (isChallenger) {
           updateData.challenger_result_id = resultId;
