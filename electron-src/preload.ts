@@ -64,6 +64,11 @@ export interface DeepLinkData {
   mode?: "timed" | "words" | "endless";
 }
 
+export interface StreakData {
+  currentStreak: number;
+  isAtRisk: boolean;
+}
+
 declare global {
   namespace NodeJS {
     interface Global {
@@ -100,6 +105,9 @@ declare global {
       getStartMinimized: () => Promise<boolean>;
       // Debug/Dev mode
       getDebugInfo: () => Promise<DebugInfo>;
+      // Streak data — renderer pushes the latest streak so the tray menu can
+      // surface it without holding a Supabase session itself.
+      updateStreakData: (data: StreakData) => void;
     };
   }
 }
@@ -168,4 +176,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Debug/Dev mode
   getDebugInfo: (): Promise<DebugInfo> =>
     ipcRenderer.invoke("getDebugInfo"),
+
+  // Streak — fire-and-forget; the tray module listens on this channel.
+  updateStreakData: (data: StreakData): void => {
+    ipcRenderer.send("updateStreakData", data);
+  },
 });

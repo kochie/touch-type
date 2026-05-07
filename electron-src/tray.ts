@@ -1,4 +1,4 @@
-import { Tray, Menu, nativeImage, app, BrowserWindow, powerSaveBlocker } from "electron";
+import { Tray, Menu, nativeImage, app, BrowserWindow, ipcMain, powerSaveBlocker } from "electron";
 import { join } from "path";
 import log from "electron-log";
 
@@ -6,6 +6,12 @@ let tray: Tray | null = null;
 let isQuitting = false;
 let hasShownTrayNotification = false;
 let powerSaveBlockerId: number | null = null;
+
+interface StreakState {
+  currentStreak: number;
+  isAtRisk: boolean;
+}
+let currentStreak: StreakState = { currentStreak: 0, isAtRisk: false };
 
 /**
  * Mark the app as quitting to allow window close
@@ -56,74 +62,20 @@ export function setupTray(mainWindow: BrowserWindow): Tray {
 
   tray = new Tray(icon);
 
-  // Create context menu
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: "Open Touch Typer",
-      click: () => {
-        mainWindow.show();
-        mainWindow.focus();
-      },
-    },
-    { type: "separator" },
-    {
-      label: "Quick Practice",
-      submenu: [
-        {
-          label: "5 minutes",
-          click: () => {
-            showAndPractice(mainWindow, 5);
-          },
-        },
-        {
-          label: "10 minutes",
-          click: () => {
-            showAndPractice(mainWindow, 10);
-          },
-        },
-        {
-          label: "15 minutes",
-          click: () => {
-            showAndPractice(mainWindow, 15);
-          },
-        },
-        {
-          label: "30 minutes",
-          click: () => {
-            showAndPractice(mainWindow, 30);
-          },
-        },
-      ],
-    },
-    { type: "separator" },
-    {
-      label: "Settings",
-      click: () => {
-        mainWindow.show();
-        mainWindow.focus();
-        mainWindow.webContents.send("navigate", "/settings");
-      },
-    },
-    {
-      label: "Statistics",
-      click: () => {
-        mainWindow.show();
-        mainWindow.focus();
-        mainWindow.webContents.send("navigate", "/stats");
-      },
-    },
-    { type: "separator" },
-    {
-      label: "Quit",
-      click: () => {
-        isQuitting = true;
-        app.quit();
-      },
-    },
-  ]);
+  refreshTrayMenu(mainWindow);
 
-  tray.setToolTip("Touch Typer");
-  tray.setContextMenu(contextMenu);
+  // The renderer pushes streak updates whenever the StreakProvider's data
+  // changes. We rebuild the menu so the streak row reflects current state.
+  ipcMain.on("updateStreakData", (_event, data: StreakState) => {
+    if (
+      typeof data?.currentStreak !== "number" ||
+      typeof data?.isAtRisk !== "boolean"
+    ) {
+      return;
+    }
+    currentStreak = data;
+    refreshTrayMenu(mainWindow);
+  });
 
   // On macOS, clicking the tray icon shows/hides the window
   tray.on("click", () => {
@@ -186,6 +138,74 @@ export function setupTray(mainWindow: BrowserWindow): Tray {
 
   log.info("System tray initialized");
   return tray;
+}
+
+/**
+ * Rebuild the tray's tooltip + context menu using the most recent streak data.
+ * Called at setup and whenever the renderer sends an updateStreakData event.
+ */
+function refreshTrayMenu(mainWindow: BrowserWindow): void {
+  if (!tray) return;
+
+  const streakLabel =
+    currentStreak.currentStreak > 0
+      ? `${currentStreak.currentStreak} day streak${currentStreak.isAtRisk ? " (at risk!)" : ""}`
+      : "No streak yet";
+
+  const tooltip =
+    currentStreak.currentStreak > 0
+      ? `Touch Typer — ${currentStreak.currentStreak} day streak${currentStreak.isAtRisk ? " ⚠️" : ""}`
+      : "Touch Typer";
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "Open Touch Typer",
+      click: () => {
+        mainWindow.show();
+        mainWindow.focus();
+      },
+    },
+    { type: "separator" },
+    { label: `🔥 ${streakLabel}`, enabled: false },
+    { type: "separator" },
+    {
+      label: "Quick Practice",
+      submenu: [
+        { label: "5 minutes", click: () => showAndPractice(mainWindow, 5) },
+        { label: "10 minutes", click: () => showAndPractice(mainWindow, 10) },
+        { label: "15 minutes", click: () => showAndPractice(mainWindow, 15) },
+        { label: "30 minutes", click: () => showAndPractice(mainWindow, 30) },
+      ],
+    },
+    { type: "separator" },
+    {
+      label: "Settings",
+      click: () => {
+        mainWindow.show();
+        mainWindow.focus();
+        mainWindow.webContents.send("navigate", "/settings");
+      },
+    },
+    {
+      label: "Statistics",
+      click: () => {
+        mainWindow.show();
+        mainWindow.focus();
+        mainWindow.webContents.send("navigate", "/stats");
+      },
+    },
+    { type: "separator" },
+    {
+      label: "Quit",
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      },
+    },
+  ]);
+
+  tray.setToolTip(tooltip);
+  tray.setContextMenu(contextMenu);
 }
 
 /**

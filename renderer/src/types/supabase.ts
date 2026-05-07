@@ -204,6 +204,7 @@ export type Database = {
           name: string | null
           phone_number: string | null
           preferred_username: string | null
+          timezone: string
           updated_at: string | null
         }
         Insert: {
@@ -213,6 +214,7 @@ export type Database = {
           name?: string | null
           phone_number?: string | null
           preferred_username?: string | null
+          timezone?: string
           updated_at?: string | null
         }
         Update: {
@@ -222,6 +224,7 @@ export type Database = {
           name?: string | null
           phone_number?: string | null
           preferred_username?: string | null
+          timezone?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -349,6 +352,45 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           whats_new_on_startup?: boolean | null
+        }
+        Relationships: []
+      }
+      streaks: {
+        Row: {
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          last_activity_date: string | null
+          last_freeze_refresh: string | null
+          longest_streak: number | null
+          streak_freeze_count: number | null
+          streak_freeze_used_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          last_freeze_refresh?: string | null
+          longest_streak?: number | null
+          streak_freeze_count?: number | null
+          streak_freeze_used_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          last_freeze_refresh?: string | null
+          longest_streak?: number | null
+          streak_freeze_count?: number | null
+          streak_freeze_used_at?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

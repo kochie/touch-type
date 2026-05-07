@@ -43,6 +43,11 @@ export interface DeepLinkData {
   mode?: "timed" | "words" | "endless";
 }
 
+export interface StreakData {
+  currentStreak: number;
+  isAtRisk: boolean;
+}
+
 export interface DebugInfo {
   isDev: boolean;
   platform: string;
@@ -85,6 +90,8 @@ export interface ElectronAPI {
   setLaunchAtStartup: (enabled: boolean) => Promise<StartupResult>;
   setStartMinimized: (enabled: boolean) => Promise<StartupResult>;
   getStartMinimized: () => Promise<boolean>;
+  // Streak
+  updateStreakData: (data: StreakData) => void;
 }
 
 declare global {
