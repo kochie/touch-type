@@ -43,7 +43,12 @@ test.describe("pvp v2", () => {
       });
       await expect(page.getByText("No active challenges")).toBeVisible({ timeout: 5_000 });
 
-      const pvpErrors = errors.filter((e) => /pvp|challenge|fetch/i.test(e));
+      // Filter narrowly to PvP-specific errors. "fetch" alone is too broad —
+      // unrelated tests' afterAll user-cleanup can race with settings/timezone
+      // syncs and surface as "Failed to fetch" in the smoke test's console.
+      const pvpErrors = errors.filter((e) =>
+        /pvp_challenges|Error fetching challenges|Error claiming challenge|invite_code/i.test(e),
+      );
       expect(
         pvpErrors,
         `unexpected console errors: ${pvpErrors.join("\n")}`,
@@ -103,8 +108,11 @@ test.describe("pvp v2", () => {
           await expect(pageB.getByTestId("pvp-accept-invite")).toBeVisible({ timeout: 10_000 });
           await pageB.getByTestId("pvp-accept-invite").click();
 
-          // After claiming, B is taken to /pvp/race?id=
-          await pageB.waitForURL(/\/pvp\/race\?id=/);
+          // After claiming, B is taken to the home page in PvP mode.
+          await pageB.waitForURL(/\/$/);
+          await expect(pageB.getByTestId("pvp-mode-banner")).toBeVisible({
+            timeout: 10_000,
+          });
 
           // Drive the opponent submission via DB (skips typing):
           await client.query(

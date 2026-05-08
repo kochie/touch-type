@@ -28,7 +28,7 @@ export default function ChallengeCard({
   compact = false,
 }: ChallengeCardProps) {
   const { user } = useSupabase();
-  const { cancelChallenge } = usePvP();
+  const { cancelChallenge, startClaimedRace } = usePvP();
   const router = useRouter();
 
   if (!user) return null;
@@ -251,7 +251,10 @@ export default function ChallengeCard({
         {challenge.status === "claimed" && challenge.opponent_id === user?.id && !challenge.opponent_completed_at && (
           <button
             data-testid="pvp-card-continue"
-            onClick={() => router.push(`/pvp/race?id=${challenge.id}`)}
+            onClick={() => {
+              startClaimedRace(challenge);
+              router.push("/");
+            }}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
           >
             <FontAwesomeIcon icon={faPlay} className="w-4 h-4" />

@@ -2,13 +2,44 @@
 
 import { useRouter } from "next/navigation";
 import { useSettings } from "@/lib/settings_hook";
+import { useWords } from "@/lib/word-provider";
+import { usePvP, type ChallengeSettings } from "@/lib/pvp-provider";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/pro-duotone-svg-icons";
 import clsx from "clsx";
+import { toast } from "sonner";
+
+const WORD_COUNT = 15;
+
+function generateWordSet(wordList: string[]): string[] {
+  const shuffled = [...wordList].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, WORD_COUNT);
+}
 
 export default function NewChallengePrompt() {
   const router = useRouter();
   const settings = useSettings();
+  const [wordList] = useWords();
+  const { startNewRace } = usePvP();
+
+  const handleStart = () => {
+    if (wordList.length === 0) {
+      toast.error("Word list still loading — try again in a moment");
+      return;
+    }
+    const wordSet = generateWordSet(wordList);
+    const challengeSettings: ChallengeSettings = {
+      keyboard: settings.keyboardName,
+      level: settings.levelName,
+      language: settings.language,
+      capital: settings.capital,
+      punctuation: settings.punctuation,
+      numbers: settings.numbers,
+      word_set: wordSet,
+    };
+    startNewRace(wordSet, challengeSettings);
+    router.push("/");
+  };
 
   return (
     <div className="max-w-md mx-auto py-8 space-y-6">
@@ -56,7 +87,7 @@ export default function NewChallengePrompt() {
 
       <button
         data-testid="pvp-start-race"
-        onClick={() => router.push("/pvp/race?new=1")}
+        onClick={handleStart}
         className={clsx(
           "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold",
           "bg-blue-500 hover:bg-blue-600 text-white transition-colors",

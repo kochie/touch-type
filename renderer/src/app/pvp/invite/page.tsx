@@ -18,7 +18,7 @@ function InvitePageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useSupabase();
-  const { fetchByInviteCode, claimChallenge } = usePvP();
+  const { fetchByInviteCode, claimChallenge, startClaimedRace } = usePvP();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
@@ -67,8 +67,11 @@ function InvitePageInner() {
       const result = await claimChallenge(challenge.id);
       if (result) {
         setAccepted(true);
+        // Enter PvP mode on the home page rather than navigating to a
+        // separate race route.
+        startClaimedRace(result);
         setTimeout(() => {
-          router.push(`/pvp/race?id=${result.id}`);
+          router.push("/");
         }, 1500);
       } else {
         setError("Failed to accept challenge");

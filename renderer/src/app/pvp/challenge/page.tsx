@@ -20,7 +20,7 @@ function ChallengePageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useSupabase();
-  const { fetchById, cancelChallenge } = usePvP();
+  const { fetchById, cancelChallenge, startClaimedRace } = usePvP();
 
   const id = searchParams.get("id");
   const [challenge, setChallenge] = useState<PvPChallenge | null>(null);
@@ -163,7 +163,10 @@ function ChallengePageInner() {
           You claimed this challenge — type the same word set to lock in your result.
         </p>
         <button
-          onClick={() => router.push(`/pvp/race?id=${challenge.id}`)}
+          onClick={() => {
+            startClaimedRace(challenge);
+            router.push("/");
+          }}
           className="inline-flex items-center gap-2 px-4 py-3 rounded-xl font-bold bg-blue-500 hover:bg-blue-600 text-white"
         >
           Continue Race

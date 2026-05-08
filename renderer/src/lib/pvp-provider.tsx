@@ -111,6 +111,19 @@ export interface OpponentResult {
   key_presses?: unknown;
 }
 
+/**
+ * Race state shown by Tracker when the user is mid-PvP-race. The race is run
+ * on the home page in "PvP mode" rather than a dedicated route.
+ *
+ *   creating: challenger is racing a fresh word_set; on completion we'll
+ *             create a new challenge row using the locked-in settings.
+ *   racing:   opponent has claimed an open challenge and is racing its
+ *             pre-locked word_set; on completion we submit their result.
+ */
+export type PvPRaceMode =
+  | { kind: "creating"; wordSet: string[]; settings: ChallengeSettings }
+  | { kind: "racing"; challenge: PvPChallenge };
+
 interface PvPContextType {
   // Derived state
   myOpenChallenges: PvPChallenge[];
@@ -118,6 +131,20 @@ interface PvPContextType {
   myCompletedChallenges: PvPChallenge[];
   isLoading: boolean;
   error: string | null;
+
+  // Active race (null when not in a PvP race)
+  currentRace: PvPRaceMode | null;
+  startNewRace: (wordSet: string[], settings: ChallengeSettings) => void;
+  startClaimedRace: (challenge: PvPChallenge) => void;
+  forfeitRace: () => void;
+  /**
+   * Submit a finished race result. Routes to createChallenge or
+   * submitOpponentResult based on currentRace.kind, clears the race state,
+   * and returns the completed challenge so the caller can navigate.
+   */
+  completeRace: (
+    result: ChallengerResult | OpponentResult,
+  ) => Promise<PvPChallenge | null>;
 
   // Mutations
   createChallenge: (
@@ -155,6 +182,7 @@ const PvPContext = createContext<PvPContextType | undefined>(undefined);
 
 export function PvPProvider({ children }: { children: ReactNode }) {
   const [challenges, setChallenges] = useState<PvPChallenge[]>([]);
+  const [currentRace, setCurrentRace] = useState<PvPRaceMode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { supabase, user } = useSupabase();
@@ -553,12 +581,50 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     };
   }, [user, supabase, refreshChallenges]);
 
+  const startNewRace = useCallback(
+    (wordSet: string[], settings: ChallengeSettings) => {
+      setCurrentRace({ kind: "creating", wordSet, settings });
+    },
+    [],
+  );
+
+  const startClaimedRace = useCallback((challenge: PvPChallenge) => {
+    setCurrentRace({ kind: "racing", challenge });
+  }, []);
+
+  const forfeitRace = useCallback(() => {
+    setCurrentRace(null);
+  }, []);
+
+  const completeRace = useCallback(
+    async (
+      result: ChallengerResult | OpponentResult,
+    ): Promise<PvPChallenge | null> => {
+      if (!currentRace) return null;
+      let completed: PvPChallenge | null = null;
+      if (currentRace.kind === "creating") {
+        completed = await createChallenge(result, currentRace.settings);
+      } else {
+        completed = await submitOpponentResult(currentRace.challenge.id, result);
+      }
+      // Clear race state regardless of success — caller can re-route.
+      setCurrentRace(null);
+      return completed;
+    },
+    [currentRace, createChallenge, submitOpponentResult],
+  );
+
   const value: PvPContextType = {
     myOpenChallenges,
     myActiveChallenges,
     myCompletedChallenges,
     isLoading,
     error,
+    currentRace,
+    startNewRace,
+    startClaimedRace,
+    forfeitRace,
+    completeRace,
     createChallenge,
     claimChallenge,
     submitOpponentResult,
