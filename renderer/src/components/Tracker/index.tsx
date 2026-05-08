@@ -103,9 +103,15 @@ export default function Tracker() {
 
   useLayoutEffect(() => {
     if (words.length === 0) return;
-    if (!keyboard.keyExists(words[letters.length].toLowerCase())) return;
-    const key = keyboard.findKey(words[letters.length].toLowerCase());
-    const [i, j] = keyboard.findIndex(words[letters.length].toLowerCase());
+    // After a PvP race completes the keyDown handler navigates away, but
+    // this effect fires once more before unmount with letters.length ===
+    // words.length — guard the bounds so words[letters.length] isn't
+    // undefined.
+    if (letters.length >= words.length) return;
+    const next = words[letters.length].toLowerCase();
+    if (!keyboard.keyExists(next)) return;
+    const key = keyboard.findKey(next);
+    const [i, j] = keyboard.findIndex(next);
     setCurrentKey({ current: key, i, j });
   }, [letters.length, words]);
 
