@@ -277,6 +277,12 @@ export function PvPProvider({ children }: { children: ReactNode }) {
       }
 
       try {
+        // The status='open' / challenger_id != self preconditions are enforced
+        // by the RLS USING clause on the "Anyone can claim an open challenge"
+        // policy. Don't add them as PostgREST query filters, because PostgREST
+        // re-applies its filters to the returned row — and after the UPDATE
+        // status='claimed', a status=eq.open filter would exclude it, leaving
+        // .select() empty even on success.
         const { data, error: updateError } = await supabase
           .from("pvp_challenges")
           .update({
@@ -285,14 +291,12 @@ export function PvPProvider({ children }: { children: ReactNode }) {
             status: "claimed",
           })
           .eq("id", challengeId)
-          .eq("status", "open")
-          .neq("challenger_id", user.id)
           .select()
           .maybeSingle();
 
         if (updateError) throw updateError;
         if (!data) {
-          // 0 rows updated — race lost or trying to claim own challenge.
+          // 0 rows updated — RLS rejected (already claimed, own challenge, etc).
           toast.error("Challenge already claimed or unavailable");
           return null;
         }
@@ -316,6 +320,10 @@ export function PvPProvider({ children }: { children: ReactNode }) {
       }
 
       try {
+        // RLS USING (status='claimed' AND opponent_id=auth.uid()) on the
+        // "Opponent can submit their result" policy enforces preconditions —
+        // don't repeat them as PostgREST filters or the .select() will come
+        // back empty after the UPDATE flips status to 'completed'.
         const { data, error: updateError } = await supabase
           .from("pvp_challenges")
           .update({
@@ -328,8 +336,6 @@ export function PvPProvider({ children }: { children: ReactNode }) {
             status: "completed",
           })
           .eq("id", challengeId)
-          .eq("status", "claimed")
-          .eq("opponent_id", user.id)
           .select()
           .maybeSingle();
 
@@ -351,12 +357,13 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     async (challengeId: string): Promise<boolean> => {
       if (!user) return false;
       try {
+        // RLS USING (challenger_id=auth.uid() AND status='open') enforces the
+        // preconditions — don't repeat them as PostgREST filters; the .select()
+        // would otherwise return empty after the UPDATE flips status.
         const { data, error: updateError } = await supabase
           .from("pvp_challenges")
           .update({ status: "cancelled" })
           .eq("id", challengeId)
-          .eq("status", "open")
-          .eq("challenger_id", user.id)
           .select()
           .maybeSingle();
 

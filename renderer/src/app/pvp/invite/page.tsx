@@ -176,7 +176,7 @@ function InvitePageInner() {
   if (challenge.status !== "open") {
     const statusMessage =
       challenge.status === "claimed"
-        ? "Someone has already claimed this invite"
+        ? "This challenge is claimed"
         : challenge.status === "completed"
           ? "This race is over. Check History to see results"
           : "The invite is no longer available.";

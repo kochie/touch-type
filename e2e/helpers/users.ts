@@ -57,23 +57,53 @@ export function uniquePassword(): string {
 }
 
 /**
- * Sign in (or sign up) via the renderer UI. Navigates to "/" if not already there,
- * dismisses the "What's New" modal if it appears, and waits for the post-login
- * "Account" affordance.
+ * Dismiss the "What's New" modal if it's currently open. Idempotent — does
+ * nothing if the modal isn't there. The modal is gated by
+ *   sessionStorage.getItem("firstTimeOpen") === null
+ * so we also set that key to suppress it on subsequent navigations.
+ */
+export async function dismissWhatsNew(page: Page): Promise<void> {
+  const niceButton = page.getByRole("button", { name: "Nice!" });
+  if (await niceButton.isVisible().catch(() => false)) {
+    await niceButton.click();
+    await niceButton.waitFor({ state: "hidden" }).catch(() => {});
+  }
+  // Mark sessionStorage so the modal won't re-open after future navigations
+  // (each goto rehydrates the React app and re-runs the gating useLayoutEffect).
+  await page
+    .evaluate(() => sessionStorage.setItem("firstTimeOpen", "seen"))
+    .catch(() => {});
+}
+
+/**
+ * Sign in (or sign up) via the renderer UI. Navigates to "/" if not already
+ * there, suppresses the "What's New" modal (which is async w.r.t. auth and
+ * can appear before *or* after login), and waits for the post-login "Account"
+ * affordance.
  */
 export async function signInUI(
   page: Page,
   email: string,
   password: string,
 ): Promise<void> {
+  // Ensure every future page in this context starts with the "first-time open"
+  // flag already set, so the WhatsNew modal never gates clicks. Safe to call
+  // multiple times — it just re-registers the same script.
+  await page.context().addInitScript(() => {
+    try {
+      sessionStorage.setItem("firstTimeOpen", "seen");
+    } catch {
+      /* ignore in environments without sessionStorage */
+    }
+  });
+
   if (!page.url().endsWith("/")) {
     await page.goto("/");
   }
 
-  const niceButton = page.getByRole("button", { name: "Nice!" });
-  if (await niceButton.isVisible().catch(() => false)) {
-    await niceButton.click();
-  }
+  // The init script doesn't help for the *current* page (it was already
+  // navigated to before the script registered), so dismiss-if-present here.
+  await dismissWhatsNew(page);
 
   await page.getByTitle("Sign In or Sign Up").click();
   await page.getByRole("textbox", { name: "Email address" }).fill(email);
@@ -81,4 +111,8 @@ export async function signInUI(
   await page.getByRole("textbox", { name: "Password" }).press("Enter");
 
   await expect(page.getByTitle("Account")).toBeVisible({ timeout: 15_000 });
+
+  // The modal can also pop up after auth (settings are loaded post-auth and
+  // whatsNewOnStartup defaults to true), so dismiss again if it appears.
+  await dismissWhatsNew(page);
 }
