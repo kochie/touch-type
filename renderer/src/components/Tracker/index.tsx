@@ -24,7 +24,7 @@ import { Key, Keyboard } from "@/keyboards/key";
 import sample from "lodash.sample";
 import { useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
-import { lookupKeyboard } from "@/keyboards";
+import { lookupKeyboard, KeyboardLayoutNames } from "@/keyboards";
 import { Result, useResults } from "@/lib/result-provider";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { usePvP } from "@/lib/pvp-provider";
@@ -121,7 +121,16 @@ export default function Tracker() {
   const cpm = total / m;
   const p = (correct / total) * 100;
 
-  const keyboardLayout = lookupKeyboard(settings.keyboardName);
+  // PvP mode locks in the challenge's keyboard at creation time; race-time
+  // accuracy must validate against THAT keyboard, not the user's current
+  // global setting (the opponent might have a different one).
+  const activeKeyboardName: KeyboardLayoutNames =
+    currentRace?.kind === "racing"
+      ? (currentRace.challenge.keyboard as KeyboardLayoutNames)
+      : currentRace?.kind === "creating"
+        ? (currentRace.settings.keyboard as KeyboardLayoutNames)
+        : settings.keyboardName;
+  const keyboardLayout = lookupKeyboard(activeKeyboardName);
   const keyboard = new Keyboard(keyboardLayout);
 
   const intervalFn = () => {
@@ -383,6 +392,7 @@ export default function Tracker() {
         keyDown={keyDown}
         keys={keys}
         intervalFn={intervalFn}
+        keyboardName={activeKeyboardName}
       />
     </div>
   );
