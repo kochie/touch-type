@@ -1,21 +1,14 @@
 "use client";
 
-import {
-  PvPChallenge,
-  getChallengeDisplayName,
-  hasUserCompleted,
-  isUsersTurn,
-  usePvP,
-} from "@/lib/pvp-provider";
+import { PvPChallenge, usePvP } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import {
-  faCheck,
   faClock,
   faCrown,
   faGamepad,
   faHourglass,
+  faPaperPlane,
   faPlay,
-  faTimes,
   faTrash,
   faTrophy,
   faUserSlash,
@@ -35,35 +28,43 @@ export default function ChallengeCard({
   compact = false,
 }: ChallengeCardProps) {
   const { user } = useSupabase();
-  const { acceptChallenge, declineChallenge, cancelChallenge } = usePvP();
+  const { cancelChallenge } = usePvP();
   const router = useRouter();
 
   if (!user) return null;
 
   const isChallenger = challenge.challenger_id === user.id;
-  const isOpponent = challenge.opponent_id === user.id;
-  const opponentName = isChallenger
-    ? getChallengeDisplayName(challenge, "opponent")
-    : getChallengeDisplayName(challenge, "challenger");
-  const userCompleted = hasUserCompleted(challenge, user.id);
-  const canPlay = isUsersTurn(challenge, user.id);
+  const challengerName =
+    challenge.challenger_id === user.id
+      ? "You"
+      : `Player ${challenge.challenger_id.slice(0, 8)}`;
+  const opponentName =
+    challenge.opponent_id && challenge.opponent_id === user.id
+      ? "You"
+      : challenge.opponent_id
+      ? `Player ${challenge.opponent_id.slice(0, 8)}`
+      : "Open";
+  const displayOpponentName = isChallenger ? opponentName : challengerName;
   const isWinner = challenge.winner_id === user.id;
 
-  const statusConfig = {
-    pending: {
-      color: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300",
+  const statusConfig: Record<
+    PvPChallenge["status"],
+    { color: string; icon: typeof faClock; label: string }
+  > = {
+    open: {
+      color:
+        "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300",
       icon: faHourglass,
-      label: isChallenger ? "Waiting for opponent" : "Challenge received",
+      label: isChallenger ? "Waiting for opponent" : "Open challenge",
     },
-    accepted: {
-      color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
-      icon: faPlay,
-      label: "Ready to play",
-    },
-    in_progress: {
-      color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300",
+    claimed: {
+      color:
+        "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300",
       icon: faGamepad,
-      label: userCompleted ? "Waiting for opponent" : "Your turn",
+      label:
+        challenge.opponent_id === user.id && !challenge.opponent_completed_at
+          ? "Your turn"
+          : "Claimed",
     },
     completed: {
       color: isWinner
@@ -77,32 +78,16 @@ export default function ChallengeCard({
       icon: faClock,
       label: "Expired",
     },
-    declined: {
+    cancelled: {
       color: "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400",
-      icon: faTimes,
-      label: "Declined",
+      icon: faTrash,
+      label: "Cancelled",
     },
   };
 
   const status = statusConfig[challenge.status];
 
-  const handlePlay = () => {
-    router.push(`/pvp/challenge?id=${challenge.id}`);
-  };
-
-  const handleAccept = async () => {
-    await acceptChallenge(challenge.id);
-  };
-
-  const handleDecline = async () => {
-    await declineChallenge(challenge.id);
-  };
-
-  const handleCancel = async () => {
-    await cancelChallenge(challenge.id);
-  };
-
-  const handleViewResults = () => {
+  const handleNavigate = () => {
     router.push(`/pvp/challenge?id=${challenge.id}`);
   };
 
@@ -114,19 +99,26 @@ export default function ChallengeCard({
           "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
           "hover:shadow-md transition-shadow cursor-pointer"
         )}
-        onClick={handlePlay}
+        onClick={handleNavigate}
       >
         <div className="flex items-center gap-3">
-          <div className={clsx("px-2 py-1 rounded-full text-xs font-medium", status.color)}>
+          <div
+            className={clsx(
+              "px-2 py-1 rounded-full text-xs font-medium",
+              status.color
+            )}
+          >
             <FontAwesomeIcon icon={status.icon} className="w-3 h-3 mr-1" />
             {status.label}
           </div>
           <span className="text-sm font-medium text-gray-900 dark:text-white">
-            vs {opponentName}
+            vs {displayOpponentName}
           </span>
         </div>
         <span className="text-xs text-gray-500">
-          {formatDistanceToNow(new Date(challenge.created_at), { addSuffix: true })}
+          {formatDistanceToNow(new Date(challenge.created_at), {
+            addSuffix: true,
+          })}
         </span>
       </div>
     );
@@ -143,27 +135,37 @@ export default function ChallengeCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className={clsx("px-2.5 py-1 rounded-full text-xs font-medium", status.color)}>
+          <div
+            className={clsx(
+              "px-2.5 py-1 rounded-full text-xs font-medium",
+              status.color
+            )}
+          >
             <FontAwesomeIcon icon={status.icon} className="w-3 h-3 mr-1.5" />
             {status.label}
           </div>
           {challenge.status === "completed" && isWinner && (
-            <FontAwesomeIcon icon={faCrown} className="w-5 h-5 text-yellow-500" />
+            <FontAwesomeIcon
+              icon={faCrown}
+              className="w-5 h-5 text-yellow-500"
+            />
           )}
         </div>
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {formatDistanceToNow(new Date(challenge.created_at), { addSuffix: true })}
+          {formatDistanceToNow(new Date(challenge.created_at), {
+            addSuffix: true,
+          })}
         </span>
       </div>
 
       {/* Opponent info */}
       <div className="mb-3">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          vs {opponentName}
+          vs {displayOpponentName}
         </h3>
-        {challenge.message && (
+        {challenge.challenger_message && (
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 italic">
-            "{challenge.message}"
+            &ldquo;{challenge.challenger_message}&rdquo;
           </p>
         )}
       </div>
@@ -199,26 +201,46 @@ export default function ChallengeCard({
       {/* Results (if completed) */}
       {challenge.status === "completed" && (
         <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
-          <div className={clsx("text-center", isChallenger && isWinner && "ring-2 ring-green-500 rounded-lg p-2")}>
+          <div
+            className={clsx(
+              "text-center",
+              isChallenger &&
+                isWinner &&
+                "ring-2 ring-green-500 rounded-lg p-2"
+            )}
+          >
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              {isChallenger ? "You" : challenge.challenger_username}
+              {challengerName}
             </p>
             <p className="text-xl font-bold text-gray-900 dark:text-white">
               {challenge.challenger_cpm?.toFixed(0)} CPM
             </p>
             <p className="text-xs text-gray-500">
-              {challenge.challenger_correct}/{(challenge.challenger_correct || 0) + (challenge.challenger_incorrect || 0)} correct
+              {challenge.challenger_correct}/
+              {(challenge.challenger_correct || 0) +
+                (challenge.challenger_incorrect || 0)}{" "}
+              correct
             </p>
           </div>
-          <div className={clsx("text-center", !isChallenger && isWinner && "ring-2 ring-green-500 rounded-lg p-2")}>
+          <div
+            className={clsx(
+              "text-center",
+              !isChallenger &&
+                isWinner &&
+                "ring-2 ring-green-500 rounded-lg p-2"
+            )}
+          >
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              {!isChallenger ? "You" : challenge.opponent_username}
+              {opponentName}
             </p>
             <p className="text-xl font-bold text-gray-900 dark:text-white">
               {challenge.opponent_cpm?.toFixed(0)} CPM
             </p>
             <p className="text-xs text-gray-500">
-              {challenge.opponent_correct}/{(challenge.opponent_correct || 0) + (challenge.opponent_incorrect || 0)} correct
+              {challenge.opponent_correct}/
+              {(challenge.opponent_correct || 0) +
+                (challenge.opponent_incorrect || 0)}{" "}
+              correct
             </p>
           </div>
         </div>
@@ -226,57 +248,44 @@ export default function ChallengeCard({
 
       {/* Actions */}
       <div className="flex gap-2">
-        {challenge.status === "pending" && isOpponent && (
+        {challenge.status === "claimed" && challenge.opponent_id === user?.id && !challenge.opponent_completed_at && (
+          <button
+            data-testid="pvp-card-continue"
+            onClick={() => router.push(`/pvp/race?id=${challenge.id}`)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+          >
+            <FontAwesomeIcon icon={faPlay} className="w-4 h-4" />
+            Continue Race
+          </button>
+        )}
+
+        {challenge.status === "open" && challenge.challenger_id === user?.id && (
           <>
             <button
-              onClick={handleAccept}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+              data-testid="pvp-card-view-link"
+              onClick={() => router.push(`/pvp/challenge?id=${challenge.id}`)}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
             >
-              <FontAwesomeIcon icon={faCheck} className="w-4 h-4" />
-              Accept
+              <FontAwesomeIcon icon={faPaperPlane} className="w-4 h-4" />
+              View Link
             </button>
             <button
-              data-testid="pvp-card-decline"
-              onClick={handleDecline}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+              data-testid="pvp-card-cancel"
+              onClick={async () => {
+                await cancelChallenge(challenge.id);
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
             >
-              <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
-              Decline
+              <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
+              Cancel
             </button>
           </>
         )}
 
-        {challenge.status === "pending" && isChallenger && (
-          <button
-            data-testid="pvp-card-cancel"
-            onClick={handleCancel}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
-          >
-            <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
-            Cancel Challenge
-          </button>
-        )}
-
-        {canPlay && (
-          <button
-            onClick={handlePlay}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-          >
-            <FontAwesomeIcon icon={faPlay} className="w-4 h-4" />
-            Play Now
-          </button>
-        )}
-
-        {challenge.status === "in_progress" && userCompleted && (
-          <div className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg">
-            <FontAwesomeIcon icon={faHourglass} className="w-4 h-4 animate-pulse" />
-            Waiting for opponent...
-          </div>
-        )}
-
         {challenge.status === "completed" && (
           <button
-            onClick={handleViewResults}
+            data-testid="pvp-card-view-results"
+            onClick={() => router.push(`/pvp/challenge?id=${challenge.id}`)}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
           >
             <FontAwesomeIcon icon={faTrophy} className="w-4 h-4" />
@@ -286,9 +295,12 @@ export default function ChallengeCard({
       </div>
 
       {/* Expiry warning */}
-      {challenge.status === "pending" && (
+      {challenge.status === "open" && (
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-          Expires {formatDistanceToNow(new Date(challenge.expires_at), { addSuffix: true })}
+          Expires{" "}
+          {formatDistanceToNow(new Date(challenge.expires_at), {
+            addSuffix: true,
+          })}
         </p>
       )}
     </div>
