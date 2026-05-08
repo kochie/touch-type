@@ -13,16 +13,10 @@ import type { Json, TablesInsert } from "@/types/supabase";
 import { toast } from "sonner";
 
 /**
- * Returns true when a Supabase fetch error indicates the PvP tables/views
- * aren't reachable — e.g. the migration hasn't been applied, the view exists
- * but lacks SELECT grants, or PostgREST hasn't reloaded its schema cache.
- *
- * Codes covered:
- *   - 42P01     Postgres: relation does not exist
- *   - 42501     Postgres: insufficient privilege (e.g. missing GRANT on view)
- *   - PGRST205  PostgREST: schema cache miss / table not found
- *   - PGRST106  PostgREST: schema not in expose-schemas
- *   - PGRST301  PostgREST: JWT not yet propagated (transient on first sign-in)
+ * Returns true when a Supabase fetch error indicates the PvP tables aren't
+ * reachable — e.g. the migration hasn't been applied or PostgREST hasn't
+ * reloaded its schema cache. Lets refreshGames render an empty state instead
+ * of crashing.
  */
 function isPvPSchemaUnavailable(err: {
   code?: string;
@@ -45,18 +39,16 @@ function isPvPSchemaUnavailable(err: {
 
 // Types ----------------------------------------------------------------------
 
-export type PvPChallengeStatus =
-  | "open"
-  | "claimed"
-  | "completed"
-  | "expired"
-  | "cancelled";
+export type PvPGameStatus = "open" | "completed" | "cancelled" | "expired";
 
-/** A row from pvp_challenges, augmented with a few derived/joined fields. */
-export interface PvPChallenge {
+/**
+ * A pvp_games row. Both creator and joiner slots have identical shape; either
+ * side may race first, both play blind, results revealed when both done.
+ */
+export interface PvPGame {
   id: string;
   invite_code: string;
-  status: PvPChallengeStatus;
+  status: PvPGameStatus;
 
   keyboard: string;
   level: string;
@@ -65,24 +57,24 @@ export interface PvPChallenge {
   punctuation: boolean;
   numbers: boolean;
   word_set: string[];
+  message: string | null;
 
-  challenger_id: string;
-  challenger_cpm: number;
-  challenger_correct: number;
-  challenger_incorrect: number;
-  challenger_time: string;
-  challenger_key_presses: unknown | null;
-  challenger_completed_at: string;
-  challenger_message: string | null;
+  creator_id: string;
+  creator_cpm: number | null;
+  creator_correct: number | null;
+  creator_incorrect: number | null;
+  creator_time: string | null;
+  creator_key_presses: unknown | null;
+  creator_completed_at: string | null;
 
-  opponent_id: string | null;
-  opponent_cpm: number | null;
-  opponent_correct: number | null;
-  opponent_incorrect: number | null;
-  opponent_time: string | null;
-  opponent_key_presses: unknown | null;
-  opponent_claimed_at: string | null;
-  opponent_completed_at: string | null;
+  joiner_id: string | null;
+  joiner_cpm: number | null;
+  joiner_correct: number | null;
+  joiner_incorrect: number | null;
+  joiner_time: string | null;
+  joiner_key_presses: unknown | null;
+  joiner_joined_at: string | null;
+  joiner_completed_at: string | null;
 
   winner_id: string | null;
 
@@ -91,83 +83,7 @@ export interface PvPChallenge {
   updated_at: string;
 }
 
-/** What the challenger submits to create a challenge (after racing). */
-export interface ChallengerResult {
-  cpm: number;
-  correct: number;
-  incorrect: number;
-  time: string;
-  key_presses?: unknown;
-  // Settings + word set come from the user's current settings + a freshly
-  // generated word_set; createChallenge fills these in.
-}
-
-/** What an opponent submits to complete a claimed challenge. */
-export interface OpponentResult {
-  cpm: number;
-  correct: number;
-  incorrect: number;
-  time: string;
-  key_presses?: unknown;
-}
-
-/**
- * Race state shown by Tracker when the user is mid-PvP-race. The race is run
- * on the home page in "PvP mode" rather than a dedicated route.
- *
- *   creating: challenger is racing a fresh word_set; on completion we'll
- *             create a new challenge row using the locked-in settings.
- *   racing:   opponent has claimed an open challenge and is racing its
- *             pre-locked word_set; on completion we submit their result.
- */
-export type PvPRaceMode =
-  | { kind: "creating"; wordSet: string[]; settings: ChallengeSettings }
-  | { kind: "racing"; challenge: PvPChallenge };
-
-interface PvPContextType {
-  // Derived state
-  myOpenChallenges: PvPChallenge[];
-  myActiveChallenges: PvPChallenge[];
-  myCompletedChallenges: PvPChallenge[];
-  isLoading: boolean;
-  error: string | null;
-
-  // Active race (null when not in a PvP race)
-  currentRace: PvPRaceMode | null;
-  startNewRace: (wordSet: string[], settings: ChallengeSettings) => void;
-  startClaimedRace: (challenge: PvPChallenge) => void;
-  forfeitRace: () => void;
-  /**
-   * Submit a finished race result. Routes to createChallenge or
-   * submitOpponentResult based on currentRace.kind, clears the race state,
-   * and returns the completed challenge so the caller can navigate.
-   */
-  completeRace: (
-    result: ChallengerResult | OpponentResult,
-  ) => Promise<PvPChallenge | null>;
-
-  // Mutations
-  createChallenge: (
-    result: ChallengerResult,
-    settings: ChallengeSettings,
-    message?: string,
-  ) => Promise<PvPChallenge | null>;
-  claimChallenge: (challengeId: string) => Promise<PvPChallenge | null>;
-  submitOpponentResult: (
-    challengeId: string,
-    result: OpponentResult,
-  ) => Promise<PvPChallenge | null>;
-  cancelChallenge: (challengeId: string) => Promise<boolean>;
-
-  // Lookups
-  fetchByInviteCode: (inviteCode: string) => Promise<PvPChallenge | null>;
-  fetchById: (id: string) => Promise<PvPChallenge | null>;
-
-  // Refresh
-  refreshChallenges: () => Promise<void>;
-}
-
-/** Settings + word set captured at creation, locked into the challenge row. */
+/** Settings + word_set captured at game creation, locked into the row. */
 export interface ChallengeSettings {
   keyboard: string;
   level: string;
@@ -178,31 +94,92 @@ export interface ChallengeSettings {
   word_set: string[];
 }
 
+/** A finished race the player wants to record against the game's open slot. */
+export interface PvPRaceResult {
+  cpm: number;
+  correct: number;
+  incorrect: number;
+  time: string;
+  key_presses?: unknown;
+}
+
+/** Active race state — the home page reads this to enter PvP mode. */
+export type PvPRaceMode = { game: PvPGame };
+
+interface PvPContextType {
+  // Derived state
+  myActiveGames: PvPGame[]; // open games where I haven't raced yet
+  myAwaitingGames: PvPGame[]; // open games where I've raced, partner hasn't
+  myCompletedGames: PvPGame[]; // terminal: completed/cancelled/expired
+  isLoading: boolean;
+  error: string | null;
+
+  // Active race
+  currentRace: PvPRaceMode | null;
+  startRace: (game: PvPGame) => void;
+  forfeitRace: () => void;
+  /** Submit the current race result; updates the caller's slot and clears state. */
+  completeRace: (result: PvPRaceResult) => Promise<PvPGame | null>;
+
+  // Mutations
+  createGame: (
+    settings: ChallengeSettings,
+    message?: string,
+  ) => Promise<PvPGame | null>;
+  joinGame: (gameId: string) => Promise<PvPGame | null>;
+  cancelGame: (gameId: string) => Promise<boolean>;
+
+  // Lookups
+  fetchByInviteCode: (inviteCode: string) => Promise<PvPGame | null>;
+  fetchById: (id: string) => Promise<PvPGame | null>;
+
+  // Refresh
+  refreshGames: () => Promise<void>;
+}
+
 const PvPContext = createContext<PvPContextType | undefined>(undefined);
 
 export function PvPProvider({ children }: { children: ReactNode }) {
-  const [challenges, setChallenges] = useState<PvPChallenge[]>([]);
+  const [games, setGames] = useState<PvPGame[]>([]);
   const [currentRace, setCurrentRace] = useState<PvPRaceMode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { supabase, user } = useSupabase();
 
-  const myOpenChallenges = challenges.filter(
-    (c) => c.status === "open" && c.challenger_id === user?.id,
+  // Derived state -----------------------------------------------------------
+  const mySlotCompletedAt = (g: PvPGame): string | null => {
+    if (!user) return null;
+    if (g.creator_id === user.id) return g.creator_completed_at;
+    if (g.joiner_id === user.id) return g.joiner_completed_at;
+    return null;
+  };
+  const partnerSlotCompletedAt = (g: PvPGame): string | null => {
+    if (!user) return null;
+    if (g.creator_id === user.id) return g.joiner_completed_at;
+    if (g.joiner_id === user.id) return g.creator_completed_at;
+    return null;
+  };
+
+  const myActiveGames = games.filter(
+    (g) => g.status === "open" && mySlotCompletedAt(g) === null,
   );
-  const myActiveChallenges = challenges.filter(
-    (c) => c.status === "claimed",
+  const myAwaitingGames = games.filter(
+    (g) =>
+      g.status === "open" &&
+      mySlotCompletedAt(g) !== null &&
+      partnerSlotCompletedAt(g) === null,
   );
-  const myCompletedChallenges = challenges.filter(
-    (c) =>
-      c.status === "completed" ||
-      c.status === "cancelled" ||
-      c.status === "expired",
+  const myCompletedGames = games.filter(
+    (g) =>
+      g.status === "completed" ||
+      g.status === "cancelled" ||
+      g.status === "expired",
   );
 
-  const refreshChallenges = useCallback(async () => {
+  // Refresh -----------------------------------------------------------------
+  const refreshGames = useCallback(async () => {
     if (!user) {
-      setChallenges([]);
+      setGames([]);
       setIsLoading(false);
       return;
     }
@@ -212,20 +189,20 @@ export function PvPProvider({ children }: { children: ReactNode }) {
 
     try {
       const { data, error: fetchError } = await supabase
-        .from("pvp_challenges")
+        .from("pvp_games")
         .select("*")
-        .or(`challenger_id.eq.${user.id},opponent_id.eq.${user.id}`)
+        .or(`creator_id.eq.${user.id},joiner_id.eq.${user.id}`)
         .order("created_at", { ascending: false });
 
       if (fetchError) {
         if (isPvPSchemaUnavailable(fetchError)) {
           console.log("PvP tables not available yet");
-          setChallenges([]);
+          setGames([]);
         } else {
           throw fetchError;
         }
       } else {
-        setChallenges((data as PvPChallenge[]) ?? []);
+        setGames((data as PvPGame[]) ?? []);
       }
     } catch (err) {
       const detail =
@@ -237,41 +214,33 @@ export function PvPProvider({ children }: { children: ReactNode }) {
               hint: (err as { hint?: string }).hint,
             }
           : err;
-      console.error("Error fetching challenges:", detail);
+      console.error("Error fetching games:", detail);
       setError(
         err instanceof Error
           ? err.message
-          : (detail as { message?: string })?.message ?? "Failed to fetch challenges",
+          : (detail as { message?: string })?.message ?? "Failed to fetch games",
       );
-      setChallenges([]);
+      setGames([]);
     } finally {
       setIsLoading(false);
     }
   }, [user, supabase]);
 
-  const createChallenge = useCallback(
+  // Mutations ---------------------------------------------------------------
+  const createGame = useCallback(
     async (
-      result: ChallengerResult,
       settings: ChallengeSettings,
       message?: string,
-    ): Promise<PvPChallenge | null> => {
+    ): Promise<PvPGame | null> => {
       if (!user) {
-        setError("Must be logged in to create challenges");
+        setError("Must be logged in to create games");
         return null;
       }
 
       try {
-        // invite_code is filled in by the set_pvp_invite_code BEFORE INSERT
-        // trigger; expires_at and challenger_completed_at have DB-side defaults.
-        // The generated Insert type still marks invite_code required, so cast.
         const insertPayload = {
-          challenger_id: user.id,
-          challenger_cpm: result.cpm,
-          challenger_correct: result.correct,
-          challenger_incorrect: result.incorrect,
-          challenger_time: result.time,
-          challenger_key_presses: (result.key_presses ?? null) as Json | null,
-          challenger_message: message ?? null,
+          creator_id: user.id,
+          message: message ?? null,
           keyboard: settings.keyboard,
           level: settings.level,
           language: settings.language,
@@ -279,142 +248,193 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           punctuation: settings.punctuation,
           numbers: settings.numbers,
           word_set: settings.word_set,
-        } as unknown as TablesInsert<"pvp_challenges">;
+        } as unknown as TablesInsert<"pvp_games">;
 
         const { data, error: insertError } = await supabase
-          .from("pvp_challenges")
+          .from("pvp_games")
           .insert(insertPayload)
           .select()
           .single();
 
         if (insertError) throw insertError;
-        await refreshChallenges();
-        return data as PvPChallenge;
+        await refreshGames();
+        return data as PvPGame;
       } catch (err) {
-        return handleMutationError(err, "Failed to create challenge");
+        return handleMutationError(err, "Failed to create game");
       }
     },
-    [user, supabase, refreshChallenges],
+    [user, supabase, refreshGames],
   );
 
-  const claimChallenge = useCallback(
-    async (challengeId: string): Promise<PvPChallenge | null> => {
+  const joinGame = useCallback(
+    async (gameId: string): Promise<PvPGame | null> => {
       if (!user) {
-        setError("Must be logged in to claim challenges");
+        setError("Must be logged in to join a game");
         return null;
       }
 
       try {
-        // The status='open' / challenger_id != self preconditions are enforced
-        // by the RLS USING clause on the "Anyone can claim an open challenge"
-        // policy. Don't add them as PostgREST query filters, because PostgREST
-        // re-applies its filters to the returned row — and after the UPDATE
-        // status='claimed', a status=eq.open filter would exclude it, leaving
-        // .select() empty even on success.
+        // PostgREST re-applies request filters to the RETURNING result, so
+        // adding precondition .eq()/.is()/.neq() filters that the UPDATE
+        // itself flips ends up filtering out the row we just updated.
+        // Race-safety lives in the RLS USING clause on the join policy
+        // (status='open' AND joiner_id IS NULL AND auth.uid() != creator_id).
         const { data, error: updateError } = await supabase
-          .from("pvp_challenges")
+          .from("pvp_games")
           .update({
-            opponent_id: user.id,
-            opponent_claimed_at: new Date().toISOString(),
-            status: "claimed",
+            joiner_id: user.id,
+            joiner_joined_at: new Date().toISOString(),
           })
-          .eq("id", challengeId)
+          .eq("id", gameId)
           .select()
           .maybeSingle();
 
         if (updateError) throw updateError;
         if (!data) {
-          // 0 rows updated — RLS rejected (already claimed, own challenge, etc).
-          toast.error("Challenge already claimed or unavailable");
+          toast.error("Couldn't join — game already has a joiner or is closed");
           return null;
         }
-        await refreshChallenges();
-        return data as PvPChallenge;
+        await refreshGames();
+        return data as PvPGame;
       } catch (err) {
-        return handleMutationError(err, "Failed to claim challenge");
+        return handleMutationError(err, "Failed to join game");
       }
     },
-    [user, supabase, refreshChallenges],
+    [user, supabase, refreshGames],
   );
 
-  const submitOpponentResult = useCallback(
-    async (
-      challengeId: string,
-      result: OpponentResult,
-    ): Promise<PvPChallenge | null> => {
-      if (!user) {
-        setError("Must be logged in to submit a result");
-        return null;
-      }
-
-      try {
-        // RLS USING (status='claimed' AND opponent_id=auth.uid()) on the
-        // "Opponent can submit their result" policy enforces preconditions —
-        // don't repeat them as PostgREST filters or the .select() will come
-        // back empty after the UPDATE flips status to 'completed'.
-        const { data, error: updateError } = await supabase
-          .from("pvp_challenges")
-          .update({
-            opponent_cpm: result.cpm,
-            opponent_correct: result.correct,
-            opponent_incorrect: result.incorrect,
-            opponent_time: result.time,
-            opponent_key_presses: (result.key_presses ?? null) as Json | null,
-            opponent_completed_at: new Date().toISOString(),
-            status: "completed",
-          })
-          .eq("id", challengeId)
-          .select()
-          .maybeSingle();
-
-        if (updateError) throw updateError;
-        if (!data) {
-          toast.error("Couldn't submit — challenge state changed or you're not the claimer");
-          return null;
-        }
-        await refreshChallenges();
-        return data as PvPChallenge;
-      } catch (err) {
-        return handleMutationError(err, "Failed to submit result");
-      }
-    },
-    [user, supabase, refreshChallenges],
-  );
-
-  const cancelChallenge = useCallback(
-    async (challengeId: string): Promise<boolean> => {
+  const cancelGame = useCallback(
+    async (gameId: string): Promise<boolean> => {
       if (!user) return false;
       try {
-        // RLS USING (challenger_id=auth.uid() AND status='open') enforces the
-        // preconditions — don't repeat them as PostgREST filters; the .select()
-        // would otherwise return empty after the UPDATE flips status.
+        // RLS "Creator can cancel" gates the UPDATE.
         const { data, error: updateError } = await supabase
-          .from("pvp_challenges")
+          .from("pvp_games")
           .update({ status: "cancelled" })
-          .eq("id", challengeId)
+          .eq("id", gameId)
           .select()
           .maybeSingle();
 
         if (updateError) throw updateError;
         if (!data) {
-          toast.error("Couldn't cancel — challenge already claimed or not yours");
+          toast.error("Couldn't cancel — game state changed or not yours");
           return false;
         }
-        await refreshChallenges();
+        await refreshGames();
         return true;
       } catch (err) {
-        handleMutationError(err, "Failed to cancel challenge");
+        handleMutationError(err, "Failed to cancel game");
         return false;
       }
     },
-    [user, supabase, refreshChallenges],
+    [user, supabase, refreshGames],
   );
 
-  // Shared error handler for mutations.
-  function handleMutationError(
-    err: unknown,
-    fallback: string,
-  ): null {
+  // Race state --------------------------------------------------------------
+  const startRace = useCallback((game: PvPGame) => {
+    setCurrentRace({ game });
+  }, []);
+
+  const forfeitRace = useCallback(() => {
+    setCurrentRace(null);
+  }, []);
+
+  const completeRace = useCallback(
+    async (result: PvPRaceResult): Promise<PvPGame | null> => {
+      if (!currentRace || !user) return null;
+      const game = currentRace.game;
+      const isCreator = game.creator_id === user.id;
+      const isJoiner = game.joiner_id === user.id;
+
+      if (!isCreator && !isJoiner) {
+        // Shouldn't happen — Tracker only enters race mode for participants.
+        setCurrentRace(null);
+        return null;
+      }
+
+      const slotPrefix: "creator" | "joiner" = isCreator ? "creator" : "joiner";
+      const updates = {
+        [`${slotPrefix}_cpm`]: result.cpm,
+        [`${slotPrefix}_correct`]: result.correct,
+        [`${slotPrefix}_incorrect`]: result.incorrect,
+        [`${slotPrefix}_time`]: result.time,
+        [`${slotPrefix}_key_presses`]: (result.key_presses ?? null) as Json | null,
+        [`${slotPrefix}_completed_at`]: new Date().toISOString(),
+      };
+
+      try {
+        // RLS submit policies gate this — the slot's completed_at NULL check
+        // is in the USING clause, so we don't repeat it here (would filter
+        // the RETURNING row out after the update flipped it non-null).
+        const { data, error: updateError } = await supabase
+          .from("pvp_games")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .update(updates as any)
+          .eq("id", game.id)
+          .select()
+          .maybeSingle();
+
+        if (updateError) throw updateError;
+        setCurrentRace(null);
+        if (!data) {
+          toast.error("Couldn't submit — game state changed");
+          return null;
+        }
+        await refreshGames();
+        return data as PvPGame;
+      } catch (err) {
+        setCurrentRace(null);
+        return handleMutationError(err, "Failed to submit result");
+      }
+    },
+    [currentRace, user, supabase, refreshGames],
+  );
+
+  // Lookups -----------------------------------------------------------------
+  const fetchByInviteCode = useCallback(
+    async (inviteCode: string): Promise<PvPGame | null> => {
+      try {
+        const { data, error: rpcError } = await supabase
+          .rpc("get_game_by_invite_code", { _code: inviteCode.toUpperCase() })
+          .maybeSingle();
+
+        if (rpcError) {
+          console.error("Error fetching game by invite code:", rpcError);
+          return null;
+        }
+        return (data as PvPGame | null) ?? null;
+      } catch (err) {
+        console.error("Error fetching game by invite code:", err);
+        return null;
+      }
+    },
+    [supabase],
+  );
+
+  const fetchById = useCallback(
+    async (id: string): Promise<PvPGame | null> => {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from("pvp_games")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error("Error fetching game by id:", fetchError);
+          return null;
+        }
+        return (data as PvPGame | null) ?? null;
+      } catch (err) {
+        console.error("Error fetching game by id:", err);
+        return null;
+      }
+    },
+    [supabase],
+  );
+
+  // Shared error handler ----------------------------------------------------
+  function handleMutationError(err: unknown, fallback: string): null {
     if (
       isPvPSchemaUnavailable(err as { code?: string; message?: string })
     ) {
@@ -444,230 +464,67 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     return null;
   }
 
-  const fetchByInviteCode = useCallback(
-    async (inviteCode: string): Promise<PvPChallenge | null> => {
-      try {
-        const { data, error: rpcError } = await supabase
-          .rpc("get_challenge_by_invite_code", { _code: inviteCode.toUpperCase() })
-          .maybeSingle();
-
-        if (rpcError) {
-          console.error("Error fetching challenge by invite code:", rpcError);
-          return null;
-        }
-        return (data as PvPChallenge | null) ?? null;
-      } catch (err) {
-        console.error("Error fetching challenge by invite code:", err);
-        return null;
-      }
-    },
-    [supabase],
-  );
-
-  const fetchById = useCallback(
-    async (id: string): Promise<PvPChallenge | null> => {
-      try {
-        const { data, error: fetchError } = await supabase
-          .from("pvp_challenges")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
-
-        if (fetchError) {
-          console.error("Error fetching challenge by id:", fetchError);
-          return null;
-        }
-        return (data as PvPChallenge | null) ?? null;
-      } catch (err) {
-        console.error("Error fetching challenge by id:", err);
-        return null;
-      }
-    },
-    [supabase],
-  );
-
-  // Initial fetch
+  // Initial fetch + auth-change reload --------------------------------------
   useEffect(() => {
-    refreshChallenges();
-  }, [refreshChallenges]);
+    refreshGames();
+  }, [refreshGames]);
 
-  // Real-time subscription for challenge updates
+  // Realtime: refresh on any change to my games -----------------------------
   useEffect(() => {
     if (!user) return;
-
-    const handleChallengeUpdate = async (payload: any) => {
-      const eventType = payload.eventType;
-      const newData = payload.new as any;
-      const oldData = payload.old as any;
-
-      // Refresh challenges first
-      await refreshChallenges();
-
-      // Notify the challenger when an opponent claims their open challenge.
-      if (
-        eventType === "UPDATE" &&
-        newData?.challenger_id === user.id &&
-        oldData?.status === "open" &&
-        newData?.status === "claimed"
-      ) {
-        toast.info("Your challenge was claimed!", {
-          description: "An opponent has accepted your PvP challenge.",
-          action: {
-            label: "View",
-            onClick: () => {
-              window.location.href = `/pvp/challenge?id=${newData.id}`;
-            },
-          },
-        });
-      }
-
-      // Notify when the challenge completes.
-      if (
-        eventType === "UPDATE" &&
-        oldData?.status !== "completed" &&
-        newData?.status === "completed"
-      ) {
-        const isWinner = newData.winner_id === user.id;
-        if (isWinner) {
-          toast.success("You Won!", {
-            description: "Congratulations! You won the PvP challenge!",
-            action: {
-              label: "View Results",
-              onClick: () => {
-                window.location.href = `/pvp/challenge?id=${newData.id}`;
-              },
-            },
-          });
-        } else {
-          toast.info("Challenge Complete", {
-            description: "The PvP challenge has been completed.",
-            action: {
-              label: "View Results",
-              onClick: () => {
-                window.location.href = `/pvp/challenge?id=${newData.id}`;
-              },
-            },
-          });
-        }
-      }
-    };
-
     const channel = supabase
-      .channel(`pvp-challenges-${user.id}`)
+      .channel(`pvp-games-${user.id}`)
       .on(
-        "postgres_changes",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        "postgres_changes" as any,
         {
           event: "*",
           schema: "public",
-          table: "pvp_challenges",
-          filter: `challenger_id=eq.${user.id}`,
+          table: "pvp_games",
+          filter: `creator_id=eq.${user.id}`,
         },
-        handleChallengeUpdate
+        () => refreshGames(),
       )
       .on(
-        "postgres_changes",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        "postgres_changes" as any,
         {
           event: "*",
           schema: "public",
-          table: "pvp_challenges",
-          filter: `opponent_id=eq.${user.id}`,
+          table: "pvp_games",
+          filter: `joiner_id=eq.${user.id}`,
         },
-        handleChallengeUpdate
+        () => refreshGames(),
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, supabase, refreshChallenges]);
-
-  const startNewRace = useCallback(
-    (wordSet: string[], settings: ChallengeSettings) => {
-      setCurrentRace({ kind: "creating", wordSet, settings });
-    },
-    [],
-  );
-
-  const startClaimedRace = useCallback((challenge: PvPChallenge) => {
-    setCurrentRace({ kind: "racing", challenge });
-  }, []);
-
-  const forfeitRace = useCallback(() => {
-    setCurrentRace(null);
-  }, []);
-
-  const completeRace = useCallback(
-    async (
-      result: ChallengerResult | OpponentResult,
-    ): Promise<PvPChallenge | null> => {
-      if (!currentRace) return null;
-      let completed: PvPChallenge | null = null;
-      if (currentRace.kind === "creating") {
-        completed = await createChallenge(result, currentRace.settings);
-      } else {
-        completed = await submitOpponentResult(currentRace.challenge.id, result);
-      }
-      // Clear race state regardless of success — caller can re-route.
-      setCurrentRace(null);
-      return completed;
-    },
-    [currentRace, createChallenge, submitOpponentResult],
-  );
+  }, [user, supabase, refreshGames]);
 
   const value: PvPContextType = {
-    myOpenChallenges,
-    myActiveChallenges,
-    myCompletedChallenges,
+    myActiveGames,
+    myAwaitingGames,
+    myCompletedGames,
     isLoading,
     error,
     currentRace,
-    startNewRace,
-    startClaimedRace,
+    startRace,
     forfeitRace,
     completeRace,
-    createChallenge,
-    claimChallenge,
-    submitOpponentResult,
-    cancelChallenge,
+    createGame,
+    joinGame,
+    cancelGame,
     fetchByInviteCode,
     fetchById,
-    refreshChallenges,
+    refreshGames,
   };
 
-  return (
-    <PvPContext.Provider value={value}>{children}</PvPContext.Provider>
-  );
+  return <PvPContext.Provider value={value}>{children}</PvPContext.Provider>;
 }
 
 export function usePvP(): PvPContextType {
-  const context = useContext(PvPContext);
-  if (context === undefined) {
-    throw new Error("usePvP must be used within a PvPProvider");
-  }
-  return context;
-}
-
-// Helper function to check if a user has completed their part of a challenge.
-// v2: completion is recorded on the row itself via *_completed_at timestamps.
-export function hasUserCompleted(
-  challenge: PvPChallenge,
-  userId: string,
-): boolean {
-  if (challenge.challenger_id === userId) {
-    return challenge.challenger_completed_at !== null;
-  }
-  if (challenge.opponent_id === userId) {
-    return challenge.opponent_completed_at !== null;
-  }
-  return false;
-}
-
-// Helper function to check if it's the user's turn to race.
-// v2: a challenge is in-flight while it is "claimed" (opponent has taken it
-// but not yet submitted their result).
-export function isUsersTurn(challenge: PvPChallenge, userId: string): boolean {
-  if (challenge.status !== "claimed") {
-    return false;
-  }
-  return !hasUserCompleted(challenge, userId);
+  const ctx = useContext(PvPContext);
+  if (!ctx) throw new Error("usePvP must be used within a PvPProvider");
+  return ctx;
 }

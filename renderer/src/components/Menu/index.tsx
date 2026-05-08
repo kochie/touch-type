@@ -41,7 +41,7 @@ export default function Menu({
   const isMas = useMas()
   const plan = usePlan();
   const { currentStreak, isAtRisk, isLoading: streakLoading } = useStreak();
-  const { myActiveChallenges } = usePvP();
+  const { myActiveGames } = usePvP();
 
   
   // This is being done because of hydration errors in the settings hook.
@@ -136,9 +136,9 @@ export default function Menu({
                 )}
                 size="lg"
               />
-              {myActiveChallenges.length > 0 && (
+              {myActiveGames.length > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  {myActiveChallenges.length > 9 ? "9+" : myActiveChallenges.length}
+                  {myActiveGames.length > 9 ? "9+" : myActiveGames.length}
                 </span>
               )}
             </Link>

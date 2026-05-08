@@ -20,7 +20,7 @@ import {
   Switch,
 } from "@headlessui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlay } from "@fortawesome/pro-duotone-svg-icons";
+import { faPlay, faSpinner } from "@fortawesome/pro-duotone-svg-icons";
 import clsx from "clsx";
 import { toast } from "sonner";
 
@@ -65,7 +65,8 @@ export default function NewChallengePrompt() {
   const router = useRouter();
   const settings = useSettings();
   const [wordList] = useWords();
-  const { startNewRace } = usePvP();
+  const { createGame } = usePvP();
+  const [creating, setCreating] = useState(false);
 
   // Local form state — defaults to the user's global settings but is editable
   // per-challenge without mutating the global settings.
@@ -78,11 +79,12 @@ export default function NewChallengePrompt() {
   const [punctuation, setPunctuation] = useState(settings.punctuation);
   const [numbers, setNumbers] = useState(settings.numbers);
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (wordList.length === 0) {
       toast.error("Word list still loading — try again in a moment");
       return;
     }
+    setCreating(true);
     const wordSet = generateWordSet(wordList);
     const challengeSettings: ChallengeSettings = {
       keyboard,
@@ -93,8 +95,11 @@ export default function NewChallengePrompt() {
       numbers,
       word_set: wordSet,
     };
-    startNewRace(wordSet, challengeSettings);
-    router.push("/");
+    const game = await createGame(challengeSettings);
+    setCreating(false);
+    if (game) {
+      router.push(`/pvp/challenge?id=${game.id}`);
+    }
   };
 
   const selectClass = clsx(
@@ -109,11 +114,11 @@ export default function NewChallengePrompt() {
     <div className="max-w-md mx-auto py-8 space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Ready to Race?
+          Create a Game
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Type a 15-word set with your chosen settings. Your time becomes the
-          score-to-beat for whoever you share the link with.
+          Pick the settings, share the link, and race when you're ready. Both
+          sides play blind — neither sees the other's score until both finish.
         </p>
       </div>
 
@@ -182,15 +187,20 @@ export default function NewChallengePrompt() {
       </div>
 
       <button
-        data-testid="pvp-start-race"
+        data-testid="pvp-create-game"
         onClick={handleStart}
+        disabled={creating}
         className={clsx(
           "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold",
           "bg-blue-500 hover:bg-blue-600 text-white transition-colors",
+          "disabled:opacity-50 disabled:cursor-not-allowed",
         )}
       >
-        <FontAwesomeIcon icon={faPlay} className="w-5 h-5" />
-        Start Race
+        <FontAwesomeIcon
+          icon={creating ? faSpinner : faPlay}
+          className={clsx("w-5 h-5", creating && "animate-spin")}
+        />
+        {creating ? "Creating…" : "Create Game"}
       </button>
     </div>
   );

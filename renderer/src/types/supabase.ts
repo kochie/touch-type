@@ -229,33 +229,33 @@ export type Database = {
         }
         Relationships: []
       }
-      pvp_challenges: {
+      pvp_games: {
         Row: {
           capital: boolean
-          challenger_completed_at: string
-          challenger_correct: number
-          challenger_cpm: number
-          challenger_id: string
-          challenger_incorrect: number
-          challenger_key_presses: Json | null
-          challenger_message: string | null
-          challenger_time: string
           created_at: string
+          creator_completed_at: string | null
+          creator_correct: number | null
+          creator_cpm: number | null
+          creator_id: string
+          creator_incorrect: number | null
+          creator_key_presses: Json | null
+          creator_time: string | null
           expires_at: string
           id: string
           invite_code: string
+          joiner_completed_at: string | null
+          joiner_correct: number | null
+          joiner_cpm: number | null
+          joiner_id: string | null
+          joiner_incorrect: number | null
+          joiner_joined_at: string | null
+          joiner_key_presses: Json | null
+          joiner_time: string | null
           keyboard: string
           language: string
           level: string
+          message: string | null
           numbers: boolean
-          opponent_claimed_at: string | null
-          opponent_completed_at: string | null
-          opponent_correct: number | null
-          opponent_cpm: number | null
-          opponent_id: string | null
-          opponent_incorrect: number | null
-          opponent_key_presses: Json | null
-          opponent_time: string | null
           punctuation: boolean
           status: string
           updated_at: string
@@ -264,30 +264,30 @@ export type Database = {
         }
         Insert: {
           capital?: boolean
-          challenger_completed_at?: string
-          challenger_correct: number
-          challenger_cpm: number
-          challenger_id: string
-          challenger_incorrect: number
-          challenger_key_presses?: Json | null
-          challenger_message?: string | null
-          challenger_time: string
           created_at?: string
+          creator_completed_at?: string | null
+          creator_correct?: number | null
+          creator_cpm?: number | null
+          creator_id: string
+          creator_incorrect?: number | null
+          creator_key_presses?: Json | null
+          creator_time?: string | null
           expires_at?: string
           id?: string
           invite_code: string
+          joiner_completed_at?: string | null
+          joiner_correct?: number | null
+          joiner_cpm?: number | null
+          joiner_id?: string | null
+          joiner_incorrect?: number | null
+          joiner_joined_at?: string | null
+          joiner_key_presses?: Json | null
+          joiner_time?: string | null
           keyboard: string
           language: string
           level: string
+          message?: string | null
           numbers?: boolean
-          opponent_claimed_at?: string | null
-          opponent_completed_at?: string | null
-          opponent_correct?: number | null
-          opponent_cpm?: number | null
-          opponent_id?: string | null
-          opponent_incorrect?: number | null
-          opponent_key_presses?: Json | null
-          opponent_time?: string | null
           punctuation?: boolean
           status?: string
           updated_at?: string
@@ -296,30 +296,30 @@ export type Database = {
         }
         Update: {
           capital?: boolean
-          challenger_completed_at?: string
-          challenger_correct?: number
-          challenger_cpm?: number
-          challenger_id?: string
-          challenger_incorrect?: number
-          challenger_key_presses?: Json | null
-          challenger_message?: string | null
-          challenger_time?: string
           created_at?: string
+          creator_completed_at?: string | null
+          creator_correct?: number | null
+          creator_cpm?: number | null
+          creator_id?: string
+          creator_incorrect?: number | null
+          creator_key_presses?: Json | null
+          creator_time?: string | null
           expires_at?: string
           id?: string
           invite_code?: string
+          joiner_completed_at?: string | null
+          joiner_correct?: number | null
+          joiner_cpm?: number | null
+          joiner_id?: string | null
+          joiner_incorrect?: number | null
+          joiner_joined_at?: string | null
+          joiner_key_presses?: Json | null
+          joiner_time?: string | null
           keyboard?: string
           language?: string
           level?: string
+          message?: string | null
           numbers?: boolean
-          opponent_claimed_at?: string | null
-          opponent_completed_at?: string | null
-          opponent_correct?: number | null
-          opponent_cpm?: number | null
-          opponent_id?: string | null
-          opponent_incorrect?: number | null
-          opponent_key_presses?: Json | null
-          opponent_time?: string | null
           punctuation?: boolean
           status?: string
           updated_at?: string
@@ -600,34 +600,34 @@ export type Database = {
     }
     Functions: {
       generate_invite_code: { Args: never; Returns: string }
-      get_challenge_by_invite_code: {
+      get_game_by_invite_code: {
         Args: { _code: string }
         Returns: {
           capital: boolean
-          challenger_completed_at: string
-          challenger_correct: number
-          challenger_cpm: number
-          challenger_id: string
-          challenger_incorrect: number
-          challenger_key_presses: Json | null
-          challenger_message: string | null
-          challenger_time: string
           created_at: string
+          creator_completed_at: string | null
+          creator_correct: number | null
+          creator_cpm: number | null
+          creator_id: string
+          creator_incorrect: number | null
+          creator_key_presses: Json | null
+          creator_time: string | null
           expires_at: string
           id: string
           invite_code: string
+          joiner_completed_at: string | null
+          joiner_correct: number | null
+          joiner_cpm: number | null
+          joiner_id: string | null
+          joiner_incorrect: number | null
+          joiner_joined_at: string | null
+          joiner_key_presses: Json | null
+          joiner_time: string | null
           keyboard: string
           language: string
           level: string
+          message: string | null
           numbers: boolean
-          opponent_claimed_at: string | null
-          opponent_completed_at: string | null
-          opponent_correct: number | null
-          opponent_cpm: number | null
-          opponent_id: string | null
-          opponent_incorrect: number | null
-          opponent_key_presses: Json | null
-          opponent_time: string | null
           punctuation: boolean
           status: string
           updated_at: string
@@ -636,7 +636,7 @@ export type Database = {
         }[]
         SetofOptions: {
           from: "*"
-          to: "pvp_challenges"
+          to: "pvp_games"
           isOneToOne: false
           isSetofReturn: true
         }

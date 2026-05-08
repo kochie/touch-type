@@ -4,7 +4,7 @@ import { usePvP } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import {
   faGamepadModern,
-  faPaperPlane,
+  faHourglass,
   faHistory,
   faPlus,
   faSwords,
@@ -17,7 +17,7 @@ import { useState } from "react";
 import ChallengeCard from "./ChallengeCard";
 import NewChallengePrompt from "./NewChallengePrompt";
 
-type TabId = "active" | "outgoing" | "history" | "new";
+type TabId = "active" | "awaiting" | "history" | "new";
 
 interface Tab {
   id: TabId;
@@ -30,9 +30,9 @@ export default function PvPHub() {
   const [activeTab, setActiveTab] = useState<TabId>("active");
   const { user, isLoading: isUserLoading } = useSupabase();
   const {
-    myActiveChallenges,
-    myOpenChallenges,
-    myCompletedChallenges,
+    myActiveGames,
+    myAwaitingGames,
+    myCompletedGames,
     isLoading,
   } = usePvP();
 
@@ -41,13 +41,13 @@ export default function PvPHub() {
       id: "active",
       label: "Active",
       icon: faGamepadModern,
-      badge: myActiveChallenges.length,
+      badge: myActiveGames.length,
     },
     {
-      id: "outgoing",
-      label: "Outgoing",
-      icon: faPaperPlane,
-      badge: myOpenChallenges.length,
+      id: "awaiting",
+      label: "Awaiting",
+      icon: faHourglass,
+      badge: myAwaitingGames.length,
     },
     {
       id: "history",
@@ -93,55 +93,51 @@ export default function PvPHub() {
 
     switch (activeTab) {
       case "active":
-        return myActiveChallenges.length > 0 ? (
+        return myActiveGames.length > 0 ? (
           <div className="space-y-4">
-            {myActiveChallenges.map((c) => (
-              <ChallengeCard key={c.id} challenge={c} />
+            {myActiveGames.map((g) => (
+              <ChallengeCard key={g.id} game={g} />
             ))}
           </div>
         ) : (
           <EmptyState
             icon={faGamepadModern}
-            title="No active challenges"
-            description="When someone claims your invite link (or you claim theirs), the in-progress challenge will appear here."
+            title="No active games"
+            description="Games where you haven't raced yet show up here. Create a new one or join a friend's invite."
             action={{
-              label: "Create Challenge",
+              label: "Create Game",
               onClick: () => setActiveTab("new"),
             }}
           />
         );
 
-      case "outgoing":
-        return myOpenChallenges.length > 0 ? (
+      case "awaiting":
+        return myAwaitingGames.length > 0 ? (
           <div className="space-y-4">
-            {myOpenChallenges.map((c) => (
-              <ChallengeCard key={c.id} challenge={c} />
+            {myAwaitingGames.map((g) => (
+              <ChallengeCard key={g.id} game={g} />
             ))}
           </div>
         ) : (
           <EmptyState
-            icon={faPaperPlane}
-            title="No open challenges"
-            description="Challenges you've created and shared, but not yet claimed, will appear here."
-            action={{
-              label: "Create Challenge",
-              onClick: () => setActiveTab("new"),
-            }}
+            icon={faHourglass}
+            title="No games awaiting partner"
+            description="Games where you've raced but the other side hasn't appear here."
           />
         );
 
       case "history":
-        return myCompletedChallenges.length > 0 ? (
+        return myCompletedGames.length > 0 ? (
           <div className="space-y-4">
-            {myCompletedChallenges.map((c) => (
-              <ChallengeCard key={c.id} challenge={c} />
+            {myCompletedGames.map((g) => (
+              <ChallengeCard key={g.id} game={g} />
             ))}
           </div>
         ) : (
           <EmptyState
             icon={faHistory}
-            title="No completed challenges"
-            description="Completed, cancelled, and expired challenges show up here."
+            title="No completed games"
+            description="Completed, cancelled, and expired games show up here."
           />
         );
 

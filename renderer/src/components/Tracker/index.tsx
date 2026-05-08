@@ -77,13 +77,9 @@ export default function Tracker() {
   ] = useReducer(statsReducer, initialStat);
 
   const resetWords = useCallback(async () => {
-    // PvP mode: word_set is locked at challenge creation; never re-sample.
+    // PvP mode: word_set is locked at game creation; never re-sample.
     if (currentRace) {
-      const set =
-        currentRace.kind === "creating"
-          ? currentRace.wordSet
-          : currentRace.challenge.word_set;
-      setWords(set.join(" "));
+      setWords(currentRace.game.word_set.join(" "));
       return;
     }
     const selected: string[] = [];
@@ -121,15 +117,12 @@ export default function Tracker() {
   const cpm = total / m;
   const p = (correct / total) * 100;
 
-  // PvP mode locks in the challenge's keyboard at creation time; race-time
+  // PvP mode locks in the game's keyboard at creation time; race-time
   // accuracy must validate against THAT keyboard, not the user's current
-  // global setting (the opponent might have a different one).
-  const activeKeyboardName: KeyboardLayoutNames =
-    currentRace?.kind === "racing"
-      ? (currentRace.challenge.keyboard as KeyboardLayoutNames)
-      : currentRace?.kind === "creating"
-        ? (currentRace.settings.keyboard as KeyboardLayoutNames)
-        : settings.keyboardName;
+  // global setting (the partner might have a different one).
+  const activeKeyboardName: KeyboardLayoutNames = currentRace
+    ? (currentRace.game.keyboard as KeyboardLayoutNames)
+    : settings.keyboardName;
   const keyboardLayout = lookupKeyboard(activeKeyboardName);
   const keyboard = new Keyboard(keyboardLayout);
 
@@ -282,11 +275,7 @@ export default function Tracker() {
       <div className="flex items-center gap-2">
         <FontAwesomeIcon icon={faSwords} className="w-5 h-5 text-yellow-400" />
         <span className="font-bold">PvP Battle</span>
-        <span className="text-sm opacity-80">
-          {currentRace.kind === "racing"
-            ? `Target ${Math.round(currentRace.challenge.challenger_cpm)} CPM`
-            : "Setting the score to beat"}
-        </span>
+        <span className="text-sm opacity-80">Playing blind</span>
       </div>
       <button
         data-testid="pvp-forfeit"
