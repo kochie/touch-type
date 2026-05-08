@@ -101,7 +101,7 @@ CREATE INDEX idx_pvp_challenges_status ON public.pvp_challenges(status);
 
 #### RLS
 
-- **`SELECT`** — authenticated users can read challenges where they are challenger or opponent (`auth.uid() IN (challenger_id, opponent_id)`). Authenticated users can also read by `invite_code` for the invite landing page (`true` predicate scoped to a `WHERE invite_code = $1` query — practically, the renderer always supplies the code). Unauthenticated visitors see nothing; the invite page redirects to sign-in.
+- **`SELECT`** — narrow: only challenger or opponent can read. Predicate: `auth.uid() IN (challenger_id, opponent_id)`. Unauthenticated visitors see nothing.
 - **`INSERT`** — authenticated users can insert with `auth.uid() = challenger_id`.
 - **`UPDATE`** — three scoped policies:
   - Challenger can `UPDATE` to set `status='cancelled'` (predicate: `challenger_id = auth.uid() AND status = 'open'`).
@@ -109,6 +109,29 @@ CREATE INDEX idx_pvp_challenges_status ON public.pvp_challenges(status);
   - Opponent can `UPDATE` to submit results (predicate: `opponent_id = auth.uid() AND status = 'claimed'`).
 
 The atomic `WHERE`-status predicates are what makes concurrent claims and double-submits safe — they reduce to "0 rows updated" rather than corrupting state.
+
+#### Invite-code lookup — `SECURITY DEFINER` function
+
+Because the SELECT policy is participant-scoped, an opponent who has not yet claimed a challenge can't read it directly — but the invite landing page needs to render the challenger's username and CPM target so the opponent can decide whether to accept. Solved with a single narrowly-scoped server function:
+
+```sql
+CREATE FUNCTION public.get_challenge_by_invite_code(_code VARCHAR)
+RETURNS SETOF public.pvp_challenges
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT * FROM public.pvp_challenges
+  WHERE invite_code = _code
+  LIMIT 1;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_challenge_by_invite_code FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_challenge_by_invite_code TO authenticated;
+```
+
+The renderer's `fetchByInviteCode` calls `supabase.rpc('get_challenge_by_invite_code', { _code })` instead of `from('pvp_challenges').select(...)`. This keeps the SELECT policy strict (participants only) while still letting the invite page resolve a code to a challenge before the opponent has claimed it.
 
 #### Realtime
 
@@ -191,7 +214,7 @@ Computing in the trigger means the writer can't lie about the result.
 /pvp/challenge?id={challengeId}   — challenge detail (link, status, results)
 ```
 
-All static routes per `output: "export"`; query params for runtime IDs.
+All static routes per `output: "export"`; query params for runtime IDs. Earlier this session we converted the original dynamic-segment routes (`renderer/src/app/pvp/[challengeId]`, `renderer/src/app/pvp/invite/[code]`) into the static routes listed above (`/pvp/challenge`, `/pvp/invite`). The implementation should continue that pattern — no `[bracket]` segment folders should be reintroduced.
 
 #### Tabs in `PvPHub`
 
@@ -232,6 +255,8 @@ invite/ABCD…             - Their CPM (target)      UPDATE   word set; user typ
 ```
 
 If the opponent closes the app between Accept and racing, the challenge sits in their Active tab (`status='claimed'`, `opponent_id = me`); they can come back and click "Continue Race" to land on `/pvp/race?id={id}`.
+
+The "Decline" button on the invite page is purely client-side navigation back to `/pvp` — it does not write to the database. By design: a decline that doesn't persist means the same person could revisit the invite link later and accept. No e2e coverage needed for this button.
 
 #### Components
 
