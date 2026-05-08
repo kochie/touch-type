@@ -6,11 +6,10 @@ import {
   useEffect,
   useState,
   useCallback,
-  useRef,
   ReactNode,
 } from "react";
 import { useSupabase } from "./supabase-provider";
-import type { Tables } from "@/types/supabase";
+import type { Json, TablesInsert } from "@/types/supabase";
 import { toast } from "sonner";
 
 /**
@@ -44,15 +43,21 @@ function isPvPSchemaUnavailable(err: {
   return msg.includes("does not exist") || msg.includes("could not find");
 }
 
-// Types
-export type PvPChallengeStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'expired' | 'declined';
+// Types ----------------------------------------------------------------------
 
+export type PvPChallengeStatus =
+  | "open"
+  | "claimed"
+  | "completed"
+  | "expired"
+  | "cancelled";
+
+/** A row from pvp_challenges, augmented with a few derived/joined fields. */
 export interface PvPChallenge {
   id: string;
-  challenger_id: string;
-  opponent_id: string | null;
-  challenge_code: string | null;
+  invite_code: string;
   status: PvPChallengeStatus;
+
   keyboard: string;
   level: string;
   language: string;
@@ -60,70 +65,90 @@ export interface PvPChallenge {
   punctuation: boolean;
   numbers: boolean;
   word_set: string[];
-  challenger_result_id: string | null;
-  opponent_result_id: string | null;
+
+  challenger_id: string;
+  challenger_cpm: number;
+  challenger_correct: number;
+  challenger_incorrect: number;
+  challenger_time: string;
+  challenger_key_presses: unknown | null;
+  challenger_completed_at: string;
+  challenger_message: string | null;
+
+  opponent_id: string | null;
+  opponent_cpm: number | null;
+  opponent_correct: number | null;
+  opponent_incorrect: number | null;
+  opponent_time: string | null;
+  opponent_key_presses: unknown | null;
+  opponent_claimed_at: string | null;
+  opponent_completed_at: string | null;
+
   winner_id: string | null;
-  message: string | null;
+
   expires_at: string;
   created_at: string;
   updated_at: string;
-  // View fields (from join)
-  challenger_username?: string | null;
-  challenger_email?: string | null;
-  opponent_username?: string | null;
-  opponent_email?: string | null;
-  challenger_cpm?: number | null;
-  challenger_correct?: number | null;
-  challenger_incorrect?: number | null;
-  opponent_cpm?: number | null;
-  opponent_correct?: number | null;
-  opponent_incorrect?: number | null;
-  winner_username?: string | null;
-  invite_code?: string | null;
 }
 
-export interface SearchUser {
-  id: string;
-  username: string;
-  displayName: string | null;
-  emailHint: string | null;
+/** What the challenger submits to create a challenge (after racing). */
+export interface ChallengerResult {
+  cpm: number;
+  correct: number;
+  incorrect: number;
+  time: string;
+  key_presses?: unknown;
+  // Settings + word set come from the user's current settings + a freshly
+  // generated word_set; createChallenge fills these in.
 }
 
-export interface CreateChallengeParams {
-  opponentId?: string;
-  keyboard: string;
-  level: string;
-  language: string;
-  capital?: boolean;
-  punctuation?: boolean;
-  numbers?: boolean;
-  wordSet: string[];
-  message?: string;
-  createInviteLink?: boolean;
+/** What an opponent submits to complete a claimed challenge. */
+export interface OpponentResult {
+  cpm: number;
+  correct: number;
+  incorrect: number;
+  time: string;
+  key_presses?: unknown;
 }
 
 interface PvPContextType {
-  // State
-  challenges: PvPChallenge[];
-  incomingChallenges: PvPChallenge[];
-  outgoingChallenges: PvPChallenge[];
-  activeChallenges: PvPChallenge[];
-  completedChallenges: PvPChallenge[];
-  pendingCount: number;
+  // Derived state
+  myOpenChallenges: PvPChallenge[];
+  myActiveChallenges: PvPChallenge[];
+  myCompletedChallenges: PvPChallenge[];
   isLoading: boolean;
   error: string | null;
 
-  // Actions
-  refreshChallenges: () => Promise<void>;
-  createChallenge: (params: CreateChallengeParams) => Promise<PvPChallenge | null>;
-  acceptChallenge: (challengeId: string) => Promise<boolean>;
-  acceptChallengeByInvite: (inviteCode: string) => Promise<PvPChallenge | null>;
-  declineChallenge: (challengeId: string) => Promise<boolean>;
+  // Mutations
+  createChallenge: (
+    result: ChallengerResult,
+    settings: ChallengeSettings,
+    message?: string,
+  ) => Promise<PvPChallenge | null>;
+  claimChallenge: (challengeId: string) => Promise<PvPChallenge | null>;
+  submitOpponentResult: (
+    challengeId: string,
+    result: OpponentResult,
+  ) => Promise<PvPChallenge | null>;
   cancelChallenge: (challengeId: string) => Promise<boolean>;
-  submitResult: (challengeId: string, resultId: string) => Promise<boolean>;
-  getChallengeByCode: (code: string) => Promise<PvPChallenge | null>;
-  getChallengeById: (id: string) => Promise<PvPChallenge | null>;
-  searchUsers: (query: string) => Promise<SearchUser[]>;
+
+  // Lookups
+  fetchByInviteCode: (inviteCode: string) => Promise<PvPChallenge | null>;
+  fetchById: (id: string) => Promise<PvPChallenge | null>;
+
+  // Refresh
+  refreshChallenges: () => Promise<void>;
+}
+
+/** Settings + word set captured at creation, locked into the challenge row. */
+export interface ChallengeSettings {
+  keyboard: string;
+  level: string;
+  language: string;
+  capital: boolean;
+  punctuation: boolean;
+  numbers: boolean;
+  word_set: string[];
 }
 
 const PvPContext = createContext<PvPContextType | undefined>(undefined);
@@ -134,22 +159,19 @@ export function PvPProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const { supabase, user } = useSupabase();
 
-  // Derived state
-  const incomingChallenges = challenges.filter(
-    (c) => c.opponent_id === user?.id && c.status === "pending"
+  const myOpenChallenges = challenges.filter(
+    (c) => c.status === "open" && c.challenger_id === user?.id,
   );
-  const outgoingChallenges = challenges.filter(
-    (c) => c.challenger_id === user?.id
+  const myActiveChallenges = challenges.filter(
+    (c) => c.status === "claimed",
   );
-  const activeChallenges = challenges.filter(
-    (c) => c.status === "accepted" || c.status === "in_progress"
+  const myCompletedChallenges = challenges.filter(
+    (c) =>
+      c.status === "completed" ||
+      c.status === "cancelled" ||
+      c.status === "expired",
   );
-  const completedChallenges = challenges.filter(
-    (c) => c.status === "completed"
-  );
-  const pendingCount = incomingChallenges.length;
 
-  // Fetch all challenges for the current user
   const refreshChallenges = useCallback(async () => {
     if (!user) {
       setChallenges([]);
@@ -162,7 +184,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
 
     try {
       const { data, error: fetchError } = await supabase
-        .from("pvp_challenges_view")
+        .from("pvp_challenges")
         .select("*")
         .or(`challenger_id.eq.${user.id},opponent_id.eq.${user.id}`)
         .order("created_at", { ascending: false });
@@ -175,11 +197,9 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           throw fetchError;
         }
       } else {
-        setChallenges((data as PvPChallenge[]) || []);
+        setChallenges((data as PvPChallenge[]) ?? []);
       }
     } catch (err) {
-      // Supabase errors are plain objects, not Error instances — log fields explicitly
-      // so the next failure isn't an opaque {} in the console.
       const detail =
         err && typeof err === "object"
           ? {
@@ -193,8 +213,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
       setError(
         err instanceof Error
           ? err.message
-          : (detail as { message?: string })?.message ??
-            "Failed to fetch challenges",
+          : (detail as { message?: string })?.message ?? "Failed to fetch challenges",
       );
       setChallenges([]);
     } finally {
@@ -202,392 +221,240 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     }
   }, [user, supabase]);
 
-  // Create a new challenge
   const createChallenge = useCallback(
-    async (params: CreateChallengeParams): Promise<PvPChallenge | null> => {
+    async (
+      result: ChallengerResult,
+      settings: ChallengeSettings,
+      message?: string,
+    ): Promise<PvPChallenge | null> => {
       if (!user) {
         setError("Must be logged in to create challenges");
         return null;
       }
 
       try {
-        const { data, error: createError } = await supabase
+        // invite_code is filled in by the set_pvp_invite_code BEFORE INSERT
+        // trigger; expires_at and challenger_completed_at have DB-side defaults.
+        // The generated Insert type still marks invite_code required, so cast.
+        const insertPayload = {
+          challenger_id: user.id,
+          challenger_cpm: result.cpm,
+          challenger_correct: result.correct,
+          challenger_incorrect: result.incorrect,
+          challenger_time: result.time,
+          challenger_key_presses: (result.key_presses ?? null) as Json | null,
+          challenger_message: message ?? null,
+          keyboard: settings.keyboard,
+          level: settings.level,
+          language: settings.language,
+          capital: settings.capital,
+          punctuation: settings.punctuation,
+          numbers: settings.numbers,
+          word_set: settings.word_set,
+        } as unknown as TablesInsert<"pvp_challenges">;
+
+        const { data, error: insertError } = await supabase
           .from("pvp_challenges")
-          .insert({
-            challenger_id: user.id,
-            opponent_id: params.opponentId || null,
-            keyboard: params.keyboard,
-            level: params.level,
-            language: params.language,
-            capital: params.capital || false,
-            punctuation: params.punctuation || false,
-            numbers: params.numbers || false,
-            word_set: params.wordSet,
-            message: params.message || null,
-          })
+          .insert(insertPayload)
           .select()
           .single();
 
-        if (createError) throw createError;
-
-        // Create invite link if requested
-        let inviteCode: string | null = null;
-        if (params.createInviteLink && data) {
-          const code = crypto.randomUUID().replace(/-/g, "").substring(0, 12).toUpperCase();
-          const { data: invite, error: inviteError } = await supabase
-            .from("pvp_challenge_invites")
-            .insert({
-              challenge_id: data.id,
-              invite_code: code,
-            })
-            .select()
-            .single();
-
-          if (!inviteError && invite) {
-            inviteCode = invite.invite_code;
-          }
-        }
-
-        // Refresh to get the full view data
+        if (insertError) throw insertError;
         await refreshChallenges();
-
-        return { ...data, invite_code: inviteCode } as PvPChallenge;
+        return data as PvPChallenge;
       } catch (err) {
-        if (isPvPSchemaUnavailable(err as { code?: string; message?: string })) {
-          const msg =
-            "PvP isn't available yet — apply the latest migrations to your Supabase before creating challenges.";
-          console.warn(msg, err);
-          toast.error(msg);
-          setError(msg);
-          return null;
-        }
-        const detail =
-          err && typeof err === "object"
-            ? {
-                code: (err as { code?: string }).code,
-                message: (err as { message?: string }).message,
-                details: (err as { details?: string }).details,
-                hint: (err as { hint?: string }).hint,
-              }
-            : err;
-        console.error("Error creating challenge:", detail);
-        const message =
-          err instanceof Error
-            ? err.message
-            : (detail as { message?: string })?.message ??
-              "Failed to create challenge";
-        setError(message);
-        return null;
+        return handleMutationError(err, "Failed to create challenge");
       }
     },
-    [user, supabase, refreshChallenges]
+    [user, supabase, refreshChallenges],
   );
 
-  // Accept a challenge
-  const acceptChallenge = useCallback(
-    async (challengeId: string): Promise<boolean> => {
+  const claimChallenge = useCallback(
+    async (challengeId: string): Promise<PvPChallenge | null> => {
       if (!user) {
-        setError("Must be logged in to accept challenges");
-        return false;
-      }
-
-      try {
-        const { error: updateError } = await supabase
-          .from("pvp_challenges")
-          .update({
-            opponent_id: user.id,
-            status: "accepted",
-          })
-          .eq("id", challengeId);
-
-        if (updateError) throw updateError;
-
-        await refreshChallenges();
-        return true;
-      } catch (err) {
-        console.error("Error accepting challenge:", err);
-        setError(err instanceof Error ? err.message : "Failed to accept challenge");
-        return false;
-      }
-    },
-    [user, supabase, refreshChallenges]
-  );
-
-  // Accept challenge by invite code
-  const acceptChallengeByInvite = useCallback(
-    async (inviteCode: string): Promise<PvPChallenge | null> => {
-      if (!user) {
-        setError("Must be logged in to accept challenges");
+        setError("Must be logged in to claim challenges");
         return null;
       }
 
       try {
-        // Find the invite
-        const { data: invite, error: inviteError } = await supabase
-          .from("pvp_challenge_invites")
-          .select("challenge_id, used, expires_at")
-          .eq("invite_code", inviteCode.toUpperCase())
-          .single();
-
-        if (inviteError || !invite) {
-          setError("Invalid invite code");
-          return null;
-        }
-
-        if (invite.used) {
-          setError("Invite has already been used");
-          return null;
-        }
-
-        if (new Date(invite.expires_at) < new Date()) {
-          setError("Invite has expired");
-          return null;
-        }
-
-        // Get the challenge
-        const { data: challenge, error: challengeError } = await supabase
-          .from("pvp_challenges")
-          .select("*")
-          .eq("id", invite.challenge_id)
-          .single();
-
-        if (challengeError || !challenge) {
-          setError("Challenge not found");
-          return null;
-        }
-
-        if (challenge.challenger_id === user.id) {
-          setError("Cannot accept your own challenge");
-          return null;
-        }
-
-        // Mark invite as used
-        await supabase
-          .from("pvp_challenge_invites")
-          .update({ used: true, used_by: user.id })
-          .eq("invite_code", inviteCode.toUpperCase());
-
-        // Accept the challenge
-        const { data: updatedChallenge, error: updateError } = await supabase
+        const { data, error: updateError } = await supabase
           .from("pvp_challenges")
           .update({
             opponent_id: user.id,
-            status: "accepted",
+            opponent_claimed_at: new Date().toISOString(),
+            status: "claimed",
           })
-          .eq("id", invite.challenge_id)
+          .eq("id", challengeId)
+          .eq("status", "open")
+          .neq("challenger_id", user.id)
           .select()
-          .single();
+          .maybeSingle();
 
         if (updateError) throw updateError;
-
+        if (!data) {
+          // 0 rows updated — race lost or trying to claim own challenge.
+          toast.error("Challenge already claimed or unavailable");
+          return null;
+        }
         await refreshChallenges();
-        return updatedChallenge as PvPChallenge;
+        return data as PvPChallenge;
       } catch (err) {
-        console.error("Error accepting challenge by invite:", err);
-        setError(err instanceof Error ? err.message : "Failed to accept challenge");
+        return handleMutationError(err, "Failed to claim challenge");
+      }
+    },
+    [user, supabase, refreshChallenges],
+  );
+
+  const submitOpponentResult = useCallback(
+    async (
+      challengeId: string,
+      result: OpponentResult,
+    ): Promise<PvPChallenge | null> => {
+      if (!user) {
+        setError("Must be logged in to submit a result");
         return null;
       }
-    },
-    [user, supabase, refreshChallenges]
-  );
 
-  // Decline a challenge
-  const declineChallenge = useCallback(
-    async (challengeId: string): Promise<boolean> => {
       try {
-        const { error: updateError } = await supabase
+        const { data, error: updateError } = await supabase
           .from("pvp_challenges")
-          .update({ status: "declined" })
-          .eq("id", challengeId);
+          .update({
+            opponent_cpm: result.cpm,
+            opponent_correct: result.correct,
+            opponent_incorrect: result.incorrect,
+            opponent_time: result.time,
+            opponent_key_presses: (result.key_presses ?? null) as Json | null,
+            opponent_completed_at: new Date().toISOString(),
+            status: "completed",
+          })
+          .eq("id", challengeId)
+          .eq("status", "claimed")
+          .eq("opponent_id", user.id)
+          .select()
+          .maybeSingle();
 
         if (updateError) throw updateError;
-
+        if (!data) {
+          toast.error("Couldn't submit — challenge state changed or you're not the claimer");
+          return null;
+        }
         await refreshChallenges();
-        return true;
+        return data as PvPChallenge;
       } catch (err) {
-        console.error("Error declining challenge:", err);
-        setError(err instanceof Error ? err.message : "Failed to decline challenge");
-        return false;
+        return handleMutationError(err, "Failed to submit result");
       }
     },
-    [supabase, refreshChallenges]
+    [user, supabase, refreshChallenges],
   );
 
-  // Cancel a challenge (only challenger can do this)
   const cancelChallenge = useCallback(
     async (challengeId: string): Promise<boolean> => {
       if (!user) return false;
       try {
-        const { error: deleteError } = await supabase
+        const { data, error: updateError } = await supabase
           .from("pvp_challenges")
-          .delete()
+          .update({ status: "cancelled" })
           .eq("id", challengeId)
-          .eq("challenger_id", user.id);
-
-        if (deleteError) throw deleteError;
-
-        await refreshChallenges();
-        return true;
-      } catch (err) {
-        console.error("Error cancelling challenge:", err);
-        setError(err instanceof Error ? err.message : "Failed to cancel challenge");
-        return false;
-      }
-    },
-    [user, supabase, refreshChallenges]
-  );
-
-  // Submit a result for a challenge
-  const submitResult = useCallback(
-    async (challengeId: string, resultId: string): Promise<boolean> => {
-      if (!user) {
-        setError("Must be logged in to submit results");
-        return false;
-      }
-
-      try {
-        // Get the challenge to determine if user is challenger or opponent
-        const { data: challenge, error: getError } = await supabase
-          .from("pvp_challenges")
-          .select("*")
-          .eq("id", challengeId)
-          .single();
-
-        if (getError || !challenge) {
-          setError("Challenge not found");
-          return false;
-        }
-
-        const isChallenger = challenge.challenger_id === user.id;
-        const updateData: {
-          challenger_result_id?: string;
-          opponent_result_id?: string;
-          status?: PvPChallengeStatus;
-        } = {};
-
-        if (isChallenger) {
-          updateData.challenger_result_id = resultId;
-        } else {
-          updateData.opponent_result_id = resultId;
-        }
-
-        // Update status if this is the first result
-        if (challenge.status === "accepted") {
-          updateData.status = "in_progress";
-        }
-
-        const { error: updateError } = await supabase
-          .from("pvp_challenges")
-          .update(updateData)
-          .eq("id", challengeId);
+          .eq("status", "open")
+          .eq("challenger_id", user.id)
+          .select()
+          .maybeSingle();
 
         if (updateError) throw updateError;
-
+        if (!data) {
+          toast.error("Couldn't cancel — challenge already claimed or not yours");
+          return false;
+        }
         await refreshChallenges();
         return true;
       } catch (err) {
-        console.error("Error submitting result:", err);
-        setError(err instanceof Error ? err.message : "Failed to submit result");
+        handleMutationError(err, "Failed to cancel challenge");
         return false;
       }
     },
-    [user, supabase, refreshChallenges]
+    [user, supabase, refreshChallenges],
   );
 
-  // Get challenge by code
-  const getChallengeByCode = useCallback(
-    async (code: string): Promise<PvPChallenge | null> => {
-      try {
-        const { data, error: fetchError } = await supabase
-          .from("pvp_challenges_view")
-          .select("*")
-          .eq("challenge_code", code.toUpperCase())
-          .single();
-
-        if (fetchError) {
-          if (fetchError.code === "PGRST116") {
-            return null; // Not found
+  // Shared error handler for mutations.
+  function handleMutationError(
+    err: unknown,
+    fallback: string,
+  ): null {
+    if (
+      isPvPSchemaUnavailable(err as { code?: string; message?: string })
+    ) {
+      const msg =
+        "PvP isn't available yet — apply the latest migrations to your Supabase before using PvP.";
+      console.warn(msg, err);
+      toast.error(msg);
+      setError(msg);
+      return null;
+    }
+    const detail =
+      err && typeof err === "object"
+        ? {
+            code: (err as { code?: string }).code,
+            message: (err as { message?: string }).message,
+            details: (err as { details?: string }).details,
+            hint: (err as { hint?: string }).hint,
           }
-          throw fetchError;
-        }
+        : err;
+    console.error("PvP mutation error:", detail);
+    const message =
+      err instanceof Error
+        ? err.message
+        : (detail as { message?: string })?.message ?? fallback;
+    toast.error(message);
+    setError(message);
+    return null;
+  }
 
-        return data as PvPChallenge;
+  const fetchByInviteCode = useCallback(
+    async (inviteCode: string): Promise<PvPChallenge | null> => {
+      try {
+        const { data, error: rpcError } = await supabase
+          .rpc("get_challenge_by_invite_code", { _code: inviteCode.toUpperCase() })
+          .maybeSingle();
+
+        if (rpcError) {
+          console.error("Error fetching challenge by invite code:", rpcError);
+          return null;
+        }
+        return (data as PvPChallenge | null) ?? null;
       } catch (err) {
-        console.error("Error fetching challenge by code:", err);
+        console.error("Error fetching challenge by invite code:", err);
         return null;
       }
     },
-    [supabase]
+    [supabase],
   );
 
-  // Get challenge by ID
-  const getChallengeById = useCallback(
+  const fetchById = useCallback(
     async (id: string): Promise<PvPChallenge | null> => {
       try {
         const { data, error: fetchError } = await supabase
-          .from("pvp_challenges_view")
+          .from("pvp_challenges")
           .select("*")
           .eq("id", id)
-          .single();
+          .maybeSingle();
 
         if (fetchError) {
-          if (fetchError.code === "PGRST116") {
-            return null; // Not found
-          }
-          throw fetchError;
+          console.error("Error fetching challenge by id:", fetchError);
+          return null;
         }
-
-        return data as PvPChallenge;
+        return (data as PvPChallenge | null) ?? null;
       } catch (err) {
-        console.error("Error fetching challenge by ID:", err);
+        console.error("Error fetching challenge by id:", err);
         return null;
       }
     },
-    [supabase]
-  );
-
-  // Search for users to challenge
-  const searchUsers = useCallback(
-    async (query: string): Promise<SearchUser[]> => {
-      if (!user || query.length < 2) {
-        return [];
-      }
-
-      try {
-        const { data, error: searchError } = await supabase
-          .from("profiles")
-          .select("id, preferred_username, email, name")
-          .or(`preferred_username.ilike.%${query}%,email.ilike.%${query}%,name.ilike.%${query}%`)
-          .neq("id", user.id)
-          .limit(10);
-
-        if (searchError) throw searchError;
-
-        return (
-          data?.map((u) => ({
-            id: u.id,
-            username: u.preferred_username || u.name || u.email?.split("@")[0] || "Unknown",
-            displayName: u.name || u.preferred_username || null,
-            emailHint: u.email
-              ? `${u.email.substring(0, 3)}...@${u.email.split("@")[1]}`
-              : null,
-          })) || []
-        );
-      } catch (err) {
-        console.error("Error searching users:", err);
-        return [];
-      }
-    },
-    [user, supabase]
+    [supabase],
   );
 
   // Initial fetch
   useEffect(() => {
     refreshChallenges();
   }, [refreshChallenges]);
-
-  // Track previous challenge IDs to detect new ones
-  const previousChallengeIds = useRef<Set<string>>(new Set());
 
   // Real-time subscription for challenge updates
   useEffect(() => {
@@ -601,31 +468,17 @@ export function PvPProvider({ children }: { children: ReactNode }) {
       // Refresh challenges first
       await refreshChallenges();
 
-      // Show notifications for new incoming challenges
-      if (eventType === "INSERT" && newData.opponent_id === user.id) {
-        // New challenge received
-        toast.info("New PvP Challenge!", {
-          description: "Someone has challenged you to a typing battle!",
-          action: {
-            label: "View",
-            onClick: () => {
-              window.location.href = "/pvp";
-            },
-          },
-        });
-      }
-
-      // Notify when opponent accepts your challenge
+      // Notify the challenger when an opponent claims their open challenge.
       if (
         eventType === "UPDATE" &&
-        newData.challenger_id === user.id &&
-        oldData?.status === "pending" &&
-        newData.status === "accepted"
+        newData?.challenger_id === user.id &&
+        oldData?.status === "open" &&
+        newData?.status === "claimed"
       ) {
-        toast.success("Challenge Accepted!", {
-          description: "Your opponent accepted the challenge. Let the battle begin!",
+        toast.info("Your challenge was claimed!", {
+          description: "An opponent has accepted your PvP challenge.",
           action: {
-            label: "Play",
+            label: "View",
             onClick: () => {
               window.location.href = `/pvp/challenge?id=${newData.id}`;
             },
@@ -633,11 +486,11 @@ export function PvPProvider({ children }: { children: ReactNode }) {
         });
       }
 
-      // Notify when challenge is completed
+      // Notify when the challenge completes.
       if (
         eventType === "UPDATE" &&
         oldData?.status !== "completed" &&
-        newData.status === "completed"
+        newData?.status === "completed"
       ) {
         const isWinner = newData.winner_id === user.id;
         if (isWinner) {
@@ -693,29 +546,23 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     };
   }, [user, supabase, refreshChallenges]);
 
-  const contextValue: PvPContextType = {
-    challenges,
-    incomingChallenges,
-    outgoingChallenges,
-    activeChallenges,
-    completedChallenges,
-    pendingCount,
+  const value: PvPContextType = {
+    myOpenChallenges,
+    myActiveChallenges,
+    myCompletedChallenges,
     isLoading,
     error,
-    refreshChallenges,
     createChallenge,
-    acceptChallenge,
-    acceptChallengeByInvite,
-    declineChallenge,
+    claimChallenge,
+    submitOpponentResult,
     cancelChallenge,
-    submitResult,
-    getChallengeByCode,
-    getChallengeById,
-    searchUsers,
+    fetchByInviteCode,
+    fetchById,
+    refreshChallenges,
   };
 
   return (
-    <PvPContext.Provider value={contextValue}>{children}</PvPContext.Provider>
+    <PvPContext.Provider value={value}>{children}</PvPContext.Provider>
   );
 }
 
@@ -727,34 +574,26 @@ export function usePvP(): PvPContextType {
   return context;
 }
 
-// Helper function to get display name for a challenge participant
-export function getChallengeDisplayName(
-  challenge: PvPChallenge,
-  role: "challenger" | "opponent"
-): string {
-  if (role === "challenger") {
-    return challenge.challenger_username || "Unknown";
-  }
-  return challenge.opponent_username || "Waiting for opponent...";
-}
-
-// Helper function to check if a user has completed their part
+// Helper function to check if a user has completed their part of a challenge.
+// v2: completion is recorded on the row itself via *_completed_at timestamps.
 export function hasUserCompleted(
   challenge: PvPChallenge,
-  userId: string
+  userId: string,
 ): boolean {
   if (challenge.challenger_id === userId) {
-    return challenge.challenger_result_id !== null;
+    return challenge.challenger_completed_at !== null;
   }
   if (challenge.opponent_id === userId) {
-    return challenge.opponent_result_id !== null;
+    return challenge.opponent_completed_at !== null;
   }
   return false;
 }
 
-// Helper function to check if it's the user's turn
+// Helper function to check if it's the user's turn to race.
+// v2: a challenge is in-flight while it is "claimed" (opponent has taken it
+// but not yet submitted their result).
 export function isUsersTurn(challenge: PvPChallenge, userId: string): boolean {
-  if (challenge.status !== "accepted" && challenge.status !== "in_progress") {
+  if (challenge.status !== "claimed") {
     return false;
   }
   return !hasUserCompleted(challenge, userId);
