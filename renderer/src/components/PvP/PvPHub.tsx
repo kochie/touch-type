@@ -4,7 +4,7 @@ import { usePvP } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import {
   faGamepadModern,
-  faInbox,
+  faPaperPlane,
   faHistory,
   faPlus,
   faSwords,
@@ -15,9 +15,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import { useState } from "react";
 import ChallengeCard from "./ChallengeCard";
-import CreateChallenge from "./CreateChallenge";
+import NewChallengePrompt from "./NewChallengePrompt";
 
-type TabId = "active" | "incoming" | "history" | "create";
+type TabId = "active" | "outgoing" | "history" | "new";
 
 interface Tab {
   id: TabId;
@@ -30,10 +30,9 @@ export default function PvPHub() {
   const [activeTab, setActiveTab] = useState<TabId>("active");
   const { user, isLoading: isUserLoading } = useSupabase();
   const {
-    activeChallenges,
-    incomingChallenges,
-    completedChallenges,
-    pendingCount,
+    myActiveChallenges,
+    myOpenChallenges,
+    myCompletedChallenges,
     isLoading,
   } = usePvP();
 
@@ -42,13 +41,13 @@ export default function PvPHub() {
       id: "active",
       label: "Active",
       icon: faGamepadModern,
-      badge: activeChallenges.length,
+      badge: myActiveChallenges.length,
     },
     {
-      id: "incoming",
-      label: "Incoming",
-      icon: faInbox,
-      badge: pendingCount,
+      id: "outgoing",
+      label: "Outgoing",
+      icon: faPaperPlane,
+      badge: myOpenChallenges.length,
     },
     {
       id: "history",
@@ -56,13 +55,12 @@ export default function PvPHub() {
       icon: faHistory,
     },
     {
-      id: "create",
+      id: "new",
       label: "New",
       icon: faPlus,
     },
   ];
 
-  // Not logged in state
   if (!isUserLoading && !user) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4">
@@ -76,9 +74,6 @@ export default function PvPHub() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
             Sign in to Play PvP
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-            Create an account or sign in to challenge friends and compete in typing battles.
-          </p>
         </div>
       </div>
     );
@@ -98,61 +93,60 @@ export default function PvPHub() {
 
     switch (activeTab) {
       case "active":
-        return activeChallenges.length > 0 ? (
+        return myActiveChallenges.length > 0 ? (
           <div className="space-y-4">
-            {activeChallenges.map((challenge) => (
-              <ChallengeCard key={challenge.id} challenge={challenge} />
+            {myActiveChallenges.map((c) => (
+              <ChallengeCard key={c.id} challenge={c} />
             ))}
           </div>
         ) : (
           <EmptyState
             icon={faGamepadModern}
             title="No active challenges"
-            description="Start a new challenge or wait for someone to accept your invitation."
+            description="When someone claims your invite link (or you claim theirs), the in-progress challenge will appear here."
             action={{
               label: "Create Challenge",
-              onClick: () => setActiveTab("create"),
+              onClick: () => setActiveTab("new"),
             }}
           />
         );
 
-      case "incoming":
-        return incomingChallenges.length > 0 ? (
+      case "outgoing":
+        return myOpenChallenges.length > 0 ? (
           <div className="space-y-4">
-            {incomingChallenges.map((challenge) => (
-              <ChallengeCard key={challenge.id} challenge={challenge} />
+            {myOpenChallenges.map((c) => (
+              <ChallengeCard key={c.id} challenge={c} />
             ))}
           </div>
         ) : (
           <EmptyState
-            icon={faInbox}
-            title="No incoming challenges"
-            description="When someone challenges you, it will appear here."
+            icon={faPaperPlane}
+            title="No open challenges"
+            description="Challenges you've created and shared, but not yet claimed, will appear here."
+            action={{
+              label: "Create Challenge",
+              onClick: () => setActiveTab("new"),
+            }}
           />
         );
 
       case "history":
-        return completedChallenges.length > 0 ? (
+        return myCompletedChallenges.length > 0 ? (
           <div className="space-y-4">
-            {completedChallenges.map((challenge) => (
-              <ChallengeCard key={challenge.id} challenge={challenge} />
+            {myCompletedChallenges.map((c) => (
+              <ChallengeCard key={c.id} challenge={c} />
             ))}
           </div>
         ) : (
           <EmptyState
             icon={faHistory}
             title="No completed challenges"
-            description="Your completed challenges will appear here."
+            description="Completed, cancelled, and expired challenges show up here."
           />
         );
 
-      case "create":
-        return (
-          <CreateChallenge
-            onSuccess={() => setActiveTab("active")}
-            onCancel={() => setActiveTab("active")}
-          />
-        );
+      case "new":
+        return <NewChallengePrompt />;
 
       default:
         return null;
@@ -161,7 +155,6 @@ export default function PvPHub() {
 
   return (
     <div className="max-w-2xl mx-auto py-6 px-4">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <FontAwesomeIcon
           icon={faSwords}
@@ -172,17 +165,17 @@ export default function PvPHub() {
         </h1>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            data-testid={`pvp-tab-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             className={clsx(
               "flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors",
               activeTab === tab.id
                 ? "bg-blue-500 text-white"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
             )}
           >
             <FontAwesomeIcon icon={tab.icon} className="w-4 h-4" />
@@ -193,7 +186,7 @@ export default function PvPHub() {
                   "px-2 py-0.5 rounded-full text-xs font-bold",
                   activeTab === tab.id
                     ? "bg-white/20 text-white"
-                    : "bg-blue-500 text-white"
+                    : "bg-blue-500 text-white",
                 )}
               >
                 {tab.badge}
@@ -203,13 +196,11 @@ export default function PvPHub() {
         ))}
       </div>
 
-      {/* Content */}
       {renderContent()}
     </div>
   );
 }
 
-// Empty state component
 interface EmptyStateProps {
   icon: typeof faSwords;
   title: string;
@@ -240,8 +231,7 @@ function EmptyState({ icon, title, description, action }: EmptyStateProps) {
           onClick={action.onClick}
           className={clsx(
             "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium",
-            "bg-blue-500 hover:bg-blue-600 text-white",
-            "transition-colors"
+            "bg-blue-500 hover:bg-blue-600 text-white transition-colors",
           )}
         >
           <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
