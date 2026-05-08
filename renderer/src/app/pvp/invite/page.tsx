@@ -18,7 +18,7 @@ function InvitePageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useSupabase();
-  const { acceptChallengeByInvite, getChallengeByCode } = usePvP();
+  const { fetchByInviteCode, claimChallenge } = usePvP();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
@@ -38,7 +38,7 @@ function InvitePageInner() {
 
       setIsLoading(true);
       try {
-        const data = await getChallengeByCode(code);
+        const data = await fetchByInviteCode(code);
         if (data) {
           setChallenge(data);
         } else {
@@ -53,22 +53,22 @@ function InvitePageInner() {
     };
 
     fetchChallenge();
-  }, [code, getChallengeByCode]);
+  }, [code, fetchByInviteCode]);
 
   const handleAccept = async () => {
     if (!user) {
       setError("Please sign in to accept this challenge");
       return;
     }
-    if (!code) return;
+    if (!challenge) return;
 
     setIsAccepting(true);
     try {
-      const result = await acceptChallengeByInvite(code);
+      const result = await claimChallenge(challenge.id);
       if (result) {
         setAccepted(true);
         setTimeout(() => {
-          router.push(`/pvp/challenge?id=${result.id}`);
+          router.push(`/pvp/race?id=${result.id}`);
         }, 1500);
       } else {
         setError("Failed to accept challenge");
@@ -107,7 +107,7 @@ function InvitePageInner() {
           Challenge Accepted!
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Redirecting to the challenge...
+          Redirecting to the race...
         </p>
       </div>
     );
@@ -172,7 +172,46 @@ function InvitePageInner() {
     );
   }
 
+  // Status mismatch — invite is no longer claimable
+  if (challenge.status !== "open") {
+    const statusMessage =
+      challenge.status === "claimed"
+        ? "Someone has already claimed this invite"
+        : challenge.status === "completed"
+          ? "This race is over. Check History to see results"
+          : "The invite is no longer available.";
+
+    return (
+      <div className="max-w-md mx-auto py-12 text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <FontAwesomeIcon
+            icon={faExclamationTriangle}
+            className="w-8 h-8 text-gray-500"
+          />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          {statusMessage}
+        </h2>
+        <button
+          onClick={() => router.push("/pvp")}
+          className={clsx(
+            "inline-flex items-center gap-2 px-4 py-2 mt-4 rounded-lg font-medium",
+            "bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600",
+            "text-gray-700 dark:text-gray-300 transition-colors"
+          )}
+        >
+          Go to PvP Hub
+        </button>
+      </div>
+    );
+  }
+
   // Show invite details
+  const challengerLabel =
+    challenge.challenger_id === user?.id
+      ? "You"
+      : `Player ${challenge.challenger_id.slice(0, 8)}`;
+
   return (
     <div className="max-w-md mx-auto py-12">
       <div className="text-center mb-8">
@@ -186,14 +225,14 @@ function InvitePageInner() {
           You've Been Challenged!
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          {challenge.challenger_username} wants to battle you in typing!
+          {challengerLabel} wants to battle you in typing!
         </p>
       </div>
 
       <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl mb-6">
-        {challenge.message && (
+        {challenge.challenger_message && (
           <p className="text-center text-gray-700 dark:text-gray-300 italic mb-4">
-            "{challenge.message}"
+            "{challenge.challenger_message}"
           </p>
         )}
         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 text-center">
@@ -222,6 +261,10 @@ function InvitePageInner() {
           </p>
         </div>
       )}
+
+      <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-3">
+        Their score to beat: {Math.round(challenge.challenger_cpm)} CPM
+      </p>
 
       <button
         data-testid="pvp-accept-invite"
