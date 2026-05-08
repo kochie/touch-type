@@ -17,7 +17,7 @@ The other big move: **all PvP mutations now go through SECURITY DEFINER RPCs.** 
 
 ## Goals
 
-- A "match" can be best-of 1, 3, 5, or 7 rounds. Rounds reveal results immediately; the match completes as soon as one player has the majority of round wins.
+- A "match" can be best-of 1, 3, 5, or 7 rounds. Each player races their own rounds at their own pace — neither has to wait for the other. Each round resolves the moment both players have submitted for it; the match completes once **all** rounds have been resolved, and the player with more round wins takes the match.
 - Rivals (people you've played at least one match against) are listed in a dedicated tab with a one-click **Rematch** button that pre-fills settings from the previous match.
 - A match always resolves to exactly one winner — ties are not possible (odd best-of + per-round tiebreaker chain).
 - All mutations route through SECURITY DEFINER RPCs: the renderer never writes to PvP tables directly.
@@ -175,14 +175,14 @@ Rivals are anyone you've completed at least one match with. Cancelled/expired ma
 open ─(joiner claims)──► open (with joiner)
                               │
               (first round completes) ▼
-                          in_progress ─(target wins reached)─► completed
+                          in_progress ─(all best_of rounds resolved)─► completed
                               │
                               ├──(forfeit)──► completed (winner = other side)
                               ├──(creator cancels, no submissions yet)──► cancelled
                               └──(expires_at passed)──► expired
 ```
 
-`open` covers both "no joiner yet" and "joiner has claimed but no round has resolved". `in_progress` is set by the round-advance trigger when the first round flips to a winner. The cancel-by-creator window is *not* gated on status — see "Cancel" below for the precise check.
+`open` covers both "no joiner yet" and "joiner has claimed but no round has resolved". `in_progress` is set by the round-advance trigger when the first round flips to a winner. **There is no early termination**: even when the running win count makes the eventual winner mathematically certain (e.g., 2-0 in BO3), the match remains `in_progress` until the final round resolves. This lets a trailing player still race every round — the catch-up is the point of the parallel-play model. The cancel-by-creator window is *not* gated on status — see "Cancel" below for the precise check.
 
 **Round lifecycle (per row in `pvp_games`):**
 
@@ -241,7 +241,7 @@ $$;
 
 **Trigger: `advance_pvp_match()`** (AFTER UPDATE on `pvp_games`, when `winner_id` was NULL → NOT NULL)
 
-Increments the match's `creator_wins` or `joiner_wins`, flips status to `in_progress` on the first round resolution, and to `completed` once either side reaches `target_wins = (best_of / 2) + 1` (integer division). The whole operation runs as a single conditional UPDATE so the increment and completion check are atomic.
+Increments the match's `creator_wins` or `joiner_wins`, flips status to `in_progress` on the first round resolution, and to `completed` once `creator_wins + joiner_wins = best_of` (i.e., every round has resolved). Match `winner_id` is the side with the higher win count — guaranteed unique because `best_of` is odd, so a tied count at completion is impossible.
 
 ```sql
 CREATE OR REPLACE FUNCTION public.advance_pvp_match()
@@ -250,32 +250,37 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
   is_creator_win BOOLEAN;
-  target_wins    INTEGER;
-  c_id           UUID;
-  j_id           UUID;
+  c_id   UUID;
+  j_id   UUID;
+  bo     SMALLINT;
+  c_wins SMALLINT;
+  j_wins SMALLINT;
 BEGIN
   IF NEW.winner_id IS NULL OR OLD.winner_id IS NOT NULL THEN
     RETURN NEW;
   END IF;
 
-  SELECT creator_id, joiner_id, (best_of / 2) + 1
-    INTO c_id, j_id, target_wins
+  SELECT creator_id, joiner_id, best_of, creator_wins, joiner_wins
+    INTO c_id, j_id, bo, c_wins, j_wins
     FROM public.pvp_matches WHERE id = NEW.match_id FOR UPDATE;
 
   is_creator_win := (NEW.winner_id = c_id);
+  IF is_creator_win THEN
+    c_wins := c_wins + 1;
+  ELSE
+    j_wins := j_wins + 1;
+  END IF;
 
   UPDATE public.pvp_matches
-     SET creator_wins = creator_wins + CASE WHEN is_creator_win THEN 1 ELSE 0 END,
-         joiner_wins  = joiner_wins  + CASE WHEN is_creator_win THEN 0 ELSE 1 END,
+     SET creator_wins = c_wins,
+         joiner_wins  = j_wins,
          status = CASE
-           WHEN (creator_wins + CASE WHEN is_creator_win THEN 1 ELSE 0 END) >= target_wins
-             OR (joiner_wins  + CASE WHEN is_creator_win THEN 0 ELSE 1 END) >= target_wins
-             THEN 'completed'
+           WHEN c_wins + j_wins >= bo THEN 'completed'
            ELSE 'in_progress'
          END,
          winner_id = CASE
-           WHEN (creator_wins + CASE WHEN is_creator_win THEN 1 ELSE 0 END) >= target_wins THEN c_id
-           WHEN (joiner_wins  + CASE WHEN is_creator_win THEN 0 ELSE 1 END) >= target_wins THEN j_id
+           WHEN c_wins + j_wins >= bo THEN
+             CASE WHEN c_wins > j_wins THEN c_id ELSE j_id END
            ELSE winner_id
          END
    WHERE id = NEW.match_id;
@@ -285,7 +290,7 @@ END;
 $$;
 ```
 
-**Concurrency invariant:** Rounds are played strictly serially — the next round's "Race now" affordance is gated on the prior round having `winner_id IS NOT NULL` (see §3). This is enforced in the RPC by rejecting `submit_round_result` for round N when round N-1 is unresolved. Concurrent round resolutions are therefore not possible by design, and the trigger does not need to defend against double-completion of the match.
+**Concurrency:** Rounds resolve independently — two rounds could resolve in close succession (e.g., creator submits the last needed slot on rounds 2 and 3 back-to-back). The `FOR UPDATE` on the match row serializes the increments and completion check, so the running totals stay accurate even under concurrent round-resolution writes.
 
 Forfeit and expiry are written by RPCs (not triggers), and both set `winner_id` directly to the non-forfeiting side / non-creator side — they bypass round counting.
 
@@ -303,8 +308,8 @@ Forfeit and expiry are written by RPCs (not triggers), and both set `winner_id` 
 
 | Tab | Contents |
 |---|---|
-| **Active** | Matches where it's my turn to race the next round, or the joiner just claimed and I'm the creator who hasn't raced round 1 yet. |
-| **Awaiting** | Matches where I've raced everything available to me and I'm waiting for the other side. |
+| **Active** | Matches that aren't terminal *and* I still have unraced rounds. The primary action card surfaces "Race round N" where N is my next un-submitted round. |
+| **Awaiting** | Matches where I've submitted all `best_of` rounds and the match isn't completed yet — i.e., the opponent still has rounds to race. The card shows my running tally and which rounds the opponent has yet to submit. |
 | **History** | Completed/cancelled/expired matches. Most recent first. |
 | **Rivals** | One row per rival (from `list_my_rivals()`). Shows record (W-L), last played, **Rematch** button. |
 | **New** | Create-match form (NewChallengePrompt). |
@@ -320,9 +325,11 @@ Forfeit and expiry are written by RPCs (not triggers), and both set `winner_id` 
 
 **Forfeit:** during a race, the Tracker's forfeit button calls the `forfeit_match` RPC. The RPC sets match `status = 'completed'`, `forfeited_by = caller`, and `winner_id = the other side`. Already-completed rounds keep their winners; in-progress rounds are left as-is (no special record — the match is over). The History UI derives "forfeited at round N" from the first round whose `winner_id` is NULL.
 
-**Round reveal cadence:** the Match detail page subscribes to realtime on the match row and its rounds. As soon as a round flips to `winner_id IS NOT NULL`, it's revealed. The next round's "Race now" button enables once the prior round has `winner_id IS NOT NULL` and the match is still `in_progress`. The same invariant is enforced server-side: `submit_round_result` for round N is rejected if round N-1 has no `winner_id`.
+**Round reveal cadence:** the Match detail page subscribes to realtime on the match row and its rounds. A round is revealed (its winner shown) the moment both players have submitted for that round and `winner_id` is non-NULL — independent of any other round's state. So a player who races ahead simply sees "Round 2 — you submitted CPM X, waiting for opponent" until the opponent catches up; rounds then resolve in cascade as the opponent submits each one.
 
-**Round 1 start:** there is no auto-start. After creating a match, the creator lands on the match detail page and clicks "Race now" themselves to play round 1. The joiner does the same after claiming via the invite link. Either side may race round 1 first; the per-round results are revealed as each round resolves (no blind-until-end as in v3).
+**Per-player round ordering:** each player races their own rounds in order (1 → 2 → 3 → …) on their own time. The "Race round N" button is enabled when N is the player's lowest-numbered round with their slot still empty, and the match is not in a terminal state. There is **no cross-player gating**: opponent's progress on any round does not affect the player's ability to race their next one. Server-side, `submit_round_result` for round N is rejected if the caller's slot on any round 1..N-1 is still NULL (defense-in-depth on the per-player ordering).
+
+**Round 1 start:** there is no auto-start. After creating a match, the creator lands on the match detail page and clicks "Race now" themselves to play round 1. The joiner does the same after claiming via the invite link. Either side may race round 1 (or any subsequent round) without waiting for the other — per-round results are revealed as each round resolves.
 
 ---
 
@@ -365,7 +372,7 @@ CREATE POLICY "round_select" ON public.pvp_games
 | `create_match(_keyboard, _level, _language, _capital, _punctuation, _numbers, _best_of, _word_sets JSONB, _message)` | Inserts match + N round rows in one tx. `_word_sets` is a JSONB array of `_best_of` arrays — JSONB sidesteps Postgres's uniform-shape requirement on `TEXT[][]`. The RPC unpacks via `jsonb_array_elements` and inserts each round with its own `TEXT[]`. Returns the new match. |
 | `get_match_by_invite_code(_code)` | Resolves a match for the invite landing page (caller may not yet be a participant). |
 | `join_match_by_invite(_code)` | Atomic: claims joiner slot if `joiner_id IS NULL AND auth.uid() <> creator_id` AND `expires_at > NOW()`. Sets `joiner_joined_at`. Returns the match. |
-| `submit_round_result(_match_id, _round_number, _cpm, _correct, _incorrect, _time, _key_presses)` | Determines the slot (`creator` or `joiner`) by comparing `auth.uid()` against the parent match's `creator_id`/`joiner_id`. Rejects when (a) caller is neither participant, (b) caller's slot on this round is already filled, (c) round N-1 (if N>1) has no `winner_id`, or (d) `expires_at < NOW()`. Trigger handles round winner + match advance. |
+| `submit_round_result(_match_id, _round_number, _cpm, _correct, _incorrect, _time, _key_presses)` | Determines the slot (`creator` or `joiner`) by comparing `auth.uid()` against the parent match's `creator_id`/`joiner_id`. Rejects when (a) caller is neither participant, (b) caller's slot on this round is already filled, (c) the caller's slot on any round 1..N-1 is still NULL (per-player ordering), (d) match is in a terminal state, or (e) `expires_at < NOW()`. Note: the opponent's progress is **not** checked — a player can race ahead. Trigger handles round winner + match advance. |
 | `forfeit_match(_match_id)` | Caller must be a participant, match must not be in a terminal state. Sets match completed, forfeited_by = caller, winner_id = other side. |
 | `cancel_match(_match_id)` | Creator only, no round has any submitted result, match not in a terminal state. |
 | `list_my_rivals()` | See §1. |
@@ -382,20 +389,26 @@ Each RPC asserts the caller's role inline (not via RLS), raising `RAISE EXCEPTIO
   - Round trigger sets winner correctly across all three tiebreaker tiers (cpm > accuracy > earlier completed_at).
   - Round trigger does not overwrite `winner_id` once set (re-UPDATE on completed round is a no-op).
   - Match advance fires only on round-winner transition (NULL → NOT NULL).
-  - Match completes exactly when target_wins is reached, status flips `open → in_progress` on first round resolution.
+  - Match status flips `open → in_progress` on first round resolution.
+  - Match completes exactly when `creator_wins + joiner_wins = best_of` (all rounds resolved), with `winner_id` set to the side with more wins. No early termination.
+  - **Catch-up scenario:** in BO3, creator submits all 3 rounds first, joiner submits round 1 (creator wins it), match is `in_progress` 1-0; joiner then submits rounds 2 and 3 winning both → match completes with joiner_id as winner (1-2). Verifies that submitting after a 1-0 lead is permitted and that the match doesn't terminate prematurely.
+  - **Race-ahead permitted:** creator submits rounds 1, 2, 3 in succession with no joiner submissions in between — none rejected; no rounds resolved yet.
   - `cancel_match` rejects once any round has a submission; succeeds when none do.
   - `forfeit_match` sets the right winner and forfeited_by; rejects on terminal-state matches.
-  - `submit_round_result` rejects round N when round N-1 is unresolved.
+  - `submit_round_result` rejects round N when caller has not submitted rounds 1..N-1 (per-player ordering).
   - `submit_round_result` rejects on already-filled slot.
   - `submit_round_result` and `join_match_by_invite` reject when `expires_at < NOW()`.
+  - `submit_round_result` rejects on terminal-state matches (completed/cancelled/expired).
   - `list_my_rivals()` excludes cancelled/expired and sums wins/losses correctly.
   - `join_match_by_invite` rejects double-join (joiner already set).
 - **Playwright** (in `touch-type/e2e/pvp.spec.ts`, replacing v3 cases):
   - **Smoke**: authenticated user navigates to `/pvp`, sees five-tab layout.
-  - **Best-of-3 round-trip**: A creates BO3, B joins, both race round 1 (B wins), both race round 2 (A wins), both race round 3 (A wins) → match `completed`, `winner_id = aId`, History tab shows match for both, Rivals tab shows the other player for both.
-  - **Forfeit mid-match**: A creates BO5, B joins, round 1 played (A wins), B forfeits round 2 → match completed, `winner_id = aId`, `forfeited_by = bId`.
+  - **Best-of-3 round-trip (sequential)**: A creates BO3, B joins, both race round 1 (B wins), both race round 2 (A wins), both race round 3 (A wins) → match `completed`, `winner_id = aId`, History tab shows match for both, Rivals tab shows the other player for both.
+  - **Catch-up from behind (parallel play)**: A creates BO3, B joins. B races and submits all 3 rounds before A submits any. The match remains `in_progress` (no rounds resolved yet — only B has submitted). Then A races round 1 (loses to B), match status becomes `in_progress` and score is 0-1; A races round 2 (loses to B), score 0-2 — match still `in_progress` (no early termination); A races round 3 (loses), score 0-3 → match `completed`, `winner_id = bId`. Verifies (a) race-ahead is permitted, (b) no early termination after the lead is mathematically locked, (c) trailing player can play every round.
+  - **Forfeit mid-match**: A creates BO5, B joins, round 1 played (A wins), B forfeits → match completed, `winner_id = aId`, `forfeited_by = bId`.
   - **Cancel while no rounds played**: Creator cancels a BO3 with joiner present but no submitted rounds → status `cancelled`.
-  - **Cancel after round played is rejected**: Creator hits cancel after round 1 completes → RPC raises, UI shows error.
+  - **Cancel after round played is rejected**: Creator hits cancel after round 1 has any submission → RPC raises, UI shows error.
+  - **Per-player ordering enforced**: Direct DB call attempts to submit round 2 for player A before A has submitted round 1 → RPC raises.
   - **Rematch from rivals tab**: After a completed match, A's Rivals tab lists B with W/L; clicking Rematch opens NewChallengePrompt pre-filled with prior settings.
   - **Already-joined invite**: a third user opening a fully-joined invite sees the closed-state copy.
 
