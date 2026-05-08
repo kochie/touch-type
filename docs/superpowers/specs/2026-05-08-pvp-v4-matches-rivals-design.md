@@ -174,15 +174,15 @@ Rivals are anyone you've completed at least one match with. Cancelled/expired ma
 ```
 open ─(joiner claims)──► open (with joiner)
                               │
-       (first race result submitted) ▼
+              (first round completes) ▼
                           in_progress ─(target wins reached)─► completed
                               │
                               ├──(forfeit)──► completed (winner = other side)
-                              ├──(creator cancels, no rounds played)──► cancelled
+                              ├──(creator cancels, no submissions yet)──► cancelled
                               └──(expires_at passed)──► expired
 ```
 
-`open` covers both "no joiner yet" and "joiner has claimed but no one has submitted a round result". `in_progress` only means "at least one round has been raced". This keeps the cancel-by-creator window aligned with §3's UI rule (creator can pull a match back so long as no actual play has happened).
+`open` covers both "no joiner yet" and "joiner has claimed but no round has resolved". `in_progress` is set by the round-advance trigger when the first round flips to a winner. The cancel-by-creator window is *not* gated on status — see "Cancel" below for the precise check.
 
 **Round lifecycle (per row in `pvp_games`):**
 
@@ -241,7 +241,7 @@ $$;
 
 **Trigger: `advance_pvp_match()`** (AFTER UPDATE on `pvp_games`, when `winner_id` was NULL → NOT NULL)
 
-Increments the match's `creator_wins` or `joiner_wins`. If either side has reached `target_wins = (best_of / 2) + 1` (integer division), flips match status to `completed` and sets `winner_id`.
+Increments the match's `creator_wins` or `joiner_wins`, flips status to `in_progress` on the first round resolution, and to `completed` once either side reaches `target_wins = (best_of / 2) + 1` (integer division). The whole operation runs as a single conditional UPDATE so the increment and completion check are atomic.
 
 ```sql
 CREATE OR REPLACE FUNCTION public.advance_pvp_match()
@@ -249,38 +249,43 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 DECLARE
-  m              public.pvp_matches%ROWTYPE;
-  target_wins    INTEGER;
   is_creator_win BOOLEAN;
+  target_wins    INTEGER;
+  c_id           UUID;
+  j_id           UUID;
 BEGIN
-  IF NEW.winner_id IS NULL OR (OLD.winner_id IS NOT NULL) THEN
+  IF NEW.winner_id IS NULL OR OLD.winner_id IS NOT NULL THEN
     RETURN NEW;
   END IF;
 
-  SELECT * INTO m FROM public.pvp_matches WHERE id = NEW.match_id FOR UPDATE;
-  is_creator_win := (NEW.winner_id = m.creator_id);
-  target_wins    := (m.best_of / 2) + 1;
+  SELECT creator_id, joiner_id, (best_of / 2) + 1
+    INTO c_id, j_id, target_wins
+    FROM public.pvp_matches WHERE id = NEW.match_id FOR UPDATE;
+
+  is_creator_win := (NEW.winner_id = c_id);
 
   UPDATE public.pvp_matches
      SET creator_wins = creator_wins + CASE WHEN is_creator_win THEN 1 ELSE 0 END,
          joiner_wins  = joiner_wins  + CASE WHEN is_creator_win THEN 0 ELSE 1 END,
-         status       = CASE
-                          WHEN m.status = 'open' THEN 'in_progress'
-                          ELSE m.status
-                        END
+         status = CASE
+           WHEN (creator_wins + CASE WHEN is_creator_win THEN 1 ELSE 0 END) >= target_wins
+             OR (joiner_wins  + CASE WHEN is_creator_win THEN 0 ELSE 1 END) >= target_wins
+             THEN 'completed'
+           ELSE 'in_progress'
+         END,
+         winner_id = CASE
+           WHEN (creator_wins + CASE WHEN is_creator_win THEN 1 ELSE 0 END) >= target_wins THEN c_id
+           WHEN (joiner_wins  + CASE WHEN is_creator_win THEN 0 ELSE 1 END) >= target_wins THEN j_id
+           ELSE winner_id
+         END
    WHERE id = NEW.match_id;
-
-  -- Re-check after increment for completion
-  UPDATE public.pvp_matches
-     SET status    = 'completed',
-         winner_id = CASE WHEN creator_wins >= target_wins THEN creator_id ELSE joiner_id END
-   WHERE id = NEW.match_id
-     AND (creator_wins >= target_wins OR joiner_wins >= target_wins);
 
   RETURN NEW;
 END;
 $$;
 ```
+
+**Concurrency invariant:** Rounds are played strictly serially — the next round's "Race now" affordance is gated on the prior round having `winner_id IS NOT NULL` (see §3). This is enforced in the RPC by rejecting `submit_round_result` for round N when round N-1 is unresolved. Concurrent round resolutions are therefore not possible by design, and the trigger does not need to defend against double-completion of the match.
 
 Forfeit and expiry are written by RPCs (not triggers), and both set `winner_id` directly to the non-forfeiting side / non-creator side — they bypass round counting.
 
@@ -308,14 +313,16 @@ Forfeit and expiry are written by RPCs (not triggers), and both set `winner_id` 
 
 - `MatchCard` (renamed from `ChallengeCard`): summarizes one match, displays `creator_wins` – `joiner_wins`, current round number, status badge, and the appropriate primary action (Race next round / View result / Copy link / Cancel).
 - `NewChallengePrompt`: existing form, plus a **Best-of** segmented control (`1 / 3 / 5 / 7`, default `3`). On submit, the renderer pre-generates `best_of` distinct word sets from the user's chosen language/capital/punctuation/numbers settings and calls `create_match(...)` with the array.
-- `RivalsTab` (new): list of rivals from the RPC. Rematch button opens NewChallengePrompt pre-filled from the last match (settings, best-of, message blank), with a `?rivalId=` query param that pre-locks the joiner side: the resulting match still uses an invite link, but with a "Direct rematch with @rival — they'll see your link in their Active tab" hint. (For v4, rematches are still link-driven; auto-binding the rival without a fresh accept is a v5 problem.)
+- `RivalsTab` (new): list of rivals from the RPC. Rematch opens NewChallengePrompt pre-filled from the last match (settings, best-of; message blank). The `?rivalId=` query param is **UI-only** — it has no DB column and writes nothing to `pvp_matches`. Its sole purpose is to seed the form and render a "Rematch with @rival — share the link with them" hint above the create button. The created match is a normal invite-link match; the rival opens the link to claim the joiner slot. Auto-binding the rival without a fresh accept is a v5 problem.
 - `Tracker` banner: shows "PvP — Round N of M, score X–Y" instead of v3's plain "PvP mode".
 
-**Cancel-by-creator window (loosened from v3):** the creator may cancel a match while `creator_wins = 0 AND joiner_wins = 0` (i.e., status is `open`, no rounds completed). This lets a creator reclaim a stale rematch the rival never engaged with — the v3 rule of "open and joiner not yet present" was too tight for the rematch flow.
+**Cancel-by-creator window (loosened from v3):** the creator may cancel a match while no round has *any* submission. Concretely, the `cancel_match` RPC checks `NOT EXISTS (SELECT 1 FROM pvp_games WHERE match_id = $1 AND (creator_completed_at IS NOT NULL OR joiner_completed_at IS NOT NULL))`. This is independent of match status — `open` (no joiner) and `open` (joiner present but nobody has raced) both cancel cleanly; once a single race has been submitted, cancel is rejected. v3's rule of "open and joiner not yet present" was too tight for the rematch flow.
 
-**Forfeit:** during a race, the Tracker's forfeit button calls the `forfeit_match` RPC. The RPC sets match `status = 'completed'`, `forfeited_by = caller`, and `winner_id = the other side`. Already-completed rounds keep their winners; in-progress rounds are left as-is (no special record — the match is over).
+**Forfeit:** during a race, the Tracker's forfeit button calls the `forfeit_match` RPC. The RPC sets match `status = 'completed'`, `forfeited_by = caller`, and `winner_id = the other side`. Already-completed rounds keep their winners; in-progress rounds are left as-is (no special record — the match is over). The History UI derives "forfeited at round N" from the first round whose `winner_id` is NULL.
 
-**Round reveal cadence:** the Match detail page subscribes to realtime on the match row and its rounds. As soon as a round flips to `winner_id IS NOT NULL`, it's revealed. The next round's "Race now" button enables once both sides have seen the prior round (i.e., the prior round is completed and the match is still `in_progress`).
+**Round reveal cadence:** the Match detail page subscribes to realtime on the match row and its rounds. As soon as a round flips to `winner_id IS NOT NULL`, it's revealed. The next round's "Race now" button enables once the prior round has `winner_id IS NOT NULL` and the match is still `in_progress`. The same invariant is enforced server-side: `submit_round_result` for round N is rejected if round N-1 has no `winner_id`.
+
+**Round 1 start:** there is no auto-start. After creating a match, the creator lands on the match detail page and clicks "Race now" themselves to play round 1. The joiner does the same after claiming via the invite link. Either side may race round 1 first; the per-round results are revealed as each round resolves (no blind-until-end as in v3).
 
 ---
 
@@ -355,15 +362,15 @@ CREATE POLICY "round_select" ON public.pvp_games
 
 | RPC | Purpose |
 |---|---|
-| `create_match(_settings, _best_of, _word_sets TEXT[][], _message)` | Inserts match + N round rows in one tx. Returns the new match. |
+| `create_match(_keyboard, _level, _language, _capital, _punctuation, _numbers, _best_of, _word_sets JSONB, _message)` | Inserts match + N round rows in one tx. `_word_sets` is a JSONB array of `_best_of` arrays — JSONB sidesteps Postgres's uniform-shape requirement on `TEXT[][]`. The RPC unpacks via `jsonb_array_elements` and inserts each round with its own `TEXT[]`. Returns the new match. |
 | `get_match_by_invite_code(_code)` | Resolves a match for the invite landing page (caller may not yet be a participant). |
-| `join_match_by_invite(_code)` | Atomic: claims joiner slot if `joiner_id IS NULL AND auth.uid() <> creator_id`. Sets `joiner_joined_at`. Returns the match. |
-| `submit_round_result(_match_id, _round_number, _slot, _cpm, _correct, _incorrect, _time, _key_presses)` | Updates the appropriate slot on the right round, with a CHECK that the caller is the right participant for `_slot`. Trigger handles round winner + match advance. |
-| `forfeit_match(_match_id)` | Sets match completed, forfeited_by = caller, winner_id = other side. |
-| `cancel_match(_match_id)` | Creator only, status='open' AND no rounds played. |
+| `join_match_by_invite(_code)` | Atomic: claims joiner slot if `joiner_id IS NULL AND auth.uid() <> creator_id` AND `expires_at > NOW()`. Sets `joiner_joined_at`. Returns the match. |
+| `submit_round_result(_match_id, _round_number, _cpm, _correct, _incorrect, _time, _key_presses)` | Determines the slot (`creator` or `joiner`) by comparing `auth.uid()` against the parent match's `creator_id`/`joiner_id`. Rejects when (a) caller is neither participant, (b) caller's slot on this round is already filled, (c) round N-1 (if N>1) has no `winner_id`, or (d) `expires_at < NOW()`. Trigger handles round winner + match advance. |
+| `forfeit_match(_match_id)` | Caller must be a participant, match must not be in a terminal state. Sets match completed, forfeited_by = caller, winner_id = other side. |
+| `cancel_match(_match_id)` | Creator only, no round has any submitted result, match not in a terminal state. |
 | `list_my_rivals()` | See §1. |
 
-Each RPC asserts the caller's role inline (not via RLS), raising `RAISE EXCEPTION` on violation. The renderer's `pvp-provider.tsx` becomes a thin wrapper around `supabase.rpc(...)` calls.
+Each RPC asserts the caller's role inline (not via RLS), raising `RAISE EXCEPTION` on violation. The renderer's `pvp-provider.tsx` becomes a thin wrapper around `supabase.rpc(...)` calls. The slot is never trusted from the client — `submit_round_result` infers it.
 
 **Realtime:** publish `pvp_matches` and `pvp_games`. SELECT RLS gates what each subscriber sees.
 
@@ -372,13 +379,17 @@ Each RPC asserts the caller's role inline (not via RLS), raising `RAISE EXCEPTIO
 **Testing:**
 
 - **pgTAP** (in `touch-type-backend/supabase/tests/pvp_v4.sql`): 
-  - Round trigger sets winner correctly across all three tiebreaker tiers.
+  - Round trigger sets winner correctly across all three tiebreaker tiers (cpm > accuracy > earlier completed_at).
+  - Round trigger does not overwrite `winner_id` once set (re-UPDATE on completed round is a no-op).
   - Match advance fires only on round-winner transition (NULL → NOT NULL).
-  - Match completes exactly when target_wins is reached.
-  - `cancel_match` rejects when `creator_wins + joiner_wins > 0`.
-  - `forfeit_match` sets the right winner and forfeited_by.
+  - Match completes exactly when target_wins is reached, status flips `open → in_progress` on first round resolution.
+  - `cancel_match` rejects once any round has a submission; succeeds when none do.
+  - `forfeit_match` sets the right winner and forfeited_by; rejects on terminal-state matches.
+  - `submit_round_result` rejects round N when round N-1 is unresolved.
+  - `submit_round_result` rejects on already-filled slot.
+  - `submit_round_result` and `join_match_by_invite` reject when `expires_at < NOW()`.
   - `list_my_rivals()` excludes cancelled/expired and sums wins/losses correctly.
-  - `join_match_by_invite` rejects double-join.
+  - `join_match_by_invite` rejects double-join (joiner already set).
 - **Playwright** (in `touch-type/e2e/pvp.spec.ts`, replacing v3 cases):
   - **Smoke**: authenticated user navigates to `/pvp`, sees five-tab layout.
   - **Best-of-3 round-trip**: A creates BO3, B joins, both race round 1 (B wins), both race round 2 (A wins), both race round 3 (A wins) → match `completed`, `winner_id = aId`, History tab shows match for both, Rivals tab shows the other player for both.
@@ -390,13 +401,13 @@ Each RPC asserts the caller's role inline (not via RLS), raising `RAISE EXCEPTIO
 
 **Migration plan (destructive, no production users):**
 
-The new migration `20260508150000_pvp_v4.sql`:
+The new migration `20260508150000_pvp_v4.sql` is written idempotently so a local `supabase db reset` can be re-run during development:
 
-1. `DROP TABLE public.pvp_games CASCADE;` (drops triggers, policies, functions tied to v3).
+1. `DROP TABLE IF EXISTS public.pvp_games CASCADE;` and `DROP TABLE IF EXISTS public.pvp_matches CASCADE;` (drops dependent triggers, policies, functions tied to v3 — order matters, but `IF EXISTS` + `CASCADE` makes it safe in either direction).
 2. `DROP FUNCTION IF EXISTS public.complete_pvp_game(); DROP FUNCTION IF EXISTS public.set_pvp_invite_code(); DROP FUNCTION IF EXISTS public.get_game_by_invite_code(VARCHAR);` (anything that survived the CASCADE).
 3. `CREATE TABLE public.pvp_matches ...` and `CREATE TABLE public.pvp_games ...` per §1.
 4. Re-create `set_pvp_invite_code()` (now firing on `pvp_matches`).
-5. Create `complete_pvp_round()`, `advance_pvp_match()`, and the seven RPCs from §4.
+5. Create `complete_pvp_round()`, `advance_pvp_match()`, and the RPCs from §4.
 6. Re-attach RLS, realtime publication, grants.
 
 A new types regen pass (`supabase gen types typescript --local > ../touch-type/renderer/src/types/supabase.ts`) updates the renderer types in lockstep.
@@ -408,7 +419,7 @@ type PvPMatch = Database["public"]["Tables"]["pvp_matches"]["Row"];
 type PvPRound = Database["public"]["Tables"]["pvp_games"]["Row"];
 
 async function createMatch(input: CreateMatchInput): Promise<PvPMatch | null> {
-  const wordSets = generateRoundWordSets(input.bestOf, input.settings);
+  const wordSets = generateRoundWordSets(input.bestOf, input.settings); // string[][]
   const { data, error } = await supabase.rpc("create_match", {
     _keyboard: input.settings.keyboard,
     _level: input.settings.level,
@@ -417,7 +428,7 @@ async function createMatch(input: CreateMatchInput): Promise<PvPMatch | null> {
     _punctuation: input.settings.punctuation,
     _numbers: input.settings.numbers,
     _best_of: input.bestOf,
-    _word_sets: wordSets,
+    _word_sets: wordSets, // serialized as JSONB by supabase-js
     _message: input.message ?? null,
   });
   if (error) { console.error("Error creating match:", error); return null; }
@@ -425,13 +436,13 @@ async function createMatch(input: CreateMatchInput): Promise<PvPMatch | null> {
 }
 ```
 
-All other mutations (`joinMatch`, `submitRoundResult`, `forfeitMatch`, `cancelMatch`) follow the same pattern.
+All other mutations (`joinMatch`, `submitRoundResult`, `forfeitMatch`, `cancelMatch`) follow the same pattern. The provider does not call `_slot` — `submit_round_result` infers the caller's role.
 
 ---
 
 ## Open questions / future work
 
 - **Auto-bind rematch**: today, even a "rematch" still requires the rival to open the invite link. A future iteration could auto-bind the rival as joiner (since they're the implied counterparty) and notify them via push.
-- **Match expiry sweeper**: `expires_at` is set, but nothing flips status to `expired` on a schedule. A pg_cron job (or edge function) should sweep stale matches; for v4 we rely on the renderer to display expired matches as terminal when `expires_at < NOW()` even if the row still says `open`.
+- **Match expiry sweeper**: `expires_at` is set and the RPCs reject submit/join past it, but nothing flips status to `expired` on a schedule. A pg_cron job (or edge function) should sweep stale matches; for v4 the renderer treats matches with `expires_at < NOW()` as terminal in display, and the RPC-level rejection prevents writes from leaking through.
 - **Round abandonment**: if a player joins, races round 1, then never returns, the match sits in `in_progress` until expiry. v4 accepts this; v5 might add a per-round timer.
 - **Streak/elo signal**: rivals could surface a streak indicator ("won last 3") — easy to derive from existing data without schema changes.
