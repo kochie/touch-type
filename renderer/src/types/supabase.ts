@@ -229,6 +229,105 @@ export type Database = {
         }
         Relationships: []
       }
+      pvp_challenges: {
+        Row: {
+          capital: boolean
+          challenger_completed_at: string
+          challenger_correct: number
+          challenger_cpm: number
+          challenger_id: string
+          challenger_incorrect: number
+          challenger_key_presses: Json | null
+          challenger_message: string | null
+          challenger_time: string
+          created_at: string
+          expires_at: string
+          id: string
+          invite_code: string
+          keyboard: string
+          language: string
+          level: string
+          numbers: boolean
+          opponent_claimed_at: string | null
+          opponent_completed_at: string | null
+          opponent_correct: number | null
+          opponent_cpm: number | null
+          opponent_id: string | null
+          opponent_incorrect: number | null
+          opponent_key_presses: Json | null
+          opponent_time: string | null
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+          word_set: string[]
+        }
+        Insert: {
+          capital?: boolean
+          challenger_completed_at?: string
+          challenger_correct: number
+          challenger_cpm: number
+          challenger_id: string
+          challenger_incorrect: number
+          challenger_key_presses?: Json | null
+          challenger_message?: string | null
+          challenger_time: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_code: string
+          keyboard: string
+          language: string
+          level: string
+          numbers?: boolean
+          opponent_claimed_at?: string | null
+          opponent_completed_at?: string | null
+          opponent_correct?: number | null
+          opponent_cpm?: number | null
+          opponent_id?: string | null
+          opponent_incorrect?: number | null
+          opponent_key_presses?: Json | null
+          opponent_time?: string | null
+          punctuation?: boolean
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+          word_set: string[]
+        }
+        Update: {
+          capital?: boolean
+          challenger_completed_at?: string
+          challenger_correct?: number
+          challenger_cpm?: number
+          challenger_id?: string
+          challenger_incorrect?: number
+          challenger_key_presses?: Json | null
+          challenger_message?: string | null
+          challenger_time?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_code?: string
+          keyboard?: string
+          language?: string
+          level?: string
+          numbers?: boolean
+          opponent_claimed_at?: string | null
+          opponent_completed_at?: string | null
+          opponent_correct?: number | null
+          opponent_cpm?: number | null
+          opponent_id?: string | null
+          opponent_incorrect?: number | null
+          opponent_key_presses?: Json | null
+          opponent_time?: string | null
+          punctuation?: boolean
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+          word_set?: string[]
+        }
+        Relationships: []
+      }
       results: {
         Row: {
           capital: boolean | null
@@ -452,116 +551,26 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          product_id: string | null
+          streak_freeze_credited: boolean | null
           transaction_id: string
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
+          product_id?: string | null
+          streak_freeze_credited?: boolean | null
           transaction_id: string
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
+          product_id?: string | null
+          streak_freeze_credited?: boolean | null
           transaction_id?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      pvp_challenges: {
-        Row: {
-          id: string
-          challenger_id: string
-          opponent_id: string | null
-          challenge_code: string | null
-          status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'expired' | 'declined'
-          keyboard: string
-          level: string
-          language: string
-          capital: boolean
-          punctuation: boolean
-          numbers: boolean
-          word_set: string[]
-          challenger_result_id: string | null
-          opponent_result_id: string | null
-          winner_id: string | null
-          message: string | null
-          expires_at: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          challenger_id: string
-          opponent_id?: string | null
-          challenge_code?: string | null
-          status?: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'expired' | 'declined'
-          keyboard: string
-          level: string
-          language: string
-          capital?: boolean
-          punctuation?: boolean
-          numbers?: boolean
-          word_set: string[]
-          challenger_result_id?: string | null
-          opponent_result_id?: string | null
-          winner_id?: string | null
-          message?: string | null
-          expires_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          challenger_id?: string
-          opponent_id?: string | null
-          challenge_code?: string | null
-          status?: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'expired' | 'declined'
-          keyboard?: string
-          level?: string
-          language?: string
-          capital?: boolean
-          punctuation?: boolean
-          numbers?: boolean
-          word_set?: string[]
-          challenger_result_id?: string | null
-          opponent_result_id?: string | null
-          winner_id?: string | null
-          message?: string | null
-          expires_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      pvp_challenge_invites: {
-        Row: {
-          id: string
-          challenge_id: string
-          invite_code: string
-          used: boolean
-          used_by: string | null
-          expires_at: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          challenge_id: string
-          invite_code: string
-          used?: boolean
-          used_by?: string | null
-          expires_at?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          challenge_id?: string
-          invite_code?: string
-          used?: boolean
-          used_by?: string | null
-          expires_at?: string
-          created_at?: string
         }
         Relationships: []
       }
@@ -588,43 +597,50 @@ export type Database = {
         }
         Relationships: []
       }
-      pvp_challenges_view: {
-        Row: {
-          id: string
-          challenger_id: string
-          opponent_id: string | null
-          challenge_code: string | null
-          status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'expired' | 'declined'
-          keyboard: string
-          level: string
-          language: string
-          capital: boolean
-          punctuation: boolean
-          numbers: boolean
-          word_set: string[]
-          challenger_result_id: string | null
-          opponent_result_id: string | null
-          winner_id: string | null
-          message: string | null
-          expires_at: string
-          created_at: string
-          updated_at: string
-          challenger_username: string | null
-          challenger_email: string | null
-          opponent_username: string | null
-          opponent_email: string | null
-          challenger_cpm: number | null
-          challenger_correct: number | null
-          challenger_incorrect: number | null
-          opponent_cpm: number | null
-          opponent_correct: number | null
-          opponent_incorrect: number | null
-          winner_username: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
+      generate_invite_code: { Args: never; Returns: string }
+      get_challenge_by_invite_code: {
+        Args: { _code: string }
+        Returns: {
+          capital: boolean
+          challenger_completed_at: string
+          challenger_correct: number
+          challenger_cpm: number
+          challenger_id: string
+          challenger_incorrect: number
+          challenger_key_presses: Json | null
+          challenger_message: string | null
+          challenger_time: string
+          created_at: string
+          expires_at: string
+          id: string
+          invite_code: string
+          keyboard: string
+          language: string
+          level: string
+          numbers: boolean
+          opponent_claimed_at: string | null
+          opponent_completed_at: string | null
+          opponent_correct: number | null
+          opponent_cpm: number | null
+          opponent_id: string | null
+          opponent_incorrect: number | null
+          opponent_key_presses: Json | null
+          opponent_time: string | null
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+          word_set: string[]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "pvp_challenges"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       trigger_send_notifications: { Args: never; Returns: undefined }
     }
     Enums: {
