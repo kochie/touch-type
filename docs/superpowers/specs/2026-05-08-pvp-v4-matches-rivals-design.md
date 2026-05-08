@@ -182,7 +182,7 @@ open ─(joiner claims)──► open (with joiner)
                               └──(expires_at passed)──► expired
 ```
 
-`open` covers both "no joiner yet" and "joiner has claimed but no round has resolved". `in_progress` is set by the round-advance trigger when the first round flips to a winner. **There is no early termination**: even when the running win count makes the eventual winner mathematically certain (e.g., 2-0 in BO3), the match remains `in_progress` until the final round resolves. This lets a trailing player still race every round — the catch-up is the point of the parallel-play model. The cancel-by-creator window is *not* gated on status — see "Cancel" below for the precise check.
+`open` covers three sub-states: no joiner yet; joiner has claimed but no submissions; joiner has claimed and one or both players have submitted slots but no round has yet resolved. `in_progress` is set by the round-advance trigger only when the first round flips to a winner — race-ahead submissions do not advance status on their own. **There is no early termination**: even when the running win count makes the eventual winner mathematically certain (e.g., 2-0 in BO3), the match remains `in_progress` until the final round resolves. This lets a trailing player still race every round — the catch-up is the point of the parallel-play model. The cancel-by-creator window is *not* gated on status — see "Cancel" below for the precise check (it keys on whether *any* submission exists, not on which `open` sub-state the match is in).
 
 **Round lifecycle (per row in `pvp_games`):**
 
@@ -308,7 +308,7 @@ Forfeit and expiry are written by RPCs (not triggers), and both set `winner_id` 
 
 | Tab | Contents |
 |---|---|
-| **Active** | Matches that aren't terminal *and* I still have unraced rounds. The primary action card surfaces "Race round N" where N is my next un-submitted round. |
+| **Active** | Matches that aren't terminal *and* I still have unraced rounds. The primary action card surfaces "Race round N" where N is my next un-submitted round. The button's enablement is per-player only — opponent progress on this or prior rounds is not a gate. |
 | **Awaiting** | Matches where I've submitted all `best_of` rounds and the match isn't completed yet — i.e., the opponent still has rounds to race. The card shows my running tally and which rounds the opponent has yet to submit. |
 | **History** | Completed/cancelled/expired matches. Most recent first. |
 | **Rivals** | One row per rival (from `list_my_rivals()`). Shows record (W-L), last played, **Rematch** button. |
@@ -324,6 +324,8 @@ Forfeit and expiry are written by RPCs (not triggers), and both set `winner_id` 
 **Cancel-by-creator window (loosened from v3):** the creator may cancel a match while no round has *any* submission. Concretely, the `cancel_match` RPC checks `NOT EXISTS (SELECT 1 FROM pvp_games WHERE match_id = $1 AND (creator_completed_at IS NOT NULL OR joiner_completed_at IS NOT NULL))`. This is independent of match status — `open` (no joiner) and `open` (joiner present but nobody has raced) both cancel cleanly; once a single race has been submitted, cancel is rejected. v3's rule of "open and joiner not yet present" was too tight for the rematch flow.
 
 **Forfeit:** during a race, the Tracker's forfeit button calls the `forfeit_match` RPC. The RPC sets match `status = 'completed'`, `forfeited_by = caller`, and `winner_id = the other side`. Already-completed rounds keep their winners; in-progress rounds are left as-is (no special record — the match is over). The History UI derives "forfeited at round N" from the first round whose `winner_id` is NULL.
+
+**Forfeit invariant exception:** on a forfeit, `winner_id` is set directly to the non-forfeiting side and may **not** match the side with more wins in `creator_wins` / `joiner_wins` (e.g., a 0-1 score where the trailing side wins by forfeit). Match-level winner derives from `forfeited_by` when set, and from the score columns otherwise. Any future query that wants "did the winner win on the merits" should check `forfeited_by IS NULL` first.
 
 **Round reveal cadence:** the Match detail page subscribes to realtime on the match row and its rounds. A round is revealed (its winner shown) the moment both players have submitted for that round and `winner_id` is non-NULL — independent of any other round's state. So a player who races ahead simply sees "Round 2 — you submitted CPM X, waiting for opponent" until the opponent catches up; rounds then resolve in cascade as the opponent submits each one.
 
@@ -390,6 +392,7 @@ Each RPC asserts the caller's role inline (not via RLS), raising `RAISE EXCEPTIO
   - Round trigger does not overwrite `winner_id` once set (re-UPDATE on completed round is a no-op).
   - Match advance fires only on round-winner transition (NULL → NOT NULL).
   - Match status flips `open → in_progress` on first round resolution.
+  - **Race-ahead does not advance status:** submitting one slot of a round (or all rounds, on one side) leaves status as `open` until a round actually resolves.
   - Match completes exactly when `creator_wins + joiner_wins = best_of` (all rounds resolved), with `winner_id` set to the side with more wins. No early termination.
   - **Catch-up scenario:** in BO3, creator submits all 3 rounds first, joiner submits round 1 (creator wins it), match is `in_progress` 1-0; joiner then submits rounds 2 and 3 winning both → match completes with joiner_id as winner (1-2). Verifies that submitting after a 1-0 lead is permitted and that the match doesn't terminate prematurely.
   - **Race-ahead permitted:** creator submits rounds 1, 2, 3 in succession with no joiner submissions in between — none rejected; no rounds resolved yet.
@@ -404,7 +407,7 @@ Each RPC asserts the caller's role inline (not via RLS), raising `RAISE EXCEPTIO
 - **Playwright** (in `touch-type/e2e/pvp.spec.ts`, replacing v3 cases):
   - **Smoke**: authenticated user navigates to `/pvp`, sees five-tab layout.
   - **Best-of-3 round-trip (sequential)**: A creates BO3, B joins, both race round 1 (B wins), both race round 2 (A wins), both race round 3 (A wins) → match `completed`, `winner_id = aId`, History tab shows match for both, Rivals tab shows the other player for both.
-  - **Catch-up from behind (parallel play)**: A creates BO3, B joins. B races and submits all 3 rounds before A submits any. The match remains `in_progress` (no rounds resolved yet — only B has submitted). Then A races round 1 (loses to B), match status becomes `in_progress` and score is 0-1; A races round 2 (loses to B), score 0-2 — match still `in_progress` (no early termination); A races round 3 (loses), score 0-3 → match `completed`, `winner_id = bId`. Verifies (a) race-ahead is permitted, (b) no early termination after the lead is mathematically locked, (c) trailing player can play every round.
+  - **Catch-up from behind (parallel play)**: A creates BO3, B joins. B races and submits all 3 rounds before A submits any. After B's three submissions, the match status is still `open` (no rounds have resolved — only one slot per round is filled). Then A races round 1 (loses to B): round 1 resolves, status flips to `in_progress`, score 0-1. A races round 2 (loses): score 0-2 — match still `in_progress` (no early termination). A races round 3 (loses): score 0-3 → match `completed`, `winner_id = bId`. Verifies (a) race-ahead is permitted, (b) status flips to `in_progress` only on first round resolution (not on bare submissions), (c) no early termination after the lead is mathematically locked, (d) trailing player can play every round.
   - **Forfeit mid-match**: A creates BO5, B joins, round 1 played (A wins), B forfeits → match completed, `winner_id = aId`, `forfeited_by = bId`.
   - **Cancel while no rounds played**: Creator cancels a BO3 with joiner present but no submitted rounds → status `cancelled`.
   - **Cancel after round played is rejected**: Creator hits cancel after round 1 has any submission → RPC raises, UI shows error.
