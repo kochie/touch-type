@@ -8,7 +8,6 @@ import {
   useSettings,
 } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
-// TODO(pvp-v4): Task 20 — add best-of selector; word_set now goes into CreateMatchInput
 import { usePvP, type MatchSettings } from "@/lib/pvp-provider";
 import { keyboards } from "../KeyboardSelect";
 import { languages, levels } from "../settings/settings";
@@ -66,9 +65,9 @@ export default function NewChallengePrompt() {
   const router = useRouter();
   const settings = useSettings();
   const [wordList] = useWords();
-  // TODO(pvp-v4): Task 20 — pass bestOf selector value; wire word_set via CreateMatchInput
   const { createMatch } = usePvP();
   const [creating, setCreating] = useState(false);
+  const [bestOf, setBestOf] = useState<1 | 3 | 5 | 7>(3);
 
   // Local form state — defaults to the user's global settings but is editable
   // per-challenge without mutating the global settings.
@@ -87,7 +86,6 @@ export default function NewChallengePrompt() {
       return;
     }
     setCreating(true);
-    // TODO(pvp-v4): Task 20 — word_set will be passed inside CreateMatchInput once Task 14 lands
     const matchSettings: MatchSettings = {
       keyboard,
       level,
@@ -97,12 +95,12 @@ export default function NewChallengePrompt() {
       numbers,
     };
     const match = await createMatch({
-      bestOf: 1, // TODO(pvp-v4): Task 20 — replace with bestOf selector value
+      bestOf,
       settings: matchSettings,
     });
     setCreating(false);
     if (match) {
-      router.push(`/pvp/challenge?id=${match.id}`);
+      router.push(`/pvp/match?id=${match.id}`);
     }
   };
 
@@ -189,6 +187,32 @@ export default function NewChallengePrompt() {
           <Toggle label="Numbers" enabled={numbers} onChange={setNumbers} />
         </div>
       </div>
+
+      <fieldset className="mt-4">
+        <legend className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Best of
+        </legend>
+        <div role="radiogroup" className="flex gap-2">
+          {([1, 3, 5, 7] as const).map((n) => (
+            <button
+              key={n}
+              type="button"
+              role="radio"
+              aria-checked={bestOf === n}
+              data-testid={`pvp-best-of-${n}`}
+              onClick={() => setBestOf(n)}
+              className={clsx(
+                "px-4 py-2 rounded-lg font-medium border",
+                bestOf === n
+                  ? "bg-blue-500 text-white border-blue-500"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700",
+              )}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      </fieldset>
 
       <button
         data-testid="pvp-create-game"
