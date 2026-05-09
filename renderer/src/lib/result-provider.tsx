@@ -4,7 +4,7 @@ import { LetterStat } from "@/components/Tracker/reducers";
 import { openDB } from "idb";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { Languages, Levels } from "./settings_hook";
+import { CodeLanguages, Languages, Levels } from "./settings_hook";
 import { KeyboardLayoutNames } from "@/keyboards";
 import { Duration } from "luxon";
 import { useSupabase } from "./supabase-provider";
@@ -60,6 +60,9 @@ export interface Result {
   punctuation: boolean;
   numbers: boolean;
   cpm: number;
+  // Code mode fields (optional for backwards compatibility)
+  codeMode?: boolean;
+  codeLang?: CodeLanguages;
 }
 
 const ResultsContext = createContext({
@@ -118,6 +121,8 @@ export function ResultsProvider({ children }) {
           punctuation: !!r.punctuation,
           numbers: !!r.numbers,
           cpm: r.cpm,
+          codeMode: r.code_mode,
+          codeLang: r.code_lang as CodeLanguages,
         }));
         allResults.push(...convertedResults);
         offset += limit;
@@ -223,7 +228,11 @@ export function ResultsProvider({ children }) {
     result: Result,
   ): Promise<{ id: string } | null> => {
     _setResults((prev) => [result, ...prev]);
-    updateDB(result);
+    try {
+      await updateDB(result);
+    } catch (err) {
+      console.error("Failed to persist result to IndexedDB:", err);
+    }
 
     if (user) {
       const { data, error } = await supabase
@@ -242,6 +251,8 @@ export function ResultsProvider({ children }) {
           numbers: result.numbers,
           cpm: result.cpm,
           key_presses: letterStatsToJson(result.keyPresses),
+          code_mode: result.codeMode,
+          code_lang: result.codeLang,
         })
         .select('id')
         .single();

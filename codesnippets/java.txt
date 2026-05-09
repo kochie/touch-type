@@ -1,0 +1,124 @@
+// SNIPPET
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+// SNIPPET
+for (int i = 0; i < 10; i++) {
+    System.out.println(i);
+}
+// SNIPPET
+public static int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+// SNIPPET
+List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);
+int sum = numbers.stream()
+    .reduce(0, Integer::sum);
+System.out.println("Sum: " + sum);
+// SNIPPET
+public class Person {
+    private String name;
+    private int age;
+
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() { return name; }
+    public int getAge() { return age; }
+
+    @Override
+    public String toString() {
+        return name + " (" + age + ")";
+    }
+}
+// SNIPPET
+try {
+    int result = 10 / 0;
+} catch (ArithmeticException e) {
+    System.err.println("Error: " + e.getMessage());
+} finally {
+    System.out.println("Done");
+}
+// SNIPPET
+Map<String, Integer> scores = new HashMap<>();
+scores.put("Alice", 95);
+scores.put("Bob", 87);
+scores.forEach((k, v) -> System.out.println(k + ": " + v));
+// SNIPPET
+interface Shape {
+    double area();
+    default String describe() {
+        return "Shape with area " + area();
+    }
+}
+// SNIPPET
+List<String> names = Arrays.asList("Charlie", "Alice", "Bob");
+names.stream()
+    .sorted()
+    .filter(n -> n.length() > 3)
+    .forEach(System.out::println);
+// SNIPPET
+Optional<String> name = Optional.of("Alice");
+String result = name
+    .map(String::toUpperCase)
+    .orElse("Unknown");
+// SNIPPET
+record Point(double x, double y) {
+    double distance() {
+        return Math.sqrt(x * x + y * y);
+    }
+}
+// SNIPPET
+ExecutorService pool = Executors.newFixedThreadPool(4);
+Future<Integer> future = pool.submit(() -> {
+    Thread.sleep(1000);
+    return 42;
+});
+int value = future.get();
+// SNIPPET
+switch (status) {
+    case "active" -> System.out.println("Running");
+    case "idle"   -> System.out.println("Waiting");
+    default       -> System.out.println("Unknown");
+}
+// SNIPPET
+var list = new ArrayList<String>();
+list.add("apple");
+list.add("banana");
+var joined = String.join(", ", list);
+// SNIPPET
+public static <T extends Comparable<T>> T max(T a, T b) {
+    return a.compareTo(b) >= 0 ? a : b;
+}
+// SNIPPET
+try (var reader = new BufferedReader(new FileReader("data.txt"))) {
+    String line;
+    while ((line = reader.readLine()) != null) {
+        System.out.println(line);
+    }
+}
+// SNIPPET
+int[] arr = {5, 3, 1, 4, 2};
+Arrays.sort(arr);
+System.out.println(Arrays.toString(arr));
+// SNIPPET
+sealed interface Result<T> permits Success, Failure {}
+record Success<T>(T value) implements Result<T> {}
+record Failure<T>(String error) implements Result<T> {}
+// SNIPPET
+@FunctionalInterface
+interface Transformer<T, R> {
+    R transform(T input);
+}
+
+Transformer<String, Integer> length = String::length;
+// SNIPPET
+var map = Map.of("a", 1, "b", 2, "c", 3);
+var total = map.values().stream()
+    .mapToInt(Integer::intValue)
+    .sum();

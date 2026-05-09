@@ -1,0 +1,167 @@
+// SNIPPET
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, World!")
+}
+// SNIPPET
+for i := 0; i < 10; i++ {
+    fmt.Println(i)
+}
+// SNIPPET
+func factorial(n int) int {
+    if n <= 1 {
+        return 1
+    }
+    return n * factorial(n-1)
+}
+// SNIPPET
+nums := []int{1, 2, 3, 4, 5}
+sum := 0
+for _, n := range nums {
+    sum += n
+}
+fmt.Println("Sum:", sum)
+// SNIPPET
+m := map[string]int{
+    "apple":  5,
+    "banana": 3,
+    "cherry": 8,
+}
+for k, v := range m {
+    fmt.Printf("%s: %d\n", k, v)
+}
+// SNIPPET
+type Point struct {
+    X, Y float64
+}
+
+func (p Point) String() string {
+    return fmt.Sprintf("(%g, %g)", p.X, p.Y)
+}
+// SNIPPET
+ch := make(chan int, 5)
+go func() {
+    for i := 0; i < 5; i++ {
+        ch <- i
+    }
+    close(ch)
+}()
+for v := range ch {
+    fmt.Println(v)
+}
+// SNIPPET
+f, err := os.Open("file.txt")
+if err != nil {
+    log.Fatal(err)
+}
+defer f.Close()
+// SNIPPET
+func divide(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, fmt.Errorf("division by zero")
+    }
+    return a / b, nil
+}
+// SNIPPET
+type Animal interface {
+    Sound() string
+    Name() string
+}
+
+func describe(a Animal) string {
+    return fmt.Sprintf("%s says %s", a.Name(), a.Sound())
+}
+// SNIPPET
+var wg sync.WaitGroup
+for i := 0; i < 5; i++ {
+    wg.Add(1)
+    go func(n int) {
+        defer wg.Done()
+        fmt.Println(n)
+    }(i)
+}
+wg.Wait()
+// SNIPPET
+s := []int{3, 1, 4, 1, 5, 9, 2, 6}
+sort.Ints(s)
+fmt.Println(s)
+// SNIPPET
+func fibonacci(n int) <-chan int {
+    ch := make(chan int)
+    go func() {
+        a, b := 0, 1
+        for i := 0; i < n; i++ {
+            ch <- a
+            a, b = b, a+b
+        }
+        close(ch)
+    }()
+    return ch
+}
+// SNIPPET
+mu := sync.Mutex{}
+counter := 0
+mu.Lock()
+counter++
+mu.Unlock()
+// SNIPPET
+switch day {
+case "Monday", "Tuesday", "Wednesday", "Thursday", "Friday":
+    fmt.Println("Weekday")
+case "Saturday", "Sunday":
+    fmt.Println("Weekend")
+default:
+    fmt.Println("Unknown")
+}
+// SNIPPET
+type Stack[T any] struct {
+    items []T
+}
+
+func (s *Stack[T]) Push(item T) {
+    s.items = append(s.items, item)
+}
+
+func (s *Stack[T]) Pop() (T, bool) {
+    if len(s.items) == 0 {
+        var zero T
+        return zero, false
+    }
+    n := len(s.items) - 1
+    item := s.items[n]
+    s.items = s.items[:n]
+    return item, true
+}
+// SNIPPET
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+select {
+case result := <-doWork(ctx):
+    fmt.Println(result)
+case <-ctx.Done():
+    fmt.Println("timeout")
+}
+// SNIPPET
+words := strings.Fields("the quick brown fox")
+for i, w := range words {
+    words[i] = strings.ToUpper(w[:1]) + w[1:]
+}
+fmt.Println(strings.Join(words, " "))
+// SNIPPET
+http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Hello, %s!", r.URL.Query().Get("name"))
+})
+log.Fatal(http.ListenAndServe(":8080", nil))
+// SNIPPET
+data, err := json.Marshal(struct {
+    Name string `json:"name"`
+    Age  int    `json:"age"`
+}{"Alice", 30})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(string(data))

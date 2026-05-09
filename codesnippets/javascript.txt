@@ -1,0 +1,135 @@
+// SNIPPET
+function greet(name) {
+    return `Hello, ${name}!`;
+}
+
+console.log(greet("World"));
+// SNIPPET
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);
+const evens = numbers.filter(n => n % 2 === 0);
+// SNIPPET
+async function fetchData(url) {
+    const response = await fetch(url);
+    const data = await response.json();
+    return data;
+}
+// SNIPPET
+class Animal {
+    constructor(name, sound) {
+        this.name = name;
+        this.sound = sound;
+    }
+
+    speak() {
+        console.log(`${this.name} says ${this.sound}`);
+    }
+}
+// SNIPPET
+const add = (a, b) => a + b;
+const multiply = (a, b) => a * b;
+const result = multiply(add(2, 3), 4);
+// SNIPPET
+const obj = { name: "Alice", age: 30, city: "London" };
+const { name, age } = obj;
+const { city, ...rest } = obj;
+// SNIPPET
+for (let i = 0; i < 10; i++) {
+    if (i % 2 === 0) {
+        console.log(`${i} is even`);
+    }
+}
+// SNIPPET
+const promise = new Promise((resolve, reject) => {
+    setTimeout(() => resolve("done"), 1000);
+});
+
+promise.then(result => console.log(result));
+// SNIPPET
+const arr = [3, 1, 4, 1, 5, 9, 2, 6];
+const sorted = [...arr].sort((a, b) => a - b);
+const max = Math.max(...arr);
+// SNIPPET
+function debounce(fn, delay) {
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+// SNIPPET
+const users = [
+    { name: "Alice", age: 25 },
+    { name: "Bob", age: 30 },
+];
+const names = users.map(u => u.name).join(", ");
+// SNIPPET
+try {
+    const data = JSON.parse(rawJson);
+    console.log(data);
+} catch (error) {
+    console.error("Invalid JSON:", error.message);
+}
+// SNIPPET
+const cache = new Map();
+
+function memoize(fn) {
+    return function (key) {
+        if (cache.has(key)) return cache.get(key);
+        const result = fn(key);
+        cache.set(key, result);
+        return result;
+    };
+}
+// SNIPPET
+const items = ["apple", "banana", "cherry"];
+const found = items.find(item => item.startsWith("b"));
+const index = items.findIndex(item => item === "cherry");
+// SNIPPET
+function* range(start, end, step = 1) {
+    for (let i = start; i < end; i += step) {
+        yield i;
+    }
+}
+// SNIPPET
+const obj1 = { a: 1, b: 2 };
+const obj2 = { b: 3, c: 4 };
+const merged = { ...obj1, ...obj2 };
+// SNIPPET
+class EventEmitter {
+    constructor() {
+        this.events = {};
+    }
+
+    on(event, listener) {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+        this.events[event].push(listener);
+    }
+
+    emit(event, ...args) {
+        if (this.events[event]) {
+            this.events[event].forEach(fn => fn(...args));
+        }
+    }
+}
+// SNIPPET
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function retry(fn, times = 3) {
+    for (let i = 0; i < times; i++) {
+        try {
+            return await fn();
+        } catch {
+            await sleep(1000);
+        }
+    }
+}
+// SNIPPET
+const set = new Set([1, 2, 3, 2, 1]);
+const unique = [...set];
+const union = new Set([...set, ...[4, 5]]);
+// SNIPPET
+const matrix = Array.from({ length: 3 }, () => new Array(3).fill(0));
+matrix[1][1] = 1;

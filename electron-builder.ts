@@ -193,7 +193,7 @@ const config: Configuration = {
     oneClick: false,
   },
   asar: true,
-  files: ["main", "renderer/out", "wordsets"],
+  files: ["main", "renderer/out", "wordsets", "codesnippets"],
   // Mac and Windows use this; Linux uses linux.publish (GitHub + snapStore + flatpak build only)
   publish: [
     {

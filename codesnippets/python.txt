@@ -1,0 +1,127 @@
+// SNIPPET
+def main():
+    print("Hello, World!")
+
+if __name__ == "__main__":
+    main()
+// SNIPPET
+for i in range(10):
+    print(i)
+// SNIPPET
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+// SNIPPET
+numbers = [1, 2, 3, 4, 5]
+total = sum(numbers)
+average = total / len(numbers)
+print(f"Average: {average}")
+// SNIPPET
+if x > 0:
+    print("Positive")
+elif x < 0:
+    print("Negative")
+else:
+    print("Zero")
+// SNIPPET
+with open("file.txt", "r") as f:
+    contents = f.read()
+    print(contents)
+// SNIPPET
+class Dog:
+    def __init__(self, name, breed):
+        self.name = name
+        self.breed = breed
+
+    def bark(self):
+        print(f"{self.name} says woof!")
+// SNIPPET
+squares = [x ** 2 for x in range(10)]
+evens = [x for x in range(20) if x % 2 == 0]
+// SNIPPET
+def greet(name="World"):
+    return f"Hello, {name}!"
+
+print(greet("Python"))
+// SNIPPET
+try:
+    result = 10 / 0
+except ZeroDivisionError:
+    print("Cannot divide by zero")
+finally:
+    print("Done")
+// SNIPPET
+words = ["apple", "banana", "cherry"]
+for i, word in enumerate(words):
+    print(f"{i}: {word}")
+// SNIPPET
+def fibonacci(n):
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
+// SNIPPET
+import json
+
+data = {"name": "Alice", "age": 30}
+json_str = json.dumps(data, indent=2)
+print(json_str)
+// SNIPPET
+names = {"Alice", "Bob", "Charlie"}
+if "Alice" in names:
+    print("Alice is in the set")
+// SNIPPET
+result = [x * 2 for x in range(5) if x % 2 == 0]
+print(result)
+// SNIPPET
+from typing import List, Optional
+
+def find_max(items: List[int]) -> Optional[int]:
+    if not items:
+        return None
+    return max(items)
+// SNIPPET
+d = {"a": 1, "b": 2, "c": 3}
+for key, value in d.items():
+    print(f"{key} = {value}")
+// SNIPPET
+def is_palindrome(s: str) -> bool:
+    s = s.lower().replace(" ", "")
+    return s == s[::-1]
+// SNIPPET
+import os
+
+home = os.path.expanduser("~")
+config = os.path.join(home, ".config", "app.json")
+// SNIPPET
+class Stack:
+    def __init__(self):
+        self._items = []
+
+    def push(self, item):
+        self._items.append(item)
+
+    def pop(self):
+        return self._items.pop()
+
+    def is_empty(self):
+        return len(self._items) == 0
+// SNIPPET
+matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+for row in matrix:
+    print(" ".join(str(x) for x in row))
+// SNIPPET
+def merge_dicts(a, b):
+    return {**a, **b}
+
+merged = merge_dicts({"x": 1}, {"y": 2})
+// SNIPPET
+words = "the quick brown fox".split()
+word_count = {word: len(word) for word in words}
+// SNIPPET
+import re
+
+pattern = r"\b\w{5}\b"
+text = "Hello world, this is Python"
+matches = re.findall(pattern, text)

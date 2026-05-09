@@ -1,0 +1,113 @@
+// SNIPPET
+fun main() {
+    println("Hello, World!")
+}
+// SNIPPET
+for (i in 0 until 10) {
+    println(i)
+}
+// SNIPPET
+fun factorial(n: Int): Int {
+    return if (n <= 1) 1 else n * factorial(n - 1)
+}
+// SNIPPET
+val numbers = listOf(1, 2, 3, 4, 5)
+val sum = numbers.sum()
+val evens = numbers.filter { it % 2 == 0 }
+println("Sum: $sum, Evens: $evens")
+// SNIPPET
+data class Person(
+    val name: String,
+    val age: Int,
+    val email: String = ""
+)
+
+val alice = Person("Alice", 30, "alice@example.com")
+val older = alice.copy(age = 31)
+// SNIPPET
+sealed class Result<out T> {
+    data class Success<T>(val value: T) : Result<T>()
+    data class Error(val message: String) : Result<Nothing>()
+}
+
+fun divide(a: Int, b: Int): Result<Int> {
+    return if (b == 0) Result.Error("Division by zero")
+    else Result.Success(a / b)
+}
+// SNIPPET
+val names = listOf("Charlie", "Alice", "Bob")
+val sorted = names.sortedBy { it.length }
+    .filter { it.length > 3 }
+    .map { it.uppercase() }
+// SNIPPET
+when (status) {
+    "active" -> println("Running")
+    "idle"   -> println("Waiting")
+    else     -> println("Unknown: $status")
+}
+// SNIPPET
+fun String.isPalindrome(): Boolean {
+    val clean = lowercase().filter { it.isLetter() }
+    return clean == clean.reversed()
+}
+// SNIPPET
+val map = mapOf("a" to 1, "b" to 2, "c" to 3)
+map.forEach { (key, value) ->
+    println("$key = $value")
+}
+// SNIPPET
+class Stack<T> {
+    private val items = mutableListOf<T>()
+
+    fun push(item: T) = items.add(item)
+    fun pop(): T? = if (items.isEmpty()) null else items.removeLast()
+    val isEmpty get() = items.isEmpty()
+}
+// SNIPPET
+val result = runCatching {
+    10 / 0
+}.onFailure { e ->
+    println("Error: ${e.message}")
+}.getOrDefault(0)
+// SNIPPET
+val numbers = (1..100).filter { it % 3 == 0 || it % 5 == 0 }.sum()
+println(numbers)
+// SNIPPET
+object Singleton {
+    var count = 0
+
+    fun increment() {
+        count++
+    }
+}
+// SNIPPET
+fun <T> List<T>.second(): T? = if (size >= 2) this[1] else null
+
+val items = listOf("a", "b", "c")
+println(items.second())
+// SNIPPET
+interface Repository<T, ID> {
+    fun findById(id: ID): T?
+    fun save(entity: T): T
+    fun delete(id: ID)
+}
+// SNIPPET
+val sequence = generateSequence(0 to 1) { (a, b) -> b to a + b }
+    .map { it.first }
+    .take(10)
+    .toList()
+// SNIPPET
+coroutineScope {
+    val deferred = async { fetchData() }
+    val result = deferred.await()
+    println(result)
+}
+// SNIPPET
+val text = "Hello, Kotlin World"
+val words = text.split(" ")
+val wordCount = words.groupBy { it.length }
+    .mapValues { it.value.size }
+// SNIPPET
+inline fun <reified T> String.fromJson(): T {
+    return gson.fromJson(this, T::class.java)
+}
