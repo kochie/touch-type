@@ -14,8 +14,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import { useState } from "react";
-import ChallengeCard from "./ChallengeCard";
-import NewChallengePrompt from "./NewChallengePrompt";
+import { MatchCard } from "./MatchCard"; // TODO(pvp-v4): Task 23
+import { NewChallengePrompt } from "./NewChallengePrompt";
 
 type TabId = "active" | "awaiting" | "history" | "new";
 
@@ -26,7 +26,7 @@ interface Tab {
   badge?: number;
 }
 
-export default function PvPHub() {
+export function PvPHub() {
   const [activeTab, setActiveTab] = useState<TabId>("active");
   const { user, isLoading: isUserLoading } = useSupabase();
   // TODO(pvp-v4): Task 23 — rewrite PvPHub tabs with v4 match/round model
@@ -103,7 +103,7 @@ export default function PvPHub() {
         return myActiveGames.length > 0 ? (
           <div className="space-y-4">
             {myActiveGames.map((g) => (
-              <ChallengeCard key={g.id} game={g} />
+              <MatchCard key={g.id} match={g} />
             ))}
           </div>
         ) : (
@@ -122,7 +122,7 @@ export default function PvPHub() {
         return myAwaitingGames.length > 0 ? (
           <div className="space-y-4">
             {myAwaitingGames.map((g) => (
-              <ChallengeCard key={g.id} game={g} />
+              <MatchCard key={g.id} match={g} />
             ))}
           </div>
         ) : (
@@ -137,7 +137,7 @@ export default function PvPHub() {
         return myCompletedGames.length > 0 ? (
           <div className="space-y-4">
             {myCompletedGames.map((g) => (
-              <ChallengeCard key={g.id} game={g} />
+              <MatchCard key={g.id} match={g} />
             ))}
           </div>
         ) : (

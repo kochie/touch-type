@@ -61,7 +61,7 @@ function Toggle({ label, enabled, onChange }: ToggleProps) {
   );
 }
 
-export default function NewChallengePrompt() {
+export function NewChallengePrompt() {
   const router = useRouter();
   const settings = useSettings();
   const [wordList] = useWords();
