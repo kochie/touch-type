@@ -61,6 +61,7 @@ export type PvPRaceMode = {
 
 export interface PvPContextType {
   myMatches: PvPMatch[];
+  myActiveCount: number;
   isLoading: boolean;
   createMatch: (input: CreateMatchInput) => Promise<PvPMatch | null>;
   joinMatchByInvite: (code: string) => Promise<PvPMatch | null>;
@@ -81,6 +82,7 @@ const PvPContext = createContext<PvPContextType | undefined>(undefined);
 export function PvPProvider({ children }: { children: ReactNode }) {
   const supabase = getSupabaseClient();
   const [myMatches, setMyMatches] = useState<PvPMatch[]>([]);
+  const [myActiveCount, setMyActiveCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [currentRace, setCurrentRace] = useState<PvPRaceMode | null>(null);
   const { user } = useSupabase();
@@ -128,6 +130,41 @@ export function PvPProvider({ children }: { children: ReactNode }) {
       void supabase.removeChannel(channel);
     };
   }, [user, refresh]);
+
+  const fetchRoundsForMatch: PvPContextType["fetchRoundsForMatch"] = useCallback(async (matchId) => {
+    const { data, error } = await supabase
+      .from("pvp_games")
+      .select("*")
+      .eq("match_id", matchId)
+      .order("round_number", { ascending: true });
+    if (error) {
+      console.error("Error fetching rounds:", error);
+      return [];
+    }
+    return data ?? [];
+  }, [supabase]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function build() {
+      if (!user) {
+        if (!cancelled) setMyActiveCount(0);
+        return;
+      }
+      let count = 0;
+      for (const m of myMatches) {
+        if (["completed", "cancelled", "expired"].includes(m.status)) continue;
+        const rounds = await fetchRoundsForMatch(m.id);
+        const isCreator = m.creator_id === user.id;
+        if (rounds.some((r) => (isCreator ? r.creator_completed_at : r.joiner_completed_at) === null)) {
+          count++;
+        }
+      }
+      if (!cancelled) setMyActiveCount(count);
+    }
+    void build();
+    return () => { cancelled = true; };
+  }, [myMatches, user, fetchRoundsForMatch]);
 
   const createMatch: PvPContextType["createMatch"] = async (input) => {
     const wordSets = await generateRoundWordSets(input.bestOf, input.settings);
@@ -223,19 +260,6 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     return data;
   };
 
-  const fetchRoundsForMatch: PvPContextType["fetchRoundsForMatch"] = async (matchId) => {
-    const { data, error } = await supabase
-      .from("pvp_games")
-      .select("*")
-      .eq("match_id", matchId)
-      .order("round_number", { ascending: true });
-    if (error) {
-      console.error("Error fetching rounds:", error);
-      return [];
-    }
-    return data ?? [];
-  };
-
   const listRivals: PvPContextType["listRivals"] = async () => {
     const { data, error } = await supabase.rpc("list_my_rivals");
     if (error) {
@@ -255,6 +279,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
 
   const value: PvPContextType = {
     myMatches,
+    myActiveCount,
     isLoading,
     createMatch,
     joinMatchByInvite,
