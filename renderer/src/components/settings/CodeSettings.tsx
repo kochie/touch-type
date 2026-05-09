@@ -13,8 +13,6 @@ import { useState } from "react";
 
 const codeLanguages = [
   { value: CodeLanguages.C, label: "C" },
-  { value: CodeLanguages.PYTHON, label: "Python" },
-  { value: CodeLanguages.JAVASCRIPT, label: "JavaScript" },
 ];
 
 const snippetSources = [
@@ -34,9 +32,12 @@ export function CodeSettings() {
   const [isSelectingFile, setIsSelectingFile] = useState(false);
 
   const handleSelectFile = async () => {
+    if (!window.electronAPI?.showOpenDialog) {
+      console.error("File dialog not available outside Electron");
+      return;
+    }
     setIsSelectingFile(true);
     try {
-      // @ts-expect-error - electronAPI is injected by preload
       const result = await window.electronAPI.showOpenDialog();
       if (!result.canceled && result.filePaths.length > 0) {
         dispatchSettings({

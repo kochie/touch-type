@@ -65,13 +65,10 @@ async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
 
 async function handleGetCodeSnippets(event: IpcMainInvokeEvent, lang: string) {
   try {
-    const file = await readFile(
-      join(__dirname, "../codesnippets/", `${lang}.txt`),
-    );
-    return file;
+    return await readFile(join(__dirname, "../codesnippets/", `${lang}.txt`));
   } catch (error) {
-    log.error("Error loading code snippets:", error);
-    return new Uint8Array();
+    log.error(`Error loading code snippets for lang="${lang}":`, error);
+    return null;
   }
 }
 
@@ -86,14 +83,18 @@ async function handleLoadUserCodeFile(event: IpcMainInvokeEvent, filePath: strin
 }
 
 async function handleShowOpenDialog() {
-  const result = await dialog.showOpenDialog({
-    properties: ["openFile"],
-    filters: [
-      { name: "Code Files", extensions: ["c", "h", "py", "js", "ts", "txt", "cpp", "hpp", "java", "go", "rs"] },
-      { name: "All Files", extensions: ["*"] },
-    ],
-  });
-  return result;
+  try {
+    return await dialog.showOpenDialog({
+      properties: ["openFile"],
+      filters: [
+        { name: "Code Files", extensions: ["c", "h", "py", "js", "ts", "txt", "cpp", "hpp", "java", "go", "rs"] },
+        { name: "All Files", extensions: ["*"] },
+      ],
+    });
+  } catch (error) {
+    log.error("Error showing open dialog:", error);
+    throw error;
+  }
 }
 
 const loadURL = serve({ directory: "renderer/out" });

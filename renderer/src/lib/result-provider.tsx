@@ -228,7 +228,11 @@ export function ResultsProvider({ children }) {
     result: Result,
   ): Promise<{ id: string } | null> => {
     _setResults((prev) => [result, ...prev]);
-    updateDB(result);
+    try {
+      await updateDB(result);
+    } catch (err) {
+      console.error("Failed to persist result to IndexedDB:", err);
+    }
 
     if (user) {
       const { data, error } = await supabase

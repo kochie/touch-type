@@ -222,7 +222,7 @@ export default function Tracker() {
           for (let i = 0; i < settings.tabWidth; i++) {
             statsDispatch({ type: "CORRECT", key: " " });
           }
-          checkCompletion();
+          checkCompletion(settings.tabWidth);
           return;
         } else if (expectedChar === " ") {
           // Just type a single space
@@ -279,8 +279,8 @@ export default function Tracker() {
     checkCompletion();
   };
 
-  const checkCompletion = () => {
-    if (letters.length === currentText.length - 1) {
+  const checkCompletion = (pendingCount = 1) => {
+    if (letters.length + pendingCount === currentText.length) {
       setShowChange(true);
       const finalCpm =
         (correct + incorrect) / (time.toDuration().toMillis() / 1000 / 60);

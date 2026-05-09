@@ -65,51 +65,40 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   const loadBundledSnippets = useCallback(async () => {
+    if (!window.electronAPI?.getCodeSnippets) {
+      setError("Code snippet loading is only available in the desktop app.");
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
 
-      // @ts-expect-error - electronAPI is injected by preload
       const buffer = await window.electronAPI.getCodeSnippets(settings.codeLang);
-      
+
       if (!buffer) {
-        throw new Error("Failed to load code snippets");
+        throw new Error(`Could not load ${settings.codeLang} snippets — file may be missing.`);
       }
 
       const content = new TextDecoder("utf-8").decode(buffer);
       const parsed = parseSnippets(content);
       const normalized = parsed.map((s) => normalizeSnippet(s, settings.tabWidth));
-      
+
       setSnippets(normalized);
       setCurrentIndex(0);
     } catch (err) {
       console.error("Error loading bundled snippets:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
-      // Fall back to generated snippets
-      const generated = generateCSnippets(10).map((s) => normalizeSnippet(s, settings.tabWidth));
-      setSnippets(generated);
+      setSnippets([]);
     } finally {
       setLoading(false);
     }
   }, [settings.codeLang, settings.tabWidth]);
 
   const loadGeneratedSnippets = useCallback(() => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const generated = generateCSnippets(20).map((s) => 
-        normalizeSnippet(s, settings.tabWidth)
-      );
-      
-      setSnippets(generated);
-      setCurrentIndex(0);
-    } catch (err) {
-      console.error("Error generating snippets:", err);
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setLoading(false);
-    }
+    setError(null);
+    const generated = generateCSnippets(20).map((s) => normalizeSnippet(s, settings.tabWidth));
+    setSnippets(generated);
+    setCurrentIndex(0);
   }, [settings.tabWidth]);
 
   const loadFileSnippets = useCallback(async () => {
@@ -118,11 +107,15 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    if (!window.electronAPI?.loadUserCodeFile) {
+      setError("File loading is only available in the desktop app.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
-      // @ts-expect-error - electronAPI is injected by preload
       const content = await window.electronAPI.loadUserCodeFile(settings.customCodePath);
       
       if (!content) {
@@ -192,6 +185,9 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
       case SnippetSource.FILE:
         loadFileSnippets();
         break;
+      default:
+        console.error(`Unknown codeSnippetSource: ${settings.codeSnippetSource}`);
+        setError(`Unrecognised snippet source. Please check your settings.`);
     }
   }, [
     settings.codeMode,
