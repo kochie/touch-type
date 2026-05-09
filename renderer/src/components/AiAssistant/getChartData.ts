@@ -1,8 +1,10 @@
 import { Result, useResults } from "@/lib/result-provider";
 import { Duration } from "luxon";
 
+type ChartDatum = { name: string; [key: string]: string | number };
+
 // Function to get chart data for each category
-export const getChartData = (category) => {
+export const getChartData = (category): ChartDatum[] => {
   const { results } = useResults();
 
   // results is an array of each typing test result
@@ -191,5 +193,7 @@ export const getChartData = (category) => {
         }); 
 
       return data.reverse();
+    default:
+      return [];
   }
 };

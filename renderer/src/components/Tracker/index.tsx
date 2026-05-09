@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 import { LetterStat, statsReducer, StatState } from "./reducers";
 import { DateTime, Duration, Interval } from "luxon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -15,15 +16,18 @@ import {
   faDungeon,
   faPercentage,
   faPersonRunning,
+  faSwords,
+  faFlag,
 } from "@fortawesome/pro-duotone-svg-icons";
 import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/keyboards/key";
 import sample from "lodash.sample";
 import { useSettings } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
-import { lookupKeyboard } from "@/keyboards";
+import { lookupKeyboard, KeyboardLayoutNames } from "@/keyboards";
 import { Result, useResults } from "@/lib/result-provider";
 import { ModalType, useModal } from "@/lib/modal-provider";
+import { usePvP } from "@/lib/pvp-provider";
 import clsx from "clsx";
 
 export interface KeyPress {
@@ -58,12 +62,12 @@ function sign(num: number): string {
 export default function Tracker() {
   const settings = useSettings();
   const { modal } = useModal();
+  const router = useRouter();
+  const { currentRace, completeRace, forfeitRace } = usePvP();
 
   const [words, setWords] = useState("");
   const [wordList] = useWords();
   const [showChange, setShowChange] = useState(false);
-
-  const [wordMetric, setWordMetric] = useState("cpm");
 
   const { putResult } = useResults();
 
@@ -73,14 +77,18 @@ export default function Tracker() {
   ] = useReducer(statsReducer, initialStat);
 
   const resetWords = useCallback(async () => {
+    // PvP mode: word_set is locked at game creation; never re-sample.
+    if (currentRace) {
+      setWords(currentRace.game.word_set.join(" "));
+      return;
+    }
     const selected: string[] = [];
     for (let i = 0; i < 15; i++) {
       selected.push(sample(wordList)!);
     }
-
     const pinned = selected.join(" ").replaceAll("  ", "");
     setWords(pinned);
-  }, [wordList]);
+  }, [wordList, currentRace]);
 
   useEffect(() => {
     resetWords();
@@ -91,9 +99,15 @@ export default function Tracker() {
 
   useLayoutEffect(() => {
     if (words.length === 0) return;
-    if (!keyboard.keyExists(words[letters.length].toLowerCase())) return;
-    const key = keyboard.findKey(words[letters.length].toLowerCase());
-    const [i, j] = keyboard.findIndex(words[letters.length].toLowerCase());
+    // After a PvP race completes the keyDown handler navigates away, but
+    // this effect fires once more before unmount with letters.length ===
+    // words.length — guard the bounds so words[letters.length] isn't
+    // undefined.
+    if (letters.length >= words.length) return;
+    const next = words[letters.length].toLowerCase();
+    if (!keyboard.keyExists(next)) return;
+    const key = keyboard.findKey(next);
+    const [i, j] = keyboard.findIndex(next);
     setCurrentKey({ current: key, i, j });
   }, [letters.length, words]);
 
@@ -101,11 +115,15 @@ export default function Tracker() {
   const total = correct + incorrect;
   const m = d.toMillis() / 1000 / 60;
   const cpm = total / m;
-  const cps = cpm / 1000 / 60 / 60;
-  const wpm = cpm / 5;
   const p = (correct / total) * 100;
 
-  const keyboardLayout = lookupKeyboard(settings.keyboardName);
+  // PvP mode locks in the game's keyboard at creation time; race-time
+  // accuracy must validate against THAT keyboard, not the user's current
+  // global setting (the partner might have a different one).
+  const activeKeyboardName: KeyboardLayoutNames = currentRace
+    ? (currentRace.game.keyboard as KeyboardLayoutNames)
+    : settings.keyboardName;
+  const keyboardLayout = lookupKeyboard(activeKeyboardName);
   const keyboard = new Keyboard(keyboardLayout);
 
   const intervalFn = () => {
@@ -125,6 +143,8 @@ export default function Tracker() {
       return;
     }
     if (e.key === "Escape") {
+      // PvP mode: Escape is a no-op (use the Forfeit button to exit).
+      if (currentRace) return;
       if (letters.length === 0) {
         resetWords();
       }
@@ -157,24 +177,48 @@ export default function Tracker() {
 
     if (letters.length === words.length - 1) {
       setShowChange(true);
-      const results: Result = {
-        correct,
-        incorrect,
-        keyPresses: [...immutableLetters],
-        time: (time as Interval).toDuration().toISO() ?? "",
-        datetime: new Date().toISOString(),
-        level: settings.levelName,
-        keyboard: settings.keyboardName,
-        language: settings.language,
-        capital: settings.capital,
-        punctuation: settings.punctuation,
-        numbers: settings.numbers,
-        cpm: (correct + incorrect) / (time.toDuration().toMillis() / 1000 / 60),
-      };
+      const finalCpm =
+        (correct + incorrect) / (time.toDuration().toMillis() / 1000 / 60);
+      const isoTime = (time as Interval).toDuration().toISO() ?? "";
+      const finalKeyPresses = [...immutableLetters];
 
-      putResult(results);
-      resetWords();
-      statsDispatch({ type: "RESET" });
+      if (currentRace) {
+        // PvP mode: route the completed race to the provider, then navigate
+        // to the challenge detail page so the user sees the link (creating)
+        // or the result comparison (racing).
+        completeRace({
+          cpm: finalCpm,
+          correct,
+          incorrect,
+          time: isoTime,
+          key_presses: finalKeyPresses,
+        }).then((completed) => {
+          if (completed) {
+            router.push(`/pvp/challenge?id=${completed.id}`);
+          } else {
+            router.push("/pvp");
+          }
+        });
+      } else {
+        const results: Result = {
+          correct,
+          incorrect,
+          keyPresses: finalKeyPresses,
+          time: isoTime,
+          datetime: new Date().toISOString(),
+          level: settings.levelName,
+          keyboard: settings.keyboardName,
+          language: settings.language,
+          capital: settings.capital,
+          punctuation: settings.punctuation,
+          numbers: settings.numbers,
+          cpm: finalCpm,
+        };
+
+        putResult(results);
+        resetWords();
+        statsDispatch({ type: "RESET" });
+      }
     }
 
     if (e.key === words[letters.length]) {
@@ -182,6 +226,11 @@ export default function Tracker() {
     } else {
       keyboard.drawKey(ctx, i, j, key, "rgba(255, 0, 0, 0.5)");
     }
+  };
+
+  const handleForfeit = () => {
+    forfeitRace();
+    router.push("/pvp");
   };
 
   const { results } = useResults();
@@ -217,8 +266,36 @@ export default function Tracker() {
     let accuracyDiff = acc1 - acc2;
   }
 
+  // PvP banner content
+  const pvpBanner = currentRace ? (
+    <div
+      data-testid="pvp-mode-banner"
+      className="flex items-center justify-between gap-4 px-4 py-2 mb-2 mx-auto max-w-[800px] rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-100"
+    >
+      <div className="flex items-center gap-2">
+        <FontAwesomeIcon icon={faSwords} className="w-5 h-5 text-yellow-400" />
+        <span className="font-bold">PvP Battle</span>
+        <span className="text-sm opacity-80">Playing blind</span>
+      </div>
+      <button
+        data-testid="pvp-forfeit"
+        onClick={handleForfeit}
+        className="flex items-center gap-1 px-3 py-1 rounded-md bg-red-500/80 hover:bg-red-500 text-white text-sm font-semibold transition-colors"
+      >
+        <FontAwesomeIcon icon={faFlag} className="w-3 h-3" />
+        Forfeit
+      </button>
+    </div>
+  ) : null;
+
   return (
-    <div className="">
+    <div
+      className={clsx(
+        currentRace &&
+          "ring-4 ring-yellow-500/60 ring-offset-0 rounded-lg pb-2",
+      )}
+    >
+      {pvpBanner}
       <div className="flex gap-10 justify-between pt-10 font-mono mx-auto w-[600px]">
         <div className="flex items-center">
           <FontAwesomeIcon icon={faDungeon} size="3x" />
@@ -226,7 +303,7 @@ export default function Tracker() {
             <p className="text-4xl">{incorrect}</p>
             <p className="text-sm text-gray-400">typos</p>
           </div>
-          {showChange ? (
+          {showChange && !currentRace ? (
             <div>
               <p
                 className={clsx(
@@ -248,7 +325,7 @@ export default function Tracker() {
             </p>
             <p className="text-sm text-gray-400">char/min</p>
           </div>
-          {showChange ? (
+          {showChange && !currentRace ? (
             <div>
               <p
                 className={clsx(
@@ -268,7 +345,7 @@ export default function Tracker() {
             <p className="text-4xl">{Number.isFinite(p) ? p.toFixed(0) : 0}</p>
             <p className="text-sm text-gray-400">accuracy</p>
           </div>
-          {showChange ? (
+          {showChange && !currentRace ? (
             <div>
               <p
                 className={clsx(
@@ -304,6 +381,7 @@ export default function Tracker() {
         keyDown={keyDown}
         keys={keys}
         intervalFn={intervalFn}
+        keyboardName={activeKeyboardName}
       />
     </div>
   );

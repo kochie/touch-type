@@ -229,6 +229,105 @@ export type Database = {
         }
         Relationships: []
       }
+      pvp_games: {
+        Row: {
+          capital: boolean
+          created_at: string
+          creator_completed_at: string | null
+          creator_correct: number | null
+          creator_cpm: number | null
+          creator_id: string
+          creator_incorrect: number | null
+          creator_key_presses: Json | null
+          creator_time: string | null
+          expires_at: string
+          id: string
+          invite_code: string
+          joiner_completed_at: string | null
+          joiner_correct: number | null
+          joiner_cpm: number | null
+          joiner_id: string | null
+          joiner_incorrect: number | null
+          joiner_joined_at: string | null
+          joiner_key_presses: Json | null
+          joiner_time: string | null
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+          word_set: string[]
+        }
+        Insert: {
+          capital?: boolean
+          created_at?: string
+          creator_completed_at?: string | null
+          creator_correct?: number | null
+          creator_cpm?: number | null
+          creator_id: string
+          creator_incorrect?: number | null
+          creator_key_presses?: Json | null
+          creator_time?: string | null
+          expires_at?: string
+          id?: string
+          invite_code: string
+          joiner_completed_at?: string | null
+          joiner_correct?: number | null
+          joiner_cpm?: number | null
+          joiner_id?: string | null
+          joiner_incorrect?: number | null
+          joiner_joined_at?: string | null
+          joiner_key_presses?: Json | null
+          joiner_time?: string | null
+          keyboard: string
+          language: string
+          level: string
+          message?: string | null
+          numbers?: boolean
+          punctuation?: boolean
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+          word_set: string[]
+        }
+        Update: {
+          capital?: boolean
+          created_at?: string
+          creator_completed_at?: string | null
+          creator_correct?: number | null
+          creator_cpm?: number | null
+          creator_id?: string
+          creator_incorrect?: number | null
+          creator_key_presses?: Json | null
+          creator_time?: string | null
+          expires_at?: string
+          id?: string
+          invite_code?: string
+          joiner_completed_at?: string | null
+          joiner_correct?: number | null
+          joiner_cpm?: number | null
+          joiner_id?: string | null
+          joiner_incorrect?: number | null
+          joiner_joined_at?: string | null
+          joiner_key_presses?: Json | null
+          joiner_time?: string | null
+          keyboard?: string
+          language?: string
+          level?: string
+          message?: string | null
+          numbers?: boolean
+          punctuation?: boolean
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+          word_set?: string[]
+        }
+        Relationships: []
+      }
       results: {
         Row: {
           capital: boolean | null
@@ -452,18 +551,24 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          product_id: string | null
+          streak_freeze_credited: boolean | null
           transaction_id: string
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
+          product_id?: string | null
+          streak_freeze_credited?: boolean | null
           transaction_id: string
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
+          product_id?: string | null
+          streak_freeze_credited?: boolean | null
           transaction_id?: string
           user_id?: string
         }
@@ -494,6 +599,48 @@ export type Database = {
       }
     }
     Functions: {
+      generate_invite_code: { Args: never; Returns: string }
+      get_game_by_invite_code: {
+        Args: { _code: string }
+        Returns: {
+          capital: boolean
+          created_at: string
+          creator_completed_at: string | null
+          creator_correct: number | null
+          creator_cpm: number | null
+          creator_id: string
+          creator_incorrect: number | null
+          creator_key_presses: Json | null
+          creator_time: string | null
+          expires_at: string
+          id: string
+          invite_code: string
+          joiner_completed_at: string | null
+          joiner_correct: number | null
+          joiner_cpm: number | null
+          joiner_id: string | null
+          joiner_incorrect: number | null
+          joiner_joined_at: string | null
+          joiner_key_presses: Json | null
+          joiner_time: string | null
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+          word_set: string[]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "pvp_games"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       trigger_send_notifications: { Args: never; Returns: undefined }
     }
     Enums: {

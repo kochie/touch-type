@@ -8,6 +8,12 @@ import { Languages, Levels } from "./settings_hook";
 import { KeyboardLayoutNames } from "@/keyboards";
 import { Duration } from "luxon";
 import { useSupabase } from "./supabase-provider";
+
+const DB_NAME = "touch-type-db";
+// v2 drops the unique constraint on the `datetime` index. The constraint
+// caused ConstraintError on any sync that re-fetched a locally-written
+// result (datetime collision between putResult and syncResults).
+const DB_VERSION = 2;
 /**
  * Converts a JSON value from Supabase to a LetterStat array.
  * Validates the structure and provides defaults for missing optional fields.
@@ -58,7 +64,7 @@ export interface Result {
 
 const ResultsContext = createContext({
   results: [] as Result[],
-  putResult: (result: Result) => {},
+  putResult: async (_result: Result): Promise<{ id: string } | null> => null,
 });
 
 export function ResultsProvider({ children }) {
@@ -128,32 +134,43 @@ export function ResultsProvider({ children }) {
   }
 
   async function initializeDB() {
-    const db = await openDB("touch-type-db", 1, {
-      upgrade(db, oldVersion, newVersion, tx) {
-        if (!db.objectStoreNames.contains("results")) {
+    const db = await openDB(DB_NAME, DB_VERSION, {
+      upgrade(db, oldVersion, _newVersion, tx) {
+        if (oldVersion < 1) {
           const os = db.createObjectStore("results", {
             keyPath: "id",
             autoIncrement: true,
           });
-          os.createIndex("datetime", "datetime", { unique: true });
+          os.createIndex("datetime", "datetime", { unique: false });
+
+          const oldResults = localStorage.getItem("results");
+          if (oldResults) {
+            const results = JSON.parse(oldResults);
+            const store = tx.objectStore("results");
+            for (const result of results) {
+              const time =
+                Duration.fromISO(result.time) ?? Duration.fromMillis(1_000_000);
+              store.put({
+                datetime: new Date().toISOString(),
+                time: time.toISO(),
+                cpm:
+                  (result.correct + result.incorrect) /
+                  (time.toMillis() / 1000 / 60),
+                ...result,
+              });
+            }
+            localStorage.removeItem("results");
+          }
         }
 
-        const oldResults = localStorage.getItem("results");
-        if (oldResults) {
-          const results = JSON.parse(oldResults);
+        if (oldVersion < 2) {
+          // Drop+recreate the `datetime` index without the unique flag.
+          // Existing data is preserved — only the index definition changes.
           const store = tx.objectStore("results");
-          for (const result of results) {
-            const time = Duration.fromISO(result.time) ?? Duration.fromMillis(1_000_000);
-            store.put({
-              datetime: new Date().toISOString(),
-              time: time.toISO(),
-              cpm:
-                (result.correct + result.incorrect) /
-                (time.toMillis() / 1000 / 60),
-              ...result,
-            });
+          if (store.indexNames.contains("datetime")) {
+            store.deleteIndex("datetime");
           }
-          localStorage.removeItem("results");
+          store.createIndex("datetime", "datetime", { unique: false });
         }
       },
     });
@@ -169,11 +186,15 @@ export function ResultsProvider({ children }) {
   }
 
   useEffect(() => {
-    initializeDB().then(syncResults);
+    initializeDB()
+      .then(syncResults)
+      .catch((err) => {
+        console.error("Failed to initialize/sync results:", err);
+      });
   }, [user]);
 
   async function updateDB(result: Result) {
-    const db = await openDB("touch-type-db", 1);
+    const db = await openDB(DB_NAME, DB_VERSION);
     const tx = db.transaction("results", "readwrite");
     const store = tx.objectStore("results");
 
@@ -181,7 +202,7 @@ export function ResultsProvider({ children }) {
   }
 
   async function updateBulkDB(results: Result[]) {
-    const db = await openDB("touch-type-db", 1);
+    const db = await openDB(DB_NAME, DB_VERSION);
     const tx = db.transaction("results", "readwrite");
     const store = tx.objectStore("results");
 
@@ -198,32 +219,40 @@ export function ResultsProvider({ children }) {
     );
   }
 
-  const putResult = async (result: Result) => {
+  const putResult = async (
+    result: Result,
+  ): Promise<{ id: string } | null> => {
     _setResults((prev) => [result, ...prev]);
     updateDB(result);
 
     if (user) {
-      // Upload to Supabase
-      const { error } = await supabase.from('results').insert({
-        user_id: user.id,
-        correct: result.correct,
-        incorrect: result.incorrect,
-        time: result.time,
-        datetime: result.datetime,
-        level: result.level,
-        keyboard: result.keyboard,
-        language: result.language,
-        capital: result.capital,
-        punctuation: result.punctuation,
-        numbers: result.numbers,
-        cpm: result.cpm,
-        key_presses: letterStatsToJson(result.keyPresses),
-      });
+      const { data, error } = await supabase
+        .from('results')
+        .insert({
+          user_id: user.id,
+          correct: result.correct,
+          incorrect: result.incorrect,
+          time: result.time,
+          datetime: result.datetime,
+          level: result.level,
+          keyboard: result.keyboard,
+          language: result.language,
+          capital: result.capital,
+          punctuation: result.punctuation,
+          numbers: result.numbers,
+          cpm: result.cpm,
+          key_presses: letterStatsToJson(result.keyPresses),
+        })
+        .select('id')
+        .single();
 
       if (error) {
         console.error('Error uploading result:', error);
+        return null;
       }
+      return data;
     }
+    return null;
   };
 
   return (
@@ -238,7 +267,7 @@ export const useResults = () => {
 };
 
 async function runTempUpdates() {
-  const db = await openDB("touch-type-db", 1);
+  const db = await openDB(DB_NAME, DB_VERSION);
   const tx = db.transaction("results", "readwrite");
   const store = tx.objectStore("results");
 

@@ -8,6 +8,7 @@ import FontAwesomeRegular from "@/assets/fontawesome-pro-6.1.2-web/webfonts/fa-r
 // @ts-ignore
 import FontAwesomeSolid from "@/assets/fontawesome-pro-6.1.2-web/webfonts/fa-solid-900.ttf";
 import { useSettings } from "@/lib/settings_hook";
+import type { KeyboardLayoutNames } from "@/keyboards";
 import { Keyboard } from "@/keyboards/key";
 import { lookupKeyboard } from "@/keyboards";
 import { LetterStat } from "../Tracker/reducers";
@@ -44,9 +45,16 @@ interface CanvasProps {
   keys: MutableRefObject<KeyPress[]>;
   intervalFn: () => void;
   currentKey?: CurrentKeyRef;
+  /**
+   * Override the keyboard layout used for visual rendering. Falls back to
+   * the user's global setting when not provided. Used by PvP mode so the
+   * on-screen keyboard matches the challenge's locked-in layout, not the
+   * player's current setting.
+   */
+  keyboardName?: KeyboardLayoutNames;
 }
 
-const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps) => {
+const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey, keyboardName }: CanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [{ width, height, pr }, resizeDispatch] = useReducer(resizer, {
@@ -56,7 +64,7 @@ const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey }: CanvasProps)
   });
 
   const settings = useSettings();
-  const keyboardLayout = lookupKeyboard(settings.keyboardName);
+  const keyboardLayout = lookupKeyboard(keyboardName ?? settings.keyboardName);
 
   useEffect(() => {
     const resize = () => {

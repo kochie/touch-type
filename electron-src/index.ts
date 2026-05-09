@@ -8,6 +8,7 @@ import {
   ipcMain,
   IpcMainInvokeEvent,
   MessageBoxOptions,
+  nativeTheme,
   shell,
 } from "electron";
 // import isDev from "electron-is-dev";
@@ -76,7 +77,19 @@ app.on("ready", async () => {
   ipcMain.handle("getWordSet", handleWordSet);
   ipcMain.handle("getProducts", getProducts)
   ipcMain.handle("isMas", () => !!process.mas);
-  
+
+  // Drives native chrome (titlebar, vibrancy, mica) to match the user's
+  // in-app theme choice. Without this, the window frame stays in the macOS
+  // system appearance even when the renderer is in manual dark/light mode.
+  ipcMain.handle(
+    "setThemeSource",
+    (_event: IpcMainInvokeEvent, source: "system" | "light" | "dark") => {
+      if (source === "system" || source === "light" || source === "dark") {
+        nativeTheme.themeSource = source;
+      }
+    },
+  );
+
   // Debug info handler
   ipcMain.handle("getDebugInfo", () => ({
     isDev: isDevMode,

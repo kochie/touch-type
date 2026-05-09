@@ -181,4 +181,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   updateStreakData: (data: StreakData): void => {
     ipcRenderer.send("updateStreakData", data);
   },
+
+  // Theme — drives native chrome (titlebar, vibrancy, mica) to match the
+  // renderer's selected theme.
+  setThemeSource: (source: "system" | "light" | "dark"): Promise<void> =>
+    ipcRenderer.invoke("setThemeSource", source),
 });
