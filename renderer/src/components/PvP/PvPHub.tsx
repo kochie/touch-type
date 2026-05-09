@@ -1,246 +1,102 @@
 "use client";
 
-import { usePvP } from "@/lib/pvp-provider";
-import { useSupabase } from "@/lib/supabase-provider";
-import {
-  faGamepadModern,
-  faHourglass,
-  faHistory,
-  faPlus,
-  faSwords,
-  faSpinner,
-  faUserSlash,
-} from "@fortawesome/pro-duotone-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import clsx from "clsx";
-import { useState } from "react";
-import { MatchCard } from "./MatchCard"; // TODO(pvp-v4): Task 23
+import { useSupabase } from "@/lib/supabase-provider";
+import { usePvP } from "@/lib/pvp-provider";
+import { MatchCard } from "./MatchCard";
 import { NewChallengePrompt } from "./NewChallengePrompt";
+import { RivalsTab } from "./RivalsTab";
 
-type TabId = "active" | "awaiting" | "history" | "new";
-
-interface Tab {
-  id: TabId;
-  label: string;
-  icon: typeof faSwords;
-  badge?: number;
-}
+type Tab = "active" | "awaiting" | "history" | "rivals" | "new";
 
 export function PvPHub() {
-  const [activeTab, setActiveTab] = useState<TabId>("active");
-  const { user, isLoading: isUserLoading } = useSupabase();
-  // TODO(pvp-v4): Task 23 — rewrite PvPHub tabs with v4 match/round model
-  // Derive v3-style game lists from flat myMatches for now.
-  const { myMatches, isLoading } = usePvP();
-  const myActiveGames = myMatches.filter(
-    (m) => m.status === "open" || m.status === "in_progress",
-  );
-  // TODO(pvp-v4): awaiting/completed partitioning requires per-round data; stub empty for now
-  const myAwaitingGames = myMatches.filter(
-    (_m) => false, // stub until Task 23
-  );
-  const myCompletedGames = myMatches.filter(
-    (m) => m.status === "completed" || m.status === "cancelled" || m.status === "expired",
-  );
+  const router = useRouter();
+  const params = useSearchParams();
+  const { user } = useSupabase();
+  const { myMatches, fetchRoundsForMatch } = usePvP();
+  const [tab, setTab] = useState<Tab>(() => (params.get("tab") as Tab) ?? "active");
+  const [unracedByMatch, setUnracedByMatch] = useState<Record<string, boolean>>({});
 
-  const tabs: Tab[] = [
-    {
-      id: "active",
-      label: "Active",
-      icon: faGamepadModern,
-      badge: myActiveGames.length,
-    },
-    {
-      id: "awaiting",
-      label: "Awaiting",
-      icon: faHourglass,
-      badge: myAwaitingGames.length,
-    },
-    {
-      id: "history",
-      label: "History",
-      icon: faHistory,
-    },
-    {
-      id: "new",
-      label: "New",
-      icon: faPlus,
-    },
+  useEffect(() => {
+    let cancelled = false;
+    async function build() {
+      if (!user) return;
+      const map: Record<string, boolean> = {};
+      for (const m of myMatches) {
+        const isCreator = m.creator_id === user.id;
+        const rounds = await fetchRoundsForMatch(m.id);
+        const hasUnraced = rounds.some((r) =>
+          (isCreator ? r.creator_completed_at : r.joiner_completed_at) === null,
+        );
+        map[m.id] = hasUnraced;
+      }
+      if (!cancelled) setUnracedByMatch(map);
+    }
+    void build();
+    return () => {
+      cancelled = true;
+    };
+  }, [myMatches, user, fetchRoundsForMatch]);
+
+  const buckets = useMemo(() => {
+    const active: typeof myMatches = [];
+    const awaiting: typeof myMatches = [];
+    const history: typeof myMatches = [];
+    for (const m of myMatches) {
+      const isTerminal = ["completed", "cancelled", "expired"].includes(m.status);
+      if (isTerminal) {
+        history.push(m);
+        continue;
+      }
+      if (unracedByMatch[m.id]) active.push(m);
+      else awaiting.push(m);
+    }
+    return { active, awaiting, history };
+  }, [myMatches, unracedByMatch]);
+
+  const tabs: { key: Tab; label: string; count?: number }[] = [
+    { key: "active",   label: "Active",   count: buckets.active.length },
+    { key: "awaiting", label: "Awaiting", count: buckets.awaiting.length },
+    { key: "history",  label: "History",  count: buckets.history.length },
+    { key: "rivals",   label: "Rivals" },
+    { key: "new",      label: "New" },
   ];
 
-  if (!isUserLoading && !user) {
-    return (
-      <div className="max-w-2xl mx-auto py-12 px-4">
-        <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-            <FontAwesomeIcon
-              icon={faUserSlash}
-              className="w-10 h-10 text-gray-400 dark:text-gray-500"
-            />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-            Sign in to Play PvP
-          </h2>
-        </div>
-      </div>
-    );
-  }
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <FontAwesomeIcon
-            icon={faSpinner}
-            className="w-8 h-8 text-gray-400 animate-spin"
-          />
-        </div>
-      );
-    }
-
-    switch (activeTab) {
-      case "active":
-        return myActiveGames.length > 0 ? (
-          <div className="space-y-4">
-            {myActiveGames.map((g) => (
-              <MatchCard key={g.id} match={g} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={faGamepadModern}
-            title="No active games"
-            description="Games where you haven't raced yet show up here. Create a new one or join a friend's invite."
-            action={{
-              label: "Create Game",
-              onClick: () => setActiveTab("new"),
-            }}
-          />
-        );
-
-      case "awaiting":
-        return myAwaitingGames.length > 0 ? (
-          <div className="space-y-4">
-            {myAwaitingGames.map((g) => (
-              <MatchCard key={g.id} match={g} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={faHourglass}
-            title="No games awaiting partner"
-            description="Games where you've raced but the other side hasn't appear here."
-          />
-        );
-
-      case "history":
-        return myCompletedGames.length > 0 ? (
-          <div className="space-y-4">
-            {myCompletedGames.map((g) => (
-              <MatchCard key={g.id} match={g} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={faHistory}
-            title="No completed games"
-            description="Completed, cancelled, and expired games show up here."
-          />
-        );
-
-      case "new":
-        return <NewChallengePrompt />;
-
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="max-w-2xl mx-auto py-6 px-4">
-      <div className="flex items-center gap-3 mb-6">
-        <FontAwesomeIcon
-          icon={faSwords}
-          className="w-8 h-8 text-blue-500 dark:text-blue-400"
-        />
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          PvP Arena
-        </h1>
-      </div>
-
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {tabs.map((tab) => (
+    <div className="max-w-2xl mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6 text-center">PvP Arena</h1>
+      <nav className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-800">
+        {tabs.map((t) => (
           <button
-            key={tab.id}
-            data-testid={`pvp-tab-${tab.id}`}
-            onClick={() => setActiveTab(tab.id)}
+            key={t.key}
+            onClick={() => {
+              setTab(t.key);
+              router.replace(`/pvp?tab=${t.key}`);
+            }}
             className={clsx(
-              "flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors",
-              activeTab === tab.id
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+              "px-3 py-2 text-sm font-medium border-b-2 -mb-px",
+              tab === t.key ? "border-blue-500 text-blue-600 dark:text-blue-400" : "border-transparent text-gray-500",
             )}
+            data-testid={`pvp-tab-${t.key}`}
           >
-            <FontAwesomeIcon icon={tab.icon} className="w-4 h-4" />
-            {tab.label}
-            {tab.badge !== undefined && tab.badge > 0 && (
-              <span
-                className={clsx(
-                  "px-2 py-0.5 rounded-full text-xs font-bold",
-                  activeTab === tab.id
-                    ? "bg-white/20 text-white"
-                    : "bg-blue-500 text-white",
-                )}
-              >
-                {tab.badge}
-              </span>
-            )}
+            {t.label}{typeof t.count === "number" ? ` (${t.count})` : ""}
           </button>
         ))}
-      </div>
+      </nav>
 
-      {renderContent()}
-    </div>
-  );
-}
-
-interface EmptyStateProps {
-  icon: typeof faSwords;
-  title: string;
-  description: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
-}
-
-function EmptyState({ icon, title, description, action }: EmptyStateProps) {
-  return (
-    <div className="text-center py-12">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-        <FontAwesomeIcon
-          icon={icon}
-          className="w-8 h-8 text-gray-400 dark:text-gray-500"
-        />
-      </div>
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-        {title}
-      </h3>
-      <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-sm mx-auto">
-        {description}
-      </p>
-      {action && (
-        <button
-          onClick={action.onClick}
-          className={clsx(
-            "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium",
-            "bg-blue-500 hover:bg-blue-600 text-white transition-colors",
-          )}
-        >
-          <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
-          {action.label}
-        </button>
-      )}
+      {tab === "active" && (buckets.active.length === 0
+        ? <p className="text-center text-gray-500 py-8">No active games</p>
+        : <div className="space-y-3">{buckets.active.map((m) => <MatchCard key={m.id} match={m} />)}</div>)}
+      {tab === "awaiting" && (buckets.awaiting.length === 0
+        ? <p className="text-center text-gray-500 py-8">Nothing awaiting</p>
+        : <div className="space-y-3">{buckets.awaiting.map((m) => <MatchCard key={m.id} match={m} />)}</div>)}
+      {tab === "history" && (buckets.history.length === 0
+        ? <p className="text-center text-gray-500 py-8">No history yet</p>
+        : <div className="space-y-3">{buckets.history.map((m) => <MatchCard key={m.id} match={m} />)}</div>)}
+      {tab === "rivals" && <RivalsTab />}
+      {tab === "new"    && <NewChallengePrompt />}
     </div>
   );
 }
