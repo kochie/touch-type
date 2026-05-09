@@ -132,14 +132,23 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     return data;
   };
 
-  // TODO(pvp-v4): Task 17 — implement forfeitMatch via forfeit_match RPC
-  const forfeitMatch = async (_matchId: string): Promise<boolean> => {
-    return false;
+  const forfeitMatch: PvPContextType["forfeitMatch"] = async (matchId) => {
+    const { error } = await supabase.rpc("forfeit_match", { _match_id: matchId });
+    if (error) {
+      console.error("Error forfeiting match:", error);
+      return false;
+    }
+    setCurrentRace(null);
+    return true;
   };
 
-  // TODO(pvp-v4): Task 17 — implement cancelMatch via cancel_match RPC
-  const cancelMatch = async (_matchId: string): Promise<boolean> => {
-    return false;
+  const cancelMatch: PvPContextType["cancelMatch"] = async (matchId) => {
+    const { error } = await supabase.rpc("cancel_match", { _match_id: matchId });
+    if (error) {
+      console.error("Error cancelling match:", error);
+      return false;
+    }
+    return true;
   };
 
   const fetchByInviteCode: PvPContextType["fetchByInviteCode"] = async (code) => {
@@ -179,9 +188,13 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     return data ?? [];
   };
 
-  // TODO(pvp-v4): Task 17 — implement listRivals via list_my_rivals RPC
-  const listRivals = async (): Promise<PvPRivalRow[]> => {
-    return [];
+  const listRivals: PvPContextType["listRivals"] = async () => {
+    const { data, error } = await supabase.rpc("list_my_rivals");
+    if (error) {
+      console.error("Error listing rivals:", error);
+      return [];
+    }
+    return data ?? [];
   };
 
   const startRace: PvPContextType["startRace"] = (match, round) => {
