@@ -48,8 +48,12 @@ export enum Languages {
 
 export enum CodeLanguages {
   C = "c",
+  GO = "go",
   PYTHON = "python",
   JAVASCRIPT = "javascript",
+  JAVA = "java",
+  KOTLIN = "kotlin",
+  SWIFT = "swift",
 }
 
 export enum SnippetSource {

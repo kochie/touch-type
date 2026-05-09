@@ -13,6 +13,12 @@ import { useState } from "react";
 
 const codeLanguages = [
   { value: CodeLanguages.C, label: "C" },
+  { value: CodeLanguages.GO, label: "Go" },
+  { value: CodeLanguages.PYTHON, label: "Python" },
+  { value: CodeLanguages.JAVASCRIPT, label: "JavaScript" },
+  { value: CodeLanguages.JAVA, label: "Java" },
+  { value: CodeLanguages.KOTLIN, label: "Kotlin" },
+  { value: CodeLanguages.SWIFT, label: "Swift" },
 ];
 
 const snippetSources = [

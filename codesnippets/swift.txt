@@ -1,0 +1,166 @@
+// SNIPPET
+import Foundation
+
+print("Hello, World!")
+// SNIPPET
+for i in 0..<10 {
+    print(i)
+}
+// SNIPPET
+func factorial(_ n: Int) -> Int {
+    guard n > 1 else { return 1 }
+    return n * factorial(n - 1)
+}
+// SNIPPET
+let numbers = [1, 2, 3, 4, 5]
+let sum = numbers.reduce(0, +)
+let evens = numbers.filter { $0 % 2 == 0 }
+print("Sum: \(sum), Evens: \(evens)")
+// SNIPPET
+struct Point {
+    var x: Double
+    var y: Double
+
+    var magnitude: Double {
+        (x * x + y * y).squareRoot()
+    }
+}
+// SNIPPET
+enum Result<T> {
+    case success(T)
+    case failure(Error)
+
+    func map<U>(_ transform: (T) -> U) -> Result<U> {
+        switch self {
+        case .success(let value): return .success(transform(value))
+        case .failure(let error): return .failure(error)
+        }
+    }
+}
+// SNIPPET
+class Animal {
+    let name: String
+
+    init(name: String) {
+        self.name = name
+    }
+
+    func sound() -> String {
+        return "..."
+    }
+}
+
+class Dog: Animal {
+    override func sound() -> String {
+        return "Woof!"
+    }
+}
+// SNIPPET
+guard let url = URL(string: "https://example.com") else {
+    print("Invalid URL")
+    return
+}
+let task = URLSession.shared.dataTask(with: url) { data, _, error in
+    if let data = data {
+        print(String(data: data, encoding: .utf8) ?? "")
+    }
+}
+task.resume()
+// SNIPPET
+let names = ["Charlie", "Alice", "Bob"]
+let sorted = names.sorted { $0.count < $1.count }
+    .filter { $0.count > 3 }
+    .map { $0.uppercased() }
+// SNIPPET
+switch status {
+case "active":
+    print("Running")
+case "idle":
+    print("Waiting")
+default:
+    print("Unknown: \(status)")
+}
+// SNIPPET
+protocol Describable {
+    var description: String { get }
+    func describe() -> String
+}
+
+extension Describable {
+    func describe() -> String {
+        "This is \(description)"
+    }
+}
+// SNIPPET
+let optionalName: String? = "Alice"
+let greeting = optionalName.map { "Hello, \($0)!" } ?? "Hello, stranger!"
+print(greeting)
+// SNIPPET
+actor Counter {
+    private var count = 0
+
+    func increment() {
+        count += 1
+    }
+
+    func value() -> Int {
+        return count
+    }
+}
+// SNIPPET
+func divide(_ a: Double, by b: Double) throws -> Double {
+    guard b != 0 else {
+        throw NSError(domain: "Math", code: 0, userInfo: [NSLocalizedDescriptionKey: "Division by zero"])
+    }
+    return a / b
+}
+// SNIPPET
+extension Array where Element: Numeric {
+    var sum: Element { reduce(0, +) }
+    var product: Element { reduce(1, *) }
+}
+// SNIPPET
+@propertyWrapper
+struct Clamped<T: Comparable> {
+    private var value: T
+    let range: ClosedRange<T>
+
+    init(wrappedValue: T, _ range: ClosedRange<T>) {
+        self.range = range
+        self.value = min(max(wrappedValue, range.lowerBound), range.upperBound)
+    }
+
+    var wrappedValue: T {
+        get { value }
+        set { value = min(max(newValue, range.lowerBound), range.upperBound) }
+    }
+}
+// SNIPPET
+async let first = fetchFirst()
+async let second = fetchSecond()
+let results = await (first, second)
+// SNIPPET
+let dictionary = ["a": 1, "b": 2, "c": 3]
+let total = dictionary.values.reduce(0, +)
+let keys = dictionary.keys.sorted().joined(separator: ", ")
+// SNIPPET
+struct Stack<T> {
+    private var items: [T] = []
+
+    mutating func push(_ item: T) {
+        items.append(item)
+    }
+
+    mutating func pop() -> T? {
+        items.popLast()
+    }
+
+    var isEmpty: Bool { items.isEmpty }
+}
+// SNIPPET
+let fibonacci = sequence(state: (0, 1)) { state -> Int in
+    let next = state.0
+    state = (state.1, state.0 + state.1)
+    return next
+}
+print(Array(fibonacci.prefix(10)))
