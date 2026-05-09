@@ -101,11 +101,15 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     return data;
   };
 
-  // TODO(pvp-v4): Task 15 — implement joinMatchByInvite via join_match_by_invite RPC
-  const joinMatchByInvite = async (
-    _code: string,
-  ): Promise<PvPMatch | null> => {
-    return null;
+  const joinMatchByInvite: PvPContextType["joinMatchByInvite"] = async (code) => {
+    const { data, error } = await supabase.rpc("join_match_by_invite", {
+      _code: code,
+    });
+    if (error) {
+      console.error("Error joining match:", error);
+      return null;
+    }
+    return data;
   };
 
   // TODO(pvp-v4): Task 16 — implement submitRoundResult via submit_round_result RPC
@@ -125,23 +129,41 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  // TODO(pvp-v4): Task 15 — implement fetchById via pvp_matches select
-  const fetchById = async (_id: string): Promise<PvPMatch | null> => {
-    return null;
+  const fetchByInviteCode: PvPContextType["fetchByInviteCode"] = async (code) => {
+    const { data, error } = await supabase.rpc("get_match_by_invite_code", {
+      _code: code,
+    });
+    if (error) {
+      console.error("Error fetching match by invite:", error);
+      return null;
+    }
+    return Array.isArray(data) ? (data[0] ?? null) : data;
   };
 
-  // TODO(pvp-v4): Task 15 — implement fetchByInviteCode via get_match_by_invite_code RPC
-  const fetchByInviteCode = async (
-    _code: string,
-  ): Promise<PvPMatch | null> => {
-    return null;
+  const fetchById: PvPContextType["fetchById"] = async (id) => {
+    const { data, error } = await supabase
+      .from("pvp_matches")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) {
+      console.error("Error fetching match:", error);
+      return null;
+    }
+    return data;
   };
 
-  // TODO(pvp-v4): Task 15 — implement fetchRoundsForMatch via pvp_games select
-  const fetchRoundsForMatch = async (
-    _matchId: string,
-  ): Promise<PvPRound[]> => {
-    return [];
+  const fetchRoundsForMatch: PvPContextType["fetchRoundsForMatch"] = async (matchId) => {
+    const { data, error } = await supabase
+      .from("pvp_games")
+      .select("*")
+      .eq("match_id", matchId)
+      .order("round_number", { ascending: true });
+    if (error) {
+      console.error("Error fetching rounds:", error);
+      return [];
+    }
+    return data ?? [];
   };
 
   // TODO(pvp-v4): Task 17 — implement listRivals via list_my_rivals RPC
