@@ -2,12 +2,15 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useState,
   ReactNode,
 } from "react";
 import type { Database, Json } from "@/types/supabase";
 import { getSupabaseClient } from "@/lib/supabase-client";
+import { useSupabase } from "@/lib/supabase-provider";
 import { generateRoundWordSets } from "@/lib/generate-round-word-sets";
 
 // Types ----------------------------------------------------------------------
@@ -77,9 +80,54 @@ const PvPContext = createContext<PvPContextType | undefined>(undefined);
 
 export function PvPProvider({ children }: { children: ReactNode }) {
   const supabase = getSupabaseClient();
-  const [myMatches] = useState<PvPMatch[]>([]);
-  const [isLoading] = useState(true);
+  const [myMatches, setMyMatches] = useState<PvPMatch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentRace, setCurrentRace] = useState<PvPRaceMode | null>(null);
+  const { user } = useSupabase();
+
+  const refresh = useCallback(async () => {
+    if (!user) {
+      setMyMatches([]);
+      setIsLoading(false);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("pvp_matches")
+      .select("*")
+      .or(`creator_id.eq.${user.id},joiner_id.eq.${user.id}`)
+      .order("updated_at", { ascending: false });
+    if (error) {
+      console.error("Error fetching matches:", error);
+      setMyMatches([]);
+    } else {
+      setMyMatches(data ?? []);
+    }
+    setIsLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`pvp_matches:${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pvp_matches" },
+        () => void refresh(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pvp_games" },
+        () => void refresh(),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user, refresh]);
 
   const createMatch: PvPContextType["createMatch"] = async (input) => {
     const wordSets = await generateRoundWordSets(input.bestOf, input.settings);
