@@ -112,11 +112,24 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     return data;
   };
 
-  // TODO(pvp-v4): Task 16 — implement submitRoundResult via submit_round_result RPC
-  const submitRoundResult = async (
-    _input: PvPRoundResultInput,
-  ): Promise<PvPRound | null> => {
-    return null;
+  const submitRoundResult: PvPContextType["submitRoundResult"] = async (input) => {
+    const { data, error } = await supabase.rpc("submit_round_result", {
+      _match_id: input.matchId,
+      _round_number: input.roundNumber,
+      _cpm: input.cpm,
+      _correct: input.correct,
+      _incorrect: input.incorrect,
+      _time: input.time,
+      _key_presses: input.keyPresses,
+    });
+    if (error) {
+      console.error("Error submitting round result:", error);
+      return null;
+    }
+    setCurrentRace((prev) =>
+      prev && prev.round.id === data?.id ? null : prev,
+    );
+    return data;
   };
 
   // TODO(pvp-v4): Task 17 — implement forfeitMatch via forfeit_match RPC
@@ -171,12 +184,11 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     return [];
   };
 
-  // TODO(pvp-v4): Task 16 — wire startRace into Tracker component
-  const startRace = (match: PvPMatch, round: PvPRound) => {
+  const startRace: PvPContextType["startRace"] = (match, round) => {
     setCurrentRace({ match, round });
   };
 
-  const cancelRace = () => {
+  const cancelRace: PvPContextType["cancelRace"] = () => {
     setCurrentRace(null);
   };
 
