@@ -129,11 +129,11 @@ test.describe("pvp v3", () => {
           // A signs in and views the completed game
           await pageA.goto("/");
           await signInUI(pageA, aEmail, aPassword);
-          await pageA.goto(`/pvp/challenge?id=${gameId}`);
+          await pageA.goto(`/pvp/match?id=${gameId}`);
           await expect(pageA.getByText("You lost")).toBeVisible({ timeout: 10_000 });
 
           // B already signed in
-          await pageB.goto(`/pvp/challenge?id=${gameId}`);
+          await pageB.goto(`/pvp/match?id=${gameId}`);
           await expect(pageB.getByText("You won!")).toBeVisible({ timeout: 10_000 });
 
           // DB invariants
@@ -186,8 +186,8 @@ test.describe("pvp v3", () => {
 
         await page.goto("/");
         await signInUI(page, email, password);
-        await page.goto(`/pvp/challenge?id=${gameId}`);
-        await page.getByTestId("pvp-cancel-game").click();
+        await page.goto(`/pvp/match?id=${gameId}`);
+        await page.getByTestId("pvp-cancel-match").click();
 
         await expect
           .poll(

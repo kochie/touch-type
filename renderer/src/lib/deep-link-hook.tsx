@@ -51,7 +51,7 @@ export function useDeepLink(handlers?: DeepLinkHandlers): void {
           if (data.pvpAction === "invite" && data.code) {
             router.push(`/pvp/invite?code=${data.code}`);
           } else if (data.pvpAction === "challenge" && data.challengeId) {
-            router.push(`/pvp/challenge?id=${data.challengeId}`);
+            router.push(`/pvp/match?id=${data.challengeId}`);
           } else {
             router.push("/pvp");
           }
