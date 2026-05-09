@@ -1,9 +1,25 @@
 "use client";
 
+// TODO(pvp-v4): Task 24 — rewrite this page to use PvPMatch + PvPRound
+// Per-round stats (creator_cpm etc.) now live on pvp_games rows, not pvp_matches.
+// This file compiles by casting game via V3GameCompat; full rewrite in Task 24.
+
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { PvPGame, usePvP } from "@/lib/pvp-provider";
+import { PvPMatch, usePvP } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
+
+/** Temporary v3-compat shape so this page compiles until Task 24 rewrites it. */
+type V3GameCompat = PvPMatch & {
+  creator_completed_at: string | null;
+  joiner_completed_at: string | null;
+  creator_cpm: number | null;
+  creator_correct: number | null;
+  creator_incorrect: number | null;
+  joiner_cpm: number | null;
+  joiner_correct: number | null;
+  joiner_incorrect: number | null;
+};
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSpinner,
@@ -21,10 +37,11 @@ function ChallengePageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useSupabase();
-  const { fetchById, cancelGame, startRace } = usePvP();
+  // TODO(pvp-v4): Task 24 — wire cancelMatch + startRace(match, round) for challenge detail page
+  const { fetchById, cancelMatch } = usePvP();
 
   const id = searchParams.get("id");
-  const [game, setGame] = useState<PvPGame | null>(null);
+  const [game, setGame] = useState<V3GameCompat | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +56,9 @@ function ChallengePageInner() {
       const g = await fetchById(id);
       if (cancelled) return;
       if (!g) setError("Game not found");
-      else setGame(g);
+      // Cast via unknown: V3GameCompat adds round-stat fields (null-defaulted at runtime)
+      // until Task 24 rewrites this page to load rounds separately.
+      else setGame(g as unknown as V3GameCompat);
       setIsLoading(false);
     }
     void load();
@@ -279,7 +298,7 @@ function ChallengePageInner() {
           <button
             data-testid="pvp-play-now"
             onClick={() => {
-              startRace(game);
+              // TODO(pvp-v4): Task 24 — startRace(match, round) once round is loaded
               router.push("/");
             }}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold bg-blue-500 hover:bg-blue-600 text-white transition-colors"
@@ -293,7 +312,7 @@ function ChallengePageInner() {
           <button
             data-testid="pvp-cancel-game"
             onClick={async () => {
-              if (await cancelGame(game.id)) router.push("/pvp");
+              if (await cancelMatch(game.id)) router.push("/pvp");
             }}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
           >

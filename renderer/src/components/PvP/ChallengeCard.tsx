@@ -1,6 +1,9 @@
 "use client";
 
-import { PvPGame, usePvP } from "@/lib/pvp-provider";
+// TODO(pvp-v4): Task 21 — rename ChallengeCard → MatchCard and update to v4 match/round shape
+// Per-round stats (creator_cpm etc.) live on pvp_games rows, not pvp_matches.
+// V3GameCompat extends PvPMatch with those optional fields so this compiles until Task 21.
+import { PvPMatch, usePvP } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import {
   faClock,
@@ -17,17 +20,33 @@ import clsx from "clsx";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 
+/** Temporary v3-compat shape so this component compiles until Task 21 rewrites it. */
+type V3GameCompat = PvPMatch & {
+  creator_completed_at: string | null;
+  joiner_completed_at: string | null;
+  creator_cpm: number | null;
+  creator_correct: number | null;
+  creator_incorrect: number | null;
+  joiner_cpm: number | null;
+  joiner_correct: number | null;
+  joiner_incorrect: number | null;
+  expires_at: string;
+};
+
 interface ChallengeCardProps {
-  game: PvPGame;
+  game: PvPMatch;
   compact?: boolean;
 }
 
 export default function ChallengeCard({
-  game,
+  game: _match,
   compact = false,
 }: ChallengeCardProps) {
+  // Cast via compat type until Task 21 rewrites this component with v4 round data
+  const game = _match as unknown as V3GameCompat;
   const { user } = useSupabase();
-  const { cancelGame, startRace } = usePvP();
+  // TODO(pvp-v4): Task 21 — wire cancelMatch + startRace(match, round)
+  const { cancelMatch } = usePvP();
   const router = useRouter();
 
   if (!user) return null;
@@ -61,7 +80,7 @@ export default function ChallengeCard({
   const isWinner = game.winner_id === user.id;
 
   const statusConfig: Record<
-    PvPGame["status"],
+    V3GameCompat["status"],
     { color: string; icon: typeof faClock; label: string }
   > = {
     open: {
@@ -255,7 +274,7 @@ export default function ChallengeCard({
           <button
             data-testid="pvp-card-play"
             onClick={() => {
-              startRace(game);
+              // TODO(pvp-v4): Task 21 — startRace(match, round) once round is loaded
               router.push("/");
             }}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
@@ -282,7 +301,7 @@ export default function ChallengeCard({
             <button
               data-testid="pvp-card-cancel"
               onClick={async () => {
-                await cancelGame(game.id);
+                await cancelMatch(game.id);
               }}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
             >

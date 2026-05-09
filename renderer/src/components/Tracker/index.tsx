@@ -63,7 +63,8 @@ export default function Tracker() {
   const settings = useSettings();
   const { modal } = useModal();
   const router = useRouter();
-  const { currentRace, completeRace, forfeitRace } = usePvP();
+  // TODO(pvp-v4): Task 19 — wire submitRoundResult + startRace(match, round) into Tracker
+  const { currentRace, cancelRace } = usePvP();
 
   const [words, setWords] = useState("");
   const [wordList] = useWords();
@@ -79,7 +80,8 @@ export default function Tracker() {
   const resetWords = useCallback(async () => {
     // PvP mode: word_set is locked at game creation; never re-sample.
     if (currentRace) {
-      setWords(currentRace.game.word_set.join(" "));
+      // TODO(pvp-v4): Task 19 — word_set lives on pvp_games (PvPRound); use currentRace.round.word_set
+      setWords(currentRace.round.word_set.join(" "));
       return;
     }
     const selected: string[] = [];
@@ -121,7 +123,7 @@ export default function Tracker() {
   // accuracy must validate against THAT keyboard, not the user's current
   // global setting (the partner might have a different one).
   const activeKeyboardName: KeyboardLayoutNames = currentRace
-    ? (currentRace.game.keyboard as KeyboardLayoutNames)
+    ? (currentRace.match.keyboard as KeyboardLayoutNames)
     : settings.keyboardName;
   const keyboardLayout = lookupKeyboard(activeKeyboardName);
   const keyboard = new Keyboard(keyboardLayout);
@@ -183,22 +185,10 @@ export default function Tracker() {
       const finalKeyPresses = [...immutableLetters];
 
       if (currentRace) {
-        // PvP mode: route the completed race to the provider, then navigate
-        // to the challenge detail page so the user sees the link (creating)
-        // or the result comparison (racing).
-        completeRace({
-          cpm: finalCpm,
-          correct,
-          incorrect,
-          time: isoTime,
-          key_presses: finalKeyPresses,
-        }).then((completed) => {
-          if (completed) {
-            router.push(`/pvp/challenge?id=${completed.id}`);
-          } else {
-            router.push("/pvp");
-          }
-        });
+        // TODO(pvp-v4): Task 19 — call submitRoundResult with v4 input shape and navigate
+        // to /pvp/match?id=... on completion. cancelRace() clears state on navigation.
+        cancelRace();
+        router.push("/pvp");
       } else {
         const results: Result = {
           correct,
@@ -229,7 +219,7 @@ export default function Tracker() {
   };
 
   const handleForfeit = () => {
-    forfeitRace();
+    cancelRace();
     router.push("/pvp");
   };
 

@@ -29,12 +29,19 @@ interface Tab {
 export default function PvPHub() {
   const [activeTab, setActiveTab] = useState<TabId>("active");
   const { user, isLoading: isUserLoading } = useSupabase();
-  const {
-    myActiveGames,
-    myAwaitingGames,
-    myCompletedGames,
-    isLoading,
-  } = usePvP();
+  // TODO(pvp-v4): Task 23 — rewrite PvPHub tabs with v4 match/round model
+  // Derive v3-style game lists from flat myMatches for now.
+  const { myMatches, isLoading } = usePvP();
+  const myActiveGames = myMatches.filter(
+    (m) => m.status === "open" || m.status === "in_progress",
+  );
+  // TODO(pvp-v4): awaiting/completed partitioning requires per-round data; stub empty for now
+  const myAwaitingGames = myMatches.filter(
+    (_m) => false, // stub until Task 23
+  );
+  const myCompletedGames = myMatches.filter(
+    (m) => m.status === "completed" || m.status === "cancelled" || m.status === "expired",
+  );
 
   const tabs: Tab[] = [
     {

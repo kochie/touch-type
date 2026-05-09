@@ -41,7 +41,9 @@ export default function Menu({
   const isMas = useMas()
   const plan = usePlan();
   const { currentStreak, isAtRisk, isLoading: streakLoading } = useStreak();
-  const { myActiveGames } = usePvP();
+  // TODO(pvp-v4): Task 26 — replace with myActiveCount derived from myMatches + status
+  const { myMatches } = usePvP();
+  const myActiveGames = myMatches.filter((m) => m.status === "open" || m.status === "in_progress");
 
   
   // This is being done because of hydration errors in the settings hook.

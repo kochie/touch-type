@@ -8,7 +8,8 @@ import {
   useSettings,
 } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
-import { usePvP, type ChallengeSettings } from "@/lib/pvp-provider";
+// TODO(pvp-v4): Task 20 — add best-of selector; word_set now goes into CreateMatchInput
+import { usePvP, type MatchSettings } from "@/lib/pvp-provider";
 import { keyboards } from "../KeyboardSelect";
 import { languages, levels } from "../settings/settings";
 import { KeyboardLayoutNames } from "@/keyboards";
@@ -65,7 +66,8 @@ export default function NewChallengePrompt() {
   const router = useRouter();
   const settings = useSettings();
   const [wordList] = useWords();
-  const { createGame } = usePvP();
+  // TODO(pvp-v4): Task 20 — pass bestOf selector value; wire word_set via CreateMatchInput
+  const { createMatch } = usePvP();
   const [creating, setCreating] = useState(false);
 
   // Local form state — defaults to the user's global settings but is editable
@@ -85,20 +87,22 @@ export default function NewChallengePrompt() {
       return;
     }
     setCreating(true);
-    const wordSet = generateWordSet(wordList);
-    const challengeSettings: ChallengeSettings = {
+    // TODO(pvp-v4): Task 20 — word_set will be passed inside CreateMatchInput once Task 14 lands
+    const matchSettings: MatchSettings = {
       keyboard,
       level,
       language,
       capital,
       punctuation,
       numbers,
-      word_set: wordSet,
     };
-    const game = await createGame(challengeSettings);
+    const match = await createMatch({
+      bestOf: 1, // TODO(pvp-v4): Task 20 — replace with bestOf selector value
+      settings: matchSettings,
+    });
     setCreating(false);
-    if (game) {
-      router.push(`/pvp/challenge?id=${game.id}`);
+    if (match) {
+      router.push(`/pvp/challenge?id=${match.id}`);
     }
   };
 

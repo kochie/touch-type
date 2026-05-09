@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { usePvP, PvPGame } from "@/lib/pvp-provider";
+import { usePvP, PvPMatch } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -18,11 +18,12 @@ function InvitePageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useSupabase();
-  const { fetchByInviteCode, joinGame, startRace } = usePvP();
+  // TODO(pvp-v4): Task 25 — wire joinMatchByInvite + startRace(match, round) for invite flow
+  const { fetchByInviteCode, joinMatchByInvite } = usePvP();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
-  const [game, setGame] = useState<PvPGame | null>(null);
+  const [game, setGame] = useState<PvPMatch | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
 
@@ -67,16 +68,23 @@ function InvitePageInner() {
       // Already a participant? Skip the join call.
       const isAlreadyJoiner = game.joiner_id === user.id;
       const isCreator = game.creator_id === user.id;
-      const joined =
-        isAlreadyJoiner || isCreator ? game : await joinGame(game.id);
-      if (joined) {
+      // TODO(pvp-v4): Task 25 — replace with joinMatchByInvite(game.invite_code) and
+      // startRace(match, round) once round lookup is wired; for now just navigate.
+      if (isAlreadyJoiner || isCreator) {
         setAccepted(true);
-        startRace(joined);
         setTimeout(() => {
-          router.push("/");
+          router.push("/pvp");
         }, 1500);
       } else {
-        setError("Failed to join the game");
+        const joined = await joinMatchByInvite(game.invite_code);
+        if (joined) {
+          setAccepted(true);
+          setTimeout(() => {
+            router.push("/pvp");
+          }, 1500);
+        } else {
+          setError("Failed to join the game");
+        }
       }
     } catch (err) {
       setError("Failed to join the game");
@@ -256,9 +264,7 @@ function InvitePageInner() {
           <span className="px-3 py-1 bg-white dark:bg-gray-800 rounded-md text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
             {game.language.toUpperCase()}
           </span>
-          <span className="px-3 py-1 bg-white dark:bg-gray-800 rounded-md text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-            {game.word_set.length} words
-          </span>
+          {/* TODO(pvp-v4): Task 25 — word_set lives on pvp_games (round) not pvp_matches */}
         </div>
       </div>
 
