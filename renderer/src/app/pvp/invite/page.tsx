@@ -18,19 +18,18 @@ function InvitePageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useSupabase();
-  // TODO(pvp-v4): Task 25 — wire joinMatchByInvite + startRace(match, round) for invite flow
-  const { fetchByInviteCode, joinMatchByInvite } = usePvP();
+  const { fetchByInviteCode, joinMatchByInvite, startRace, fetchRoundsForMatch } = usePvP();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
-  const [game, setGame] = useState<PvPMatch | null>(null);
+  const [match, setMatch] = useState<PvPMatch | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
 
   const code = searchParams.get("code");
 
   useEffect(() => {
-    const fetchGame = async () => {
+    const fetchMatch = async () => {
       if (!code) {
         setError("Invalid invite code");
         setIsLoading(false);
@@ -41,7 +40,7 @@ function InvitePageInner() {
       try {
         const data = await fetchByInviteCode(code);
         if (data) {
-          setGame(data);
+          setMatch(data);
         } else {
           setError("Game not found or invite has expired");
         }
@@ -53,7 +52,7 @@ function InvitePageInner() {
       }
     };
 
-    fetchGame();
+    fetchMatch();
   }, [code, fetchByInviteCode]);
 
   const handleAccept = async () => {
@@ -61,30 +60,24 @@ function InvitePageInner() {
       setError("Please sign in to join this game");
       return;
     }
-    if (!game) return;
+    if (!match) return;
 
     setIsAccepting(true);
     try {
-      // Already a participant? Skip the join call.
-      const isAlreadyJoiner = game.joiner_id === user.id;
-      const isCreator = game.creator_id === user.id;
-      // TODO(pvp-v4): Task 25 — replace with joinMatchByInvite(game.invite_code) and
-      // startRace(match, round) once round lookup is wired; for now just navigate.
-      if (isAlreadyJoiner || isCreator) {
+      const isAlreadyJoiner = match.joiner_id === user.id;
+      const isCreator = match.creator_id === user.id;
+      const joined = isAlreadyJoiner || isCreator ? match : await joinMatchByInvite(code!);
+      if (joined) {
+        const rounds = await fetchRoundsForMatch(joined.id);
+        const isCreatorNow = joined.creator_id === user.id;
+        const myFirstUnraced = rounds.find(
+          (r) => (isCreatorNow ? r.creator_completed_at : r.joiner_completed_at) === null,
+        );
+        if (myFirstUnraced) startRace(joined, myFirstUnraced);
         setAccepted(true);
-        setTimeout(() => {
-          router.push("/pvp");
-        }, 1500);
+        setTimeout(() => router.push("/"), 1500);
       } else {
-        const joined = await joinMatchByInvite(game.invite_code);
-        if (joined) {
-          setAccepted(true);
-          setTimeout(() => {
-            router.push("/pvp");
-          }, 1500);
-        } else {
-          setError("Failed to join the game");
-        }
+        setError("Failed to join the game");
       }
     } catch (err) {
       setError("Failed to join the game");
@@ -127,7 +120,7 @@ function InvitePageInner() {
   }
 
   // Error state
-  if (error || !game) {
+  if (error || !match) {
     return (
       <div className="max-w-md mx-auto py-12 text-center">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
@@ -156,17 +149,17 @@ function InvitePageInner() {
     );
   }
 
-  const isCreator = game.creator_id === user?.id;
-  const isJoiner = game.joiner_id === user?.id;
+  const isCreator = match.creator_id === user?.id;
+  const isJoiner = match.joiner_id === user?.id;
   const isParticipant = isCreator || isJoiner;
 
   // Already a participant — show settings + Play button.
   // Status non-open — terminal state.
-  if (game.status !== "open") {
+  if (match.status !== "open") {
     const statusMessage =
-      game.status === "completed"
+      match.status === "completed"
         ? "This game is already completed. See History for results."
-        : game.status === "cancelled"
+        : match.status === "cancelled"
           ? "This game was cancelled."
           : "This game has expired.";
 
@@ -196,7 +189,7 @@ function InvitePageInner() {
   }
 
   // Game has another joiner that isn't us — link is closed to us.
-  if (game.joiner_id && !isParticipant) {
+  if (match.joiner_id && !isParticipant) {
     return (
       <div className="max-w-md mx-auto py-12 text-center">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -246,9 +239,9 @@ function InvitePageInner() {
       </div>
 
       <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl mb-6">
-        {game.message && (
+        {match.message && (
           <p className="text-center text-gray-700 dark:text-gray-300 italic mb-4">
-            &ldquo;{game.message}&rdquo;
+            &ldquo;{match.message}&rdquo;
           </p>
         )}
         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 text-center">
@@ -256,15 +249,17 @@ function InvitePageInner() {
         </h3>
         <div className="flex flex-wrap justify-center gap-2 text-sm">
           <span className="px-3 py-1 bg-white dark:bg-gray-800 rounded-md text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-            Level {game.level}
+            Level {match.level}
           </span>
           <span className="px-3 py-1 bg-white dark:bg-gray-800 rounded-md text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-            {game.keyboard}
+            {match.keyboard}
           </span>
           <span className="px-3 py-1 bg-white dark:bg-gray-800 rounded-md text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-            {game.language.toUpperCase()}
+            {match.language.toUpperCase()}
           </span>
-          {/* TODO(pvp-v4): Task 25 — word_set lives on pvp_games (round) not pvp_matches */}
+          <span className="px-3 py-1 bg-white dark:bg-gray-800 rounded-md text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+            Best of {match.best_of}
+          </span>
         </div>
       </div>
 
