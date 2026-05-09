@@ -231,26 +231,92 @@ export type Database = {
       }
       pvp_games: {
         Row: {
-          capital: boolean
+          completed_at: string | null
           created_at: string
           creator_completed_at: string | null
           creator_correct: number | null
           creator_cpm: number | null
-          creator_id: string
           creator_incorrect: number | null
           creator_key_presses: Json | null
           creator_time: string | null
-          expires_at: string
           id: string
-          invite_code: string
           joiner_completed_at: string | null
           joiner_correct: number | null
           joiner_cpm: number | null
-          joiner_id: string | null
           joiner_incorrect: number | null
-          joiner_joined_at: string | null
           joiner_key_presses: Json | null
           joiner_time: string | null
+          match_id: string
+          round_number: number
+          winner_id: string | null
+          word_set: string[]
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          creator_completed_at?: string | null
+          creator_correct?: number | null
+          creator_cpm?: number | null
+          creator_incorrect?: number | null
+          creator_key_presses?: Json | null
+          creator_time?: string | null
+          id?: string
+          joiner_completed_at?: string | null
+          joiner_correct?: number | null
+          joiner_cpm?: number | null
+          joiner_incorrect?: number | null
+          joiner_key_presses?: Json | null
+          joiner_time?: string | null
+          match_id: string
+          round_number: number
+          winner_id?: string | null
+          word_set: string[]
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          creator_completed_at?: string | null
+          creator_correct?: number | null
+          creator_cpm?: number | null
+          creator_incorrect?: number | null
+          creator_key_presses?: Json | null
+          creator_time?: string | null
+          id?: string
+          joiner_completed_at?: string | null
+          joiner_correct?: number | null
+          joiner_cpm?: number | null
+          joiner_incorrect?: number | null
+          joiner_key_presses?: Json | null
+          joiner_time?: string | null
+          match_id?: string
+          round_number?: number
+          winner_id?: string | null
+          word_set?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pvp_games_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "pvp_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pvp_matches: {
+        Row: {
+          best_of: number
+          capital: boolean
+          created_at: string
+          creator_id: string
+          creator_wins: number
+          expires_at: string
+          forfeited_by: string | null
+          id: string
+          invite_code: string
+          joiner_id: string | null
+          joiner_joined_at: string | null
+          joiner_wins: number
           keyboard: string
           language: string
           level: string
@@ -260,29 +326,20 @@ export type Database = {
           status: string
           updated_at: string
           winner_id: string | null
-          word_set: string[]
         }
         Insert: {
+          best_of: number
           capital?: boolean
           created_at?: string
-          creator_completed_at?: string | null
-          creator_correct?: number | null
-          creator_cpm?: number | null
           creator_id: string
-          creator_incorrect?: number | null
-          creator_key_presses?: Json | null
-          creator_time?: string | null
+          creator_wins?: number
           expires_at?: string
+          forfeited_by?: string | null
           id?: string
           invite_code: string
-          joiner_completed_at?: string | null
-          joiner_correct?: number | null
-          joiner_cpm?: number | null
           joiner_id?: string | null
-          joiner_incorrect?: number | null
           joiner_joined_at?: string | null
-          joiner_key_presses?: Json | null
-          joiner_time?: string | null
+          joiner_wins?: number
           keyboard: string
           language: string
           level: string
@@ -292,29 +349,20 @@ export type Database = {
           status?: string
           updated_at?: string
           winner_id?: string | null
-          word_set: string[]
         }
         Update: {
+          best_of?: number
           capital?: boolean
           created_at?: string
-          creator_completed_at?: string | null
-          creator_correct?: number | null
-          creator_cpm?: number | null
           creator_id?: string
-          creator_incorrect?: number | null
-          creator_key_presses?: Json | null
-          creator_time?: string | null
+          creator_wins?: number
           expires_at?: string
+          forfeited_by?: string | null
           id?: string
           invite_code?: string
-          joiner_completed_at?: string | null
-          joiner_correct?: number | null
-          joiner_cpm?: number | null
           joiner_id?: string | null
-          joiner_incorrect?: number | null
           joiner_joined_at?: string | null
-          joiner_key_presses?: Json | null
-          joiner_time?: string | null
+          joiner_wins?: number
           keyboard?: string
           language?: string
           level?: string
@@ -324,7 +372,6 @@ export type Database = {
           status?: string
           updated_at?: string
           winner_id?: string | null
-          word_set?: string[]
         }
         Relationships: []
       }
@@ -599,30 +646,21 @@ export type Database = {
       }
     }
     Functions: {
-      generate_invite_code: { Args: never; Returns: string }
-      get_game_by_invite_code: {
-        Args: { _code: string }
+      cancel_match: {
+        Args: { _match_id: string }
         Returns: {
+          best_of: number
           capital: boolean
           created_at: string
-          creator_completed_at: string | null
-          creator_correct: number | null
-          creator_cpm: number | null
           creator_id: string
-          creator_incorrect: number | null
-          creator_key_presses: Json | null
-          creator_time: string | null
+          creator_wins: number
           expires_at: string
+          forfeited_by: string | null
           id: string
           invite_code: string
-          joiner_completed_at: string | null
-          joiner_correct: number | null
-          joiner_cpm: number | null
           joiner_id: string | null
-          joiner_incorrect: number | null
           joiner_joined_at: string | null
-          joiner_key_presses: Json | null
-          joiner_time: string | null
+          joiner_wins: number
           keyboard: string
           language: string
           level: string
@@ -632,15 +670,203 @@ export type Database = {
           status: string
           updated_at: string
           winner_id: string | null
-          word_set: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_match: {
+        Args: {
+          _best_of: number
+          _capital: boolean
+          _keyboard: string
+          _language: string
+          _level: string
+          _message?: string
+          _numbers: boolean
+          _punctuation: boolean
+          _word_sets: Json
+        }
+        Returns: {
+          best_of: number
+          capital: boolean
+          created_at: string
+          creator_id: string
+          creator_wins: number
+          expires_at: string
+          forfeited_by: string | null
+          id: string
+          invite_code: string
+          joiner_id: string | null
+          joiner_joined_at: string | null
+          joiner_wins: number
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      forfeit_match: {
+        Args: { _match_id: string }
+        Returns: {
+          best_of: number
+          capital: boolean
+          created_at: string
+          creator_id: string
+          creator_wins: number
+          expires_at: string
+          forfeited_by: string | null
+          id: string
+          invite_code: string
+          joiner_id: string | null
+          joiner_joined_at: string | null
+          joiner_wins: number
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      generate_invite_code: { Args: never; Returns: string }
+      get_match_by_invite_code: {
+        Args: { _code: string }
+        Returns: {
+          best_of: number
+          capital: boolean
+          created_at: string
+          creator_id: string
+          creator_wins: number
+          expires_at: string
+          forfeited_by: string | null
+          id: string
+          invite_code: string
+          joiner_id: string | null
+          joiner_joined_at: string | null
+          joiner_wins: number
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
         }[]
         SetofOptions: {
           from: "*"
-          to: "pvp_games"
+          to: "pvp_matches"
           isOneToOne: false
           isSetofReturn: true
         }
       }
+      join_match_by_invite: {
+        Args: { _code: string }
+        Returns: {
+          best_of: number
+          capital: boolean
+          created_at: string
+          creator_id: string
+          creator_wins: number
+          expires_at: string
+          forfeited_by: string | null
+          id: string
+          invite_code: string
+          joiner_id: string | null
+          joiner_joined_at: string | null
+          joiner_wins: number
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      list_my_rivals: {
+        Args: never
+        Returns: {
+          last_match_id: string
+          last_played_at: string
+          matches_lost: number
+          matches_played: number
+          matches_won: number
+          rival_id: string
+        }[]
+      }
+      submit_round_result: {
+        Args: {
+          _correct: number
+          _cpm: number
+          _incorrect: number
+          _key_presses: Json
+          _match_id: string
+          _round_number: number
+          _time: string
+        }
+        Returns: {
+          completed_at: string | null
+          created_at: string
+          creator_completed_at: string | null
+          creator_correct: number | null
+          creator_cpm: number | null
+          creator_incorrect: number | null
+          creator_key_presses: Json | null
+          creator_time: string | null
+          id: string
+          joiner_completed_at: string | null
+          joiner_correct: number | null
+          joiner_cpm: number | null
+          joiner_incorrect: number | null
+          joiner_key_presses: Json | null
+          joiner_time: string | null
+          match_id: string
+          round_number: number
+          winner_id: string | null
+          word_set: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_games"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      test_smallint: { Args: { x: number }; Returns: number }
       trigger_send_notifications: { Args: never; Returns: undefined }
     }
     Enums: {
