@@ -678,6 +678,38 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cancel_match_as: {
+        Args: { _match_id: string; _user: string }
+        Returns: {
+          best_of: number
+          capital: boolean
+          created_at: string
+          creator_id: string
+          creator_wins: number
+          expires_at: string
+          forfeited_by: string | null
+          id: string
+          invite_code: string
+          joiner_id: string | null
+          joiner_joined_at: string | null
+          joiner_wins: number
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_match: {
         Args: {
           _best_of: number
@@ -720,8 +752,83 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_match_as: {
+        Args: {
+          _best_of: number
+          _capital: boolean
+          _keyboard: string
+          _language: string
+          _level: string
+          _message: string
+          _numbers: boolean
+          _punctuation: boolean
+          _user: string
+          _word_sets: Json
+        }
+        Returns: {
+          best_of: number
+          capital: boolean
+          created_at: string
+          creator_id: string
+          creator_wins: number
+          expires_at: string
+          forfeited_by: string | null
+          id: string
+          invite_code: string
+          joiner_id: string | null
+          joiner_joined_at: string | null
+          joiner_wins: number
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       forfeit_match: {
         Args: { _match_id: string }
+        Returns: {
+          best_of: number
+          capital: boolean
+          created_at: string
+          creator_id: string
+          creator_wins: number
+          expires_at: string
+          forfeited_by: string | null
+          id: string
+          invite_code: string
+          joiner_id: string | null
+          joiner_joined_at: string | null
+          joiner_wins: number
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      forfeit_match_as: {
+        Args: { _match_id: string; _user: string }
         Returns: {
           best_of: number
           capital: boolean
@@ -817,6 +924,38 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      join_match_by_invite_as: {
+        Args: { _code: string; _user: string }
+        Returns: {
+          best_of: number
+          capital: boolean
+          created_at: string
+          creator_id: string
+          creator_wins: number
+          expires_at: string
+          forfeited_by: string | null
+          id: string
+          invite_code: string
+          joiner_id: string | null
+          joiner_joined_at: string | null
+          joiner_wins: number
+          keyboard: string
+          language: string
+          level: string
+          message: string | null
+          numbers: boolean
+          punctuation: boolean
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       list_my_rivals: {
         Args: never
         Returns: {
@@ -866,7 +1005,45 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      test_smallint: { Args: { x: number }; Returns: number }
+      submit_round_result_as: {
+        Args: {
+          _correct: number
+          _cpm: number
+          _incorrect: number
+          _key_presses: Json
+          _match_id: string
+          _round_number: number
+          _time: string
+          _user: string
+        }
+        Returns: {
+          completed_at: string | null
+          created_at: string
+          creator_completed_at: string | null
+          creator_correct: number | null
+          creator_cpm: number | null
+          creator_incorrect: number | null
+          creator_key_presses: Json | null
+          creator_time: string | null
+          id: string
+          joiner_completed_at: string | null
+          joiner_correct: number | null
+          joiner_cpm: number | null
+          joiner_incorrect: number | null
+          joiner_key_presses: Json | null
+          joiner_time: string | null
+          match_id: string
+          round_number: number
+          winner_id: string | null
+          word_set: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_games"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       trigger_send_notifications: { Args: never; Returns: undefined }
     }
     Enums: {
