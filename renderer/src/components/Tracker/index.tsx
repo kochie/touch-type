@@ -28,6 +28,7 @@ import { lookupKeyboard, KeyboardLayoutNames } from "@/keyboards";
 import { Result, useResults } from "@/lib/result-provider";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { usePvP } from "@/lib/pvp-provider";
+import type { Json } from "@/types/supabase";
 import clsx from "clsx";
 
 export interface KeyPress {
@@ -63,8 +64,7 @@ export default function Tracker() {
   const settings = useSettings();
   const { modal } = useModal();
   const router = useRouter();
-  // TODO(pvp-v4): Task 19 — wire submitRoundResult + startRace(match, round) into Tracker
-  const { currentRace, cancelRace } = usePvP();
+  const { currentRace, submitRoundResult, forfeitMatch } = usePvP();
 
   const [words, setWords] = useState("");
   const [wordList] = useWords();
@@ -80,7 +80,6 @@ export default function Tracker() {
   const resetWords = useCallback(async () => {
     // PvP mode: word_set is locked at game creation; never re-sample.
     if (currentRace) {
-      // TODO(pvp-v4): Task 19 — word_set lives on pvp_games (PvPRound); use currentRace.round.word_set
       setWords(currentRace.round.word_set.join(" "));
       return;
     }
@@ -132,7 +131,7 @@ export default function Tracker() {
     if (letters.length > 0) statsDispatch({ type: "TICK" });
   };
 
-  const keyDown = (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
+  const keyDown = async (e: KeyboardEvent, ctx: CanvasRenderingContext2D) => {
     if (modal !== ModalType.NONE) {
       return;
     }
@@ -185,10 +184,17 @@ export default function Tracker() {
       const finalKeyPresses = [...immutableLetters];
 
       if (currentRace) {
-        // TODO(pvp-v4): Task 19 — call submitRoundResult with v4 input shape and navigate
-        // to /pvp/match?id=... on completion. cancelRace() clears state on navigation.
-        cancelRace();
-        router.push("/pvp");
+        await submitRoundResult({
+          matchId: currentRace.match.id,
+          roundNumber: currentRace.round.round_number,
+          cpm: finalCpm,
+          correct,
+          incorrect,
+          time: isoTime,
+          keyPresses: finalKeyPresses as unknown as Json,
+        });
+        router.push(`/pvp/match?id=${currentRace.match.id}`);
+        return;
       } else {
         const results: Result = {
           correct,
@@ -216,11 +222,6 @@ export default function Tracker() {
     } else {
       keyboard.drawKey(ctx, i, j, key, "rgba(255, 0, 0, 0.5)");
     }
-  };
-
-  const handleForfeit = () => {
-    cancelRace();
-    router.push("/pvp");
   };
 
   const { results } = useResults();
@@ -264,12 +265,20 @@ export default function Tracker() {
     >
       <div className="flex items-center gap-2">
         <FontAwesomeIcon icon={faSwords} className="w-5 h-5 text-yellow-400" />
-        <span className="font-bold">PvP Battle</span>
-        <span className="text-sm opacity-80">Playing blind</span>
+        <span className="font-bold">
+          PvP — Round {currentRace.round.round_number} of {currentRace.match.best_of}
+        </span>
+        <span className="text-sm opacity-80">
+          Score {currentRace.match.creator_wins} – {currentRace.match.joiner_wins}
+        </span>
       </div>
       <button
         data-testid="pvp-forfeit"
-        onClick={handleForfeit}
+        onClick={async () => {
+          if (await forfeitMatch(currentRace.match.id)) {
+            router.push(`/pvp/match?id=${currentRace.match.id}`);
+          }
+        }}
         className="flex items-center gap-1 px-3 py-1 rounded-md bg-red-500/80 hover:bg-red-500 text-white text-sm font-semibold transition-colors"
       >
         <FontAwesomeIcon icon={faFlag} className="w-3 h-3" />
