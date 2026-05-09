@@ -7,6 +7,8 @@ import {
   ReactNode,
 } from "react";
 import type { Database, Json } from "@/types/supabase";
+import { getSupabaseClient } from "@/lib/supabase-client";
+import { generateRoundWordSets } from "@/lib/generate-round-word-sets";
 
 // Types ----------------------------------------------------------------------
 
@@ -74,15 +76,29 @@ export interface PvPContextType {
 const PvPContext = createContext<PvPContextType | undefined>(undefined);
 
 export function PvPProvider({ children }: { children: ReactNode }) {
+  const supabase = getSupabaseClient();
   const [myMatches] = useState<PvPMatch[]>([]);
   const [isLoading] = useState(true);
   const [currentRace, setCurrentRace] = useState<PvPRaceMode | null>(null);
 
-  // TODO(pvp-v4): Task 14 — implement createMatch with real word-set helper
-  const createMatch = async (
-    _input: CreateMatchInput,
-  ): Promise<PvPMatch | null> => {
-    return null;
+  const createMatch: PvPContextType["createMatch"] = async (input) => {
+    const wordSets = await generateRoundWordSets(input.bestOf, input.settings);
+    const { data, error } = await supabase.rpc("create_match", {
+      _keyboard: input.settings.keyboard,
+      _level: input.settings.level,
+      _language: input.settings.language,
+      _capital: input.settings.capital,
+      _punctuation: input.settings.punctuation,
+      _numbers: input.settings.numbers,
+      _best_of: input.bestOf,
+      _word_sets: wordSets as unknown as Json,
+      _message: input.message,
+    });
+    if (error) {
+      console.error("Error creating match:", error);
+      return null;
+    }
+    return data;
   };
 
   // TODO(pvp-v4): Task 15 — implement joinMatchByInvite via join_match_by_invite RPC
