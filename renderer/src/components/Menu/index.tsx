@@ -10,6 +10,7 @@ import {
 import {
   faChartRadar,
   faMicrochipAi,
+  faCode,
 } from "@fortawesome/pro-regular-svg-icons";
 import { faFire, faSparkles, faSwords } from "@fortawesome/pro-duotone-svg-icons";
 import { usePvP } from "@/lib/pvp-provider";
@@ -31,6 +32,42 @@ interface MenuProps {
   handleAccount?: () => void;
 }
 
+interface NavItemProps {
+  href: string;
+  icon: typeof faKeyboard;
+  label: string;
+  isActive: boolean;
+  badge?: number;
+  hidden?: boolean;
+}
+
+function NavItem({ href, icon, label, isActive, badge, hidden }: NavItemProps) {
+  if (hidden) return null;
+  return (
+    <Link href={href}>
+      <div
+        title={label}
+        className={clsx(
+          "relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors duration-150",
+          isActive
+            ? "text-sky-400 bg-sky-400/10"
+            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
+        )}
+      >
+        <FontAwesomeIcon icon={icon} className="w-4 h-4" />
+        <span className="text-[9px] font-semibold tracking-widest uppercase select-none">
+          {label}
+        </span>
+        {badge !== undefined && badge > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
+            {badge > 9 ? "9+" : badge}
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
 export default function Menu({
   handleWhatsNew,
   handleSignIn,
@@ -38,32 +75,23 @@ export default function Menu({
 }: MenuProps) {
   const pathname = usePathname();
   const settings = useSettings();
-  const isMas = useMas()
+  const isMas = useMas();
   const plan = usePlan();
   const { currentStreak, isAtRisk, isLoading: streakLoading } = useStreak();
   const { myActiveGames } = usePvP();
 
-  
-  // This is being done because of hydration errors in the settings hook.
-  // Because using the settings hook uses local storage any direct rendering
-  // of the settings hook will cause a hydration error.
   const [hydratedSettings, setHydratedSettings] = useState(defaultSettings);
   useLayoutEffect(() => {
     setHydratedSettings((prev) => ({ ...prev, ...settings }));
   }, [settings]);
 
-  const premium = plan?.billing_plan === "premium"
+  const premium = plan?.billing_plan === "premium";
 
   const [isScrolled, setIsScrolled] = useState(false);
-
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 0);
     window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Check initial scroll position
-
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -72,163 +100,130 @@ export default function Menu({
       className={clsx(
         "top-0 sticky w-full z-50 transition-all duration-300 ease-in-out",
         isScrolled
-          ? "bg-[#2a2b2d]/95 backdrop-blur-sm shadow-lg"
+          ? "bg-white/90 dark:bg-[#0d0f14]/95 backdrop-blur-md shadow-sm shadow-black/10 dark:shadow-black/30 border-b border-slate-200/60 dark:border-white/[0.06]"
           : "bg-transparent"
       )}
     >
-      <div className="flex justify-between pt-8 mx-8 pb-4">
-        <div className="flex gap-4">
-          <div className="hover:animate-pulse" title="Stats">
-            <Link href={"/stats"}>
-              <FontAwesomeIcon
-                icon={faChartColumn}
-                className={clsx(
-                  pathname === "/stats" ? "text-yellow-500" : "",
-                  "cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out",
-                )}
-                size="lg"
-              />
-            </Link>
-          </div>
-          <div className="hover:animate-pulse" title="Heatmap">
-            <Link href={"/heatmap"}>
-              <FontAwesomeIcon
-                icon={faChartRadar}
-                className={clsx(
-                  pathname === "/heatmap" ? "text-yellow-500" : "",
-                  "cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out",
-                )}
-                size="lg"
-              />
-            </Link>
-          </div>
-          <div className="hover:animate-pulse">
-            <Link href={"/"}>
-              <FontAwesomeIcon
-                icon={faKeyboard}
-                className={clsx(
-                  pathname === "/" ? "text-yellow-500" : "",
-                  "cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out",
-                )}
-                size="lg"
-              />
-            </Link>
-          </div>
-          <div className={clsx("hover:animate-pulse", isMas && !premium && "hidden")}>
-            <Link href={"/assistant"}>
-              <FontAwesomeIcon
-                icon={faMicrochipAi}
-                className={clsx(
-                  pathname === "/assistant" ? "text-yellow-500" : "",
-                  "cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out",
-                )}
-                size="lg"
-              />
-            </Link>
-          </div>
-          <div className="hover:animate-pulse relative" title="PvP Arena">
-            <Link href={"/pvp"}>
-              <FontAwesomeIcon
-                icon={faSwords}
-                className={clsx(
-                  pathname?.startsWith("/pvp") ? "text-yellow-500" : "",
-                  "cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out",
-                )}
-                size="lg"
-              />
-              {myActiveGames.length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  {myActiveGames.length > 9 ? "9+" : myActiveGames.length}
-                </span>
-              )}
-            </Link>
-          </div>
+      <div className="flex items-center justify-between px-6 py-2">
+        {/* Primary navigation */}
+        <div className="flex items-center gap-1">
+          <NavItem
+            href="/stats"
+            icon={faChartColumn}
+            label="Stats"
+            isActive={pathname === "/stats"}
+          />
+          <NavItem
+            href="/heatmap"
+            icon={faChartRadar}
+            label="Map"
+            isActive={pathname === "/heatmap"}
+          />
+          <NavItem
+            href="/"
+            icon={faKeyboard}
+            label="Practice"
+            isActive={pathname === "/"}
+          />
+          <NavItem
+            href="/code"
+            icon={faCode}
+            label="Code"
+            isActive={pathname === "/code"}
+          />
+          <NavItem
+            href="/assistant"
+            icon={faMicrochipAi}
+            label="AI"
+            isActive={pathname === "/assistant"}
+            hidden={isMas && !premium}
+          />
+          <NavItem
+            href="/pvp"
+            icon={faSwords}
+            label="Arena"
+            isActive={pathname?.startsWith("/pvp") ?? false}
+            badge={myActiveGames.length}
+          />
         </div>
 
-        {pathname === "/" ? (
-          <div className="flex gap-2 text-sm font-normal text-gray-400">
-            <div className="">
-              <p className="">
-                Level <span>{hydratedSettings.levelName}</span>
-              </p>
-            </div>
-            <div>•</div>
-            <div>
-              <p className="">
-                {
-                  keyboards.find(
-                    (keyboard) =>
-                      keyboard.layout === hydratedSettings.keyboardName,
-                  )?.name
-                }
-              </p>
-            </div>{" "}
-            <div>•</div>
-            <div>
-              <p className="">
-                {
-                  languages.find(
-                    (lang) => lang.value === hydratedSettings.language,
-                  )?.label
-                }
-              </p>
-            </div>
+        {/* Center context — only on home */}
+        {pathname === "/" && (
+          <div className="flex gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 select-none">
+            <span>Level {hydratedSettings.levelName}</span>
+            <span className="opacity-40">•</span>
+            <span>
+              {keyboards.find(
+                (k) => k.layout === hydratedSettings.keyboardName
+              )?.name ?? hydratedSettings.keyboardName}
+            </span>
+            <span className="opacity-40">•</span>
+            <span>
+              {languages.find(
+                (l) => l.value === hydratedSettings.language
+              )?.label ?? hydratedSettings.language}
+            </span>
           </div>
-        ) : null}
+        )}
 
-        <div className="flex gap-4 items-center">
+        {/* Utility actions */}
+        <div className="flex items-center gap-1">
           {!streakLoading && (
             <Link
               href="/streak"
-              className={clsx(
-                "flex items-center gap-1.5 px-2 py-1 rounded-full text-sm font-medium transition-colors",
-                currentStreak === 0
-                  ? "text-gray-500"
-                  : isAtRisk
-                  ? "text-orange-400 animate-pulse"
-                  : "text-orange-400 hover:text-orange-300"
-              )}
               title={
                 isAtRisk && currentStreak > 0
                   ? "Practice today to keep your streak!"
                   : `${currentStreak} day streak`
               }
+              className={clsx(
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold tabular-nums transition-colors duration-150",
+                currentStreak === 0
+                  ? "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                  : isAtRisk
+                  ? "text-orange-500 animate-pulse hover:bg-orange-500/10"
+                  : "text-orange-400 hover:bg-orange-400/10"
+              )}
             >
-              <FontAwesomeIcon icon={faFire} size="lg" />
+              <FontAwesomeIcon icon={faFire} className="w-4 h-4" />
               <span>{currentStreak}</span>
             </Link>
           )}
+
           <Suspense
             fallback={
-              <FontAwesomeIcon
-                icon={faSpinner}
-                className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
-                size="lg"
-                spin
-              />
+              <div className="px-2.5 py-1.5">
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  className="w-4 h-4 text-slate-400"
+                  spin
+                />
+              </div>
             }
           >
             <User signIn={handleSignIn} account={handleAccount} />
           </Suspense>
-          <button onClick={handleWhatsNew} title="What's New">
-            <FontAwesomeIcon
-              icon={faSparkles}
-              className="cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out"
-              size="lg"
-            />
+
+          <button
+            onClick={handleWhatsNew}
+            title="What's New"
+            className="flex items-center px-2.5 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150"
+          >
+            <FontAwesomeIcon icon={faSparkles} className="w-4 h-4" />
           </button>
-          <div className="hover:animate-pulse" title="Settings">
-            <Link href={"/settings"}>
-              <FontAwesomeIcon
-                icon={faGear}
-                className={clsx(
-                  pathname === "/settings" ? "text-yellow-500" : "",
-                  "cursor-pointer hover:text-yellow-300 transform duration-200 ease-in-out",
-                )}
-                size="lg"
-              />
-            </Link>
-          </div>
+
+          <Link href="/settings" title="Settings">
+            <div
+              className={clsx(
+                "flex items-center px-2.5 py-1.5 rounded-lg transition-colors duration-150",
+                pathname === "/settings"
+                  ? "text-sky-400 bg-sky-400/10"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
+              )}
+            >
+              <FontAwesomeIcon icon={faGear} className="w-4 h-4" />
+            </div>
+          </Link>
         </div>
       </div>
     </div>
