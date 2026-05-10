@@ -2,10 +2,12 @@
 
 import AIAssistant from "@/components/AiAssistant";
 import Button from "@/components/Button";
+import PageHeader from "@/components/PageHeader";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import { usePlan } from "@/lib/plan_hook";
 import { faSpinnerThird } from "@fortawesome/pro-duotone-svg-icons";
+import { faMicrochipAi } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export function ClientAssistant() {
@@ -68,5 +70,16 @@ export function ClientAssistant() {
     );
   }
 
-  return <AIAssistant />;
+  return (
+    <div>
+      <PageHeader
+        icon={faMicrochipAi}
+        title="AI Assistant"
+        subtitle="Personalized coaching based on your sessions"
+        iconBg="bg-violet-400/10"
+        iconColor="text-violet-400"
+      />
+      <AIAssistant />
+    </div>
+  );
 }
