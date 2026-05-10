@@ -1,11 +1,165 @@
-import StreakSettings from "@/components/settings/StreakSettings";
+"use client";
+
+import { Suspense } from "react";
+import PageHeader from "@/components/PageHeader";
+import { faFire, faSnowflake } from "@fortawesome/pro-duotone-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useStreak } from "@/lib/streak_hook";
+import ActivityCalendar from "@/components/ActivityCalendar";
+import clsx from "clsx";
+import Link from "next/link";
+
+const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+
+function StreakPageInner() {
+  const {
+    currentStreak,
+    longestStreak,
+    isAtRisk,
+    freezesAvailable,
+    isPremium,
+    isLoading,
+  } = useStreak();
+
+  // Build a week indicator: which days this week are "done"
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sunday
+  // Map Sunday=0 to index 6, Monday=1 to index 0, etc.
+  const todayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+  if (isLoading) {
+    return (
+      <div className="px-6 animate-pulse space-y-4">
+        <div className="h-40 bg-slate-100 dark:bg-white/5 rounded-xl" />
+        <div className="h-24 bg-slate-100 dark:bg-white/5 rounded-xl" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <PageHeader
+        icon={faFire}
+        title="Streak"
+        subtitle="Keep the fire alive — practice every day"
+        iconBg="bg-orange-400/10"
+        iconColor="text-orange-400"
+      />
+
+      <div className="px-6 grid grid-cols-2 gap-4 max-w-3xl">
+        {/* Streak hero */}
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-xl p-6 flex flex-col items-center text-center">
+          <FontAwesomeIcon
+            icon={faFire}
+            className={clsx(
+              "w-10 h-10 mb-2",
+              isAtRisk ? "text-orange-500 animate-pulse" : "text-orange-400"
+            )}
+          />
+          <div className="text-5xl font-extrabold text-orange-400 leading-none">
+            {currentStreak}
+          </div>
+          <div className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">
+            day streak
+          </div>
+
+          {/* Week dots */}
+          <div className="flex gap-2 mt-4">
+            {DAY_LABELS.map((label, i) => (
+              <div
+                key={i}
+                className={clsx(
+                  "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold uppercase",
+                  i === todayIndex
+                    ? "bg-orange-400 text-white"
+                    : i < todayIndex
+                    ? "bg-orange-400/20 text-orange-400"
+                    : "bg-slate-100 dark:bg-white/[0.04] text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-white/[0.06]"
+                )}
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+
+          {isAtRisk && (
+            <p className="text-xs text-orange-500 mt-3">
+              Practice today to keep your streak!
+            </p>
+          )}
+        </div>
+
+        {/* Streak freezes */}
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-xl p-5">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
+            Streak Freezes
+          </div>
+          <div className="text-3xl font-extrabold text-sky-400 leading-none mb-1">
+            {freezesAvailable}
+          </div>
+          <div className="text-xs text-slate-400 dark:text-slate-500 mb-4">available</div>
+
+          <div className="flex gap-2 flex-wrap mb-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className={clsx(
+                  "w-8 h-8 rounded-lg flex items-center justify-center text-sm",
+                  i < (freezesAvailable ?? 0)
+                    ? "bg-sky-400/15 border border-sky-400/30 text-sky-400"
+                    : "bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] text-slate-300 dark:text-slate-700 opacity-50"
+                )}
+              >
+                <FontAwesomeIcon icon={faSnowflake} className="w-3.5 h-3.5" />
+              </div>
+            ))}
+          </div>
+
+          {isPremium ? (
+            <Link
+              href="/settings"
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border-dashed border-2 border-slate-200 dark:border-white/[0.08] text-xs font-semibold text-slate-400 dark:text-slate-500 hover:border-sky-400/40 hover:text-sky-400 transition-colors duration-150"
+            >
+              <span>+</span>
+              <span>Get more freezes</span>
+            </Link>
+          ) : (
+            <Link
+              href="/settings"
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-sky-400/10 border border-sky-400/30 text-xs font-semibold text-sky-400 hover:bg-sky-400/15 transition-colors duration-150"
+            >
+              Upgrade for freezes
+            </Link>
+          )}
+        </div>
+
+        {/* Longest streak */}
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-xl p-5">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
+            Best Streak
+          </div>
+          <div className="text-4xl font-extrabold text-orange-400 leading-none">
+            {longestStreak}
+          </div>
+          <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">days — all time best</div>
+        </div>
+
+        {/* Activity calendar */}
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-xl p-5">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">
+            Activity
+          </div>
+          <ActivityCalendar />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function StreakPage() {
   return (
-    <div className="w-screen min-h-screen dark:text-white p-9">
-      <div className="max-w-2xl mx-auto">
-        <StreakSettings />
-      </div>
-    </div>
+    <Suspense>
+      <StreakPageInner />
+    </Suspense>
   );
 }
