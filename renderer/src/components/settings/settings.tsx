@@ -18,6 +18,9 @@ import { CalendarSettings } from "./CalendarSettings";
 import { StartupSettings } from "./StartupSettings";
 import { DebugSettings } from "./DebugSettings";
 import { CodeSettings } from "./CodeSettings";
+import PageHeader from "../PageHeader";
+import { faGear } from "@fortawesome/free-solid-svg-icons";
+import { useState } from "react";
 
 export const languages = [
   {
@@ -69,17 +72,157 @@ export const levels = [
   },
 ];
 
-const Settings = () => {
+type SettingsCategoryId =
+  | "appearance"
+  | "keyboard"
+  | "practice"
+  | "notifications"
+  | "account"
+  | "about";
+
+interface SettingsCategory {
+  id: SettingsCategoryId;
+  label: string;
+}
+
+const SETTINGS_CATEGORIES: SettingsCategory[] = [
+  { id: "appearance", label: "Appearance" },
+  { id: "keyboard", label: "Keyboard" },
+  { id: "practice", label: "Practice & Code" },
+  { id: "notifications", label: "Notifications" },
+  { id: "account", label: "Account" },
+  { id: "about", label: "About" },
+];
+
+// ── Panel components ──────────────────────────────────────────────────────────
+
+function AppearanceSettings() {
   const settings = useSettings();
   const dispatchSettings = useSettingsDispatch();
 
   return (
-    <div className="p-9 space-y-10">
-      {/* General Settings */}
-      <div className="grid grid-cols-2 gap-10">
-      <form className="flex flex-col gap-6">
-        <KeyboardSelect />
+    <form className="flex flex-col gap-6">
+      <SettingsSwitch
+        enabled={settings.analytics}
+        setEnabled={(enabled) => {
+          enabled
+            ? Fathom.enableTrackingForMe()
+            : Fathom.blockTrackingForMe();
+          dispatchSettings({ type: "SET_ANALYTICS", analytics: enabled });
+        }}
+        label="Enabled Analytics"
+        description="Send telemetry data about usage back to developers."
+      />
 
+      <SettingsSwitch
+        enabled={settings.whatsNewOnStartup}
+        setEnabled={(enabled) =>
+          dispatchSettings({ type: "SET_WHATS_NEW", whatsnew: enabled })
+        }
+        label="Show What's New on Startup"
+        description="Show the What's New message when the app starts."
+      />
+
+      <Field as="div" className="flex items-center justify-between">
+        <span className="flex flex-grow flex-col">
+          <Label>Theme</Label>
+          <Description as="span" className="text-sm text-gray-500">
+            Choose the color scheme of the app.
+          </Description>
+        </span>
+        <Select
+          className={clsx(
+            "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+            "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
+            // Make the text of each option black on Windows
+            "*:text-black",
+          )}
+          value={settings.theme}
+          onChange={(e) => {
+            dispatchSettings({
+              type: "CHANGE_COLOR_SCHEME",
+              colorScheme: e.target.value as ColorScheme,
+            });
+          }}
+        >
+          <option value={ColorScheme.DARK}>Dark</option>
+          <option value={ColorScheme.LIGHT}>Light</option>
+          <option value={ColorScheme.SYSTEM}>System</option>
+        </Select>
+      </Field>
+
+      <SettingsSwitch
+        enabled={settings.publishToLeaderboard}
+        setEnabled={(enabled: boolean) =>
+          dispatchSettings({
+            type: "SET_PUBLISH_TO_LEADERBOARD",
+            publishToLeaderboard: enabled,
+          })
+        }
+        label="Publish to Leaderboard"
+        description="Publish results to the public leaderboard."
+      />
+
+      <SettingsSwitch
+        enabled={settings.blinker}
+        setEnabled={(enabled: boolean) =>
+          dispatchSettings({ type: "SET_BLINKER", blinker: enabled })
+        }
+        label="Blinker"
+        description="Blink the key being typed."
+      />
+    </form>
+  );
+}
+
+function KeyboardSettingsPanel() {
+  const settings = useSettings();
+  const dispatchSettings = useSettingsDispatch();
+
+  return (
+    <form className="flex flex-col gap-6">
+      <KeyboardSelect />
+
+      <Field as="div" className="flex items-center justify-between">
+        <span className="flex flex-grow flex-col">
+          <Label>Language</Label>
+          <Description as="span" className="text-sm text-gray-500">
+            Choose the keyboard of the words to type.
+          </Description>
+        </span>
+        <Select
+          className={clsx(
+            "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+            "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
+            // Make the text of each option black on Windows
+            "*:text-black",
+          )}
+          value={settings.language}
+          onChange={(e) => {
+            dispatchSettings({
+              type: "CHANGE_LANGUAGE",
+              language: e.target.value as Languages,
+            });
+          }}
+        >
+          {languages.map((language) => (
+            <option key={language.value} value={language.value}>
+              {language.label}
+            </option>
+          ))}
+        </Select>
+      </Field>
+    </form>
+  );
+}
+
+function PracticeSettingsPanel() {
+  const settings = useSettings();
+  const dispatchSettings = useSettingsDispatch();
+
+  return (
+    <div className="flex flex-col gap-6">
+      <form className="flex flex-col gap-6">
         <Field as="div" className="flex items-center justify-between">
           <span className="flex flex-grow flex-col">
             <Label className="my-auto sm:col-span-2">Level</Label>
@@ -110,151 +253,114 @@ const Settings = () => {
           </Select>
         </Field>
 
-        <Field as="div" className="flex items-center justify-between">
-          <span className="flex flex-grow flex-col">
-            <Label>Language</Label>
-            <Description as="span" className="text-sm text-gray-500">
-              Choose the keyboard of the words to type.
-            </Description>
-          </span>
-          <Select
-            className={clsx(
-              "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
-              "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
-              // Make the text of each option black on Windows
-              "*:text-black",
-            )}
-            value={settings.language}
-            onChange={(e) => {
-              dispatchSettings({
-                type: "CHANGE_LANGUAGE",
-                language: e.target.value as Languages,
-              });
-            }}
-          >
-            {languages.map((language) => (
-              <option key={language.value} value={language.value}>
-                {language.label}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <SettingsSwitch 
+        <SettingsSwitch
           enabled={settings.punctuation}
-          setEnabled={(enabled) => dispatchSettings({ type: "SET_PUNCTUATION", punctuation: enabled })}
+          setEnabled={(enabled) =>
+            dispatchSettings({ type: "SET_PUNCTUATION", punctuation: enabled })
+          }
           label="Punctuation"
           description="Include punctuation in the words to type."
         />
-        <SettingsSwitch 
+        <SettingsSwitch
           enabled={settings.numbers}
-          setEnabled={(enabled) => dispatchSettings({ type: "SET_NUMBERS", numbers: enabled })}
+          setEnabled={(enabled) =>
+            dispatchSettings({ type: "SET_NUMBERS", numbers: enabled })
+          }
           label="Numbers"
           description="Include numbers in the words to type."
         />
-        <SettingsSwitch 
+        <SettingsSwitch
           enabled={settings.capital}
-          setEnabled={(enabled) => dispatchSettings({ type: "SET_CAPITAL", capital: enabled })}
+          setEnabled={(enabled) =>
+            dispatchSettings({ type: "SET_CAPITAL", capital: enabled })
+          }
           label="Capital"
           description="Include capital letters in the words to type."
         />
       </form>
-      <form className="flex flex-col gap-6">
-        <SettingsSwitch
-          enabled={settings.analytics}
-          setEnabled={(enabled) => {
-            enabled
-              ? Fathom.enableTrackingForMe()
-              : Fathom.blockTrackingForMe();
-            dispatchSettings({ type: "SET_ANALYTICS", analytics: enabled });
-          }}
-          label="Enabled Analytics"
-          description="Send telemetry data about usage back to developers."
-        />
 
-        <SettingsSwitch
-          enabled={settings.whatsNewOnStartup}
-          setEnabled={(enabled) =>
-            dispatchSettings({ type: "SET_WHATS_NEW", whatsnew: enabled })
-          }
-          label="Show What's New on Startup"
-          description="Show the What's New message when the app starts."
-        />
-
-        <Field as="div" className="flex items-center justify-between">
-          <span className="flex flex-grow flex-col">
-            <Label>Theme</Label>
-            <Description as="span" className="text-sm text-gray-500">
-              Choose the color scheme of the app.
-            </Description>
-          </span>
-          <Select
-            className={clsx(
-              "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
-              "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
-              // Make the text of each option black on Windows
-              "*:text-black",
-            )}
-            value={settings.theme}
-            onChange={(e) => {
-              dispatchSettings({
-                type: "CHANGE_COLOR_SCHEME",
-                colorScheme: e.target.value as ColorScheme,
-              });
-            }}
-          >
-            <option value={ColorScheme.DARK}>Dark</option>
-            <option value={ColorScheme.LIGHT}>Light</option>
-            <option value={ColorScheme.SYSTEM}>System</option>
-          </Select>
-        </Field>
-
-        <SettingsSwitch
-          enabled={settings.publishToLeaderboard}
-          setEnabled={(enabled: boolean) =>
-            dispatchSettings({
-              type: "SET_PUBLISH_TO_LEADERBOARD",
-              publishToLeaderboard: enabled,
-            })
-          }
-          label="Publish to Leaderboard"
-          description="Publish results to the public leaderboard."
-        />
-
-        <SettingsSwitch
-          enabled={settings.blinker}
-          setEnabled={(enabled: boolean) =>
-            dispatchSettings({ type: "SET_BLINKER", blinker: enabled })
-          }
-          label="Blinker"
-          description="Blink the key being typed."
-        />
-      </form>
-      </div>
-
-      {/* Code Mode Section */}
       <hr className="border-white/10" />
-      
-      <div className="grid grid-cols-2 gap-10">
-        <CodeSettings />
-      </div>
 
-      {/* Scheduling Section */}
+      <CodeSettings />
+    </div>
+  );
+}
+
+function NotificationsPanel() {
+  return (
+    <div className="flex flex-col gap-6">
+      <NotificationSettings />
       <hr className="border-white/10" />
-      
-      <div className="grid grid-cols-2 gap-10">
-        <NotificationSettings />
-        <CalendarSettings />
-      </div>
-
-      {/* Startup Section */}
+      <CalendarSettings />
       <hr className="border-white/10" />
-      
-      <div className="grid grid-cols-2 gap-10">
-        <StartupSettings />
-      </div>
+      <StartupSettings />
+    </div>
+  );
+}
 
-      {/* Debug Section - Only visible in dev mode */}
+function AccountPanel() {
+  return (
+    <div className="flex flex-col gap-6">
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        Manage your account settings and subscription.
+      </p>
+    </div>
+  );
+}
+
+function AboutPanel() {
+  return (
+    <div className="flex flex-col gap-6">
       <DebugSettings />
+    </div>
+  );
+}
+
+// ── Main Settings component ───────────────────────────────────────────────────
+
+const Settings = () => {
+  const [activeCategory, setActiveCategory] =
+    useState<SettingsCategoryId>("appearance");
+
+  return (
+    <div>
+      <PageHeader
+        icon={faGear}
+        title="Settings"
+        subtitle="Customize your Touch Typer experience"
+        iconBg="bg-slate-400/10"
+        iconColor="text-slate-400 dark:text-slate-300"
+      />
+
+      <div className="px-6 pb-8 flex gap-6 max-w-5xl">
+        {/* Left category nav */}
+        <nav className="w-44 flex-shrink-0 flex flex-col gap-0.5 pt-1">
+          {SETTINGS_CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={clsx(
+                "text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150",
+                activeCategory === cat.id
+                  ? "bg-sky-400/10 text-sky-400"
+                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:text-slate-700 dark:hover:text-slate-200",
+              )}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Right panel */}
+        <div className="flex-1 min-w-0">
+          {activeCategory === "appearance" && <AppearanceSettings />}
+          {activeCategory === "keyboard" && <KeyboardSettingsPanel />}
+          {activeCategory === "practice" && <PracticeSettingsPanel />}
+          {activeCategory === "notifications" && <NotificationsPanel />}
+          {activeCategory === "account" && <AccountPanel />}
+          {activeCategory === "about" && <AboutPanel />}
+        </div>
+      </div>
     </div>
   );
 };
@@ -295,8 +401,8 @@ function SettingsSwitch({
         checked={enabled}
         onChange={setEnabled}
         className={clsx(
-          enabled ? "bg-indigo-600" : "bg-gray-200",
-          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+          enabled ? "bg-sky-500" : "bg-slate-200 dark:bg-slate-700",
+          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:ring-offset-2 focus:ring-offset-transparent",
         )}
       >
         <span
