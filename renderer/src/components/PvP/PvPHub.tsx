@@ -16,6 +16,7 @@ import clsx from "clsx";
 import { useState } from "react";
 import ChallengeCard from "./ChallengeCard";
 import NewChallengePrompt from "./NewChallengePrompt";
+import PageHeader from "@/components/PageHeader";
 
 type TabId = "active" | "awaiting" | "history" | "new";
 
@@ -151,15 +152,13 @@ export default function PvPHub() {
 
   return (
     <div className="max-w-2xl mx-auto py-6 px-4">
-      <div className="flex items-center gap-3 mb-6">
-        <FontAwesomeIcon
-          icon={faSwords}
-          className="w-8 h-8 text-blue-500 dark:text-blue-400"
-        />
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          PvP Arena
-        </h1>
-      </div>
+      <PageHeader
+        icon={faSwords}
+        title="Arena"
+        subtitle="Challenge friends and climb the leaderboard"
+        iconBg="bg-amber-400/10"
+        iconColor="text-amber-400"
+      />
 
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {tabs.map((tab) => (
@@ -170,8 +169,8 @@ export default function PvPHub() {
             className={clsx(
               "flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors",
               activeTab === tab.id
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
+                ? "bg-sky-500/15 border border-sky-500/40 text-sky-400"
+                : "bg-slate-100 dark:bg-white/[0.04] border border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.07]",
             )}
           >
             <FontAwesomeIcon icon={tab.icon} className="w-4 h-4" />
@@ -181,8 +180,8 @@ export default function PvPHub() {
                 className={clsx(
                   "px-2 py-0.5 rounded-full text-xs font-bold",
                   activeTab === tab.id
-                    ? "bg-white/20 text-white"
-                    : "bg-blue-500 text-white",
+                    ? "bg-sky-400/20 text-sky-300"
+                    : "bg-sky-500 text-white",
                 )}
               >
                 {tab.badge}
@@ -227,7 +226,7 @@ function EmptyState({ icon, title, description, action }: EmptyStateProps) {
           onClick={action.onClick}
           className={clsx(
             "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium",
-            "bg-blue-500 hover:bg-blue-600 text-white transition-colors",
+            "bg-sky-500 hover:bg-sky-400 text-white transition-colors",
           )}
         >
           <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
