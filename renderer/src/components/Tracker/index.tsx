@@ -90,8 +90,9 @@ function renderChar(char: string, isTyped: boolean, isCorrect: boolean, isCurren
   return <span className={baseClass}>{char}</span>;
 }
 
-export default function Tracker() {
+export default function Tracker({ mode }: { mode?: "practice" | "code" }) {
   const settings = useSettings();
+  const effectiveCodeMode = mode === "code" || settings.codeMode;
   const { modal } = useModal();
   const router = useRouter();
   const { currentRace, completeRace, forfeitRace } = usePvP();
@@ -109,7 +110,7 @@ export default function Tracker() {
   ] = useReducer(statsReducer, initialStat);
 
   // Get the current text based on mode
-  const currentText = settings.codeMode ? currentSnippet : words;
+  const currentText = effectiveCodeMode ? currentSnippet : words;
 
   const resetWords = useCallback(async () => {
     // PvP mode: word_set is locked at game creation; never re-sample.
@@ -117,7 +118,7 @@ export default function Tracker() {
       setWords(currentRace.game.word_set.join(" "));
       return;
     }
-    if (settings.codeMode) {
+    if (effectiveCodeMode) {
       nextSnippet();
     } else {
       const selected: string[] = [];
@@ -127,7 +128,7 @@ export default function Tracker() {
       const pinned = selected.join(" ").replaceAll("  ", "");
       setWords(pinned);
     }
-  }, [wordList, currentRace, settings.codeMode, nextSnippet]);
+  }, [wordList, currentRace, effectiveCodeMode, nextSnippet]);
 
   useEffect(() => {
     resetWords();
@@ -195,7 +196,7 @@ export default function Tracker() {
     if (!expectedChar) return;
 
     // In code mode, handle special keys
-    if (settings.codeMode) {
+    if (effectiveCodeMode) {
       // Handle Enter key for newlines
       if (e.key === "Enter" && expectedChar === "\n") {
         if (letters.length === 0) {
@@ -239,7 +240,7 @@ export default function Tracker() {
 
     // For regular keys, check if the key exists on keyboard
     // Special handling for newlines and spaces in code mode
-    const isSpecialCodeChar = settings.codeMode && (expectedChar === "\n" || expectedChar === " ");
+    const isSpecialCodeChar = effectiveCodeMode && (expectedChar === "\n" || expectedChar === " ");
     
     if (!isSpecialCodeChar && !keyboard.keyExists(e.key.toLowerCase())) return;
 
@@ -318,8 +319,8 @@ export default function Tracker() {
           punctuation: settings.punctuation,
           numbers: settings.numbers,
           cpm: finalCpm,
-          codeMode: settings.codeMode,
-          codeLang: settings.codeMode ? settings.codeLang : undefined,
+          codeMode: effectiveCodeMode,
+          codeLang: effectiveCodeMode ? settings.codeLang : undefined,
         };
 
         putResult(results);
@@ -364,24 +365,24 @@ export default function Tracker() {
       (results[results.length - 2].correct +
         results[results.length - 2].incorrect);
 
-    let accuracyDiff = acc1 - acc2;
+    accuracyDiff = acc1 - acc2;
   }
 
   // PvP banner content
   const pvpBanner = currentRace ? (
     <div
       data-testid="pvp-mode-banner"
-      className="flex items-center justify-between gap-4 px-4 py-2 mb-2 mx-auto max-w-[800px] rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-100"
+      className="flex items-center justify-between gap-4 px-4 py-2 mb-3 mx-auto max-w-[760px] rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-100"
     >
       <div className="flex items-center gap-2">
-        <FontAwesomeIcon icon={faSwords} className="w-5 h-5 text-yellow-400" />
-        <span className="font-bold">PvP Battle</span>
-        <span className="text-sm opacity-80">Playing blind</span>
+        <FontAwesomeIcon icon={faSwords} className="w-4 h-4 text-sky-400" />
+        <span className="font-semibold text-sm text-sky-300">PvP Battle</span>
+        <span className="text-xs text-sky-400/70">playing blind</span>
       </div>
       <button
         data-testid="pvp-forfeit"
         onClick={handleForfeit}
-        className="flex items-center gap-1 px-3 py-1 rounded-md bg-red-500/80 hover:bg-red-500 text-white text-sm font-semibold transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-400 text-xs font-semibold transition-colors duration-150"
       >
         <FontAwesomeIcon icon={faFlag} className="w-3 h-3" />
         Forfeit
@@ -391,85 +392,103 @@ export default function Tracker() {
 
   // Render the text display based on mode
   const renderTextDisplay = () => {
-    if (settings.codeMode) {
-      // Code mode: multi-line display with special character handling
+    if (effectiveCodeMode) {
       return (
-        <pre className="font-['Roboto_Mono'] text-left p-6 whitespace-pre bg-gray-900/50 rounded-lg mx-auto max-w-[700px] overflow-x-auto text-sm leading-relaxed">
-          {/* Line numbers */}
-          <code>
-            {currentText.split("").map((char, i) => {
-              const isTyped = i < letters.length;
-              const isCorrect = isTyped ? letters[i]?.correct : false;
-              const isCurrent = i === letters.length;
+        <div className="mx-auto max-w-[760px] mt-4 rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.07] shadow-sm">
+          {/* Editor chrome bar */}
+          <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-100 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.06]">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-400/50" />
+              <div className="w-3 h-3 rounded-full bg-amber-400/50" />
+              <div className="w-3 h-3 rounded-full bg-green-400/50" />
+            </div>
+            <span className="text-[11px] font-mono font-medium tracking-wider text-slate-400 dark:text-slate-500 uppercase">
+              {settings.codeLang}
+            </span>
+            <span className="ml-auto text-[10px] text-slate-400 dark:text-slate-600">
+              tab = indent · enter = newline
+            </span>
+          </div>
+          <pre className="font-['Roboto_Mono'] text-sm text-left p-5 whitespace-pre bg-white dark:bg-slate-950/60 overflow-x-auto leading-relaxed">
+            <code>
+              {currentText.split("").map((char, i) => {
+                const isTyped = i < letters.length;
+                const isCorrect = isTyped ? letters[i]?.correct : false;
+                const isCurrent = i === letters.length;
 
-              if (char === "\n") {
+                if (char === "\n") {
+                  return (
+                    <span
+                      key={i}
+                      className={clsx(
+                        isTyped
+                          ? isCorrect
+                            ? "text-slate-400 dark:text-slate-600"
+                            : "bg-red-500/20 text-red-400"
+                          : isCurrent
+                          ? "bg-amber-400/30 text-amber-600 dark:text-amber-400"
+                          : "text-slate-300 dark:text-slate-700",
+                      )}
+                    >
+                      {isCurrent ? "↵" : ""}
+                      {"\n"}
+                    </span>
+                  );
+                }
+
+                if (char === " " && isCurrent) {
+                  return (
+                    <span key={i} className="bg-amber-400 text-slate-900 font-bold rounded-sm">
+                      {"·"}
+                    </span>
+                  );
+                }
+
                 return (
                   <span
                     key={i}
                     className={clsx(
                       isTyped
                         ? isCorrect
-                          ? "text-gray-500"
-                          : "bg-red-500 text-white"
+                          ? "text-slate-500 dark:text-slate-400"
+                          : "bg-red-500/20 text-red-400 rounded-sm"
                         : isCurrent
-                        ? "bg-yellow-600/50"
-                        : "text-gray-500",
+                        ? "bg-amber-400 text-slate-900 font-bold rounded-sm"
+                        : "text-slate-800 dark:text-slate-200",
                     )}
                   >
-                    {isCurrent ? "↵" : ""}
-                    {"\n"}
+                    {char}
                   </span>
                 );
-              }
-
-              if (char === " " && isCurrent) {
-                return (
-                  <span
-                    key={i}
-                    className="bg-yellow-600 font-bold"
-                  >
-                    {"·"}
-                  </span>
-                );
-              }
-
-              return (
-                <span
-                  key={i}
-                  className={clsx(
-                    isTyped
-                      ? isCorrect
-                        ? "text-gray-400"
-                        : "bg-red-500 text-white"
-                      : isCurrent
-                      ? "bg-yellow-600 font-bold text-gray-200"
-                      : "",
-                  )}
-                >
-                  {char}
-                </span>
-              );
-            })}
-          </code>
-        </pre>
+              })}
+            </code>
+          </pre>
+        </div>
       );
     } else {
-      // Word mode: single line display (original behavior)
       return (
-        <p className="font-['Roboto_Mono'] text-center p-10 whitespace-pre-wrap">
-          {letters.map((letter, i) => (
-            <span
-              key={i}
-              className={letter.correct ? "text-gray-400" : "bg-red-500"}
-            >
-              {letter.key}
+        <div className="mx-auto max-w-[760px] mt-4 px-8 py-6">
+          <p className="font-['Roboto_Mono'] text-center text-base leading-loose tracking-wide whitespace-pre-wrap">
+            {letters.map((letter, i) => (
+              <span
+                key={i}
+                className={
+                  letter.correct
+                    ? "text-slate-400 dark:text-slate-500"
+                    : "bg-red-500/20 text-red-400 rounded-sm"
+                }
+              >
+                {letter.key}
+              </span>
+            ))}
+            <span className="bg-amber-400 text-slate-900 font-bold rounded-sm px-px">
+              {currentText[letters.length]}
             </span>
-          ))}
-          <span className="bg-yellow-600 font-bold text-gray-200">
-            {currentText[letters.length]}
-          </span>
-          {currentText.substring(letters.length + 1, currentText.length)}
-        </p>
+            <span className="text-slate-600 dark:text-slate-400">
+              {currentText.substring(letters.length + 1)}
+            </span>
+          </p>
+        </div>
       );
     }
   };
@@ -477,85 +496,86 @@ export default function Tracker() {
   return (
     <div
       className={clsx(
-        currentRace &&
-          "ring-4 ring-yellow-500/60 ring-offset-0 rounded-lg pb-2",
+        currentRace && "ring-2 ring-sky-500/40 ring-offset-0 rounded-xl pb-2",
       )}
     >
       {pvpBanner}
-      <div className="flex gap-10 justify-between pt-10 font-mono mx-auto w-[600px]">
-        <div className="flex items-center">
-          <FontAwesomeIcon icon={settings.codeMode ? faCode : faDungeon} size="3x" />
-          <div className="ml-5">
-            <p className="text-4xl">{incorrect}</p>
-            <p className="text-sm text-gray-400">typos</p>
-          </div>
-          {showChange && !currentRace ? (
-            <div>
-              <p
-                className={clsx(
-                  typoDiff <= 0 ? "text-green-400" : "text-red-400",
-                  "text-sm",
-                )}
-              >
-                {sign(typoDiff)}
-                {typoDiff}
-              </p>
-            </div>
-          ) : null}
+
+      {/* Stats row */}
+      <div className="flex gap-3 justify-center pt-6 font-mono mx-auto max-w-[660px] px-4">
+        {/* Typos card */}
+        <div className="flex-1 flex flex-col items-center gap-1 py-4 px-3 rounded-xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05]">
+          <FontAwesomeIcon
+            icon={effectiveCodeMode ? faCode : faDungeon}
+            className="text-slate-400 dark:text-slate-500 text-lg"
+          />
+          <span className="text-4xl font-bold tabular-nums tracking-tight">
+            {incorrect}
+          </span>
+          <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-600 font-semibold">
+            typos
+          </span>
+          {showChange && !currentRace && (
+            <span
+              className={clsx(
+                "text-xs font-semibold tabular-nums",
+                typoDiff <= 0 ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400",
+              )}
+            >
+              {sign(typoDiff)}{typoDiff}
+            </span>
+          )}
         </div>
-        <div className="flex items-center">
-          <FontAwesomeIcon icon={faPersonRunning} size="3x" />
-          <div className="ml-5">
-            <p className="text-4xl">
-              {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
-            </p>
-            <p className="text-sm text-gray-400">char/min</p>
-          </div>
-          {showChange && !currentRace ? (
-            <div>
-              <p
-                className={clsx(
-                  cpmDiff >= 0 ? "text-green-400" : "text-red-400",
-                  "text-sm",
-                )}
-              >
-                {sign(cpmDiff)}
-                {cpmDiff.toFixed(0)}
-              </p>
-            </div>
-          ) : null}
+
+        {/* Speed card */}
+        <div className="flex-1 flex flex-col items-center gap-1 py-4 px-3 rounded-xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05]">
+          <FontAwesomeIcon
+            icon={faPersonRunning}
+            className="text-slate-400 dark:text-slate-500 text-lg"
+          />
+          <span className="text-4xl font-bold tabular-nums tracking-tight">
+            {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
+          </span>
+          <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-600 font-semibold">
+            char/min
+          </span>
+          {showChange && !currentRace && (
+            <span
+              className={clsx(
+                "text-xs font-semibold tabular-nums",
+                cpmDiff >= 0 ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400",
+              )}
+            >
+              {sign(cpmDiff)}{cpmDiff.toFixed(0)}
+            </span>
+          )}
         </div>
-        <div className="flex items-center">
-          <FontAwesomeIcon icon={faPercentage} size="3x" />
-          <div className="ml-5">
-            <p className="text-4xl">{Number.isFinite(p) ? p.toFixed(0) : 0}</p>
-            <p className="text-sm text-gray-400">accuracy</p>
-          </div>
-          {showChange && !currentRace ? (
-            <div>
-              <p
-                className={clsx(
-                  accuracyDiff >= 0 ? "text-green-400" : "text-red-400",
-                  "text-sm",
-                )}
-              >
-                {sign(accuracyDiff)}
-                {accuracyDiff.toFixed(0)}
-              </p>
-            </div>
-          ) : null}
+
+        {/* Accuracy card */}
+        <div className="flex-1 flex flex-col items-center gap-1 py-4 px-3 rounded-xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05]">
+          <FontAwesomeIcon
+            icon={faPercentage}
+            className="text-slate-400 dark:text-slate-500 text-lg"
+          />
+          <span className="text-4xl font-bold tabular-nums tracking-tight">
+            {Number.isFinite(p) ? p.toFixed(0) : 0}
+          </span>
+          <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-600 font-semibold">
+            accuracy
+          </span>
+          {showChange && !currentRace && (
+            <span
+              className={clsx(
+                "text-xs font-semibold tabular-nums",
+                accuracyDiff >= 0 ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400",
+              )}
+            >
+              {sign(accuracyDiff)}{(accuracyDiff * 100).toFixed(1)}%
+            </span>
+          )}
         </div>
       </div>
-      
-      {/* Code mode indicator */}
-      {settings.codeMode && (
-        <div className="text-center text-sm text-gray-500 mt-4">
-          <span className="bg-gray-800 px-3 py-1 rounded-full">
-            Code Mode: {settings.codeLang.toUpperCase()} | Press Tab for indent, Enter for newline
-          </span>
-        </div>
-      )}
-      
+
       {renderTextDisplay()}
 
       <Canvas

@@ -7,6 +7,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { usePathname } from "next/navigation";
 import { CodeLanguages, SnippetSource, useSettings } from "./settings_hook";
 import { generateCSnippet, generateCSnippets } from "./code-generator";
 
@@ -59,6 +60,8 @@ function normalizeSnippet(snippet: string, tabWidth: number = 4): string {
 
 export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
   const settings = useSettings();
+  const pathname = usePathname();
+  const isCodePage = pathname === "/code";
   const [snippets, setSnippets] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -171,7 +174,7 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Load snippets based on source setting
   useEffect(() => {
-    if (!settings.codeMode) {
+    if (!settings.codeMode && !isCodePage) {
       return;
     }
 
@@ -191,6 +194,7 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [
     settings.codeMode,
+    isCodePage,
     settings.codeSnippetSource,
     settings.codeLang,
     settings.customCodePath,
