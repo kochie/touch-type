@@ -61,36 +61,7 @@ function sign(num: number): string {
   return "";
 }
 
-/**
- * Render a character with visual indicators for special characters
- */
-function renderChar(char: string, isTyped: boolean, isCorrect: boolean, isCurrent: boolean): React.ReactNode {
-  const baseClass = isTyped
-    ? isCorrect
-      ? "text-gray-400"
-      : "bg-red-500 text-white"
-    : isCurrent
-    ? "bg-yellow-600 font-bold text-gray-200"
-    : "";
-
-  // Handle special characters with visual indicators
-  if (char === "\n") {
-    return (
-      <span className={clsx(baseClass, "text-gray-500")}>
-        {"↵"}
-        <br />
-      </span>
-    );
-  }
-
-  if (char === " ") {
-    return <span className={baseClass}>{" "}</span>;
-  }
-
-  return <span className={baseClass}>{char}</span>;
-}
-
-export default function Tracker({ mode }: { mode?: "practice" | "code" }) {
+export default function Tracker({ mode }: { mode?: "code" }) {
   const settings = useSettings();
   const effectiveCodeMode = mode === "code" || settings.codeMode;
   const { modal } = useModal();
