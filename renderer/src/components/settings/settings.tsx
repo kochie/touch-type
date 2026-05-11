@@ -18,6 +18,7 @@ import { NotificationSettings } from "./NotificationSettings";
 import { CalendarSettings } from "./CalendarSettings";
 import { StartupSettings } from "./StartupSettings";
 import { DebugSettings } from "./DebugSettings";
+import { AccountSettings } from "./AccountSettings";
 import { CodeSettings } from "./CodeSettings";
 import PageHeader from "../PageHeader";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
@@ -388,9 +389,7 @@ function NotificationsPanel() {
 function AccountPanel() {
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        Manage your account settings and subscription.
-      </p>
+      <AccountSettings />
     </div>
   );
 }
