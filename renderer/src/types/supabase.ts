@@ -34,6 +34,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_insights: {
+        Row: {
+          created_at: string
+          generated_at: string
+          heatmap_data: Json
+          id: string
+          insight_cards: Json
+          model_version: string
+          sessions_count: number
+          summary: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string
+          heatmap_data?: Json
+          id?: string
+          insight_cards?: Json
+          model_version?: string
+          sessions_count?: number
+          summary?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string
+          heatmap_data?: Json
+          id?: string
+          insight_cards?: Json
+          model_version?: string
+          sessions_count?: number
+          summary?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
           category: string
@@ -437,6 +476,7 @@ export type Database = {
       }
       settings: {
         Row: {
+          ai_weekly_email: boolean
           analytics: boolean | null
           app_language: string
           blinker: boolean | null
@@ -466,6 +506,7 @@ export type Database = {
           whats_new_on_startup: boolean | null
         }
         Insert: {
+          ai_weekly_email?: boolean
           analytics?: boolean | null
           app_language?: string
           blinker?: boolean | null
@@ -495,6 +536,7 @@ export type Database = {
           whats_new_on_startup?: boolean | null
         }
         Update: {
+          ai_weekly_email?: boolean
           analytics?: boolean | null
           app_language?: string
           blinker?: boolean | null
@@ -884,6 +926,7 @@ export type Database = {
         }
       }
       generate_invite_code: { Args: never; Returns: string }
+      generate_unique_username: { Args: never; Returns: string }
       get_match_by_invite_code: {
         Args: { _code: string }
         Returns: {

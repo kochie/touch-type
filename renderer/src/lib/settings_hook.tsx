@@ -99,6 +99,7 @@ const SettingsContext = createContext({
   dismissedKeyboardSuggestions: [] as Languages[],
   appLanguage: Languages.ENGLISH,
   autoDetectAppLanguage: true,
+  aiWeeklyEmail: false,
 });
 
 export const defaultSettings = {
@@ -132,6 +133,7 @@ export const defaultSettings = {
   dismissedKeyboardSuggestions: [] as Languages[],
   appLanguage: Languages.ENGLISH,
   autoDetectAppLanguage: true,
+  aiWeeklyEmail: false,
 };
 
 type ChangeSettingsAction =
@@ -250,6 +252,10 @@ type ChangeSettingsAction =
   | {
       type: "SET_AUTO_DETECT_APP_LANGUAGE";
       enabled: boolean;
+    }
+  | {
+      type: "SET_AI_WEEKLY_EMAIL";
+      aiWeeklyEmail: boolean;
     };
 
 
@@ -431,6 +437,9 @@ const reducer = (
     case "SET_AUTO_DETECT_APP_LANGUAGE":
       return { ...state, autoDetectAppLanguage: action.enabled };
 
+    case "SET_AI_WEEKLY_EMAIL":
+      return { ...state, aiWeeklyEmail: action.aiWeeklyEmail };
+
     default:
       return { ...state };
   }
@@ -513,6 +522,7 @@ export const SettingsProvider = ({ children }) => {
           tabWidth: data.tab_width ?? 4,
           appLanguage: (data.app_language as Languages) ?? Languages.ENGLISH,
           // autoDetectAppLanguage is NOT fetched from DB — machine-specific (localStorage only)
+          aiWeeklyEmail: data.ai_weekly_email ?? false,
         };
         dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
         dbSettingsLoaded.current = true;
@@ -557,6 +567,7 @@ export const SettingsProvider = ({ children }) => {
         tab_width: safeSettings.tabWidth,
         app_language: safeSettings.appLanguage,
         // auto_detect_app_language is NOT saved to DB — machine-specific, same treatment as launchAtStartup
+        ai_weekly_email: safeSettings.aiWeeklyEmail,
       };
 
       const { error } = await supabase

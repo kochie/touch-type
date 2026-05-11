@@ -20,6 +20,7 @@ import { StartupSettings } from "./StartupSettings";
 import { DebugSettings } from "./DebugSettings";
 import { AccountSettings } from "./AccountSettings";
 import { CodeSettings } from "./CodeSettings";
+import { AiAssistantSettings } from "./AiAssistantSettings";
 import PageHeader from "../PageHeader";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
 import { useState, useRef, useEffect } from "react";
@@ -59,6 +60,7 @@ type SettingsCategoryId =
   | "keyboard"
   | "practice"
   | "notifications"
+  | "ai"
   | "account"
   | "about";
 
@@ -67,6 +69,7 @@ const SETTINGS_CATEGORIES: SettingsCategoryId[] = [
   "keyboard",
   "practice",
   "notifications",
+  "ai",
   "account",
   "about",
 ];
@@ -433,7 +436,7 @@ const Settings = () => {
                   : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:text-slate-700 dark:hover:text-slate-200",
               )}
             >
-              {t(`settings.categories.${cat}`)}
+              {cat === "ai" ? "AI Assistant" : t(`settings.categories.${cat}`)}
             </button>
           ))}
         </nav>
@@ -444,6 +447,7 @@ const Settings = () => {
           {activeCategory === "keyboard" && <KeyboardSettingsPanel />}
           {activeCategory === "practice" && <PracticeSettingsPanel />}
           {activeCategory === "notifications" && <NotificationsPanel />}
+          {activeCategory === "ai" && <AiAssistantSettings />}
           {activeCategory === "account" && <AccountPanel />}
           {activeCategory === "about" && <AboutPanel />}
         </div>
