@@ -44,6 +44,9 @@ export enum Languages {
   GERMAN = "de",
   SPANISH = "es",
   MAORI = "mi",
+  ITALIAN = "it",
+  PORTUGUESE_BR = "pt-br",
+  DUTCH = "nl",
 }
 
 export enum CodeLanguages {
