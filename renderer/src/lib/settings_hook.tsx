@@ -11,6 +11,8 @@ import {
 } from "react";
 import { KeyboardLayout, KeyboardLayoutNames } from "@/keyboards";
 import { useSupabase } from "./supabase-provider";
+import i18n from "@/lib/i18n";
+import { detectAppLanguage } from "@/lib/locale-detect";
 
 export interface Settings {
   keyboard: KeyboardLayout;
@@ -94,6 +96,8 @@ const SettingsContext = createContext({
   customCodePath: "",
   tabWidth: 4,
   dismissedKeyboardSuggestions: [] as Languages[],
+  appLanguage: Languages.ENGLISH,
+  autoDetectAppLanguage: true,
 });
 
 export const defaultSettings = {
@@ -125,6 +129,8 @@ export const defaultSettings = {
   customCodePath: "",
   tabWidth: 4,
   dismissedKeyboardSuggestions: [] as Languages[],
+  appLanguage: Languages.ENGLISH,
+  autoDetectAppLanguage: true,
 };
 
 type ChangeSettingsAction =
@@ -235,6 +241,14 @@ type ChangeSettingsAction =
   | {
       type: "CLEAR_KEYBOARD_SUGGESTION_DISMISSAL";
       language: Languages;
+    }
+  | {
+      type: "SET_APP_LANGUAGE";
+      appLanguage: Languages;
+    }
+  | {
+      type: "SET_AUTO_DETECT_APP_LANGUAGE";
+      enabled: boolean;
     };
 
 
@@ -410,6 +424,12 @@ const reducer = (
         ),
       };
 
+    case "SET_APP_LANGUAGE":
+      return { ...state, appLanguage: action.appLanguage };
+
+    case "SET_AUTO_DETECT_APP_LANGUAGE":
+      return { ...state, autoDetectAppLanguage: action.enabled };
+
     default:
       return { ...state };
   }
@@ -427,9 +447,15 @@ export const SettingsProvider = ({ children }) => {
   // Load settings from localStorage after hydration (client-side only)
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
-    
+
     const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
     dispatch({ type: "LOAD_SETTINGS", settings: savedSettings });
+
+    if (savedSettings.autoDetectAppLanguage !== false) {
+      detectAppLanguage().then((detected) => {
+        dispatch({ type: "SET_APP_LANGUAGE", appLanguage: detected });
+      });
+    }
   }, []);
 
   // Sync settings from Supabase when user logs in
@@ -477,6 +503,8 @@ export const SettingsProvider = ({ children }) => {
           codeSnippetSource: (data.code_snippet_source as SnippetSource) ?? SnippetSource.BUNDLED,
           customCodePath: data.custom_code_path ?? "",
           tabWidth: data.tab_width ?? 4,
+          appLanguage: (data.app_language as Languages) ?? Languages.ENGLISH,
+          // autoDetectAppLanguage is NOT fetched from DB — machine-specific (localStorage only)
         };
         dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
       }
@@ -518,6 +546,8 @@ export const SettingsProvider = ({ children }) => {
         code_snippet_source: safeSettings.codeSnippetSource,
         custom_code_path: safeSettings.customCodePath,
         tab_width: safeSettings.tabWidth,
+        app_language: safeSettings.appLanguage,
+        // auto_detect_app_language is NOT saved to DB — machine-specific, same treatment as launchAtStartup
       };
 
       const { error } = await supabase
@@ -550,8 +580,12 @@ export const SettingsProvider = ({ children }) => {
   }, [settings.theme]);
 
   useEffect(() => {
+    i18n.changeLanguage(settings.appLanguage);
+  }, [settings.appLanguage]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
-    
+
     const safeSettings = {
       ...settings,
     };
