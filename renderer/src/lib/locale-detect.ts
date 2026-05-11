@@ -1,17 +1,17 @@
 import { Languages } from "@/lib/settings_hook";
 
-const LOCALE_MAP: Array<{ prefix: string; language: Languages }> = [
-  { prefix: "fr", language: Languages.FRENCH },
-  { prefix: "de", language: Languages.GERMAN },
-  { prefix: "es", language: Languages.SPANISH },
-  { prefix: "mi", language: Languages.MAORI },
-  { prefix: "it", language: Languages.ITALIAN },
-  { prefix: "pt", language: Languages.PORTUGUESE_BR },
-  { prefix: "nl", language: Languages.DUTCH },
-  { prefix: "en", language: Languages.ENGLISH },
-];
-
 function mapLocaleToLanguage(locale: string): Languages {
+  // Map built inside the function to avoid circular-dependency evaluation order issues
+  const LOCALE_MAP: Array<{ prefix: string; language: Languages }> = [
+    { prefix: "fr", language: Languages.FRENCH },
+    { prefix: "de", language: Languages.GERMAN },
+    { prefix: "es", language: Languages.SPANISH },
+    { prefix: "mi", language: Languages.MAORI },
+    { prefix: "it", language: Languages.ITALIAN },
+    { prefix: "pt", language: Languages.PORTUGUESE_BR },
+    { prefix: "nl", language: Languages.DUTCH },
+    { prefix: "en", language: Languages.ENGLISH },
+  ];
   const lower = locale.toLowerCase();
   for (const { prefix, language } of LOCALE_MAP) {
     if (lower === prefix || lower.startsWith(`${prefix}-`)) {
