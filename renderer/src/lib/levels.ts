@@ -70,3 +70,10 @@ export const LEVEL_3_ABNT2 = /^[sdklaei fjg hwo]+$/u;
 export const LEVEL_4_ABNT2 = /^[sdklaei fjg hwo ru ç]+$/u;
 export const LEVEL_5_ABNT2 = /^[sdklaei fjg hwo ru ç zxcm áâãéêíóôõ]+$/u;
 export const LEVEL_6_ABNT2 = /^[sdklaei fjg hwo ru ç zxcm áâãéêíóôõ qtybvpn úü]+$/u;
+
+export const LEVEL_1_IT_QWERTY = /^[sdklaei]+$/u;
+export const LEVEL_2_IT_QWERTY = /^[sdklaei fjg]+$/u;
+export const LEVEL_3_IT_QWERTY = /^[sdklaei fjg hwo]+$/u;
+export const LEVEL_4_IT_QWERTY = /^[sdklaei fjg hwo ru à]+$/u;
+export const LEVEL_5_IT_QWERTY = /^[sdklaei fjg hwo ru à zxcm èì]+$/u;
+export const LEVEL_6_IT_QWERTY = /^[sdklaei fjg hwo ru à zxcm èì qtybvpn òù]+$/u;
