@@ -30,8 +30,15 @@ function CodePageInner() {
   const dispatch = useSettingsDispatch();
 
   useEffect(() => {
-    window.electronAPI?.setWindowHeight?.(CODE_MODE_HEIGHT);
-    return () => { window.electronAPI?.setWindowHeight?.(DEFAULT_HEIGHT); };
+    let resized = false;
+    const timer = setTimeout(() => {
+      window.electronAPI?.setWindowHeight?.(CODE_MODE_HEIGHT);
+      resized = true;
+    }, 100);
+    return () => {
+      clearTimeout(timer);
+      if (resized) window.electronAPI?.setWindowHeight?.(DEFAULT_HEIGHT);
+    };
   }, []);
 
   const rightPanel = (
