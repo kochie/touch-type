@@ -129,7 +129,12 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
     if (!keyboard.keyExists(currentChar.toLowerCase())) return;
     const key = keyboard.findKey(currentChar.toLowerCase());
     const [i, j] = keyboard.findIndex(currentChar.toLowerCase());
-    setCurrentKey({ current: key, i, j });
+    // Skip the state update when nothing actually changed — avoids an
+    // infinite loop caused by the new object reference always being !== prev.
+    setCurrentKey((prev) => {
+      if (prev?.current === key && prev?.i === i && prev?.j === j) return prev;
+      return { current: key, i, j };
+    });
   }, [letters.length, currentText]);
 
   const d = (time as Interval).toDuration();
