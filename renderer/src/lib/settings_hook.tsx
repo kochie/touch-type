@@ -93,6 +93,7 @@ const SettingsContext = createContext({
   codeSnippetSource: SnippetSource.BUNDLED,
   customCodePath: "",
   tabWidth: 4,
+  dismissedKeyboardSuggestions: [] as Languages[],
 });
 
 export const defaultSettings = {
@@ -123,6 +124,7 @@ export const defaultSettings = {
   codeSnippetSource: SnippetSource.BUNDLED,
   customCodePath: "",
   tabWidth: 4,
+  dismissedKeyboardSuggestions: [] as Languages[],
 };
 
 type ChangeSettingsAction =
@@ -225,6 +227,14 @@ type ChangeSettingsAction =
   | {
       type: "SET_TAB_WIDTH";
       width: number;
+    }
+  | {
+      type: "DISMISS_KEYBOARD_SUGGESTION";
+      language: Languages;
+    }
+  | {
+      type: "CLEAR_KEYBOARD_SUGGESTION_DISMISSAL";
+      language: Languages;
     };
 
 
@@ -379,6 +389,25 @@ const reducer = (
       return {
         ...state,
         tabWidth: action.width,
+      };
+
+    case "DISMISS_KEYBOARD_SUGGESTION":
+      return {
+        ...state,
+        dismissedKeyboardSuggestions: [
+          ...state.dismissedKeyboardSuggestions.filter(
+            (l) => l !== action.language,
+          ),
+          action.language,
+        ],
+      };
+
+    case "CLEAR_KEYBOARD_SUGGESTION_DISMISSAL":
+      return {
+        ...state,
+        dismissedKeyboardSuggestions: state.dismissedKeyboardSuggestions.filter(
+          (l) => l !== action.language,
+        ),
       };
 
     default:

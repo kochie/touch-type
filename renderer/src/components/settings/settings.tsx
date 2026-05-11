@@ -21,7 +21,8 @@ import { DebugSettings } from "./DebugSettings";
 import { CodeSettings } from "./CodeSettings";
 import PageHeader from "../PageHeader";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { keyboards } from "../KeyboardSelect";
 
 export const levels = [
   {
@@ -154,42 +155,9 @@ function AppearanceSettings() {
 }
 
 function KeyboardSettingsPanel() {
-  const settings = useSettings();
-  const dispatchSettings = useSettingsDispatch();
-
   return (
     <form className="flex flex-col gap-6">
       <KeyboardSelect />
-
-      <Field as="div" className="flex items-center justify-between">
-        <span className="flex flex-grow flex-col">
-          <Label>Language</Label>
-          <Description as="span" className="text-sm text-gray-500">
-            Choose the keyboard of the words to type.
-          </Description>
-        </span>
-        <Select
-          className={clsx(
-            "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
-            "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
-            // Make the text of each option black on Windows
-            "*:text-black",
-          )}
-          value={settings.language}
-          onChange={(e) => {
-            dispatchSettings({
-              type: "CHANGE_LANGUAGE",
-              language: e.target.value as Languages,
-            });
-          }}
-        >
-          {LANGUAGES.map((language) => (
-            <option key={language.value} value={language.value}>
-              {language.label}
-            </option>
-          ))}
-        </Select>
-      </Field>
     </form>
   );
 }
@@ -198,8 +166,106 @@ function PracticeSettingsPanel() {
   const settings = useSettings();
   const dispatchSettings = useSettingsDispatch();
 
+  const prevKeyboard = useRef(settings.keyboardName);
+  useEffect(() => {
+    if (prevKeyboard.current !== settings.keyboardName) {
+      const langEntry = LANGUAGES.find((l) => l.value === settings.language);
+      if (langEntry?.preferredKeyboards.includes(settings.keyboardName)) {
+        dispatchSettings({
+          type: "CLEAR_KEYBOARD_SUGGESTION_DISMISSAL",
+          language: settings.language,
+        });
+      }
+      prevKeyboard.current = settings.keyboardName;
+    }
+  }, [settings.keyboardName, settings.language, dispatchSettings]);
+
+  const langEntry = LANGUAGES.find((l) => l.value === settings.language);
+  const showSuggestion =
+    langEntry !== undefined &&
+    langEntry.preferredKeyboards.length > 0 &&
+    !langEntry.preferredKeyboards.includes(settings.keyboardName) &&
+    !settings.dismissedKeyboardSuggestions.includes(settings.language);
+
+  const primaryKeyboard = langEntry?.preferredKeyboards[0];
+  const primaryKeyboardName = primaryKeyboard
+    ? (keyboards.find((k) => k.layout === primaryKeyboard)?.name ??
+       primaryKeyboard)
+    : "";
+
   return (
     <div className="flex flex-col gap-6">
+      <form className="flex flex-col gap-6">
+        <Field as="div" className="flex items-center justify-between">
+          <span className="flex flex-grow flex-col">
+            <Label>Language</Label>
+            <Description as="span" className="text-sm text-gray-500">
+              Choose the language of the words to type.
+            </Description>
+          </span>
+          <Select
+            className={clsx(
+              "block w-44 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+              "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
+              "*:text-black",
+            )}
+            value={settings.language}
+            onChange={(e) => {
+              dispatchSettings({
+                type: "CHANGE_LANGUAGE",
+                language: e.target.value as Languages,
+              });
+            }}
+          >
+            {LANGUAGES.map((language) => (
+              <option key={language.value} value={language.value}>
+                {language.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </form>
+
+      {showSuggestion && primaryKeyboard && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-sky-400/[0.08] border border-sky-400/20 text-sm">
+          <span className="text-slate-700 dark:text-slate-300">
+            {langEntry?.label} types best with the{" "}
+            <span className="font-semibold">{primaryKeyboardName}</span>{" "}
+            keyboard.
+          </span>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                dispatchSettings({
+                  type: "CHANGE_KEYBOARD",
+                  keyboardName: primaryKeyboard,
+                });
+                dispatchSettings({
+                  type: "DISMISS_KEYBOARD_SUGGESTION",
+                  language: settings.language,
+                });
+              }}
+              className="text-sky-400 font-semibold hover:text-sky-300 transition-colors"
+            >
+              Switch
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                dispatchSettings({
+                  type: "DISMISS_KEYBOARD_SUGGESTION",
+                  language: settings.language,
+                })
+              }
+              className="text-slate-400 hover:text-slate-300 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       <form className="flex flex-col gap-6">
         <Field as="div" className="flex items-center justify-between">
           <span className="flex flex-grow flex-col">
@@ -212,7 +278,6 @@ function PracticeSettingsPanel() {
             className={clsx(
               "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
               "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
-              // Make the text of each option black on Windows
               "*:text-black",
             )}
             value={settings.levelName}
@@ -252,12 +317,10 @@ function PracticeSettingsPanel() {
           setEnabled={(enabled) =>
             dispatchSettings({ type: "SET_CAPITAL", capital: enabled })
           }
-          label="Capital"
+          label="Capital Letters"
           description="Include capital letters in the words to type."
         />
       </form>
-
-      <hr className="border-white/10" />
 
       <CodeSettings />
     </div>
