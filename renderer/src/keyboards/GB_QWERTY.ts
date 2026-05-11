@@ -61,7 +61,7 @@ export const MACOS_GB_QWERTY: KeyboardLayout = [
     new Key("'", { secondaryKey: "@" }),
     new Key(
       "Enter",
-      { position: ["bottom", "right"], width: 58, inert: true, shape: "backwards-l-slim" },
+      { position: ["middle", "center"], width: 58, inert: true, shape: "backwards-l-slim", font: "28px 'Roboto Mono'" },
       "↵",
     ),
   ],
