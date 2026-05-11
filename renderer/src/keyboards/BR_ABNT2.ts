@@ -85,7 +85,7 @@ export const MACOS_BR_ABNT2: KeyboardLayout = [
     new Key("/", { secondaryKey: "?" }),
     new Key(
       "Shift",
-      { position: ["bottom", "right"], width: 140, inert: true },
+      { position: ["bottom", "right"], width: 60, inert: true },
       "shift",
     ),
   ],

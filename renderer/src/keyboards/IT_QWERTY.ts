@@ -84,7 +84,7 @@ export const MACOS_IT_QWERTY: KeyboardLayout = [
     new Key("-", { secondaryKey: "_" }),
     new Key(
       "Shift",
-      { position: ["bottom", "right"], width: 185, inert: true },
+      { position: ["bottom", "right"], width: 145, inert: true },
       "shift",
     ),
   ],
