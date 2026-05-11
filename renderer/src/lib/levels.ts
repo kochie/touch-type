@@ -36,6 +36,13 @@ export const LEVEL_4_QWERTY_MI = /^[sdklaei āfjg hwoōē īruū]+$/u;
 export const LEVEL_5_QWERTY_MI = /^[sdklaei āfjg hwoōē īruū zxcm]+$/u;
 export const LEVEL_6_QWERTY_MI = /^[sdklaei āfjg hwoōē īruū zxcm qtybvpn]+$/u;
 
+export const LEVEL_1_COLEMAK_DH = /^[rsei]+$/u;
+export const LEVEL_2_COLEMAK_DH = /^[rsei atno]+$/u;
+export const LEVEL_3_COLEMAK_DH = /^[rsei atno wfuy]+$/u;
+export const LEVEL_4_COLEMAK_DH = /^[rsei atno wfuy qpjy]+$/u;
+export const LEVEL_5_COLEMAK_DH = /^[rsei atno wfuy qpjy xcm]+$/u;
+export const LEVEL_6_COLEMAK_DH = /^[rsei atno wfuy qpjy xcm zvbdhgk]+$/u;
+
 export const LEVEL_1_QWERTZ = /^[sdkläüop]+$/u;
 export const LEVEL_2_QWERTZ = /^[sdkläüop afjö]+$/u;
 export const LEVEL_3_QWERTZ = /^[sdkläüop afjö we]+$/u;

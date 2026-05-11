@@ -41,6 +41,14 @@ const regExpMap = {
     [Levels.LEVEL_5]: regexp.LEVEL_5_COLEMAK,
     [Levels.LEVEL_6]: regexp.LEVEL_6_COLEMAK,
   },
+  [KeyboardLayoutNames.MACOS_US_COLEMAK_DH]: {
+    [Levels.LEVEL_1]: regexp.LEVEL_1_COLEMAK_DH,
+    [Levels.LEVEL_2]: regexp.LEVEL_2_COLEMAK_DH,
+    [Levels.LEVEL_3]: regexp.LEVEL_3_COLEMAK_DH,
+    [Levels.LEVEL_4]: regexp.LEVEL_4_COLEMAK_DH,
+    [Levels.LEVEL_5]: regexp.LEVEL_5_COLEMAK_DH,
+    [Levels.LEVEL_6]: regexp.LEVEL_6_COLEMAK_DH,
+  },
   [KeyboardLayoutNames.MACOS_FR_AZERTY]: {
     [Levels.LEVEL_1]: regexp.LEVEL_1_AZERTY,
     [Levels.LEVEL_2]: regexp.LEVEL_2_AZERTY,
