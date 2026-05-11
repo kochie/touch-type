@@ -62,7 +62,7 @@ export const MACOS_BR_ABNT2: KeyboardLayout = [
     new Key(
       "Enter",
       { position: ["bottom", "right"], width: 58, inert: true, shape: "backwards-l-slim" },
-      "return",
+      "↵",
     ),
   ],
   [
