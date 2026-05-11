@@ -23,6 +23,8 @@ import PageHeader from "../PageHeader";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
 import { useState, useRef, useEffect } from "react";
 import { keyboards } from "../KeyboardSelect";
+import { useTranslation } from "react-i18next";
+import { detectAppLanguage } from "@/lib/locale-detect";
 
 export const levels = [
   {
@@ -59,18 +61,13 @@ type SettingsCategoryId =
   | "account"
   | "about";
 
-interface SettingsCategory {
-  id: SettingsCategoryId;
-  label: string;
-}
-
-const SETTINGS_CATEGORIES: SettingsCategory[] = [
-  { id: "appearance", label: "Appearance" },
-  { id: "keyboard", label: "Keyboard" },
-  { id: "practice", label: "Practice & Code" },
-  { id: "notifications", label: "Notifications" },
-  { id: "account", label: "Account" },
-  { id: "about", label: "About" },
+const SETTINGS_CATEGORIES: SettingsCategoryId[] = [
+  "appearance",
+  "keyboard",
+  "practice",
+  "notifications",
+  "account",
+  "about",
 ];
 
 // ── Panel components ──────────────────────────────────────────────────────────
@@ -78,6 +75,7 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
 function AppearanceSettings() {
   const settings = useSettings();
   const dispatchSettings = useSettingsDispatch();
+  const { t } = useTranslation();
 
   return (
     <form className="flex flex-col gap-6">
@@ -89,8 +87,8 @@ function AppearanceSettings() {
             : Fathom.blockTrackingForMe();
           dispatchSettings({ type: "SET_ANALYTICS", analytics: enabled });
         }}
-        label="Enabled Analytics"
-        description="Send telemetry data about usage back to developers."
+        label={t("settings.appearance.analytics")}
+        description={t("settings.appearance.analyticsDesc")}
       />
 
       <SettingsSwitch
@@ -98,22 +96,21 @@ function AppearanceSettings() {
         setEnabled={(enabled) =>
           dispatchSettings({ type: "SET_WHATS_NEW", whatsnew: enabled })
         }
-        label="Show What's New on Startup"
-        description="Show the What's New message when the app starts."
+        label={t("settings.appearance.whatsNew")}
+        description={t("settings.appearance.whatsNewDesc")}
       />
 
       <Field as="div" className="flex items-center justify-between">
         <span className="flex flex-grow flex-col">
-          <Label>Theme</Label>
+          <Label>{t("settings.appearance.theme")}</Label>
           <Description as="span" className="text-sm text-gray-500">
-            Choose the color scheme of the app.
+            {t("settings.appearance.themeDesc")}
           </Description>
         </span>
         <Select
           className={clsx(
             "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
             "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
-            // Make the text of each option black on Windows
             "*:text-black",
           )}
           value={settings.theme}
@@ -124,9 +121,9 @@ function AppearanceSettings() {
             });
           }}
         >
-          <option value={ColorScheme.DARK}>Dark</option>
-          <option value={ColorScheme.LIGHT}>Light</option>
-          <option value={ColorScheme.SYSTEM}>System</option>
+          <option value={ColorScheme.DARK}>{t("settings.appearance.themeDark")}</option>
+          <option value={ColorScheme.LIGHT}>{t("settings.appearance.themeLight")}</option>
+          <option value={ColorScheme.SYSTEM}>{t("settings.appearance.themeSystem")}</option>
         </Select>
       </Field>
 
@@ -138,8 +135,8 @@ function AppearanceSettings() {
             publishToLeaderboard: enabled,
           })
         }
-        label="Publish to Leaderboard"
-        description="Publish results to the public leaderboard."
+        label={t("settings.appearance.publishLeaderboard")}
+        description={t("settings.appearance.publishLeaderboardDesc")}
       />
 
       <SettingsSwitch
@@ -147,8 +144,53 @@ function AppearanceSettings() {
         setEnabled={(enabled: boolean) =>
           dispatchSettings({ type: "SET_BLINKER", blinker: enabled })
         }
-        label="Blinker"
-        description="Blink the key being typed."
+        label={t("settings.appearance.blinker")}
+        description={t("settings.appearance.blinkerDesc")}
+      />
+
+      <Field as="div" className="flex items-center justify-between">
+        <span className="flex flex-grow flex-col">
+          <Label>{t("settings.appearance.appLanguage")}</Label>
+          <Description as="span" className="text-sm text-gray-500">
+            {t("settings.appearance.appLanguageDesc")}
+          </Description>
+        </span>
+        <Select
+          className={clsx(
+            "block w-44 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+            "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
+            "*:text-black",
+            settings.autoDetectAppLanguage && "opacity-50 cursor-not-allowed",
+          )}
+          value={settings.appLanguage}
+          disabled={settings.autoDetectAppLanguage}
+          onChange={(e) => {
+            dispatchSettings({
+              type: "SET_APP_LANGUAGE",
+              appLanguage: e.target.value as Languages,
+            });
+          }}
+        >
+          {LANGUAGES.map((language) => (
+            <option key={language.value} value={language.value}>
+              {language.label}
+            </option>
+          ))}
+        </Select>
+      </Field>
+
+      <SettingsSwitch
+        enabled={settings.autoDetectAppLanguage}
+        setEnabled={(enabled) => {
+          dispatchSettings({ type: "SET_AUTO_DETECT_APP_LANGUAGE", enabled });
+          if (enabled) {
+            detectAppLanguage().then((detected) => {
+              dispatchSettings({ type: "SET_APP_LANGUAGE", appLanguage: detected });
+            });
+          }
+        }}
+        label={t("settings.appearance.autoDetect")}
+        description={t("settings.appearance.autoDetectDesc")}
       />
     </form>
   );
@@ -157,6 +199,7 @@ function AppearanceSettings() {
 function KeyboardSettingsPanel() {
   const settings = useSettings();
   const dispatchSettings = useSettingsDispatch();
+  const { t } = useTranslation();
 
   const prevKeyboard = useRef(settings.keyboardName);
   useEffect(() => {
@@ -191,9 +234,9 @@ function KeyboardSettingsPanel() {
 
       <Field as="div" className="flex items-center justify-between">
         <span className="flex flex-grow flex-col">
-          <Label>Language</Label>
+          <Label>{t("settings.keyboard.practiceLanguage")}</Label>
           <Description as="span" className="text-sm text-gray-500">
-            Choose the language of the words to type.
+            {t("settings.keyboard.practiceLanguageDesc")}
           </Description>
         </span>
         <Select
@@ -363,13 +406,14 @@ function AboutPanel() {
 const Settings = () => {
   const [activeCategory, setActiveCategory] =
     useState<SettingsCategoryId>("appearance");
+  const { t } = useTranslation();
 
   return (
     <div>
       <PageHeader
         icon={faGear}
-        title="Settings"
-        subtitle="Customize your Touch Typer experience"
+        title={t("settings.title")}
+        subtitle={t("settings.subtitle")}
         iconBg="bg-slate-400/10"
         iconColor="text-slate-400 dark:text-slate-300"
       />
@@ -379,16 +423,16 @@ const Settings = () => {
         <nav className="w-44 flex-shrink-0 flex flex-col gap-0.5 pt-1">
           {SETTINGS_CATEGORIES.map((cat) => (
             <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
               className={clsx(
                 "text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150",
-                activeCategory === cat.id
+                activeCategory === cat
                   ? "bg-sky-400/10 text-sky-400"
                   : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:text-slate-700 dark:hover:text-slate-200",
               )}
             >
-              {cat.label}
+              {t(`settings.categories.${cat}`)}
             </button>
           ))}
         </nav>
