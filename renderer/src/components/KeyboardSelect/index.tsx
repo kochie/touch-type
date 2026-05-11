@@ -90,7 +90,7 @@ export default function KeyboardSelect() {
     if (foundKeyboard) {
       setSelectedKeyboard(foundKeyboard);
     }
-  }, []);
+  }, [settings.keyboardName]);
 
   const handleChange = (value: KeyboardLayoutNames) => {
     const keyboard = keyboards.find((keyboard) => keyboard.layout === value);
