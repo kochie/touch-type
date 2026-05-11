@@ -79,7 +79,15 @@ const regExpMap = {
     [Levels.LEVEL_4]: regexp.LEVEL_4_QWERTY,
     [Levels.LEVEL_5]: regexp.LEVEL_5_QWERTY,
     [Levels.LEVEL_6]: regexp.LEVEL_6_QWERTY,
-  }
+  },
+  [KeyboardLayoutNames.MACOS_GB_QWERTY]: {
+    [Levels.LEVEL_1]: regexp.LEVEL_1_GB_QWERTY,
+    [Levels.LEVEL_2]: regexp.LEVEL_2_GB_QWERTY,
+    [Levels.LEVEL_3]: regexp.LEVEL_3_GB_QWERTY,
+    [Levels.LEVEL_4]: regexp.LEVEL_4_GB_QWERTY,
+    [Levels.LEVEL_5]: regexp.LEVEL_5_GB_QWERTY,
+    [Levels.LEVEL_6]: regexp.LEVEL_6_GB_QWERTY,
+  },
 };
 
 function getRegExp(levelName: Levels, keyboardName: KeyboardLayoutNames) {

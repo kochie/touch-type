@@ -49,3 +49,10 @@ export const LEVEL_3_QWERTZ = /^[sdkläüop afjö we]+$/u;
 export const LEVEL_4_QWERTZ = /^[sdkläüop afjö we xcmbin]+$/u;
 export const LEVEL_5_QWERTZ = /^[sdkläüop afjö we xcmbin qrupght]+$/u;
 export const LEVEL_6_QWERTZ = /^[sdkläüop afjö we xcmbin qrupght vyzß]+$/u;
+
+export const LEVEL_1_GB_QWERTY = /^[sdklaei]+$/u;
+export const LEVEL_2_GB_QWERTY = /^[sdklaei fjg]+$/u;
+export const LEVEL_3_GB_QWERTY = /^[sdklaei fjg hwo]+$/u;
+export const LEVEL_4_GB_QWERTY = /^[sdklaei fjg hwo ru]+$/u;
+export const LEVEL_5_GB_QWERTY = /^[sdklaei fjg hwo ru zxcm]+$/u;
+export const LEVEL_6_GB_QWERTY = /^[sdklaei fjg hwo ru zxcm qtybvpn]+$/u;
