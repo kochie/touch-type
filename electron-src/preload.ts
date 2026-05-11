@@ -118,6 +118,12 @@ declare global {
       getCodeSnippets: (lang: string) => Promise<Uint8Array>;
       loadUserCodeFile: (filePath: string) => Promise<string | null>;
       showOpenDialog: () => Promise<OpenDialogResult>;
+      // MAS streak freeze in-app purchase
+      purchaseStreakFreeze: (productId: string) => Promise<{ queued: boolean; error?: string }>;
+      // Notified by main process after Stripe freeze checkout completes
+      onFreezePurchaseComplete: (callback: () => void) => void;
+      // Notified by main process after Stripe subscription checkout completes (3DS fallback)
+      onSubscriptionPurchaseComplete: (callback: () => void) => void;
     };
   }
 }
@@ -134,11 +140,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onDeepLink: (callback: (data: DeepLinkData) => void) => {
     ipcRenderer.on("deep-link", (_, data: DeepLinkData) => callback(data));
   },
+  offDeepLink: () => ipcRenderer.removeAllListeners("deep-link"),
 
   // Navigation - listen for navigation requests from tray menu
   onNavigate: (callback: (path: string) => void) => {
     ipcRenderer.on("navigate", (_, path: string) => callback(path));
   },
+  offNavigate: () => ipcRenderer.removeAllListeners("navigate"),
 
   // Push notifications (APNS/WNS)
   registerPushNotifications: (): Promise<PushRegistrationResult> =>
@@ -213,4 +221,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   showOpenDialog: (): Promise<{ canceled: boolean; filePaths: string[] }> =>
     ipcRenderer.invoke("showOpenDialog"),
+
+  purchaseStreakFreeze: (productId: string): Promise<{ queued: boolean; error?: string }> =>
+    ipcRenderer.invoke("purchaseStreakFreeze", productId),
+
+  onFreezePurchaseComplete: (callback: () => void): void => {
+    ipcRenderer.on("freeze-purchase-complete", () => callback());
+  },
+
+  onSubscriptionPurchaseComplete: (callback: () => void): void => {
+    ipcRenderer.on("subscription-purchase-complete", () => callback());
+  },
 });

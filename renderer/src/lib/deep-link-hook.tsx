@@ -85,8 +85,10 @@ export function useDeepLink(handlers?: DeepLinkHandlers): void {
     // Register navigation handler (for tray menu)
     window.electronAPI.onNavigate(handleNavigate);
 
-    // Note: We don't need to clean up IPC listeners in this case
-    // as they persist for the lifetime of the app
+    return () => {
+      window.electronAPI?.offDeepLink?.();
+      window.electronAPI?.offNavigate?.();
+    };
   }, [handleDeepLink, handleNavigate]);
 }
 

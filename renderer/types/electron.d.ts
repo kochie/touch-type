@@ -74,7 +74,9 @@ export interface ElectronAPI {
   getSystemLocale: () => Promise<string>;
   // Deep linking
   onDeepLink: (callback: (data: DeepLinkData) => void) => void;
+  offDeepLink: () => void;
   onNavigate: (callback: (path: string) => void) => void;
+  offNavigate: () => void;
   // Push notifications
   registerPushNotifications: () => Promise<PushRegistrationResult>;
   unregisterPushNotifications: () => Promise<ScheduleResult>;
@@ -100,6 +102,12 @@ export interface ElectronAPI {
   getCodeSnippets: (lang: string) => Promise<Uint8Array | null>;
   loadUserCodeFile: (filePath: string) => Promise<string | null>;
   showOpenDialog: () => Promise<{ canceled: boolean; filePaths: string[] }>;
+  // MAS streak freeze consumable purchase
+  purchaseStreakFreeze: (productId: string) => Promise<{ queued: boolean; error?: string }>;
+  // Fired by main process after Stripe freeze checkout completes
+  onFreezePurchaseComplete: (callback: () => void) => void;
+  // Fired by main process after Stripe subscription checkout completes (3DS fallback)
+  onSubscriptionPurchaseComplete: (callback: () => void) => void;
 }
 
 declare global {
