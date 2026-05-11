@@ -10,7 +10,8 @@ import {
 import { useWords } from "@/lib/word-provider";
 import { usePvP, type ChallengeSettings } from "@/lib/pvp-provider";
 import { keyboards } from "../KeyboardSelect";
-import { languages, levels } from "../settings/settings";
+import { levels } from "../settings/settings";
+import { LANGUAGES as languages } from "@/lib/languages";
 import { KeyboardLayoutNames } from "@/keyboards";
 import {
   Description,
