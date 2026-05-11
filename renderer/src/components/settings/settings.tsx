@@ -13,6 +13,7 @@ import { Description, Field, Label, Select, Switch } from "@headlessui/react";
 import { platform } from "os";
 import KeyboardSelect from "../KeyboardSelect";
 import clsx from "clsx";
+import { LANGUAGES } from "@/lib/languages";
 import { NotificationSettings } from "./NotificationSettings";
 import { CalendarSettings } from "./CalendarSettings";
 import { StartupSettings } from "./StartupSettings";
@@ -21,29 +22,6 @@ import { CodeSettings } from "./CodeSettings";
 import PageHeader from "../PageHeader";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
-
-export const languages = [
-  {
-    value: Languages.ENGLISH,
-    label: "English",
-  },
-  {
-    value: Languages.FRENCH,
-    label: "French",
-  },
-  {
-    value: Languages.GERMAN,
-    label: "German",
-  },
-  {
-    value: Languages.SPANISH,
-    label: "Spanish",
-  },
-  {
-    value: Languages.MAORI,
-    label: "Maori",
-  },
-];
 
 export const levels = [
   {
@@ -205,7 +183,7 @@ function KeyboardSettingsPanel() {
             });
           }}
         >
-          {languages.map((language) => (
+          {LANGUAGES.map((language) => (
             <option key={language.value} value={language.value}>
               {language.label}
             </option>

@@ -21,7 +21,7 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { defaultSettings, useSettings } from "@/lib/settings_hook";
 import { keyboards } from "../KeyboardSelect";
-import { languages } from "../settings/settings";
+import { LANGUAGES } from "@/lib/languages";
 import { useMas } from "@/lib/mas_hook";
 import { usePlan } from "@/lib/plan_hook";
 import { useStreak } from "@/lib/streak_hook";
@@ -159,7 +159,7 @@ export default function Menu({
             </span>
             <span className="opacity-40">•</span>
             <span>
-              {languages.find(
+              {LANGUAGES.find(
                 (l) => l.value === hydratedSettings.language
               )?.label ?? hydratedSettings.language}
             </span>
