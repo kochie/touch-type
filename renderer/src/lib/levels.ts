@@ -63,3 +63,10 @@ export const LEVEL_3_NORDIC = /^[sdklaei fjg hwo]+$/u;
 export const LEVEL_4_NORDIC = /^[sdklaei fjg hwo ru å]+$/u;
 export const LEVEL_5_NORDIC = /^[sdklaei fjg hwo ru å zxcm ä]+$/u;
 export const LEVEL_6_NORDIC = /^[sdklaei fjg hwo ru å zxcm ä qtybvpn ö]+$/u;
+
+export const LEVEL_1_ABNT2 = /^[sdklaei]+$/u;
+export const LEVEL_2_ABNT2 = /^[sdklaei fjg]+$/u;
+export const LEVEL_3_ABNT2 = /^[sdklaei fjg hwo]+$/u;
+export const LEVEL_4_ABNT2 = /^[sdklaei fjg hwo ru ç]+$/u;
+export const LEVEL_5_ABNT2 = /^[sdklaei fjg hwo ru ç zxcm áâãéêíóôõ]+$/u;
+export const LEVEL_6_ABNT2 = /^[sdklaei fjg hwo ru ç zxcm áâãéêíóôõ qtybvpn úü]+$/u;

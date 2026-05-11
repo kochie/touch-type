@@ -96,6 +96,14 @@ const regExpMap = {
     [Levels.LEVEL_5]: regexp.LEVEL_5_NORDIC,
     [Levels.LEVEL_6]: regexp.LEVEL_6_NORDIC,
   },
+  [KeyboardLayoutNames.MACOS_BR_ABNT2]: {
+    [Levels.LEVEL_1]: regexp.LEVEL_1_ABNT2,
+    [Levels.LEVEL_2]: regexp.LEVEL_2_ABNT2,
+    [Levels.LEVEL_3]: regexp.LEVEL_3_ABNT2,
+    [Levels.LEVEL_4]: regexp.LEVEL_4_ABNT2,
+    [Levels.LEVEL_5]: regexp.LEVEL_5_ABNT2,
+    [Levels.LEVEL_6]: regexp.LEVEL_6_ABNT2,
+  },
 };
 
 function getRegExp(levelName: Levels, keyboardName: KeyboardLayoutNames) {

@@ -9,6 +9,7 @@ import { MACOS_ES_QWERTY } from "./ES_QWERTY";
 import { MACOS_NZ_QWERTY } from "./NZ_QWERTY";
 import { MACOS_GB_QWERTY } from "./GB_QWERTY";
 import { MACOS_SE_NORDIC } from "./SE_NORDIC";
+import { MACOS_BR_ABNT2 } from "./BR_ABNT2";
 
 export enum KeyboardLayoutNames {
   MACOS_US_QWERTY = "MACOS_US_QWERTY",
@@ -21,6 +22,7 @@ export enum KeyboardLayoutNames {
   MACOS_NZ_QWERTY = "MACOS_NZ_QWERTY",
   MACOS_GB_QWERTY = "MACOS_GB_QWERTY",
   MACOS_SE_NORDIC = "MACOS_SE_NORDIC",
+  MACOS_BR_ABNT2 = "MACOS_BR_ABNT2",
 }
 
 export type KeyboardLayout = (Key | Key[])[][];
@@ -36,6 +38,7 @@ export {
   MACOS_NZ_QWERTY,
   MACOS_GB_QWERTY,
   MACOS_SE_NORDIC,
+  MACOS_BR_ABNT2,
 };
 
 export type { Key, Shape } from "./key";
@@ -62,6 +65,8 @@ export function lookupKeyboard(keyboardName: KeyboardLayoutNames) {
       return MACOS_GB_QWERTY;
     case KeyboardLayoutNames.MACOS_SE_NORDIC:
       return MACOS_SE_NORDIC;
+    case KeyboardLayoutNames.MACOS_BR_ABNT2:
+      return MACOS_BR_ABNT2;
     default:
       return MACOS_US_QWERTY;
   }
