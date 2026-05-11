@@ -49,6 +49,31 @@ export const keyboards = [
     layout: KeyboardLayoutNames.MACOS_NZ_QWERTY,
     country: "🇳🇿",
   },
+  {
+    name: "MAC COLEMAK-DH",
+    layout: KeyboardLayoutNames.MACOS_US_COLEMAK_DH,
+    country: "🇺🇸",
+  },
+  {
+    name: "MAC QWERTY (British)",
+    layout: KeyboardLayoutNames.MACOS_GB_QWERTY,
+    country: "🇬🇧",
+  },
+  {
+    name: "MAC NORDIC (Swedish)",
+    layout: KeyboardLayoutNames.MACOS_SE_NORDIC,
+    country: "🇸🇪",
+  },
+  {
+    name: "MAC ABNT2 (Portuguese)",
+    layout: KeyboardLayoutNames.MACOS_BR_ABNT2,
+    country: "🇧🇷",
+  },
+  {
+    name: "MAC QWERTY (Italian)",
+    layout: KeyboardLayoutNames.MACOS_IT_QWERTY,
+    country: "🇮🇹",
+  },
 ];
 
 export default function KeyboardSelect() {
