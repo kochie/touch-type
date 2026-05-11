@@ -1,0 +1,37 @@
+{
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your Touch Typer experience",
+    "categories": {
+      "appearance": "Appearance",
+      "keyboard": "Keyboard",
+      "practice": "Practice & Code",
+      "notifications": "Notifications",
+      "account": "Account",
+      "about": "About"
+    },
+    "appearance": {
+      "analytics": "Enable Analytics",
+      "analyticsDesc": "Send telemetry data about usage back to developers.",
+      "whatsNew": "Show What's New on Startup",
+      "whatsNewDesc": "Show the What's New message when the app starts.",
+      "theme": "Theme",
+      "themeDesc": "Choose the color scheme of the app.",
+      "themeDark": "Dark",
+      "themeLight": "Light",
+      "themeSystem": "System",
+      "publishLeaderboard": "Publish to Leaderboard",
+      "publishLeaderboardDesc": "Publish results to the public leaderboard.",
+      "blinker": "Blinker",
+      "blinkerDesc": "Blink the key being typed.",
+      "appLanguage": "Application Language",
+      "appLanguageDesc": "Choose the language of the app interface.",
+      "autoDetect": "Auto-detect Language",
+      "autoDetectDesc": "Automatically set the app language from your system locale."
+    },
+    "keyboard": {
+      "practiceLanguage": "Practice Language",
+      "practiceLanguageDesc": "Choose the language of the words to type."
+    }
+  }
+}
