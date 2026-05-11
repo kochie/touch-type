@@ -2,10 +2,10 @@ import { createContext, useContext, useLayoutEffect, useState } from "react";
 
 type MasContextProps = boolean;
 
-const MasContext = createContext<MasContextProps>(true);
+const MasContext = createContext<MasContextProps>(false);
 
 export const MasProvider = ({ children }) => {
-  const [_isMas, setMas] = useState<boolean>(true);
+  const [_isMas, setMas] = useState<boolean>(false);
 
   useLayoutEffect(() => {
     // electronAPI is only present when the renderer runs inside Electron.
