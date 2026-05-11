@@ -562,8 +562,8 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
       {pvpBanner}
 
       {effectiveCodeMode && !currentRace ? (
-        /* 3-column layout: stats | code box | controls */
-        <div className="flex items-start gap-3 px-6 pt-2">
+        /* 3-column layout: stats | code box | controls — width-capped to keyboard visual bounds */
+        <div className="flex items-start gap-3 max-w-5xl mx-auto px-4 pt-2">
           {verticalStats}
           <div className="flex-1 min-w-0 pt-4">{codeBox}</div>
           {rightPanel && (
