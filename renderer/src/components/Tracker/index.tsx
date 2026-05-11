@@ -480,9 +480,9 @@ export default function Tracker({ mode }: { mode?: "code" }) {
           <div className="flex flex-1 items-center justify-center gap-3 py-3 px-5">
             <FontAwesomeIcon
               icon={effectiveCodeMode ? faCode : faDungeon}
-              className="text-slate-600 dark:text-slate-600 text-lg flex-shrink-0"
+              className="text-slate-500 dark:text-slate-500 text-lg flex-shrink-0"
             />
-            <span className="text-3xl font-bold tabular-nums text-slate-100">
+            <span className="text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
               {incorrect}
             </span>
             <div className="flex flex-col gap-0.5">
@@ -498,7 +498,7 @@ export default function Tracker({ mode }: { mode?: "code" }) {
               >
                 {sign(typoDiff)}{typoDiff}
               </span>
-              <span className="text-[9px] uppercase tracking-widest text-gray-800 font-semibold leading-none">
+              <span className="text-[9px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">
                 typos
               </span>
             </div>
@@ -508,9 +508,9 @@ export default function Tracker({ mode }: { mode?: "code" }) {
           <div className="flex flex-1 items-center justify-center gap-3 py-3 px-5 border-x border-white/[0.07]">
             <FontAwesomeIcon
               icon={faPersonRunning}
-              className="text-slate-600 dark:text-slate-600 text-lg flex-shrink-0"
+              className="text-slate-500 dark:text-slate-500 text-lg flex-shrink-0"
             />
-            <span className="text-3xl font-bold tabular-nums text-slate-100">
+            <span className="text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
               {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
             </span>
             <div className="flex flex-col gap-0.5">
@@ -526,7 +526,7 @@ export default function Tracker({ mode }: { mode?: "code" }) {
               >
                 {sign(cpmDiff)}{cpmDiff.toFixed(0)}
               </span>
-              <span className="text-[9px] uppercase tracking-widest text-gray-800 font-semibold leading-none">
+              <span className="text-[9px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">
                 char/min
               </span>
             </div>
@@ -536,9 +536,9 @@ export default function Tracker({ mode }: { mode?: "code" }) {
           <div className="flex flex-1 items-center justify-center gap-3 py-3 px-5">
             <FontAwesomeIcon
               icon={faPercentage}
-              className="text-slate-600 dark:text-slate-600 text-lg flex-shrink-0"
+              className="text-slate-500 dark:text-slate-500 text-lg flex-shrink-0"
             />
-            <span className="text-3xl font-bold tabular-nums text-slate-100">
+            <span className="text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
               {Number.isFinite(p) ? p.toFixed(0) : 0}
             </span>
             <div className="flex flex-col gap-0.5">
@@ -554,12 +554,11 @@ export default function Tracker({ mode }: { mode?: "code" }) {
               >
                 {sign(accuracyDiff)}{(accuracyDiff * 100).toFixed(1)}%
               </span>
-              <span className="text-[9px] uppercase tracking-widest text-gray-800 font-semibold leading-none">
+              <span className="text-[9px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">
                 accuracy
               </span>
             </div>
           </div>
-
         </div>
       </div>
 
