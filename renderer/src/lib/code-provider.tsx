@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
@@ -63,6 +64,8 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const isCodePage = pathname === "/code";
   const [snippets, setSnippets] = useState<string[]>([]);
+  const snippetsLengthRef = useRef(0);
+  snippetsLengthRef.current = snippets.length;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -204,18 +207,16 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
   ]);
 
   const nextSnippet = useCallback(() => {
-    if (snippets.length === 0) return;
-    
-    // If we're using generated snippets, generate a new one instead of cycling
+    if (snippetsLengthRef.current === 0) return;
+
     if (settings.codeSnippetSource === SnippetSource.GENERATED) {
       const newSnippet = normalizeSnippet(generateCSnippet(), settings.tabWidth);
       setSnippets((prev) => [...prev, newSnippet]);
       setCurrentIndex((prev) => prev + 1);
     } else {
-      // Cycle through existing snippets
-      setCurrentIndex((prev) => (prev + 1) % snippets.length);
+      setCurrentIndex((prev) => (prev + 1) % snippetsLengthRef.current);
     }
-  }, [snippets.length, settings.codeSnippetSource, settings.tabWidth]);
+  }, [settings.codeSnippetSource, settings.tabWidth]);
 
   const currentSnippet = snippets[currentIndex] || "";
 
