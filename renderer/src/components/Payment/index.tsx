@@ -8,9 +8,13 @@ import {
 import { useCallback } from 'react';
 import { useSupabaseClient } from '@/lib/supabase-provider';
 
-// Make sure to call `loadStripe` outside of a component's render to avoid
-// recreating the `Stripe` object on every render.
-const stripePromise = loadStripe('pk_test_51LYouDIsLeqpVAzJK9MonFdeWzOoVDmYW3FfDcJRbGHt9Nx2Km5FCvC7kPtHedlLTfsgvmmYlxpcsn54Gkfx5ZHT00P73XEu2v');
+// Must be initialised outside of a component to avoid recreating on every render.
+// Set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY — it must belong to the same Stripe account
+// as the STRIPE_SECRET_KEY used by the backend edge functions.
+const stripeKey = process.env["NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"];
+if (!stripeKey) throw new Error("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set");
+
+export const stripePromise = loadStripe(stripeKey);
 
 export function StripeCheckout() {
   const supabase = useSupabaseClient();
