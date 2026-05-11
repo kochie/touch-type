@@ -111,8 +111,6 @@ declare global {
       getStartMinimized: () => Promise<boolean>;
       // Debug/Dev mode
       getDebugInfo: () => Promise<DebugInfo>;
-      // System locale
-      getSystemLocale: () => Promise<string>;
       // Streak data — renderer pushes the latest streak so the tray menu can
       // surface it without holding a Supabase session itself.
       updateStreakData: (data: StreakData) => void;
