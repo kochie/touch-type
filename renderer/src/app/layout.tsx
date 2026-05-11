@@ -9,6 +9,7 @@ const isLinux = os.platform() === "linux";
 import "@/styles/globals.css";
 import Fathom from "@/components/Fathom";
 import clsx from "clsx";
+import "@/lib/i18n";
 
 console.log("NODE_ENV", process.env.NODE_ENV)
 
