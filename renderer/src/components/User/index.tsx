@@ -21,7 +21,7 @@ export default function User({ signIn, account }) {
       <button
         onClick={signIn}
         title="Sign In or Sign Up"
-        className="flex items-center px-2.5 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150"
+        className="flex items-center px-2.5 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150 cursor-pointer"
       >
         <FontAwesomeIcon icon={faRightToBracket} className="w-4 h-4" />
       </button>
@@ -32,7 +32,7 @@ export default function User({ signIn, account }) {
     <button
       onClick={account}
       title="Account"
-      className="flex items-center px-2.5 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150"
+      className="flex items-center px-2.5 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150 cursor-pointer"
     >
       <FontAwesomeIcon icon={faUser} className="w-4 h-4" />
     </button>
