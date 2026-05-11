@@ -201,6 +201,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   setThemeSource: (source: "system" | "light" | "dark"): Promise<void> =>
     ipcRenderer.invoke("setThemeSource", source),
 
+  setWindowHeight: (height: number): Promise<void> =>
+    ipcRenderer.invoke("setWindowHeight", height),
+
   // Code mode - load code snippets and user files
   getCodeSnippets: (lang: string): Promise<Uint8Array> =>
     ipcRenderer.invoke("getCodeSnippets", lang),

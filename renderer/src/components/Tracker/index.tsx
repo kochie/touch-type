@@ -484,7 +484,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   );
 
   const codeBox = (
-    <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.07] shadow-sm">
+    <div className="flex flex-col flex-1 rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.07] shadow-sm">
       {/* Editor chrome bar */}
       <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-100 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.06]">
         <div className="flex gap-1.5">
@@ -499,7 +499,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
           tab = indent · enter = newline
         </span>
       </div>
-      <pre ref={codeContainerRef} className="font-['Roboto_Mono'] text-sm text-left p-5 whitespace-pre bg-white dark:bg-slate-950/60 overflow-x-auto overflow-y-hidden max-h-[45vh] leading-relaxed">
+      <pre ref={codeContainerRef} className="font-['Roboto_Mono'] text-sm text-left p-5 whitespace-pre bg-white dark:bg-slate-950/60 overflow-x-auto overflow-y-hidden flex-1 leading-relaxed">
         <code>
           {currentText.split("").map((char, i) => {
             const isTyped = i < letters.length;
@@ -568,9 +568,9 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
 
       {effectiveCodeMode && !currentRace ? (
         /* 3-column layout: stats | code box | controls — width-capped to keyboard visual bounds */
-        <div className="flex items-start gap-3 max-w-5xl mx-auto px-4 pt-2">
+        <div className="flex items-stretch gap-3 max-w-5xl mx-auto px-4 pt-2">
           {verticalStats}
-          <div className="flex-1 min-w-0 pt-4">{codeBox}</div>
+          <div className="flex-1 min-w-0 pt-4 flex flex-col">{codeBox}</div>
           {rightPanel && (
             <div className="flex-shrink-0 w-28 pt-4">{rightPanel}</div>
           )}

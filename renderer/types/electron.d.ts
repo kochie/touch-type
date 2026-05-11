@@ -95,6 +95,7 @@ export interface ElectronAPI {
   updateStreakData: (data: StreakData) => void;
   // Theme
   setThemeSource: (source: "system" | "light" | "dark") => Promise<void>;
+  setWindowHeight: (height: number) => Promise<void>;
   // Code mode
   getCodeSnippets: (lang: string) => Promise<Uint8Array | null>;
   loadUserCodeFile: (filePath: string) => Promise<string | null>;

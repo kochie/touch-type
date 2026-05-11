@@ -139,6 +139,13 @@ app.on("ready", async () => {
 
   ipcMain.handle("getSystemLocale", () => app.getLocale());
 
+  ipcMain.handle("setWindowHeight", (_event: IpcMainInvokeEvent, height: number) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return;
+    const [width] = win.getSize();
+    win.setSize(width, Math.round(height), true);
+  });
+
   // Setup startup handlers for launch at login
   setupStartupHandlers();
 

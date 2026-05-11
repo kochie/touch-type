@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Tracker from "@/components/Tracker";
 import {
   CodeLanguages,
@@ -22,9 +22,17 @@ const CODE_LANGUAGES: { value: CodeLanguages; label: string }[] = [
   { value: CodeLanguages.SWIFT, label: "Swift" },
 ];
 
+const CODE_MODE_HEIGHT = 1100;
+const DEFAULT_HEIGHT = 900;
+
 function CodePageInner() {
   const settings = useSettings();
   const dispatch = useSettingsDispatch();
+
+  useEffect(() => {
+    window.electronAPI?.setWindowHeight?.(CODE_MODE_HEIGHT);
+    return () => { window.electronAPI?.setWindowHeight?.(DEFAULT_HEIGHT); };
+  }, []);
 
   const rightPanel = (
     <div className="flex flex-col gap-1.5">
