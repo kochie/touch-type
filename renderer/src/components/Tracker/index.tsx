@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -61,7 +61,7 @@ function sign(num: number): string {
   return "";
 }
 
-export default function Tracker({ mode }: { mode?: "code" }) {
+export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPanel?: React.ReactNode }) {
   const settings = useSettings();
   const effectiveCodeMode = mode === "code" || settings.codeMode;
   const { modal } = useModal();
@@ -209,11 +209,11 @@ export default function Tracker({ mode }: { mode?: "code" }) {
       }
     }
 
-    // For regular keys, check if the key exists on keyboard
-    // Special handling for newlines and spaces in code mode
-    const isSpecialCodeChar = effectiveCodeMode && (expectedChar === "\n" || expectedChar === " ");
-    
-    if (!isSpecialCodeChar && !keyboard.keyExists(e.key.toLowerCase())) return;
+    // In code mode, accept any printable character (length === 1 filters out
+    // non-printable keys like "ArrowLeft", "Control", etc.). Outside code mode,
+    // restrict to keys that exist on the selected keyboard layout.
+    const isCodeModePrintable = effectiveCodeMode && e.key.length === 1;
+    if (!isCodeModePrintable && !keyboard.keyExists(e.key.toLowerCase())) return;
 
     if (letters.length === 0) {
       statsDispatch({ type: "START" });
@@ -361,108 +361,185 @@ export default function Tracker({ mode }: { mode?: "code" }) {
     </div>
   ) : null;
 
-  // Render the text display based on mode
-  const renderTextDisplay = () => {
-    if (effectiveCodeMode) {
-      return (
-        <div className="mx-auto max-w-[760px] mt-4 rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.07] shadow-sm">
-          {/* Editor chrome bar */}
-          <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-100 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.06]">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-red-400/50" />
-              <div className="w-3 h-3 rounded-full bg-amber-400/50" />
-              <div className="w-3 h-3 rounded-full bg-green-400/50" />
-            </div>
-            <span className="text-[11px] font-mono font-medium tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-              {settings.codeLang}
+  // Render the text display for non-code (word practice) mode
+  const renderTextDisplay = () => (
+    <div className="mx-auto min-w-[900px] max-w-[1000px] mt-4 px-8 py-6">
+      <p className="font-['Roboto_Mono'] text-center text-base leading-loose tracking-wide whitespace-pre-wrap">
+        {letters.map((letter, i) => (
+          <span
+            key={i}
+            className={
+              letter.correct
+                ? "text-slate-400 dark:text-slate-500"
+                : "bg-red-500/20 text-red-400 rounded-sm"
+            }
+          >
+            {letter.key}
+          </span>
+        ))}
+        <span className="bg-amber-400 text-slate-900 font-bold rounded-sm px-px">
+          {currentText[letters.length]}
+        </span>
+        <span className="text-slate-600 dark:text-slate-400">
+          {currentText.substring(letters.length + 1)}
+        </span>
+      </p>
+    </div>
+  );
+
+  const horizontalStats = (
+    <div className="flex justify-center pt-6 font-mono">
+      <div className="flex w-[740px] rounded-2xl overflow-hidden bg-white/[0.03] border border-white/[0.07]">
+        {/* Typos */}
+        <div className="flex flex-1 items-center justify-center gap-4 py-4 px-6">
+          <FontAwesomeIcon
+            icon={effectiveCodeMode ? faCode : faDungeon}
+            className="text-slate-500 dark:text-slate-500 text-3xl flex-shrink-0"
+          />
+          <span className="text-4xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
+            {incorrect}
+          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? typoDiff <= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
+              {sign(typoDiff)}{typoDiff}
             </span>
-            <span className="ml-auto text-[10px] text-slate-400 dark:text-slate-600">
-              tab = indent · enter = newline
-            </span>
+            <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">typos</span>
           </div>
-          <pre className="font-['Roboto_Mono'] text-sm text-left p-5 whitespace-pre bg-white dark:bg-slate-950/60 overflow-x-auto leading-relaxed">
-            <code>
-              {currentText.split("").map((char, i) => {
-                const isTyped = i < letters.length;
-                const isCorrect = isTyped ? letters[i]?.correct : false;
-                const isCurrent = i === letters.length;
-
-                if (char === "\n") {
-                  return (
-                    <span
-                      key={i}
-                      className={clsx(
-                        isTyped
-                          ? isCorrect
-                            ? "text-slate-400 dark:text-slate-600"
-                            : "bg-red-500/20 text-red-400"
-                          : isCurrent
-                          ? "bg-amber-400/30 text-amber-600 dark:text-amber-400"
-                          : "text-slate-300 dark:text-slate-700",
-                      )}
-                    >
-                      {isCurrent ? "↵" : ""}
-                      {"\n"}
-                    </span>
-                  );
-                }
-
-                if (char === " " && isCurrent) {
-                  return (
-                    <span key={i} className="bg-amber-400 text-slate-900 font-bold rounded-sm">
-                      {"·"}
-                    </span>
-                  );
-                }
-
-                return (
-                  <span
-                    key={i}
-                    className={clsx(
-                      isTyped
-                        ? isCorrect
-                          ? "text-slate-500 dark:text-slate-400"
-                          : "bg-red-500/20 text-red-400 rounded-sm"
-                        : isCurrent
-                        ? "bg-amber-400 text-slate-900 font-bold rounded-sm"
-                        : "text-slate-800 dark:text-slate-200",
-                    )}
-                  >
-                    {char}
-                  </span>
-                );
-              })}
-            </code>
-          </pre>
         </div>
-      );
-    } else {
-      return (
-        <div className="mx-auto min-w-[900px] max-w-[1000px] mt-4 px-8 py-6">
-          <p className="font-['Roboto_Mono'] text-center text-base leading-loose tracking-wide whitespace-pre-wrap">
-            {letters.map((letter, i) => (
+        {/* Speed */}
+        <div className="flex flex-1 items-center justify-center gap-4 py-4 px-6 border-x border-white/[0.07]">
+          <FontAwesomeIcon icon={faPersonRunning} className="text-slate-500 dark:text-slate-500 text-3xl flex-shrink-0" />
+          <span className="text-4xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
+            {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
+          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? cpmDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
+              {sign(cpmDiff)}{cpmDiff.toFixed(0)}
+            </span>
+            <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">char/min</span>
+          </div>
+        </div>
+        {/* Accuracy */}
+        <div className="flex flex-1 items-center justify-center gap-4 py-4 px-6">
+          <FontAwesomeIcon icon={faPercentage} className="text-slate-500 dark:text-slate-500 text-3xl flex-shrink-0" />
+          <span className="text-4xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
+            {Number.isFinite(p) ? p.toFixed(0) : 0}
+          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? accuracyDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
+              {sign(accuracyDiff)}{(accuracyDiff * 100).toFixed(1)}%
+            </span>
+            <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">accuracy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const verticalStats = (
+    <div className="flex flex-col gap-2 pt-4 w-20 flex-shrink-0 font-mono">
+      {/* Typos */}
+      <div className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07]">
+        <FontAwesomeIcon icon={faCode} className="text-slate-500 text-base" />
+        <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{incorrect}</span>
+        <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">typos</span>
+        <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? typoDiff <= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
+          {sign(typoDiff)}{typoDiff}
+        </span>
+      </div>
+      {/* Speed */}
+      <div className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07]">
+        <FontAwesomeIcon icon={faPersonRunning} className="text-slate-500 text-base" />
+        <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{Number.isFinite(cpm) ? cpm.toFixed(0) : 0}</span>
+        <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">chr/min</span>
+        <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? cpmDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
+          {sign(cpmDiff)}{cpmDiff.toFixed(0)}
+        </span>
+      </div>
+      {/* Accuracy */}
+      <div className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07]">
+        <FontAwesomeIcon icon={faPercentage} className="text-slate-500 text-base" />
+        <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{Number.isFinite(p) ? p.toFixed(0) : 0}</span>
+        <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">accur.</span>
+        <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? accuracyDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
+          {sign(accuracyDiff)}{(accuracyDiff * 100).toFixed(0)}%
+        </span>
+      </div>
+    </div>
+  );
+
+  const codeBox = (
+    <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.07] shadow-sm">
+      {/* Editor chrome bar */}
+      <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-100 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.06]">
+        <div className="flex gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-red-400/50" />
+          <div className="w-3 h-3 rounded-full bg-amber-400/50" />
+          <div className="w-3 h-3 rounded-full bg-green-400/50" />
+        </div>
+        <span className="text-[11px] font-mono font-medium tracking-wider text-slate-400 dark:text-slate-500 uppercase">
+          {settings.codeLang}
+        </span>
+        <span className="ml-auto text-[10px] text-slate-400 dark:text-slate-600">
+          tab = indent · enter = newline
+        </span>
+      </div>
+      <pre className="font-['Roboto_Mono'] text-sm text-left p-5 whitespace-pre bg-white dark:bg-slate-950/60 overflow-x-auto leading-relaxed">
+        <code>
+          {currentText.split("").map((char, i) => {
+            const isTyped = i < letters.length;
+            const isCorrect = isTyped ? letters[i]?.correct : false;
+            const isCurrent = i === letters.length;
+
+            if (char === "\n") {
+              return (
+                <span
+                  key={i}
+                  className={clsx(
+                    isTyped
+                      ? isCorrect
+                        ? "text-slate-400 dark:text-slate-600"
+                        : "bg-red-500/20 text-red-400"
+                      : isCurrent
+                      ? "bg-amber-400/30 text-amber-600 dark:text-amber-400"
+                      : "text-slate-300 dark:text-slate-700",
+                  )}
+                >
+                  {isCurrent ? "↵" : ""}
+                  {"\n"}
+                </span>
+              );
+            }
+
+            if (char === " " && isCurrent) {
+              return (
+                <span key={i} className="bg-amber-400 text-slate-900 font-bold rounded-sm">
+                  {"·"}
+                </span>
+              );
+            }
+
+            return (
               <span
                 key={i}
-                className={
-                  letter.correct
-                    ? "text-slate-400 dark:text-slate-500"
-                    : "bg-red-500/20 text-red-400 rounded-sm"
-                }
+                className={clsx(
+                  isTyped
+                    ? isCorrect
+                      ? "text-slate-500 dark:text-slate-400"
+                      : "bg-red-500/20 text-red-400 rounded-sm"
+                    : isCurrent
+                    ? "bg-amber-400 text-slate-900 font-bold rounded-sm"
+                    : "text-slate-800 dark:text-slate-200",
+                )}
               >
-                {letter.key}
+                {char}
               </span>
-            ))}
-            <span className="bg-amber-400 text-slate-900 font-bold rounded-sm px-px">
-              {currentText[letters.length]}
-            </span>
-            <span className="text-slate-600 dark:text-slate-400">
-              {currentText.substring(letters.length + 1)}
-            </span>
-          </p>
-        </div>
-      );
-    }
-  };
+            );
+          })}
+        </code>
+      </pre>
+    </div>
+  );
 
   return (
     <div
@@ -472,97 +549,21 @@ export default function Tracker({ mode }: { mode?: "code" }) {
     >
       {pvpBanner}
 
-      {/* Stats pill strip */}
-      <div className="flex justify-center pt-6 font-mono">
-        <div className="flex w-[620px] rounded-2xl overflow-hidden bg-white/[0.03] border border-white/[0.07]">
-
-          {/* Typos */}
-          <div className="flex flex-1 items-center justify-center gap-3 py-3 px-5">
-            <FontAwesomeIcon
-              icon={effectiveCodeMode ? faCode : faDungeon}
-              className="text-slate-500 dark:text-slate-500 text-lg flex-shrink-0"
-            />
-            <span className="text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
-              {incorrect}
-            </span>
-            <div className="flex flex-col gap-0.5">
-              <span
-                className={clsx(
-                  "text-[11px] font-semibold tabular-nums leading-none",
-                  showChange && !currentRace
-                    ? typoDiff <= 0
-                      ? "text-green-400"
-                      : "text-red-400"
-                    : "invisible",
-                )}
-              >
-                {sign(typoDiff)}{typoDiff}
-              </span>
-              <span className="text-[9px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">
-                typos
-              </span>
-            </div>
-          </div>
-
-          {/* Speed */}
-          <div className="flex flex-1 items-center justify-center gap-3 py-3 px-5 border-x border-white/[0.07]">
-            <FontAwesomeIcon
-              icon={faPersonRunning}
-              className="text-slate-500 dark:text-slate-500 text-lg flex-shrink-0"
-            />
-            <span className="text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
-              {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
-            </span>
-            <div className="flex flex-col gap-0.5">
-              <span
-                className={clsx(
-                  "text-[11px] font-semibold tabular-nums leading-none",
-                  showChange && !currentRace
-                    ? cpmDiff >= 0
-                      ? "text-green-400"
-                      : "text-red-400"
-                    : "invisible",
-                )}
-              >
-                {sign(cpmDiff)}{cpmDiff.toFixed(0)}
-              </span>
-              <span className="text-[9px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">
-                char/min
-              </span>
-            </div>
-          </div>
-
-          {/* Accuracy */}
-          <div className="flex flex-1 items-center justify-center gap-3 py-3 px-5">
-            <FontAwesomeIcon
-              icon={faPercentage}
-              className="text-slate-500 dark:text-slate-500 text-lg flex-shrink-0"
-            />
-            <span className="text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
-              {Number.isFinite(p) ? p.toFixed(0) : 0}
-            </span>
-            <div className="flex flex-col gap-0.5">
-              <span
-                className={clsx(
-                  "text-[11px] font-semibold tabular-nums leading-none",
-                  showChange && !currentRace
-                    ? accuracyDiff >= 0
-                      ? "text-green-400"
-                      : "text-red-400"
-                    : "invisible",
-                )}
-              >
-                {sign(accuracyDiff)}{(accuracyDiff * 100).toFixed(1)}%
-              </span>
-              <span className="text-[9px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">
-                accuracy
-              </span>
-            </div>
-          </div>
+      {effectiveCodeMode && !currentRace ? (
+        /* 3-column layout: stats | code box | controls */
+        <div className="flex items-start gap-3 px-6 pt-2">
+          {verticalStats}
+          <div className="flex-1 min-w-0 pt-4">{codeBox}</div>
+          {rightPanel && (
+            <div className="flex-shrink-0 w-28 pt-4">{rightPanel}</div>
+          )}
         </div>
-      </div>
-
-      {renderTextDisplay()}
+      ) : (
+        <>
+          {horizontalStats}
+          {renderTextDisplay()}
+        </>
+      )}
 
       <Canvas
         letters={letters}
