@@ -73,6 +73,27 @@ export type Database = {
         }
         Relationships: []
       }
+      app_auth_codes: {
+        Row: {
+          code: string
+          created_at: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code?: string
+          created_at?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
           category: string
@@ -235,10 +256,33 @@ export type Database = {
         }
         Relationships: []
       }
+      processed_payment_intents: {
+        Row: {
+          created_at: string
+          credited_quantity: number
+          payment_intent_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credited_quantity?: number
+          payment_intent_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credited_quantity?: number
+          payment_intent_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
           email: string | null
+          equipped_face: string
+          equipped_hat: string | null
           id: string
           name: string | null
           phone_number: string | null
@@ -249,6 +293,8 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email?: string | null
+          equipped_face?: string
+          equipped_hat?: string | null
           id: string
           name?: string | null
           phone_number?: string | null
@@ -259,6 +305,8 @@ export type Database = {
         Update: {
           created_at?: string | null
           email?: string | null
+          equipped_face?: string
+          equipped_hat?: string | null
           id?: string
           name?: string | null
           phone_number?: string | null
@@ -1247,4 +1295,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
