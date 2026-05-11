@@ -182,11 +182,13 @@ function AppearanceSettings() {
       <SettingsSwitch
         enabled={settings.autoDetectAppLanguage}
         setEnabled={(enabled) => {
-          dispatchSettings({ type: "SET_AUTO_DETECT_APP_LANGUAGE", enabled });
           if (enabled) {
             detectAppLanguage().then((detected) => {
               dispatchSettings({ type: "SET_APP_LANGUAGE", appLanguage: detected });
+              dispatchSettings({ type: "SET_AUTO_DETECT_APP_LANGUAGE", enabled: true });
             });
+          } else {
+            dispatchSettings({ type: "SET_AUTO_DETECT_APP_LANGUAGE", enabled: false });
           }
         }}
         label={t("settings.appearance.autoDetect")}
