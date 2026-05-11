@@ -57,10 +57,10 @@ export function shouldStartMinimized(): boolean {
     argv: process.argv,
   });
   
-  // Start minimized if both conditions are met:
-  // 1. App was auto-launched (or startMinimized is enabled regardless)
-  // 2. User has enabled start minimized
-  return startMinimized && (wasAutoLaunched || startMinimized);
+  // Start minimized only when BOTH conditions are met:
+  // 1. App was auto-launched (login item, --hidden, or --autostart flag)
+  // 2. User has enabled start minimized in settings
+  return startMinimized && wasAutoLaunched;
 }
 
 /**
