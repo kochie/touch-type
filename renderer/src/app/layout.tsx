@@ -1,17 +1,8 @@
 import Providers from "./Providers";
-
-const os = require("os");
-
-const isMac = os.platform() === "darwin";
-const isWindows = os.platform() === "win32";
-const isLinux = os.platform() === "linux";
-
 import "@/styles/globals.css";
 import Fathom from "@/components/Fathom";
-import clsx from "clsx";
 import "@/lib/i18n";
-
-console.log("NODE_ENV", process.env.NODE_ENV)
+import { PlatformBody } from "@/components/PlatformBody";
 
 export default function RootLayout({
   children,
@@ -20,17 +11,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        className={clsx(
-          !isMac && "dark:text-white text-black dark:bg-zinc-800 bg-zinc-300",
-          "w-full min-h-screen dark:text-white"
-        )}
-      >
+      <PlatformBody>
         <Fathom />
         <Providers>
           {children}
         </Providers>
-      </body>
+      </PlatformBody>
     </html>
   );
 }
