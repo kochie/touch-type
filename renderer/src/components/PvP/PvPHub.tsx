@@ -8,7 +8,6 @@ import {
   faSwords,
   faSpinnerThird,
   faUserSlash,
-  faTrophy,
 } from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
@@ -216,6 +215,7 @@ export default function PvPHub() {
         .eq("id", user.id);
       if (error) {
         toast.error("Failed to save avatar");
+        throw error;
       }
     },
     [user, supabase],
@@ -223,18 +223,20 @@ export default function PvPHub() {
 
   const handleFaceChange = useCallback(
     (slug: string) => {
+      const prev = myFace;
       setMyFace(slug);
-      saveAvatar(slug, myHat);
+      saveAvatar(slug, myHat).catch(() => setMyFace(prev));
     },
-    [myHat, saveAvatar],
+    [myFace, myHat, saveAvatar],
   );
 
   const handleHatChange = useCallback(
     (slug: string | null) => {
+      const prev = myHat;
       setMyHat(slug);
-      saveAvatar(myFace, slug);
+      saveAvatar(myFace, slug).catch(() => setMyHat(prev));
     },
-    [myFace, saveAvatar],
+    [myFace, myHat, saveAvatar],
   );
 
   // Stats from completed games
