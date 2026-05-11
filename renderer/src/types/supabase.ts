@@ -439,6 +439,7 @@ export type Database = {
       settings: {
         Row: {
           analytics: boolean | null
+          app_language: string | null
           blinker: boolean | null
           capital: boolean | null
           code_lang: string | null
@@ -467,6 +468,7 @@ export type Database = {
         }
         Insert: {
           analytics?: boolean | null
+          app_language?: string | null
           blinker?: boolean | null
           capital?: boolean | null
           code_lang?: string | null
@@ -495,6 +497,7 @@ export type Database = {
         }
         Update: {
           analytics?: boolean | null
+          app_language?: string | null
           blinker?: boolean | null
           capital?: boolean | null
           code_lang?: string | null
