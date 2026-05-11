@@ -39,15 +39,11 @@ export interface FaceDef {
   Component: FC;
 }
 
-export interface HatDef {
-  slug: string;
-  name: string;
-  tier: HatTier;
-  unlockCondition?: UnlockCondition;
-  Component: FC | null; // null = "no hat"
-}
+export type HatDef =
+  | { slug: string; name: string; tier: "free" | "premium"; Component: FC | null; unlockCondition?: never }
+  | { slug: string; name: string; tier: "earned"; Component: FC; unlockCondition: UnlockCondition };
 
-export const FACES: FaceDef[] = [
+export const FACES: readonly FaceDef[] = [
   { slug: "classic", name: "Classic", Component: ClassicFace },
   { slug: "cool",    name: "Cool",    Component: CoolFace },
   { slug: "fierce",  name: "Fierce",  Component: FierceFace },
@@ -61,7 +57,7 @@ export const FACES: FaceDef[] = [
   { slug: "cat",     name: "Cat",     Component: CatFace },
 ];
 
-export const HATS: HatDef[] = [
+export const HATS: readonly HatDef[] = [
   { slug: "none",     name: "None",         tier: "free",    Component: null },
   { slug: "beanie",   name: "Beanie",       tier: "free",    Component: BeanieHat },
   { slug: "cap",      name: "Baseball Cap", tier: "free",    Component: CapHat },
