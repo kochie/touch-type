@@ -8,6 +8,7 @@ import {
   useEffect,
   useLayoutEffect,
   useReducer,
+  useRef,
 } from "react";
 import { KeyboardLayout, KeyboardLayoutNames } from "@/keyboards";
 import { useSupabase } from "./supabase-provider";
@@ -441,6 +442,7 @@ const SettingsDispatchContext = createContext<Dispatch<ChangeSettingsAction>>(
 
 export const SettingsProvider = ({ children }) => {
   const [settings, dispatch] = useReducer(reducer, defaultSettings);
+  const dbSettingsLoaded = useRef(false);
 
   const { supabase, user } = useSupabase();
 
@@ -451,11 +453,17 @@ export const SettingsProvider = ({ children }) => {
     const savedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
     dispatch({ type: "LOAD_SETTINGS", settings: savedSettings });
 
+    let cancelled = false;
     if (savedSettings.autoDetectAppLanguage !== false) {
       detectAppLanguage().then((detected) => {
-        dispatch({ type: "SET_APP_LANGUAGE", appLanguage: detected });
+        if (!cancelled && !dbSettingsLoaded.current) {
+          dispatch({ type: "SET_APP_LANGUAGE", appLanguage: detected });
+        }
       });
     }
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Sync settings from Supabase when user logs in
@@ -507,6 +515,7 @@ export const SettingsProvider = ({ children }) => {
           // autoDetectAppLanguage is NOT fetched from DB — machine-specific (localStorage only)
         };
         dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
+        dbSettingsLoaded.current = true;
       }
     };
 
@@ -580,7 +589,9 @@ export const SettingsProvider = ({ children }) => {
   }, [settings.theme]);
 
   useEffect(() => {
-    i18n.changeLanguage(settings.appLanguage);
+    i18n.changeLanguage(settings.appLanguage).catch((err) => {
+      console.error("Failed to change language:", err);
+    });
   }, [settings.appLanguage]);
 
   useEffect(() => {
