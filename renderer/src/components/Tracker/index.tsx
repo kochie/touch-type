@@ -438,7 +438,7 @@ export default function Tracker({ mode }: { mode?: "code" }) {
       );
     } else {
       return (
-        <div className="mx-auto max-w-[760px] mt-4 px-8 py-6">
+        <div className="mx-auto min-w-[900px] max-w-[1000px] mt-4 px-8 py-6">
           <p className="font-['Roboto_Mono'] text-center text-base leading-loose tracking-wide whitespace-pre-wrap">
             {letters.map((letter, i) => (
               <span
@@ -472,78 +472,94 @@ export default function Tracker({ mode }: { mode?: "code" }) {
     >
       {pvpBanner}
 
-      {/* Stats row */}
-      <div className="flex gap-3 justify-center pt-6 font-mono mx-auto max-w-[660px] px-4">
-        {/* Typos card */}
-        <div className="flex-1 flex flex-col items-center gap-1 py-4 px-3 rounded-xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05]">
-          <FontAwesomeIcon
-            icon={effectiveCodeMode ? faCode : faDungeon}
-            className="text-slate-400 dark:text-slate-500 text-lg"
-          />
-          <span className="text-4xl font-bold tabular-nums tracking-tight">
-            {incorrect}
-          </span>
-          <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-600 font-semibold">
-            typos
-          </span>
-          {showChange && !currentRace && (
-            <span
-              className={clsx(
-                "text-xs font-semibold tabular-nums",
-                typoDiff <= 0 ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400",
-              )}
-            >
-              {sign(typoDiff)}{typoDiff}
-            </span>
-          )}
-        </div>
+      {/* Stats pill strip */}
+      <div className="flex justify-center pt-6 font-mono">
+        <div className="flex w-[620px] rounded-2xl overflow-hidden bg-white/[0.03] border border-white/[0.07]">
 
-        {/* Speed card */}
-        <div className="flex-1 flex flex-col items-center gap-1 py-4 px-3 rounded-xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05]">
-          <FontAwesomeIcon
-            icon={faPersonRunning}
-            className="text-slate-400 dark:text-slate-500 text-lg"
-          />
-          <span className="text-4xl font-bold tabular-nums tracking-tight">
-            {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
-          </span>
-          <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-600 font-semibold">
-            char/min
-          </span>
-          {showChange && !currentRace && (
-            <span
-              className={clsx(
-                "text-xs font-semibold tabular-nums",
-                cpmDiff >= 0 ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400",
-              )}
-            >
-              {sign(cpmDiff)}{cpmDiff.toFixed(0)}
+          {/* Typos */}
+          <div className="flex flex-1 items-center justify-center gap-3 py-3 px-5">
+            <FontAwesomeIcon
+              icon={effectiveCodeMode ? faCode : faDungeon}
+              className="text-slate-600 dark:text-slate-600 text-lg flex-shrink-0"
+            />
+            <span className="text-3xl font-bold tabular-nums text-slate-100">
+              {incorrect}
             </span>
-          )}
-        </div>
+            <div className="flex flex-col gap-0.5">
+              <span
+                className={clsx(
+                  "text-[11px] font-semibold tabular-nums leading-none",
+                  showChange && !currentRace
+                    ? typoDiff <= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                    : "invisible",
+                )}
+              >
+                {sign(typoDiff)}{typoDiff}
+              </span>
+              <span className="text-[9px] uppercase tracking-widest text-gray-800 font-semibold leading-none">
+                typos
+              </span>
+            </div>
+          </div>
 
-        {/* Accuracy card */}
-        <div className="flex-1 flex flex-col items-center gap-1 py-4 px-3 rounded-xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05]">
-          <FontAwesomeIcon
-            icon={faPercentage}
-            className="text-slate-400 dark:text-slate-500 text-lg"
-          />
-          <span className="text-4xl font-bold tabular-nums tracking-tight">
-            {Number.isFinite(p) ? p.toFixed(0) : 0}
-          </span>
-          <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-600 font-semibold">
-            accuracy
-          </span>
-          {showChange && !currentRace && (
-            <span
-              className={clsx(
-                "text-xs font-semibold tabular-nums",
-                accuracyDiff >= 0 ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400",
-              )}
-            >
-              {sign(accuracyDiff)}{(accuracyDiff * 100).toFixed(1)}%
+          {/* Speed */}
+          <div className="flex flex-1 items-center justify-center gap-3 py-3 px-5 border-x border-white/[0.07]">
+            <FontAwesomeIcon
+              icon={faPersonRunning}
+              className="text-slate-600 dark:text-slate-600 text-lg flex-shrink-0"
+            />
+            <span className="text-3xl font-bold tabular-nums text-slate-100">
+              {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
             </span>
-          )}
+            <div className="flex flex-col gap-0.5">
+              <span
+                className={clsx(
+                  "text-[11px] font-semibold tabular-nums leading-none",
+                  showChange && !currentRace
+                    ? cpmDiff >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                    : "invisible",
+                )}
+              >
+                {sign(cpmDiff)}{cpmDiff.toFixed(0)}
+              </span>
+              <span className="text-[9px] uppercase tracking-widest text-gray-800 font-semibold leading-none">
+                char/min
+              </span>
+            </div>
+          </div>
+
+          {/* Accuracy */}
+          <div className="flex flex-1 items-center justify-center gap-3 py-3 px-5">
+            <FontAwesomeIcon
+              icon={faPercentage}
+              className="text-slate-600 dark:text-slate-600 text-lg flex-shrink-0"
+            />
+            <span className="text-3xl font-bold tabular-nums text-slate-100">
+              {Number.isFinite(p) ? p.toFixed(0) : 0}
+            </span>
+            <div className="flex flex-col gap-0.5">
+              <span
+                className={clsx(
+                  "text-[11px] font-semibold tabular-nums leading-none",
+                  showChange && !currentRace
+                    ? accuracyDiff >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                    : "invisible",
+                )}
+              >
+                {sign(accuracyDiff)}{(accuracyDiff * 100).toFixed(1)}%
+              </span>
+              <span className="text-[9px] uppercase tracking-widest text-gray-800 font-semibold leading-none">
+                accuracy
+              </span>
+            </div>
+          </div>
+
         </div>
       </div>
 
