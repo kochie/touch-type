@@ -1,4 +1,3 @@
-// touch-type/renderer/src/lib/i18n.ts
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
@@ -14,6 +13,7 @@ import nlCommon from "@/locales/nl/common.json";
 i18n.use(initReactI18next).init({
   lng: "en",
   fallbackLng: "en",
+  ns: ["common"],
   defaultNS: "common",
   resources: {
     en: { common: enCommon },
@@ -28,6 +28,7 @@ i18n.use(initReactI18next).init({
   interpolation: {
     escapeValue: false,
   },
+  returnNull: false,
 });
 
 export default i18n;
