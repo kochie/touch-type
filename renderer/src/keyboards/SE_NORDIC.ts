@@ -92,12 +92,12 @@ export const MACOS_SE_NORDIC: KeyboardLayout = [
     new Key("fn", { position: ["bottom", "left"], inert: true }, "fn"),
     new Key(
       "Control",
-      { position: ["bottom", "center"], inert: true, icon: "" },
+      { position: ["bottom", "center"], inert: true, icon: "\uf106" },
       "control",
     ),
     new Key(
       "Alt",
-      { position: ["bottom", "center"], inert: true, icon: "" },
+      { position: ["bottom", "center"], inert: true, icon: "\ue318" },
       "option",
     ),
     new Key(
@@ -106,7 +106,7 @@ export const MACOS_SE_NORDIC: KeyboardLayout = [
         position: ["bottom", "center"],
         width: 100,
         inert: true,
-        icon: "",
+        icon: "\ue142",
       },
       "command",
     ),
@@ -117,13 +117,13 @@ export const MACOS_SE_NORDIC: KeyboardLayout = [
         position: ["bottom", "center"],
         width: 100,
         inert: true,
-        icon: "",
+        icon: "\ue142",
       },
       "command",
     ),
     new Key(
       "Alt",
-      { position: ["bottom", "center"], inert: true, icon: "" },
+      { position: ["bottom", "center"], inert: true, icon: "\ue318" },
       "option",
     ),
     new Key(
@@ -133,7 +133,7 @@ export const MACOS_SE_NORDIC: KeyboardLayout = [
         inert: true,
         font: "bold 20px FontAwesome",
       },
-      "",
+      "\uf0d9",
     ),
     [
       new Key(
@@ -144,7 +144,7 @@ export const MACOS_SE_NORDIC: KeyboardLayout = [
           height: 37.5,
           font: "bold 20px FontAwesome",
         },
-        "",
+        "\uf0d8",
       ),
       new Key(
         "ArrowDown",
@@ -154,7 +154,7 @@ export const MACOS_SE_NORDIC: KeyboardLayout = [
           inert: true,
           font: "bold 20px FontAwesome",
         },
-        "",
+        "\uf0d7",
       ),
     ],
     new Key(
@@ -164,7 +164,7 @@ export const MACOS_SE_NORDIC: KeyboardLayout = [
         inert: true,
         font: "bold 20px FontAwesome",
       },
-      "",
+      "\uf0da",
     ),
   ],
 ];
