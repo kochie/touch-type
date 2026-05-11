@@ -71,6 +71,7 @@ export interface ElectronAPI {
   getProducts: () => Promise<Electron.Product[]>;
   isMas: () => Promise<boolean>;
   getDebugInfo: () => Promise<DebugInfo>;
+  getSystemLocale: () => Promise<string>;
   // Deep linking
   onDeepLink: (callback: (data: DeepLinkData) => void) => void;
   onNavigate: (callback: (path: string) => void) => void;

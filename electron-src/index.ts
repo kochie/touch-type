@@ -137,6 +137,8 @@ app.on("ready", async () => {
     nodeVersion: process.versions.node,
   }));
 
+  ipcMain.handle("getSystemLocale", () => app.getLocale());
+
   // Setup startup handlers for launch at login
   setupStartupHandlers();
 
@@ -156,8 +158,9 @@ app.on("ready", async () => {
 
   const mainWindow = new BrowserWindow({
     width: 1280,
-    height: 800,
+    height: 900,
     minWidth: 1280,
+    minHeight: 900,
     autoHideMenuBar: true,
     show: !startHidden, // Don't show window if starting minimized
     // transparent: true,

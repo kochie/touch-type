@@ -111,6 +111,8 @@ declare global {
       getStartMinimized: () => Promise<boolean>;
       // Debug/Dev mode
       getDebugInfo: () => Promise<DebugInfo>;
+      // System locale
+      getSystemLocale: () => Promise<string>;
       // Streak data — renderer pushes the latest streak so the tray menu can
       // surface it without holding a Supabase session itself.
       updateStreakData: (data: StreakData) => void;
@@ -186,6 +188,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Debug/Dev mode
   getDebugInfo: (): Promise<DebugInfo> =>
     ipcRenderer.invoke("getDebugInfo"),
+
+  // System locale
+  getSystemLocale: (): Promise<string> =>
+    ipcRenderer.invoke("getSystemLocale"),
 
   // Streak — fire-and-forget; the tray module listens on this channel.
   updateStreakData: (data: StreakData): void => {
