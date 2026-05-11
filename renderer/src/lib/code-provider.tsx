@@ -10,7 +10,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { CodeLanguages, SnippetSource, useSettings } from "./settings_hook";
-import { generateCSnippet, generateCSnippets } from "./code-generator";
+import { generateSnippet, generateSnippets } from "./code-generator";
 
 type CodeContextProps = {
   snippets: string[];
@@ -102,10 +102,10 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loadGeneratedSnippets = useCallback(() => {
     setError(null);
-    const generated = generateCSnippets(20).map((s) => normalizeSnippet(s, settings.tabWidth));
+    const generated = generateSnippets(settings.codeLang, 20).map((s) => normalizeSnippet(s, settings.tabWidth));
     setSnippets(generated);
     setCurrentIndex(0);
-  }, [settings.tabWidth]);
+  }, [settings.codeLang, settings.tabWidth]);
 
   const loadFileSnippets = useCallback(async () => {
     if (!settings.customCodePath) {
@@ -210,7 +210,7 @@ export const CodeProvider = ({ children }: { children: React.ReactNode }) => {
     if (snippetsLengthRef.current === 0) return;
 
     if (settings.codeSnippetSource === SnippetSource.GENERATED) {
-      const newSnippet = normalizeSnippet(generateCSnippet(), settings.tabWidth);
+      const newSnippet = normalizeSnippet(generateSnippet(settings.codeLang), settings.tabWidth);
       setSnippets((prev) => [...prev, newSnippet]);
       setCurrentIndex((prev) => prev + 1);
     } else {

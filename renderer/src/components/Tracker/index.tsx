@@ -114,8 +114,15 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
     const container = codeContainerRef.current;
     const cursor = cursorRef.current;
     if (!container || !cursor) return;
-    const targetScrollTop = cursor.offsetTop - container.clientHeight / 2 + cursor.offsetHeight / 2;
-    container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: "smooth" });
+    const containerRect = container.getBoundingClientRect();
+    const cursorRect = cursor.getBoundingClientRect();
+    // Position of cursor midpoint relative to the container's visible top edge
+    const cursorMidInView = cursorRect.top - containerRect.top + cursorRect.height / 2;
+    const halfContainer = container.clientHeight / 2;
+    // Only start scrolling once the cursor passes the midpoint of the visible area
+    if (cursorMidInView <= halfContainer) return;
+    const targetScrollTop = container.scrollTop + (cursorMidInView - halfContainer);
+    container.scrollTo({ top: targetScrollTop, behavior: "smooth" });
   }, [letters.length]);
 
   useLayoutEffect(() => {
@@ -452,7 +459,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   );
 
   const verticalStats = (
-    <div className="flex flex-col gap-2 pt-4 w-20 flex-shrink-0 font-mono">
+    <div className="flex flex-col gap-2 w-20 flex-shrink-0 font-mono">
       {/* Typos */}
       <div className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07]">
         <FontAwesomeIcon icon={faCode} className="text-slate-500 text-base" />
@@ -499,14 +506,44 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
           tab = indent · enter = newline
         </span>
       </div>
-      <pre ref={codeContainerRef} className="font-['Roboto_Mono'] text-sm text-left p-5 whitespace-pre bg-white dark:bg-slate-950/60 overflow-x-auto overflow-y-hidden flex-1 leading-relaxed">
-        <code>
-          {currentText.split("").map((char, i) => {
-            const isTyped = i < letters.length;
-            const isCorrect = isTyped ? letters[i]?.correct : false;
-            const isCurrent = i === letters.length;
+      {/* Wrapper takes flex-1 height but contributes 0 natural height (child is absolute) */}
+      <div className="flex-1 relative overflow-hidden bg-white dark:bg-slate-950/60">
+        <pre ref={codeContainerRef} className="absolute inset-0 font-['Roboto_Mono'] text-sm text-left p-5 whitespace-pre overflow-x-auto overflow-y-auto leading-relaxed scrollbar-none">
+          <code>
+            {currentText.split("").map((char, i) => {
+              const isTyped = i < letters.length;
+              const isCorrect = isTyped ? letters[i]?.correct : false;
+              const isCurrent = i === letters.length;
 
-            if (char === "\n") {
+              if (char === "\n") {
+                return (
+                  <span
+                    key={i}
+                    ref={isCurrent ? cursorRef : undefined}
+                    className={clsx(
+                      isTyped
+                        ? isCorrect
+                          ? "text-slate-400 dark:text-slate-600"
+                          : "bg-red-500/20 text-red-400"
+                        : isCurrent
+                        ? "bg-amber-400/30 text-amber-600 dark:text-amber-400"
+                        : "text-slate-300 dark:text-slate-700",
+                    )}
+                  >
+                    {isCurrent ? "↵" : ""}
+                    {"\n"}
+                  </span>
+                );
+              }
+
+              if (char === " " && isCurrent) {
+                return (
+                  <span key={i} ref={cursorRef} className="bg-amber-400 text-slate-900 font-bold rounded-sm">
+                    {"·"}
+                  </span>
+                );
+              }
+
               return (
                 <span
                   key={i}
@@ -514,47 +551,20 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
                   className={clsx(
                     isTyped
                       ? isCorrect
-                        ? "text-slate-400 dark:text-slate-600"
-                        : "bg-red-500/20 text-red-400"
+                        ? "text-slate-500 dark:text-slate-400"
+                        : "bg-red-500/20 text-red-400 rounded-sm"
                       : isCurrent
-                      ? "bg-amber-400/30 text-amber-600 dark:text-amber-400"
-                      : "text-slate-300 dark:text-slate-700",
+                      ? "bg-amber-400 text-slate-900 font-bold rounded-sm"
+                      : "text-slate-800 dark:text-slate-200",
                   )}
                 >
-                  {isCurrent ? "↵" : ""}
-                  {"\n"}
+                  {char}
                 </span>
               );
-            }
-
-            if (char === " " && isCurrent) {
-              return (
-                <span key={i} ref={cursorRef} className="bg-amber-400 text-slate-900 font-bold rounded-sm">
-                  {"·"}
-                </span>
-              );
-            }
-
-            return (
-              <span
-                key={i}
-                ref={isCurrent ? cursorRef : undefined}
-                className={clsx(
-                  isTyped
-                    ? isCorrect
-                      ? "text-slate-500 dark:text-slate-400"
-                      : "bg-red-500/20 text-red-400 rounded-sm"
-                    : isCurrent
-                    ? "bg-amber-400 text-slate-900 font-bold rounded-sm"
-                    : "text-slate-800 dark:text-slate-200",
-                )}
-              >
-                {char}
-              </span>
-            );
-          })}
-        </code>
-      </pre>
+            })}
+          </code>
+        </pre>
+      </div>
     </div>
   );
 
@@ -568,11 +578,11 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
 
       {effectiveCodeMode && !currentRace ? (
         /* 3-column layout: stats | code box | controls — width-capped to keyboard visual bounds */
-        <div className="flex items-stretch gap-3 max-w-5xl mx-auto px-4 pt-2">
+        <div className="flex items-stretch gap-3 max-w-5xl mx-auto px-4 pt-4">
           {verticalStats}
-          <div className="flex-1 min-w-0 pt-4 flex flex-col">{codeBox}</div>
+          <div className="flex-1 min-w-0 flex flex-col">{codeBox}</div>
           {rightPanel && (
-            <div className="flex-shrink-0 w-28 pt-4">{rightPanel}</div>
+            <div className="flex-shrink-0 w-28">{rightPanel}</div>
           )}
         </div>
       ) : (

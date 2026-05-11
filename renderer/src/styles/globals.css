@@ -20,6 +20,14 @@
   --background-position-pos-100: 100% 100%;
 }
 
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Custom scrollbar styling */
 @layer base {
   /* For Firefox */

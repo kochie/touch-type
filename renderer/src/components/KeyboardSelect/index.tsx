@@ -74,6 +74,46 @@ export const keyboards = [
     layout: KeyboardLayoutNames.MACOS_IT_QWERTY,
     country: "🇮🇹",
   },
+  {
+    name: "MAC NORDIC (Norwegian)",
+    layout: KeyboardLayoutNames.MACOS_NO_NORDIC,
+    country: "🇳🇴",
+  },
+  {
+    name: "MAC NORDIC (Danish)",
+    layout: KeyboardLayoutNames.MACOS_DA_NORDIC,
+    country: "🇩🇰",
+  },
+  {
+    name: "MAC NORDIC (Finnish)",
+    layout: KeyboardLayoutNames.MACOS_FI_NORDIC,
+    country: "🇫🇮",
+  },
+  {
+    name: "MAC QWERTY (Canadian French)",
+    layout: KeyboardLayoutNames.MACOS_CA_QWERTY,
+    country: "🇨🇦",
+  },
+  {
+    name: "MAC QWERTY (Dutch)",
+    layout: KeyboardLayoutNames.MACOS_NL_QWERTY,
+    country: "🇳🇱",
+  },
+  {
+    name: "MAC QWERTY (Portuguese)",
+    layout: KeyboardLayoutNames.MACOS_PT_QWERTY,
+    country: "🇵🇹",
+  },
+  {
+    name: "MAC QWERTY (Polish Pro)",
+    layout: KeyboardLayoutNames.MACOS_PL_QWERTY,
+    country: "🇵🇱",
+  },
+  {
+    name: "MAC QWERTY (Turkish Q)",
+    layout: KeyboardLayoutNames.MACOS_TR_QWERTY,
+    country: "🇹🇷",
+  },
 ];
 
 export default function KeyboardSelect() {

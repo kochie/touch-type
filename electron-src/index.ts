@@ -139,11 +139,20 @@ app.on("ready", async () => {
 
   ipcMain.handle("getSystemLocale", () => app.getLocale());
 
+  // Track whether the user has manually resized the window so we can skip
+  // programmatic auto-resizes after they've taken ownership of the size.
+  let userHasResized = false;
+  let isProgrammaticResize = false;
+
   ipcMain.handle("setWindowHeight", (_event: IpcMainInvokeEvent, height: number) => {
+    if (userHasResized) return;
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return;
     const [width] = win.getSize();
+    isProgrammaticResize = true;
     win.setSize(width, Math.round(height), true);
+    // Reset flag after the resize event fires (~next tick)
+    setTimeout(() => { isProgrammaticResize = false; }, 100);
   });
 
   // Setup startup handlers for launch at login
@@ -194,6 +203,10 @@ app.on("ready", async () => {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url); // Open URL in user's browser.
     return { action: "deny" }; // Prevent the app from opening the URL.
+  });
+
+  mainWindow.on("resize", () => {
+    if (!isProgrammaticResize) userHasResized = true;
   });
 
   // Set the main window reference for deep linking

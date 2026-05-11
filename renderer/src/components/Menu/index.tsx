@@ -98,7 +98,7 @@ export default function Menu({
   return (
     <div
       className={clsx(
-        "top-0 sticky w-full z-50 transition-all duration-300 ease-in-out",
+        "top-0 sticky relative w-full z-50 transition-all duration-300 ease-in-out",
         isScrolled
           ? "bg-white/90 dark:bg-[#0d0f14]/95 backdrop-blur-md shadow-sm shadow-black/10 dark:shadow-black/30 border-b border-slate-200/60 dark:border-white/[0.06]"
           : "bg-transparent"
@@ -146,25 +146,6 @@ export default function Menu({
             badge={myActiveGames.length}
           />
         </div>
-
-        {/* Center context — only on home */}
-        {pathname === "/" && (
-          <div className="flex gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 select-none">
-            <span>Level {hydratedSettings.levelName}</span>
-            <span className="opacity-40">•</span>
-            <span>
-              {keyboards.find(
-                (k) => k.layout === hydratedSettings.keyboardName
-              )?.name ?? hydratedSettings.keyboardName}
-            </span>
-            <span className="opacity-40">•</span>
-            <span>
-              {LANGUAGES.find(
-                (l) => l.value === hydratedSettings.language
-              )?.label ?? hydratedSettings.language}
-            </span>
-          </div>
-        )}
 
         {/* Utility actions */}
         <div className="flex items-center gap-1">
@@ -226,6 +207,27 @@ export default function Menu({
           </Link>
         </div>
       </div>
+
+      {/* Center context — absolutely centered within the nav bar */}
+      {pathname === "/" && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 select-none">
+            <span>Level {hydratedSettings.levelName}</span>
+            <span className="opacity-40">•</span>
+            <span>
+              {keyboards.find(
+                (k) => k.layout === hydratedSettings.keyboardName
+              )?.name ?? hydratedSettings.keyboardName}
+            </span>
+            <span className="opacity-40">•</span>
+            <span>
+              {LANGUAGES.find(
+                (l) => l.value === hydratedSettings.language
+              )?.label ?? hydratedSettings.language}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
