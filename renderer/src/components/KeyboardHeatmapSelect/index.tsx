@@ -13,62 +13,62 @@ import clsx from "clsx";
 
 const keyboards = [
   {
-    name: "MAC COLEMAK",
+    name: "Colemak",
     layout: KeyboardLayoutNames.MACOS_US_COLEMAK,
     country: "🇺🇸",
   },
   {
-    name: "MAC QWERTY (American)",
+    name: "US QWERTY",
     layout: KeyboardLayoutNames.MACOS_US_QWERTY,
     country: "🇺🇸",
   },
   {
-    name: "MAC DVORAK",
+    name: "Dvorak",
     layout: KeyboardLayoutNames.MACOS_US_DVORAK,
     country: "🇺🇸",
   },
   {
-    name: "MAC AZERTY",
+    name: "AZERTY",
     layout: KeyboardLayoutNames.MACOS_FR_AZERTY,
     country: "🇫🇷",
   },
   {
-    name: "MAC QWERTZ",
+    name: "QWERTZ",
     layout: KeyboardLayoutNames.MACOS_DE_QWERTZ,
     country: "🇩🇪",
   },
   {
-    name: "MAC QWERTY (Spanish)",
+    name: "ES QWERTY",
     layout: KeyboardLayoutNames.MACOS_ES_QWERTY,
     country: "🇪🇸",
   },
   {
-    name: "MAC QWERTY (Māori)",
+    name: "NZ QWERTY",
     layout: KeyboardLayoutNames.MACOS_NZ_QWERTY,
     country: "🇳🇿",
   },
   {
-    name: "MAC COLEMAK-DH",
+    name: "Colemak-DH",
     layout: KeyboardLayoutNames.MACOS_US_COLEMAK_DH,
     country: "🇺🇸",
   },
   {
-    name: "MAC QWERTY (British)",
+    name: "UK QWERTY",
     layout: KeyboardLayoutNames.MACOS_GB_QWERTY,
     country: "🇬🇧",
   },
   {
-    name: "MAC NORDIC (Swedish)",
+    name: "Nordic SE",
     layout: KeyboardLayoutNames.MACOS_SE_NORDIC,
     country: "🇸🇪",
   },
   {
-    name: "MAC ABNT2 (Portuguese)",
+    name: "ABNT2",
     layout: KeyboardLayoutNames.MACOS_BR_ABNT2,
     country: "🇧🇷",
   },
   {
-    name: "MAC QWERTY (Italian)",
+    name: "IT QWERTY",
     layout: KeyboardLayoutNames.MACOS_IT_QWERTY,
     country: "🇮🇹",
   },
