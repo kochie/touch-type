@@ -1,1 +1,37 @@
-{}
+{
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Personaliza tu experiencia Touch Typer",
+    "categories": {
+      "appearance": "Apariencia",
+      "keyboard": "Teclado",
+      "practice": "Práctica y código",
+      "notifications": "Notificaciones",
+      "account": "Cuenta",
+      "about": "Acerca de"
+    },
+    "appearance": {
+      "analytics": "Activar análisis",
+      "analyticsDesc": "Enviar datos de telemetría a los desarrolladores.",
+      "whatsNew": "Mostrar novedades al iniciar",
+      "whatsNewDesc": "Mostrar el mensaje de novedades cuando se inicia la aplicación.",
+      "theme": "Tema",
+      "themeDesc": "Elige el esquema de colores de la aplicación.",
+      "themeDark": "Oscuro",
+      "themeLight": "Claro",
+      "themeSystem": "Sistema",
+      "publishLeaderboard": "Publicar en clasificación",
+      "publishLeaderboardDesc": "Publicar resultados en la clasificación pública.",
+      "blinker": "Cursor parpadeante",
+      "blinkerDesc": "Hacer parpadear la tecla que se está escribiendo.",
+      "appLanguage": "Idioma de la aplicación",
+      "appLanguageDesc": "Elige el idioma de la interfaz de la aplicación.",
+      "autoDetect": "Detectar idioma automáticamente",
+      "autoDetectDesc": "Establecer automáticamente el idioma de la aplicación desde la configuración regional del sistema."
+    },
+    "keyboard": {
+      "practiceLanguage": "Idioma de práctica",
+      "practiceLanguageDesc": "Elige el idioma de las palabras a escribir."
+    }
+  }
+}

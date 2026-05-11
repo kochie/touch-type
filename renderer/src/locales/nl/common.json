@@ -1,1 +1,37 @@
-{}
+{
+  "settings": {
+    "title": "Instellingen",
+    "subtitle": "Pas je Touch Typer-ervaring aan",
+    "categories": {
+      "appearance": "Uiterlijk",
+      "keyboard": "Toetsenbord",
+      "practice": "Oefenen & code",
+      "notifications": "Meldingen",
+      "account": "Account",
+      "about": "Over"
+    },
+    "appearance": {
+      "analytics": "Analyses inschakelen",
+      "analyticsDesc": "Gebruikstelemetriegegevens naar de ontwikkelaars sturen.",
+      "whatsNew": "Nieuwtjes tonen bij opstarten",
+      "whatsNewDesc": "Het nieuwsbericht tonen wanneer de app start.",
+      "theme": "Thema",
+      "themeDesc": "Kies het kleurenschema van de app.",
+      "themeDark": "Donker",
+      "themeLight": "Licht",
+      "themeSystem": "Systeem",
+      "publishLeaderboard": "Publiceren naar scorebord",
+      "publishLeaderboardDesc": "Resultaten publiceren op het openbare scorebord.",
+      "blinker": "Knipperende cursor",
+      "blinkerDesc": "De getypte toets laten knipperen.",
+      "appLanguage": "Applicatietaal",
+      "appLanguageDesc": "Kies de taal van de app-interface.",
+      "autoDetect": "Taal automatisch detecteren",
+      "autoDetectDesc": "De app-taal automatisch instellen op basis van uw systeemtaalinstellingen."
+    },
+    "keyboard": {
+      "practiceLanguage": "Oefentaal",
+      "practiceLanguageDesc": "Kies de taal van de te typen woorden."
+    }
+  }
+}

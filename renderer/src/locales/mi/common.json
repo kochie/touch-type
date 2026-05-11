@@ -1,1 +1,37 @@
-{}
+{
+  "settings": {
+    "title": "Tautuhinga",
+    "subtitle": "Whakarite i tō wheako Touch Typer",
+    "categories": {
+      "appearance": "Āhua",
+      "keyboard": "Papapātuhi",
+      "practice": "Whakarite & Code",
+      "notifications": "Pānui",
+      "account": "Pūkete",
+      "about": "Mō"
+    },
+    "appearance": {
+      "analytics": "Whakakā Tātaritanga",
+      "analyticsDesc": "Tukuna ngā raraunga arotake ki ngā kaihanga.",
+      "whatsNew": "Whakaahua He Aha te Hou i te Tīmatanga",
+      "whatsNewDesc": "Whakaahua te karere He Aha te Hou ina tīmata te tono.",
+      "theme": "Kaupeka",
+      "themeDesc": "Kōwhiria te hoahoa tae o te tono.",
+      "themeDark": "Pouri",
+      "themeLight": "Mārama",
+      "themeSystem": "Pūnaha",
+      "publishLeaderboard": "Whakaputaina ki te Tūtohu",
+      "publishLeaderboardDesc": "Whakaputaina ngā hua ki te tūtohu tūmatanui.",
+      "blinker": "Kanohi",
+      "blinkerDesc": "Kanapu te pātene e tāia ana.",
+      "appLanguage": "Reo Tono",
+      "appLanguageDesc": "Kōwhiria te reo o te tono.",
+      "autoDetect": "Kitea Aunoa te Reo",
+      "autoDetectDesc": "Tautuhia aunoa te reo o te tono mai i ngā tautuhinga ā-rohe o tō pūnaha."
+    },
+    "keyboard": {
+      "practiceLanguage": "Reo Whakarite",
+      "practiceLanguageDesc": "Kōwhiria te reo o ngā kupu hei tāuru."
+    }
+  }
+}

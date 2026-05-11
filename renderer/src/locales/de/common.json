@@ -1,1 +1,37 @@
-{}
+{
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Passen Sie Ihr Touch Typer-Erlebnis an",
+    "categories": {
+      "appearance": "Erscheinungsbild",
+      "keyboard": "Tastatur",
+      "practice": "Übung & Code",
+      "notifications": "Benachrichtigungen",
+      "account": "Konto",
+      "about": "Über"
+    },
+    "appearance": {
+      "analytics": "Analysen aktivieren",
+      "analyticsDesc": "Telemetriedaten über die Nutzung an Entwickler senden.",
+      "whatsNew": "Neuigkeiten beim Start anzeigen",
+      "whatsNewDesc": "Die Neuigkeiten-Nachricht beim App-Start anzeigen.",
+      "theme": "Design",
+      "themeDesc": "Wählen Sie das Farbschema der App.",
+      "themeDark": "Dunkel",
+      "themeLight": "Hell",
+      "themeSystem": "System",
+      "publishLeaderboard": "In Rangliste veröffentlichen",
+      "publishLeaderboardDesc": "Ergebnisse in der öffentlichen Rangliste veröffentlichen.",
+      "blinker": "Blinker",
+      "blinkerDesc": "Die getippte Taste blinken lassen.",
+      "appLanguage": "Anwendungssprache",
+      "appLanguageDesc": "Wählen Sie die Sprache der App-Oberfläche.",
+      "autoDetect": "Sprache automatisch erkennen",
+      "autoDetectDesc": "Anwendungssprache automatisch aus den Systemeinstellungen übernehmen."
+    },
+    "keyboard": {
+      "practiceLanguage": "Übungssprache",
+      "practiceLanguageDesc": "Wählen Sie die Sprache der zu tippenden Wörter."
+    }
+  }
+}
