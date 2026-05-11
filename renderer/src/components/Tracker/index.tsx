@@ -107,6 +107,16 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
 
   const keys = useRef<KeyPress[]>([]);
   const [currentKey, setCurrentKey] = useState<CurrentKeyRef>();
+  const codeContainerRef = useRef<HTMLPreElement>(null);
+  const cursorRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const container = codeContainerRef.current;
+    const cursor = cursorRef.current;
+    if (!container || !cursor) return;
+    const targetScrollTop = cursor.offsetTop - container.clientHeight / 2 + cursor.offsetHeight / 2;
+    container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: "smooth" });
+  }, [letters.length]);
 
   useLayoutEffect(() => {
     if (currentText.length === 0) return;
@@ -484,7 +494,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
           tab = indent · enter = newline
         </span>
       </div>
-      <pre className="font-['Roboto_Mono'] text-sm text-left p-5 whitespace-pre bg-white dark:bg-slate-950/60 overflow-x-auto leading-relaxed">
+      <pre ref={codeContainerRef} className="font-['Roboto_Mono'] text-sm text-left p-5 whitespace-pre bg-white dark:bg-slate-950/60 overflow-x-auto overflow-y-hidden max-h-[45vh] leading-relaxed">
         <code>
           {currentText.split("").map((char, i) => {
             const isTyped = i < letters.length;
@@ -495,6 +505,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
               return (
                 <span
                   key={i}
+                  ref={isCurrent ? cursorRef : undefined}
                   className={clsx(
                     isTyped
                       ? isCorrect
@@ -513,7 +524,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
 
             if (char === " " && isCurrent) {
               return (
-                <span key={i} className="bg-amber-400 text-slate-900 font-bold rounded-sm">
+                <span key={i} ref={cursorRef} className="bg-amber-400 text-slate-900 font-bold rounded-sm">
                   {"·"}
                 </span>
               );
@@ -522,6 +533,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
             return (
               <span
                 key={i}
+                ref={isCurrent ? cursorRef : undefined}
                 className={clsx(
                   isTyped
                     ? isCorrect
