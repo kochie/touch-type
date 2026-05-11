@@ -56,3 +56,10 @@ export const LEVEL_3_GB_QWERTY = /^[sdklaei fjg hwo]+$/u;
 export const LEVEL_4_GB_QWERTY = /^[sdklaei fjg hwo ru]+$/u;
 export const LEVEL_5_GB_QWERTY = /^[sdklaei fjg hwo ru zxcm]+$/u;
 export const LEVEL_6_GB_QWERTY = /^[sdklaei fjg hwo ru zxcm qtybvpn]+$/u;
+
+export const LEVEL_1_NORDIC = /^[sdklaei]+$/u;
+export const LEVEL_2_NORDIC = /^[sdklaei fjg]+$/u;
+export const LEVEL_3_NORDIC = /^[sdklaei fjg hwo]+$/u;
+export const LEVEL_4_NORDIC = /^[sdklaei fjg hwo ru å]+$/u;
+export const LEVEL_5_NORDIC = /^[sdklaei fjg hwo ru å zxcm ä]+$/u;
+export const LEVEL_6_NORDIC = /^[sdklaei fjg hwo ru å zxcm ä qtybvpn ö]+$/u;
