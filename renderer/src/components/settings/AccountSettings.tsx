@@ -62,6 +62,7 @@ export function AccountSettings() {
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -95,19 +96,25 @@ export function AccountSettings() {
     if (!user) return;
     setSaving(true);
     setSaveStatus("idle");
+    setSaveError(null);
     try {
       const { error } = await supabase.from("profiles").upsert({
         id: user.id,
         name,
-        preferred_username: username,
+        preferred_username: username.trim(),
       });
-      if (error) throw error;
+      if (error) {
+        // Postgres unique violation
+        if (error.code === "23505") throw new Error("That username is already taken.");
+        throw error;
+      }
       await supabase.auth.updateUser({ data: { name } });
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
-    } catch {
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save.");
       setSaveStatus("error");
-      setTimeout(() => setSaveStatus("idle"), 4000);
+      setTimeout(() => { setSaveStatus("idle"); setSaveError(null); }, 4000);
     } finally {
       setSaving(false);
     }
@@ -166,7 +173,7 @@ export function AccountSettings() {
             <span className="text-sm text-green-400">Saved</span>
           )}
           {saveStatus === "error" && (
-            <span className="text-sm text-red-400">Failed to save</span>
+            <span className="text-sm text-red-400">{saveError ?? "Failed to save"}</span>
           )}
           <Button onClick={handleSave} disabled={saving}>
             {saving ? <FontAwesomeIcon icon={faSpinner} spin /> : "Save changes"}
