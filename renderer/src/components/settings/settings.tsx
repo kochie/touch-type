@@ -155,14 +155,6 @@ function AppearanceSettings() {
 }
 
 function KeyboardSettingsPanel() {
-  return (
-    <form className="flex flex-col gap-6">
-      <KeyboardSelect />
-    </form>
-  );
-}
-
-function PracticeSettingsPanel() {
   const settings = useSettings();
   const dispatchSettings = useSettingsDispatch();
 
@@ -194,37 +186,37 @@ function PracticeSettingsPanel() {
     : "";
 
   return (
-    <div className="flex flex-col gap-6">
-      <form className="flex flex-col gap-6">
-        <Field as="div" className="flex items-center justify-between">
-          <span className="flex flex-grow flex-col">
-            <Label>Language</Label>
-            <Description as="span" className="text-sm text-gray-500">
-              Choose the language of the words to type.
-            </Description>
-          </span>
-          <Select
-            className={clsx(
-              "block w-44 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
-              "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
-              "*:text-black",
-            )}
-            value={settings.language}
-            onChange={(e) => {
-              dispatchSettings({
-                type: "CHANGE_LANGUAGE",
-                language: e.target.value as Languages,
-              });
-            }}
-          >
-            {LANGUAGES.map((language) => (
-              <option key={language.value} value={language.value}>
-                {language.label}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      </form>
+    <form className="flex flex-col gap-6">
+      <KeyboardSelect />
+
+      <Field as="div" className="flex items-center justify-between">
+        <span className="flex flex-grow flex-col">
+          <Label>Language</Label>
+          <Description as="span" className="text-sm text-gray-500">
+            Choose the language of the words to type.
+          </Description>
+        </span>
+        <Select
+          className={clsx(
+            "block w-44 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+            "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
+            "*:text-black",
+          )}
+          value={settings.language}
+          onChange={(e) => {
+            dispatchSettings({
+              type: "CHANGE_LANGUAGE",
+              language: e.target.value as Languages,
+            });
+          }}
+        >
+          {LANGUAGES.map((language) => (
+            <option key={language.value} value={language.value}>
+              {language.label}
+            </option>
+          ))}
+        </Select>
+      </Field>
 
       {showSuggestion && primaryKeyboard && (
         <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-sky-400/[0.08] border border-sky-400/20 text-sm">
@@ -265,7 +257,16 @@ function PracticeSettingsPanel() {
           </div>
         </div>
       )}
+    </form>
+  );
+}
 
+function PracticeSettingsPanel() {
+  const settings = useSettings();
+  const dispatchSettings = useSettingsDispatch();
+
+  return (
+    <div className="flex flex-col gap-6">
       <form className="flex flex-col gap-6">
         <Field as="div" className="flex items-center justify-between">
           <span className="flex flex-grow flex-col">

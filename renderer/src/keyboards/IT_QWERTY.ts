@@ -40,11 +40,6 @@ export const MACOS_IT_QWERTY: KeyboardLayout = [
     new Key("p", {}, "P"),
     new Key("\u00e8", { secondaryKey: "\u00e9" }, "\u00e8"),
     new Key("+", { secondaryKey: "*" }),
-    new Key(
-      "Enter",
-      { position: ["bottom", "right"], width: 142.5, inert: true },
-      "return",
-    ),
   ],
   [
     new Key(
@@ -64,6 +59,11 @@ export const MACOS_IT_QWERTY: KeyboardLayout = [
     new Key("\u00f2", { secondaryKey: "\u00e7" }, "\u00f2"),
     new Key("\u00e0", { secondaryKey: "\u00b0" }, "\u00e0"),
     new Key("\u00f9", { secondaryKey: "\u00a7" }, "\u00f9"),
+    new Key(
+      "Enter",
+      { position: ["bottom", "right"], width: 58, inert: true, shape: "backwards-l-slim" },
+      "return",
+    ),
   ],
   [
     new Key(

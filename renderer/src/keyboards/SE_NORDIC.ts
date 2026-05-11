@@ -40,11 +40,6 @@ export const MACOS_SE_NORDIC: KeyboardLayout = [
     new Key("p", {}, "P"),
     new Key("å", { secondaryKey: "Å" }, "å"),
     new Key("¨", { secondaryKey: "^" }),
-    new Key(
-      "Enter",
-      { position: ["bottom", "right"], width: 142.5, inert: true },
-      "return",
-    ),
   ],
   [
     new Key(
@@ -64,6 +59,11 @@ export const MACOS_SE_NORDIC: KeyboardLayout = [
     new Key("ö", { secondaryKey: "Ö" }, "ö"),
     new Key("ä", { secondaryKey: "Ä" }, "ä"),
     new Key("'", { secondaryKey: "*" }),
+    new Key(
+      "Enter",
+      { position: ["bottom", "right"], width: 58, inert: true, shape: "backwards-l-slim" },
+      "return",
+    ),
   ],
   [
     new Key(

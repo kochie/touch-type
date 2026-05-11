@@ -40,11 +40,6 @@ export const MACOS_BR_ABNT2: KeyboardLayout = [
     new Key("p", {}, "P"),
     new Key("\u00b4", { secondaryKey: "`" }),
     new Key("[", { secondaryKey: "{" }),
-    new Key(
-      "Enter",
-      { position: ["bottom", "right"], width: 142.5, inert: true },
-      "return",
-    ),
   ],
   [
     new Key(
@@ -64,6 +59,11 @@ export const MACOS_BR_ABNT2: KeyboardLayout = [
     new Key("\u00e7", { secondaryKey: "\u00c7" }, "\u00e7"),
     new Key("~", { secondaryKey: "^" }),
     new Key("]", { secondaryKey: "}" }),
+    new Key(
+      "Enter",
+      { position: ["bottom", "right"], width: 58, inert: true, shape: "backwards-l-slim" },
+      "return",
+    ),
   ],
   [
     new Key(
