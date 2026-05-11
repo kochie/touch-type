@@ -11,6 +11,7 @@ import { Notification, ipcMain, BrowserWindow, app } from "electron";
 import { join } from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { unlink } from "fs/promises";
 import log from "electron-log";
 import {
   registerForPushNotifications,
@@ -246,6 +247,15 @@ function handlePushNotification(payload: PushNotificationPayload): void {
 async function installLinuxScheduler(config: NotificationConfig): Promise<void> {
   const [hour, minute] = config.time.split(":");
 
+  if (!/^\d{1,2}$/.test(hour) || !/^\d{1,2}$/.test(minute)) {
+    throw new Error(`Invalid time format: ${config.time}`);
+  }
+  const hourNum = parseInt(hour, 10);
+  const minuteNum = parseInt(minute, 10);
+  if (hourNum < 0 || hourNum > 23 || minuteNum < 0 || minuteNum > 59) {
+    throw new Error(`Time out of range: ${config.time}`);
+  }
+
   // First, remove any existing entries
   await removeLinuxScheduler();
 
@@ -271,9 +281,12 @@ async function installLinuxScheduler(config: NotificationConfig): Promise<void> 
 
   const appPath = app.getPath("exe");
   const deepLink = `touchtyper://practice?duration=${config.duration}`;
+  if (!Number.isInteger(config.duration) || config.duration < 0) {
+    throw new Error(`Invalid duration: ${config.duration}`);
+  }
 
   // Create cron entry with a marker comment for identification
-  const cronEntry = `${minute} ${hour} * * ${days} ${appPath} "${deepLink}" # TouchTyperReminder`;
+  const cronEntry = `${minuteNum} ${hourNum} * * ${days} ${appPath} "${deepLink}" # TouchTyperReminder`;
 
   // Add to user's crontab
   try {
