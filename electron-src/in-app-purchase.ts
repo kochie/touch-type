@@ -72,31 +72,3 @@ export async function getProducts(): Promise<Electron.Product[]> {
   console.log(products)
   return products
 }
-
-// Retrieve and display the product descriptions.
-inAppPurchase.getProducts(PRODUCT_IDS).then(products => {
-  // Check the parameters.
-  if (!Array.isArray(products) || products.length <= 0) {
-    console.log('Unable to retrieve the product information.')
-    return
-  }
-
-  // Display the name and price of each product.
-  for (const product of products) {
-    console.log(`The price of ${product.localizedTitle} is ${product.formattedPrice}.`)
-  }
-
-  // Ask the user which product they want to purchase.
-  const selectedProduct = products[0]
-  const selectedQuantity = 1
-
-  // Purchase the selected product.
-  inAppPurchase.purchaseProduct(selectedProduct.productIdentifier, selectedQuantity).then(isProductValid => {
-    if (!isProductValid) {
-      console.log('The product is not valid.')
-      return
-    }
-
-    console.log('The payment has been added to the payment queue.')
-  })
-})
