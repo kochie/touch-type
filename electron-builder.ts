@@ -122,11 +122,13 @@ const config: Configuration = {
     bundleShortVersion: version.replace(/-beta\.\d+$/, ""),
     category: "public.app-category.productivity",
     icon: "build/icon.icon",
-    // stable channel → production APS; everything else (beta, alpha, dev) → sandbox APS
-    // No buildingMas guard here — the mas/masDev configs override entitlements for
-    // those targets. Guarding here caused --mac default --mac mas to always set
-    // entitlements=undefined for the default target (isMasBuild sees 'mas' in argv).
-    entitlements: buildingDev || channel !== "stable"
+    // Developer ID (DMG) builds always use production APS — sandbox APS requires
+    // an Apple Development cert + registered devices and cannot be used with
+    // freely-distributed Developer ID builds. Beta vs stable APNS routing is
+    // handled server-side. MAC_DEV=true local builds use a Development cert
+    // and can use sandbox APS via the dev entitlements.
+    // mas/masDev configs override this for App Store targets.
+    entitlements: buildingDev
       ? "build/entitlements.mac.dev.plist"
       : "build/entitlements.mac.plist",
     // Provisioning profile required for push notifications with Developer ID.
