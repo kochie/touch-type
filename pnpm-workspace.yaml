@@ -1,6 +1,7 @@
-onlyBuiltDependencies:
-  - '@sentry/cli'
-  - electron
-  - esbuild
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  '@sentry/cli': true
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
