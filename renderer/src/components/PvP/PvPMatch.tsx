@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 import { LetterStat, statsReducer, StatState } from "../Tracker/reducers";
-import { DateTime, Duration, Interval } from "luxon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPercentage,
@@ -42,8 +41,8 @@ interface PvPMatchProps {
 const initialStat: StatState = {
   correct: 0,
   incorrect: 0,
-  time: Interval.after(DateTime.now(), 0),
-  start: DateTime.now(),
+  time: Temporal.Duration.from({ milliseconds: 0 }),
+  start: Temporal.Now.instant(),
   letters: [] as LetterStat[],
   immutableLetters: [] as LetterStat[],
 };
@@ -93,9 +92,9 @@ export default function PvPMatch({
     setCurrentKey({ current: key, i, j });
   }, [letters.length, words, gameState]);
 
-  const d = (time as Interval).toDuration();
+  const d = time;
   const total = correct + incorrect;
-  const m = d.toMillis() / 1000 / 60;
+  const m = d.total("milliseconds") / 1000 / 60;
   const cpm = total / (m || 1);
 
   const intervalFn = () => {
@@ -107,12 +106,12 @@ export default function PvPMatch({
     setGameState("completed");
     const finalCpm =
       (correct + incorrect) /
-      ((time as Interval).toDuration().toMillis() / 1000 / 60);
+      (time.total("milliseconds") / 1000 / 60);
     onComplete({
       cpm: finalCpm,
       correct,
       incorrect,
-      time: (time as Interval).toDuration().toISO() ?? "",
+      time: time.toString(),
       keyPresses: [...immutableLetters],
     });
   }, [correct, incorrect, time, immutableLetters, onComplete]);
@@ -192,7 +191,7 @@ export default function PvPMatch({
       <div className="flex justify-around mb-4 text-sm text-gray-700 dark:text-gray-300">
         <span><FontAwesomeIcon icon={faPersonRunning} /> {Math.round(cpm)} cpm</span>
         <span><FontAwesomeIcon icon={faPercentage} /> {total > 0 ? Math.round((correct / total) * 100) : 0}%</span>
-        <span><FontAwesomeIcon icon={faUserClock} /> {d.toFormat("m:ss")}</span>
+        <span><FontAwesomeIcon icon={faUserClock} /> {(() => { const ms = d.total("milliseconds"); const mins = Math.floor(ms / 60000); const secs = Math.floor((ms % 60000) / 1000); return `${mins}:${secs.toString().padStart(2, "0")}`; })()}</span>
       </div>
       <Canvas
         letters={letters}

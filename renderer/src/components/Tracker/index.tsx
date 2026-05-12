@@ -10,7 +10,6 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { LetterStat, statsReducer, StatState } from "./reducers";
-import { DateTime, Interval } from "luxon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDungeon,
@@ -49,8 +48,8 @@ export interface CurrentKeyRef {
 const initialStat: StatState = {
   correct: 0,
   incorrect: 0,
-  time: Interval.after(DateTime.now(), 0),
-  start: DateTime.now(),
+  time: Temporal.Duration.from({ milliseconds: 0 }),
+  start: Temporal.Now.instant(),
   letters: [] as LetterStat[],
   immutableLetters: [] as LetterStat[],
 };
@@ -144,9 +143,9 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
     });
   }, [letters.length, currentText]);
 
-  const d = (time as Interval).toDuration();
+  const d = time;
   const total = correct + incorrect;
-  const m = d.toMillis() / 1000 / 60;
+  const m = d.total("milliseconds") / 1000 / 60;
   const cpm = total / m;
   const p = (correct / total) * 100;
 
@@ -277,8 +276,8 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
     if (letters.length + pendingCount === currentText.length) {
       setShowChange(true);
       const finalCpm =
-        (correct + incorrect) / (time.toDuration().toMillis() / 1000 / 60);
-      const isoTime = (time as Interval).toDuration().toISO() ?? "";
+        (correct + incorrect) / (time.total("milliseconds") / 1000 / 60);
+      const isoTime = time.toString();
       const finalKeyPresses = [...immutableLetters];
 
       if (currentRace) {
@@ -304,7 +303,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
           incorrect,
           keyPresses: finalKeyPresses,
           time: isoTime,
-          datetime: new Date().toISOString(),
+          datetime: Temporal.Now.instant().toString(),
           level: settings.levelName,
           keyboard: settings.keyboardName,
           language: settings.language,
