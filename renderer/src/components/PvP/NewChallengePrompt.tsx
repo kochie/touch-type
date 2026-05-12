@@ -22,6 +22,7 @@ import {
 } from "@headlessui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faSpinner } from "@fortawesome/pro-duotone-svg-icons";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
 import { toast } from "sonner";
 
@@ -62,7 +63,7 @@ function Toggle({ label, enabled, onChange }: ToggleProps) {
   );
 }
 
-export default function NewChallengePrompt({ onDone }: { onDone?: () => void }) {
+export default function NewChallengePrompt({ onDone, onClose }: { onDone?: () => void; onClose?: () => void }) {
   const router = useRouter();
   const settings = useSettings();
   const [wordList] = useWords();
@@ -113,12 +114,20 @@ export default function NewChallengePrompt({ onDone }: { onDone?: () => void }) 
   );
 
   return (
-    <div className="max-w-md mx-auto py-8 space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+    <div className="p-6 space-y-5 w-full max-w-md">
+      <div className="relative text-center">
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute right-0 top-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+          >
+            <FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
           Create a Game
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Pick the settings, share the link, and race when you're ready. Both
           sides play blind — neither sees the other's score until both finish.
         </p>

@@ -1,4 +1,3 @@
-// renderer/src/components/avatars/AvatarPicker.tsx
 "use client";
 
 import type { FC } from "react";
@@ -7,7 +6,7 @@ import { FACES, HATS, isHatUnlocked, type HatDef } from "@/lib/avatars";
 import { AvatarComposite } from "./AvatarComposite";
 import { useSupabaseClient } from "@/lib/supabase-provider";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLock } from "@fortawesome/free-solid-svg-icons";
+import { faLock, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 interface AvatarPickerProps {
   userId: string;
@@ -16,6 +15,7 @@ interface AvatarPickerProps {
   isPremium: boolean;
   onFaceChange: (slug: string) => void;
   onHatChange: (slug: string | null) => void;
+  onClose?: () => void;
 }
 
 interface GameStats {
@@ -38,6 +38,7 @@ export function AvatarPicker({
   isPremium,
   onFaceChange,
   onHatChange,
+  onClose,
 }: AvatarPickerProps) {
   const supabase = useSupabaseClient();
   const [stats, setStats] = useState<GameStats>({ gamesPlayed: 0, wins: 0 });
@@ -134,10 +135,23 @@ export function AvatarPicker({
   };
 
   return (
-    <div className="flex flex-col gap-3 p-4 w-72 bg-slate-950 border-l border-slate-800">
+    <div className="flex flex-col gap-4 p-5 w-80">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-slate-200">Customise Avatar</p>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+          >
+            <FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       {/* Preview */}
-      <div className="flex flex-col items-center gap-2 p-3 bg-slate-900 rounded-xl">
-        <AvatarComposite face={currentFace} hat={currentHat} size={72} />
+      <div className="flex flex-col items-center gap-2 p-4 bg-slate-900 rounded-xl">
+        <AvatarComposite face={currentFace} hat={currentHat} size={88} />
         <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
           Preview
         </p>
@@ -182,7 +196,7 @@ export function AvatarPicker({
         <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2">
           Hat
         </p>
-        <div className="max-h-52 overflow-y-auto pr-1 flex flex-col gap-5">
+        <div className="flex flex-col gap-5">
           <div>
             {tierLabel(
               "Free",

@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { LetterStat, statsReducer, StatState } from "./reducers";
-import { DateTime, Duration, Interval } from "luxon";
+import { DateTime, Interval } from "luxon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDungeon,
@@ -331,34 +331,18 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   const { results } = useResults();
   // get the typo diff between the last two results
   const typoDiff =
-    results.length > 1
-      ? results[results.length - 1].incorrect -
-        results[results.length - 2].incorrect
-      : 0;
+    results.length > 1 ? results[0].incorrect - results[1].incorrect : 0;
 
   let cpmDiff = 0;
   let accuracyDiff = 0;
   if (results.length > 1) {
-    const cpm1 =
-      (results[results.length - 1].correct +
-        results[results.length - 1].incorrect) /
-      Duration.fromISO(results[results.length - 1].time).as("minutes");
-    const cpm2 =
-      (results[results.length - 2].correct +
-        results[results.length - 2].incorrect) /
-      Duration.fromISO(results[results.length - 2].time).as("minutes");
-    cpmDiff = cpm1 - cpm2;
+    cpmDiff = results[0].cpm - results[1].cpm;
 
-    const acc1 =
-      results[results.length - 1].correct /
-      (results[results.length - 1].correct +
-        results[results.length - 1].incorrect);
-    const acc2 =
-      results[results.length - 2].correct /
-      (results[results.length - 2].correct +
-        results[results.length - 2].incorrect);
-
-    accuracyDiff = acc1 - acc2;
+    const total0 = results[0].correct + results[0].incorrect;
+    const total1 = results[1].correct + results[1].incorrect;
+    const acc0 = total0 > 0 ? results[0].correct / total0 : 0;
+    const acc1 = total1 > 0 ? results[1].correct / total1 : 0;
+    accuracyDiff = acc0 - acc1;
   }
 
   // PvP banner content
@@ -436,7 +420,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
           </span>
           <div className="flex flex-col gap-0.5">
             <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? cpmDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
-              {sign(cpmDiff)}{cpmDiff.toFixed(0)}
+              {sign(cpmDiff)}{Number.isFinite(cpmDiff) ? cpmDiff.toFixed(0) : "0"}
             </span>
             <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">char/min</span>
           </div>
@@ -449,7 +433,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
           </span>
           <div className="flex flex-col gap-0.5">
             <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? accuracyDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
-              {sign(accuracyDiff)}{(accuracyDiff * 100).toFixed(1)}%
+              {sign(accuracyDiff)}{Number.isFinite(accuracyDiff) ? (accuracyDiff * 100).toFixed(1) : "0.0"}%
             </span>
             <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">accuracy</span>
           </div>
@@ -475,7 +459,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
         <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{Number.isFinite(cpm) ? cpm.toFixed(0) : 0}</span>
         <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">chr/min</span>
         <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? cpmDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
-          {sign(cpmDiff)}{cpmDiff.toFixed(0)}
+          {sign(cpmDiff)}{Number.isFinite(cpmDiff) ? cpmDiff.toFixed(0) : "0"}
         </span>
       </div>
       {/* Accuracy */}
@@ -484,7 +468,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
         <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{Number.isFinite(p) ? p.toFixed(0) : 0}</span>
         <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">accur.</span>
         <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? accuracyDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
-          {sign(accuracyDiff)}{(accuracyDiff * 100).toFixed(0)}%
+          {sign(accuracyDiff)}{Number.isFinite(accuracyDiff) ? (accuracyDiff * 100).toFixed(0) : "0"}%
         </span>
       </div>
     </div>

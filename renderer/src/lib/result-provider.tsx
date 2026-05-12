@@ -261,6 +261,30 @@ export function ResultsProvider({ children }) {
         console.error('Error uploading result:', error);
         return null;
       }
+
+      // Submit to leaderboard as a best-score upsert (fire-and-forget).
+      // The edge function checks publish_to_leaderboard and only keeps the
+      // user's best CPM for each keyboard+level+language combination.
+      if (!result.codeMode) {
+        const timeMs = Duration.fromISO(result.time).toMillis();
+        if (Number.isFinite(timeMs) && timeMs > 0) {
+          supabase.functions.invoke('leaderboards', {
+            body: {
+              correct:     result.correct,
+              incorrect:   result.incorrect,
+              cpm:         result.cpm,
+              keyboard:    result.keyboard,
+              level:       result.level,
+              language:    result.language ?? 'en',
+              capital:     result.capital,
+              punctuation: result.punctuation,
+              numbers:     result.numbers,
+              time:        timeMs,
+            },
+          }).catch((err) => console.warn('Leaderboard submission failed silently:', err));
+        }
+      }
+
       return data;
     }
     return null;

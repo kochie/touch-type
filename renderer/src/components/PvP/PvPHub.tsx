@@ -9,12 +9,14 @@ import {
   faSpinnerThird,
   faUserSlash,
 } from "@fortawesome/pro-duotone-svg-icons";
-import { faXmark, faPencil } from "@fortawesome/pro-regular-svg-icons";
+import { faPencil } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import NewChallengePrompt from "./NewChallengePrompt";
 import PageHeader from "@/components/PageHeader";
+import Modal from "@/components/Modal";
+import LeaderboardTab from "./LeaderboardTab";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -23,7 +25,7 @@ import { AvatarComposite } from "@/components/avatars/AvatarComposite";
 import { AvatarPicker } from "@/components/avatars/AvatarPicker";
 import Link from "next/link";
 
-type TabId = "challenges" | "history";
+type TabId = "challenges" | "history" | "leaderboard";
 
 // ── Game row ─────────────────────────────────────────────────────────────────
 
@@ -281,6 +283,7 @@ export default function PvPHub() {
   const tabs: { id: TabId; label: string; badge?: number }[] = [
     { id: "challenges", label: "Challenges", badge: myActiveGames.length },
     { id: "history", label: "History" },
+    { id: "leaderboard", label: "Leaderboard" },
   ];
 
   return (
@@ -326,7 +329,7 @@ export default function PvPHub() {
             {/* Left: game list */}
             <div className="flex flex-col gap-2 flex-1 min-w-0">
               {/* Your avatar row */}
-              {user && !showNewChallenge && (
+              {user && (
                 <div className="flex flex-col gap-1">
                   <button
                     onClick={() => setPickerOpen((o) => !o)}
@@ -338,10 +341,7 @@ export default function PvPHub() {
                       <p className="text-xs text-violet-400/60">Tap to customise avatar</p>
                     </div>
                     <span className="text-[11px] font-bold text-violet-400 bg-violet-500/15 border border-violet-500/25 rounded-full px-2.5 py-0.5 flex items-center gap-1">
-                      {pickerOpen
-                        ? <><FontAwesomeIcon icon={faXmark} className="w-2.5 h-2.5" /> Close</>
-                        : <><FontAwesomeIcon icon={faPencil} className="w-2.5 h-2.5" /> Edit</>
-                      }
+                      <FontAwesomeIcon icon={faPencil} className="w-2.5 h-2.5" /> Edit
                     </span>
                   </button>
                   <Link
@@ -353,45 +353,27 @@ export default function PvPHub() {
                 </div>
               )}
 
-              {showNewChallenge ? (
-                <NewChallengePrompt onDone={() => setShowNewChallenge(false)} />
-              ) : (
-                <>
-                  {challengeGames.length > 0 && (
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">Active</p>
-                  )}
-                  {challengeGames.map(g => (
-                    <ArenaGameRow key={g.id} game={g} userId={user!.id} usernameMap={usernameMap} avatarMap={avatarMap} />
-                  ))}
-                  {challengeGames.length === 0 && (
-                    <div className="py-8 text-center">
-                      <FontAwesomeIcon icon={faSwords} className="w-8 h-8 text-slate-600 mb-3" />
-                      <p className="text-sm text-slate-400">No active challenges</p>
-                      <p className="text-xs text-slate-600 mt-1">Create one to get started</p>
-                    </div>
-                  )}
-                  <button
-                    onClick={() => setShowNewChallenge(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 mt-2 rounded-xl border border-dashed border-slate-700/60 text-sm text-slate-500 hover:text-slate-300 hover:border-slate-600 transition-colors duration-150 cursor-pointer"
-                  >
-                    <FontAwesomeIcon icon={faPlus} className="w-3.5 h-3.5" />
-                    New Challenge
-                  </button>
-                </>
+              {challengeGames.length > 0 && (
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">Active</p>
               )}
+              {challengeGames.map(g => (
+                <ArenaGameRow key={g.id} game={g} userId={user!.id} usernameMap={usernameMap} avatarMap={avatarMap} />
+              ))}
+              {challengeGames.length === 0 && (
+                <div className="py-8 text-center">
+                  <FontAwesomeIcon icon={faSwords} className="w-8 h-8 text-slate-600 mb-3" />
+                  <p className="text-sm text-slate-400">No active challenges</p>
+                  <p className="text-xs text-slate-600 mt-1">Create one to get started</p>
+                </div>
+              )}
+              <button
+                onClick={() => setShowNewChallenge(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 mt-2 rounded-xl border border-dashed border-slate-700/60 text-sm text-slate-500 hover:text-slate-300 hover:border-slate-600 transition-colors duration-150 cursor-pointer"
+              >
+                <FontAwesomeIcon icon={faPlus} className="w-3.5 h-3.5" />
+                New Challenge
+              </button>
             </div>
-
-            {/* Avatar picker panel */}
-            {pickerOpen && user && (
-              <AvatarPicker
-                userId={user.id}
-                currentFace={myFace}
-                currentHat={myHat}
-                isPremium={isPremium}
-                onFaceChange={handleFaceChange}
-                onHatChange={handleHatChange}
-              />
-            )}
 
             {/* Right: stat cards */}
             <div className="w-64 flex-shrink-0 flex flex-col gap-3">
@@ -403,7 +385,7 @@ export default function PvPHub() {
               />
             </div>
           </div>
-        ) : (
+        ) : activeTab === "history" ? (
           /* History tab — full width */
           <div className="flex flex-col gap-2">
             {historyGames.length > 0 ? (
@@ -417,8 +399,42 @@ export default function PvPHub() {
               </div>
             )}
           </div>
+        ) : (
+          /* Leaderboard tab */
+          <LeaderboardTab />
         )}
       </div>
+
+      {/* New challenge modal */}
+      <Modal
+        open={showNewChallenge}
+        onClose={() => setShowNewChallenge(false)}
+        panelClassName="relative transform rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl transition-all my-8"
+      >
+        <NewChallengePrompt
+          onDone={() => setShowNewChallenge(false)}
+          onClose={() => setShowNewChallenge(false)}
+        />
+      </Modal>
+
+      {/* Avatar picker modal */}
+      <Modal
+        open={pickerOpen && !!user}
+        onClose={() => setPickerOpen(false)}
+        panelClassName="relative transform rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl transition-all my-8 overflow-y-auto max-h-[90vh]"
+      >
+        {user && (
+          <AvatarPicker
+            userId={user.id}
+            currentFace={myFace}
+            currentHat={myHat}
+            isPremium={isPremium}
+            onFaceChange={handleFaceChange}
+            onHatChange={handleHatChange}
+            onClose={() => setPickerOpen(false)}
+          />
+        )}
+      </Modal>
     </div>
   );
 }
