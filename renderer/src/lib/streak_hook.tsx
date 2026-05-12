@@ -213,9 +213,15 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
           ? !Temporal.PlainDate.from(lastActivityDate).equals(Temporal.Now.plainDateISO())
           : true;
 
+        // The DB trigger only fires on successful Supabase inserts. If an insert
+        // failed silently (network issue), the trigger never saw that session and
+        // the DB streak is stale. Use the client calculation as a floor so a
+        // locally-visible streak is never shown lower than it should be.
+        const clientCalc = calculateStreakFromResults(results);
+
         setStreak({
-          currentStreak: data.current_streak ?? 0,
-          longestStreak: data.longest_streak ?? 0,
+          currentStreak: Math.max(data.current_streak ?? 0, clientCalc.currentStreak),
+          longestStreak: Math.max(data.longest_streak ?? 0, clientCalc.longestStreak),
           lastActivityDate: data.last_activity_date,
           isAtRisk,
           freezesAvailable: data.streak_freeze_count ?? 0,
@@ -231,7 +237,7 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Error fetching streak:", error);
       calculateFromResults();
     }
-  }, [user, supabase, isPremium, calculateFromResults]);
+  }, [user, supabase, isPremium, calculateFromResults, results]);
 
   // Refresh freeze count for premium users (weekly)
   const refreshFreezes = useCallback(async () => {

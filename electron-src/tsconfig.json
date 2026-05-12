@@ -7,7 +7,7 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "lib": ["dom", "es2024"],
+    "lib": ["dom", "es2017"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": false,

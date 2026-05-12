@@ -27,21 +27,12 @@ export async function createPushNotificationChannel(): Promise<string> {
     
     // Set up expiration handling - channels typically expire after 30 days
     if (channel.expirationTime) {
-      let expiresAt: Temporal.Instant;
-      if (typeof channel.expirationTime === 'string') {
-        expiresAt = Temporal.Instant.from(channel.expirationTime);
-      } else if (typeof channel.expirationTime === 'number') {
-        // Handle both millisecond and second timestamps
-        const ms = channel.expirationTime > 9999999999
-          ? channel.expirationTime
-          : channel.expirationTime * 1000;
-        expiresAt = Temporal.Instant.fromEpochMilliseconds(ms);
-      } else if (channel.expirationTime instanceof Date) {
-        expiresAt = Temporal.Instant.fromEpochMilliseconds(channel.expirationTime.getTime());
-      } else {
-        expiresAt = Temporal.Instant.from(String(channel.expirationTime));
-      }
-      log.info('WNS channel expires:', expiresAt.toString());
+      const expiresAt = channel.expirationTime instanceof Date
+        ? channel.expirationTime
+        : new Date(typeof channel.expirationTime === 'number'
+            ? (channel.expirationTime > 9999999999 ? channel.expirationTime : channel.expirationTime * 1000)
+            : channel.expirationTime);
+      log.info('WNS channel expires:', expiresAt.toISOString());
     }
     
     return channel.uri;

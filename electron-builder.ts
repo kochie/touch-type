@@ -101,10 +101,6 @@ const config: Configuration = {
   copyright: "Copyright © 2022 Robert Koch",
   npmRebuild: true,
   generateUpdatesFilesForAllChannels: true,
-  // Node.js flags for main process (Node 24 needs --harmony-temporal; drop when upgrading to Electron with Node 26)
-  extraEnv: {
-    NODE_OPTIONS: "--harmony-temporal",
-  },
   // Register custom URL protocol for deep linking
   protocols: [
     {
