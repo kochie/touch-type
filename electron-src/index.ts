@@ -51,7 +51,7 @@ if (!shouldContinue) {
   process.exit(0);
 }
 
-async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
+async function handleWordSet(_event: IpcMainInvokeEvent, language: string) {
   try {
     const file = await readFile(
       join(__dirname, "../wordsets/", `${language}.txt`),
@@ -62,7 +62,7 @@ async function handleWordSet(event: IpcMainInvokeEvent, language: string) {
   }
 }
 
-async function handleGetCodeSnippets(event: IpcMainInvokeEvent, lang: string) {
+async function handleGetCodeSnippets(_event: IpcMainInvokeEvent, lang: string) {
   try {
     return await readFile(join(__dirname, "../codesnippets/", `${lang}.txt`));
   } catch (error) {
@@ -71,7 +71,7 @@ async function handleGetCodeSnippets(event: IpcMainInvokeEvent, lang: string) {
   }
 }
 
-async function handleLoadUserCodeFile(event: IpcMainInvokeEvent, filePath: string) {
+async function handleLoadUserCodeFile(_event: IpcMainInvokeEvent, filePath: string) {
   try {
     const content = await readFile(filePath, "utf-8");
     return content;

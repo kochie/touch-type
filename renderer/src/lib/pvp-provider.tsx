@@ -189,7 +189,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
 
     try {
       const { data, error: fetchError } = await supabase
-        .from("pvp_games")
+        .from("pvp_matches")
         .select("*")
         .or(`creator_id.eq.${user.id},joiner_id.eq.${user.id}`)
         .order("created_at", { ascending: false });
@@ -202,7 +202,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           throw fetchError;
         }
       } else {
-        setGames((data as PvPGame[]) ?? []);
+        setGames((data as unknown as PvPGame[]) ?? []);
       }
     } catch (err) {
       const detail =
@@ -247,18 +247,17 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           capital: settings.capital,
           punctuation: settings.punctuation,
           numbers: settings.numbers,
-          word_set: settings.word_set,
-        } as unknown as TablesInsert<"pvp_games">;
+        } as unknown as TablesInsert<"pvp_matches">;
 
         const { data, error: insertError } = await supabase
-          .from("pvp_games")
+          .from("pvp_matches")
           .insert(insertPayload)
           .select()
           .single();
 
         if (insertError) throw insertError;
         await refreshGames();
-        return data as PvPGame;
+        return data as unknown as PvPGame;
       } catch (err) {
         return handleMutationError(err, "Failed to create game");
       }
@@ -280,7 +279,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
         // Race-safety lives in the RLS USING clause on the join policy
         // (status='open' AND joiner_id IS NULL AND auth.uid() != creator_id).
         const { data, error: updateError } = await supabase
-          .from("pvp_games")
+          .from("pvp_matches")
           .update({
             joiner_id: user.id,
             joiner_joined_at: new Date().toISOString(),
@@ -295,7 +294,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           return null;
         }
         await refreshGames();
-        return data as PvPGame;
+        return data as unknown as PvPGame;
       } catch (err) {
         return handleMutationError(err, "Failed to join game");
       }
@@ -309,7 +308,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
       try {
         // RLS "Creator can cancel" gates the UPDATE.
         const { data, error: updateError } = await supabase
-          .from("pvp_games")
+          .from("pvp_matches")
           .update({ status: "cancelled" })
           .eq("id", gameId)
           .select()
@@ -366,11 +365,13 @@ export function PvPProvider({ children }: { children: ReactNode }) {
         // RLS submit policies gate this — the slot's completed_at NULL check
         // is in the USING clause, so we don't repeat it here (would filter
         // the RETURNING row out after the update flipped it non-null).
+        // Round results live in pvp_games (child rows); game.id is the match id.
         const { data, error: updateError } = await supabase
           .from("pvp_games")
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .update(updates as any)
-          .eq("id", game.id)
+          .eq("match_id", game.id)
+          .eq("round_number", 1)
           .select()
           .maybeSingle();
 
@@ -381,7 +382,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           return null;
         }
         await refreshGames();
-        return data as PvPGame;
+        return data as unknown as PvPGame;
       } catch (err) {
         setCurrentRace(null);
         return handleMutationError(err, "Failed to submit result");
@@ -395,14 +396,14 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     async (inviteCode: string): Promise<PvPGame | null> => {
       try {
         const { data, error: rpcError } = await supabase
-          .rpc("get_game_by_invite_code", { _code: inviteCode.toUpperCase() })
+          .rpc("get_match_by_invite_code", { _code: inviteCode.toUpperCase() })
           .maybeSingle();
 
         if (rpcError) {
           console.error("Error fetching game by invite code:", rpcError);
           return null;
         }
-        return (data as PvPGame | null) ?? null;
+        return (data as unknown as PvPGame | null) ?? null;
       } catch (err) {
         console.error("Error fetching game by invite code:", err);
         return null;
@@ -415,7 +416,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
     async (id: string): Promise<PvPGame | null> => {
       try {
         const { data, error: fetchError } = await supabase
-          .from("pvp_games")
+          .from("pvp_matches")
           .select("*")
           .eq("id", id)
           .maybeSingle();
@@ -424,7 +425,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           console.error("Error fetching game by id:", fetchError);
           return null;
         }
-        return (data as PvPGame | null) ?? null;
+        return (data as unknown as PvPGame | null) ?? null;
       } catch (err) {
         console.error("Error fetching game by id:", err);
         return null;
@@ -480,7 +481,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
         {
           event: "*",
           schema: "public",
-          table: "pvp_games",
+          table: "pvp_matches",
           filter: `creator_id=eq.${user.id}`,
         },
         () => refreshGames(),
@@ -491,7 +492,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
         {
           event: "*",
           schema: "public",
-          table: "pvp_games",
+          table: "pvp_matches",
           filter: `joiner_id=eq.${user.id}`,
         },
         () => refreshGames(),

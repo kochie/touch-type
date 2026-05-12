@@ -527,6 +527,7 @@ export type Database = {
           ai_weekly_email: boolean
           analytics: boolean | null
           app_language: string
+          background_opacity: number | null
           blinker: boolean | null
           capital: boolean | null
           code_lang: string | null
@@ -557,6 +558,7 @@ export type Database = {
           ai_weekly_email?: boolean
           analytics?: boolean | null
           app_language?: string
+          background_opacity?: number | null
           blinker?: boolean | null
           capital?: boolean | null
           code_lang?: string | null
@@ -587,6 +589,7 @@ export type Database = {
           ai_weekly_email?: boolean
           analytics?: boolean | null
           app_language?: string
+          background_opacity?: number | null
           blinker?: boolean | null
           capital?: boolean | null
           code_lang?: string | null
@@ -1295,3 +1298,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

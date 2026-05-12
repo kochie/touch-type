@@ -12,7 +12,7 @@ export function setupInAppPurchase(): void {
   console.log("In-app purchase is available:", inAppPurchase.canMakePayments())
 
   // Listen for transactions as soon as possible.
-  inAppPurchase.on('transactions-updated', (event: Event, transactions: Transaction[]) => {
+  inAppPurchase.on('transactions-updated', (_event: Event, transactions: Transaction[]) => {
     if (!Array.isArray(transactions)) {
       return
     }

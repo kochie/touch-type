@@ -123,7 +123,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
         throw subError;
       }
 
-      setSubscription(sub);
+      setSubscription(sub as unknown as Tables<"subscriptions">);
     } catch (err: any) {
       console.error("Error fetching user data:", err);
       setError(err.message);

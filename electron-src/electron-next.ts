@@ -1,9 +1,9 @@
 // Native
 import { createServer } from "http";
-import { join, isAbsolute, normalize } from "path";
+import { isAbsolute } from "path";
 
 // Packages
-import { app, protocol } from "electron";
+import { app } from "electron";
 // import isDev from 'electron-is-dev'
 // import { resolve } from "app-root-path";
 import pkg from 'app-root-path';
@@ -37,43 +37,9 @@ const devServer = async (dir: string, port?: number) => {
   });
 };
 
-const adjustRenderer = (directory: string) => {
-  const paths = ["/_next", "/static"];
-  const isWindows = process.platform === "win32";
-
-  const rscFile = /\/.+\.txt/;
-
-  protocol.interceptFileProtocol("file", (request, callback) => {
-    let path = request.url.substr(isWindows ? 8 : 7);
-
-    let newPath = path;
-
-    // On windows the request looks like: file:///C:/static/bar
-    // On other systems it's file:///static/bar
-    if (isWindows) {
-      newPath = newPath.substr(2);
-    }
-
-    if (
-      paths.some((prefix) => newPath.startsWith(prefix)) ||
-      rscFile.test(newPath)
-    ) {
-      if (isWindows) {
-        newPath = normalize(newPath);
-      }
-
-      newPath = join(directory, "out", newPath);
-      path = newPath;
-    }
-
-    // Electron doesn't like anything in the path to be encoded,
-    // so we need to undo that. This specifically allows for
-    // Electron apps with spaces in their app names.
-    path = decodeURIComponent(path);
-
-    callback({ path });
-  });
-};
+// adjustRenderer was disabled when electron-serve replaced protocol.interceptFileProtocol.
+// Kept here for reference; remove in a future cleanup pass.
+// const adjustRenderer = (directory: string) => { ... };
 
 export default async (directories: Directories | string, port?: number) => {
   if (!directories) {

@@ -1,5 +1,5 @@
 import { app, BrowserWindow } from "electron";
-import { join, resolve } from "path";
+import { resolve } from "path";
 import log from "electron-log";
 
 export interface DeepLinkData {
@@ -148,7 +148,7 @@ export function setupDeepLinkHandlers(): boolean {
     return false;
   }
 
-  app.on("second-instance", (event, commandLine) => {
+  app.on("second-instance", (_event, commandLine) => {
     log.info("Second instance detected, command line:", commandLine);
 
     // Windows/Linux: the URL is in commandLine

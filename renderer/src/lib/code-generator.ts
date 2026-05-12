@@ -206,7 +206,7 @@ const kotlinTemplates: Array<() => string> = [
   () => { const f = rFunc(), v = rVar(); return `suspend fun ${f}(): Result<String> = runCatching {\n    val ${v} = api.getData()\n    ${v}.body() ?: error("Empty response")\n}`; },
   () => { const v = rVar(); return `val ${v} by lazy {\n    println("Computing...")\n    ${rVal()} * ${rVal()}\n}\nprintln(${v})`; },
   () => { const f = rFunc(); return `fun List<Int>.${f}(): Int {\n    return this.fold(0) { acc, n -> acc + n }\n}`; },
-  () => `val result = runCatching { riskyOperation() }\n    .onSuccess { println("OK: $it") }\n    .onFailure { println("Error: ${it.message}") }`,
+  () => 'val result = runCatching { riskyOperation() }\n    .onSuccess { println("OK: $it") }\n    .onFailure { println("Error: ${it.message}") }',
   () => { const v = rVar(); return `val ${v} = flow {\n    repeat(${randomInt(3, 8)}) {\n        emit(it)\n        delay(100)\n    }\n}\n${v}.collect { println(it) }`; },
   () => `@Composable\nfun Greeting(name: String) {\n    Text(text = "Hello, $name!")\n}`,
   () => { const cls = rClass(); return `interface ${cls} {\n    fun execute(): Boolean\n    fun rollback(): Unit = println("Rolling back")\n}`; },

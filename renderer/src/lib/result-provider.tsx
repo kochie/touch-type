@@ -121,7 +121,7 @@ export function ResultsProvider({ children }) {
           punctuation: !!r.punctuation,
           numbers: !!r.numbers,
           cpm: r.cpm,
-          codeMode: r.code_mode,
+          codeMode: r.code_mode ?? undefined,
           codeLang: r.code_lang as CodeLanguages,
         }));
         allResults.push(...convertedResults);
