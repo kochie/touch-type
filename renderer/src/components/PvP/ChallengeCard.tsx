@@ -14,7 +14,7 @@ import {
 } from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "@/lib/relative-time";
 import { useRouter } from "next/navigation";
 
 interface ChallengeCardProps {
@@ -123,9 +123,7 @@ export default function ChallengeCard({
           </span>
         </div>
         <span className="text-xs text-gray-500">
-          {formatDistanceToNow(new Date(game.created_at), {
-            addSuffix: true,
-          })}
+          {formatDistanceToNow(game.created_at)}
         </span>
       </div>
     );
@@ -159,9 +157,7 @@ export default function ChallengeCard({
           )}
         </div>
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {formatDistanceToNow(new Date(game.created_at), {
-            addSuffix: true,
-          })}
+          {formatDistanceToNow(game.created_at)}
         </span>
       </div>
 
@@ -321,9 +317,7 @@ export default function ChallengeCard({
       {game.status === "open" && (
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
           Expires{" "}
-          {formatDistanceToNow(new Date(game.expires_at), {
-            addSuffix: true,
-          })}
+          {formatDistanceToNow(game.expires_at)}
         </p>
       )}
     </div>

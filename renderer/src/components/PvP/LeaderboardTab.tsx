@@ -6,14 +6,14 @@ import { useSettings } from "@/lib/settings_hook";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinnerThird, faTrophy } from "@fortawesome/pro-duotone-svg-icons";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import { Duration } from "luxon";
+import { formatDuration } from "@/lib/duration-utils";
 import { keyboards } from "@/components/KeyboardSelect";
 import { levels } from "@/components/settings/settings";
 import { LANGUAGES } from "@/lib/languages";
 import { KeyboardLayoutNames } from "@/keyboards";
 import { Levels, Languages } from "@/lib/settings_hook";
 import clsx from "clsx";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "@/lib/relative-time";
 
 interface LeaderboardScore {
   user_id: string;
@@ -62,7 +62,7 @@ function ScoreRow({
   const total = score.correct + score.incorrect;
   const accuracy = total > 0 ? (score.correct / total) * 100 : 0;
   const cpm = Number.isFinite(score.cpm) ? score.cpm : total / (score.time / 1000 / 60);
-  const duration = Duration.fromMillis(score.time);
+  const duration = Temporal.Duration.from({ milliseconds: score.time });
 
   return (
     <div
@@ -85,10 +85,10 @@ function ScoreRow({
       </span>
       <span className="text-sm tabular-nums text-slate-300 text-right">{accuracy.toFixed(1)}%</span>
       <span className="text-xs tabular-nums text-slate-400 text-right font-mono">
-        {duration.toFormat(score.time >= 60_000 ? "m:ss" : "s.S")}s
+        {formatDuration(duration, score.time >= 60_000 ? "m:ss" : "s.S")}s
       </span>
       <span className="text-[11px] text-slate-500 text-right truncate">
-        {formatDistanceToNow(new Date(score.datetime), { addSuffix: true })}
+        {formatDistanceToNow(score.datetime)}
       </span>
     </div>
   );

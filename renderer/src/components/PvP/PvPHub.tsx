@@ -17,7 +17,7 @@ import NewChallengePrompt from "./NewChallengePrompt";
 import PageHeader from "@/components/PageHeader";
 import Modal from "@/components/Modal";
 import LeaderboardTab from "./LeaderboardTab";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "@/lib/relative-time";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePlan } from "@/lib/plan_hook";
@@ -136,7 +136,7 @@ function BestCpmCard({ cpm, opponentName, at }: BestCpmCardProps) {
           <p className="text-4xl font-bold text-amber-400 tabular-nums">{cpm.toFixed(0)}</p>
           <p className="text-xs text-slate-500">
             {opponentName ? `vs ${opponentName}` : ""}
-            {at ? ` · ${formatDistanceToNow(new Date(at), { addSuffix: true })}` : ""}
+            {at ? ` · ${formatDistanceToNow(at)}` : ""}
           </p>
         </>
       ) : (
