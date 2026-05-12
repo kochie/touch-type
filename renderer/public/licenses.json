@@ -80,13 +80,13 @@
     },
     {
       "name": "@types/debug",
-      "version": "4.1.12",
+      "version": "4.1.13",
       "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/debug",
       "author": ""
     },
     {
       "name": "@types/estree",
-      "version": "1.0.8",
+      "version": "1.0.9",
       "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/estree",
       "author": ""
     },
@@ -122,7 +122,7 @@
     },
     {
       "name": "@types/node",
-      "version": "25.6.2",
+      "version": "25.7.0",
       "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node",
       "author": ""
     },
@@ -170,13 +170,13 @@
     },
     {
       "name": "@xmldom/xmldom",
-      "version": "0.8.11",
+      "version": "0.9.10",
       "homepage": "https://github.com/xmldom/xmldom",
       "author": ""
     },
     {
       "name": "acorn",
-      "version": "8.15.0",
+      "version": "8.16.0",
       "homepage": "https://github.com/acornjs/acorn",
       "author": ""
     },
@@ -188,7 +188,7 @@
     },
     {
       "name": "ajv",
-      "version": "6.12.6",
+      "version": "6.15.0",
       "homepage": "https://github.com/ajv-validator/ajv",
       "author": "Evgeny Poberezkin"
     },
@@ -220,7 +220,7 @@
       "name": "astral-regex",
       "version": "2.0.0",
       "homepage": "https://github.com/kevva/astral-regex#readme",
-      "author": "Kevin M\u00e5rtensson"
+      "author": "Kevin Mårtensson"
     },
     {
       "name": "bail",
@@ -242,7 +242,7 @@
     },
     {
       "name": "brace-expansion",
-      "version": "5.0.5",
+      "version": "5.0.6",
       "homepage": "https://github.com/juliangruber/brace-expansion#readme",
       "author": ""
     },
@@ -446,9 +446,9 @@
     },
     {
       "name": "i18next",
-      "version": "26.0.10",
+      "version": "26.1.0",
       "homepage": "https://www.i18next.com",
-      "author": "Jan M\u00fchlemann"
+      "author": "Jan Mühlemann"
     },
     {
       "name": "iconv-corefoundation",
@@ -512,7 +512,7 @@
     },
     {
       "name": "jsonfile",
-      "version": "6.2.0",
+      "version": "6.2.1",
       "homepage": "https://github.com/jprichardson/node-jsonfile#readme",
       "author": "JP Richardson"
     },
@@ -740,7 +740,7 @@
     },
     {
       "name": "pg-protocol",
-      "version": "1.11.0",
+      "version": "1.13.0",
       "homepage": "https://github.com/brianc/node-postgres#readme",
       "author": ""
     },
@@ -752,7 +752,7 @@
     },
     {
       "name": "plist",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "homepage": "https://github.com/TooTallNate/node-plist#readme",
       "author": "Nathan Rajlich"
     },
@@ -808,7 +808,7 @@
       "name": "react-i18next",
       "version": "17.0.7",
       "homepage": "https://github.com/i18next/react-i18next",
-      "author": "Jan M\u00fchlemann"
+      "author": "Jan Mühlemann"
     },
     {
       "name": "react-markdown",
@@ -908,7 +908,7 @@
     },
     {
       "name": "undici-types",
-      "version": "7.19.2",
+      "version": "7.21.0",
       "homepage": "https://undici.nodejs.org",
       "author": ""
     },
@@ -1150,7 +1150,7 @@
     },
     {
       "name": "@opentelemetry/redis-common",
-      "version": "0.38.2",
+      "version": "0.38.3",
       "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/redis-common#readme",
       "author": "OpenTelemetry Authors"
     },
@@ -1186,7 +1186,7 @@
     },
     {
       "name": "import-in-the-middle",
-      "version": "2.0.4",
+      "version": "2.0.6",
       "homepage": "https://github.com/nodejs/import-in-the-middle#readme",
       "author": "Bryan English"
     },
@@ -1218,7 +1218,7 @@
     },
     {
       "name": "semver",
-      "version": "7.7.3",
+      "version": "7.7.4",
       "homepage": "https://github.com/npm/node-semver#readme",
       "author": "GitHub Inc."
     }
@@ -1248,7 +1248,7 @@
     },
     {
       "name": "sax",
-      "version": "1.4.4",
+      "version": "1.6.0",
       "homepage": "https://github.com/isaacs/sax-js#readme",
       "author": "Isaac Z. Schlueter"
     }
