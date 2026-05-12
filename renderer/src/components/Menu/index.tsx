@@ -176,7 +176,7 @@ export default function Menu({
                 className={clsx(
                   "w-4 h-4",
                   isAtRisk && currentStreak > 0 && [
-                    "animate-bounce",
+                    "animate-streak-shake",
                     "[filter:drop-shadow(0_0_6px_rgb(249_115_22))]",
                   ]
                 )}
