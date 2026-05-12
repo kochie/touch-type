@@ -45,7 +45,12 @@ declare global {
       nanoseconds?: number;
     }
 
-    function now(): Instant;
+    namespace Now {
+      function instant(): Instant;
+      function plainDateISO(timeZone?: string): PlainDate;
+      function timeZoneId(): string;
+      function zonedDateTimeISO(timeZone?: string): ZonedDateTime;
+    }
   }
 }
 

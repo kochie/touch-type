@@ -21,6 +21,7 @@ import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/keyboards/key";
 import { lookupKeyboard, KeyboardLayoutNames } from "@/keyboards";
 import { ModalType, useModal } from "@/lib/modal-provider";
+import { formatDuration } from "@/lib/duration-utils";
 
 export interface PvPRaceResult {
   cpm: number;
@@ -191,7 +192,7 @@ export default function PvPMatch({
       <div className="flex justify-around mb-4 text-sm text-gray-700 dark:text-gray-300">
         <span><FontAwesomeIcon icon={faPersonRunning} /> {Math.round(cpm)} cpm</span>
         <span><FontAwesomeIcon icon={faPercentage} /> {total > 0 ? Math.round((correct / total) * 100) : 0}%</span>
-        <span><FontAwesomeIcon icon={faUserClock} /> {(() => { const ms = d.total("milliseconds"); const mins = Math.floor(ms / 60000); const secs = Math.floor((ms % 60000) / 1000); return `${mins}:${secs.toString().padStart(2, "0")}`; })()}</span>
+        <span><FontAwesomeIcon icon={faUserClock} /> {formatDuration(d, "m:ss")}</span>
       </div>
       <Canvas
         letters={letters}
