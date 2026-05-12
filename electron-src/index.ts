@@ -197,9 +197,9 @@ app.on("ready", async () => {
 
   const mainWindow = new BrowserWindow({
     width: 1280,
-    height: 900,
+    height: 1000,
     minWidth: 1280,
-    minHeight: 900,
+    minHeight: 1000,
     autoHideMenuBar: true,
     show: !startHidden, // Don't show window if starting minimized
     // transparent: true,
