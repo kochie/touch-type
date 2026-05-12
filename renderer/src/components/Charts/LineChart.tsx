@@ -13,7 +13,6 @@ import {
   scaleTime,
   select,
 } from "d3";
-import { Duration } from "luxon";
 import { useEffect, useRef, useState } from "react";
 
 interface Result {
@@ -24,7 +23,7 @@ interface Result {
   keyboard: string;
   language: string;
   datetime: Date;
-  time: Duration;
+  time: string;
 }
 
 const margin = { top: 10, right: 30, bottom: 30, left: 60 };
@@ -81,7 +80,7 @@ export default function LineChart({keyboard}: LineChartProps) {
 
     // Add Y axis
     const maxTime = max(computed, function (d) {
-      return Duration.fromISO(d.time).toMillis() / 1000
+      return Temporal.Duration.from(d.time).total("milliseconds") / 1000
     });
     if (maxTime === undefined) return;
     const y = scaleLinear().domain([0, maxTime]).range([height, 0]);
@@ -110,7 +109,7 @@ export default function LineChart({keyboard}: LineChartProps) {
         "d",
         line(
           (d) => x(new Date(d.datetime)),
-          (d) => y(Duration.fromISO(d.time).toMillis() / 1000),
+          (d) => y(Temporal.Duration.from(d.time).total("milliseconds") / 1000),
         ),
       );
 

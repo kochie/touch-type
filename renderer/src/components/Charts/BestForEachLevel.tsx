@@ -3,7 +3,7 @@
 import { KeyboardLayoutNames } from "@/keyboards";
 import { Result, useResults } from "@/lib/result-provider";
 import { Levels } from "@/lib/settings_hook";
-import { Duration } from "luxon";
+import { formatDuration } from "@/lib/duration-utils";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { faStar, faStarHalf } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -18,41 +18,41 @@ const initialState = [
     level: Levels.LEVEL_1,
     cpm: 0,
     incorrect: 0,
-    time: Duration.fromISO("PT0S"),
+    time: Temporal.Duration.from("PT0S"),
   },
   {
     level: Levels.LEVEL_2,
     cpm: 0,
     incorrect: 0,
-    time: Duration.fromISO("PT0S"),
+    time: Temporal.Duration.from("PT0S"),
   },
   {
     level: Levels.LEVEL_3,
     cpm: 0,
     incorrect: 0,
-    time: Duration.fromISO("PT0S"),
+    time: Temporal.Duration.from("PT0S"),
   },
   {
     level: Levels.LEVEL_4,
     cpm: 0,
     incorrect: 0,
-    time: Duration.fromISO("PT0S"),
+    time: Temporal.Duration.from("PT0S"),
   },
   {
     level: Levels.LEVEL_5,
     cpm: 0,
     incorrect: 0,
-    time: Duration.fromISO("PT0S"),
+    time: Temporal.Duration.from("PT0S"),
   },
   {
     level: Levels.LEVEL_6,
     cpm: 0,
     incorrect: 0,
-    time: Duration.fromISO("PT0S"),
+    time: Temporal.Duration.from("PT0S"),
   },
 ];
 
-function calcStars(cpm: number, incorrect: number, time: Duration) {
+function calcStars(cpm: number, incorrect: number, time: Temporal.Duration) {
   // -1/2 star for each error
   // 1 star for each 70 cpm
 
@@ -94,7 +94,7 @@ export default function BestForEachLevel({ keyboard }: BestForEachLevelProps) {
             level: result.level,
             cpm: result.cpm,
             incorrect: result.incorrect,
-            time: Duration.fromISO(result.time),
+            time: Temporal.Duration.from(result.time),
           };
         }
         return b;
@@ -121,7 +121,7 @@ export default function BestForEachLevel({ keyboard }: BestForEachLevelProps) {
           >
             <div className="flex justify-between items-center gap-2">
               <h2 className="text-lg font-semibold">Level {b.level}</h2>
-              {b.time.toMillis() > 0 && <span className="text-xs">{b.time.toFormat("mm:ss")}</span>}
+              {b.time.total("milliseconds") > 0 && <span className="text-xs">{formatDuration(b.time, "mm:ss")}</span>}
             </div>
             <div className="text-xs py-1">
               {b.cpm > 0 && (
