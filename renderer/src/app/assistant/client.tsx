@@ -6,6 +6,7 @@ import Button from "@/components/Button";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import { usePlan } from "@/lib/plan_hook";
+import { AssistantChat } from "@/components/AiAssistant/AssistantChat";
 import { InsightCard } from "@/components/AiAssistant/InsightCard";
 import { InsightSummary } from "@/components/AiAssistant/InsightSummary";
 import { InsightHeatmap } from "@/components/AiAssistant/InsightHeatmap";
@@ -247,6 +248,17 @@ function InsightsDashboard({
             <InsightHeatmap heatmapData={insight.heatmap_data} />
           </div>
         )}
+
+        {/* Live AI coaching chat */}
+        <div className="rounded-xl bg-slate-800/30 border border-slate-700/40 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-700/40">
+            <p className="text-sm font-semibold text-slate-300">Ask your coach</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              AI-powered responses based on your session data
+            </p>
+          </div>
+          <AssistantChat key={insight.id} insight={insight} />
+        </div>
       </div>
     </div>
   );
@@ -291,18 +303,61 @@ export function ClientAssistant() {
 
   if (plan.billing_plan === "free") {
     return (
-      <div className="flex flex-col mx-auto justify-center items-center h-full mt-10 gap-6">
-        <span className="text-lg font-semibold">
-          Upgrade to premium to access the assistant
-        </span>
-        <div className="flex gap-6 w-96">
-          <Button
-            onClick={() =>
-              window.open(process.env["NEXT_PUBLIC_ACCOUNT_LINK"], "_blank")
-            }
-          >
-            Account Settings
-          </Button>
+      <div className="flex flex-col h-full overflow-y-auto">
+        <PageHeader
+          icon={faMicrochipAi}
+          title="AI Assistant"
+          subtitle="Personalized coaching based on your sessions"
+          iconBg="bg-violet-400/10"
+          iconColor="text-violet-400"
+        />
+        <div className="px-6 pb-6 flex flex-col gap-8">
+          <div className="rounded-2xl bg-gradient-to-br from-violet-500/15 to-purple-500/10 border border-violet-500/25 px-6 py-5">
+            <p className="text-base font-semibold text-slate-100 mb-1">
+              Unlock your personal AI typing coach
+            </p>
+            <p className="text-sm text-slate-400">
+              Premium members get weekly AI-generated insights tailored to their
+              actual sessions — speed coaching, accuracy analysis, practice
+              plans, and more.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((f) => (
+              <div
+                key={f.title}
+                className="rounded-xl bg-slate-800/50 border border-slate-700/50 p-4 flex gap-4 items-start"
+              >
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${f.iconBg}`}
+                >
+                  <FontAwesomeIcon
+                    icon={f.icon}
+                    className={`w-5 h-5 ${f.iconColor}`}
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-100 mb-0.5">
+                    {f.title}
+                  </p>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {f.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex gap-4 w-72">
+              <Button
+                onClick={() =>
+                  window.open(process.env["NEXT_PUBLIC_ACCOUNT_LINK"], "_blank")
+                }
+              >
+                Upgrade to Premium
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );

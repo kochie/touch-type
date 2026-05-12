@@ -1,14 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Field, Label, Description } from "@headlessui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
-import { faArrowUpRightFromSquare } from "@fortawesome/pro-regular-svg-icons";
 import clsx from "clsx";
 import { useSupabase } from "@/lib/supabase-provider";
 import { useMas } from "@/lib/mas_hook";
+import { useModal, ModalType } from "@/lib/modal-provider";
 import Button from "../Button";
+
+interface Subscription {
+  billing_plan: string | null;
+  billing_period: string | null;
+  next_billing_date: string | null;
+  status: string | null;
+  auto_renew: boolean | null;
+}
 
 function InputField({
   id,
@@ -52,13 +60,46 @@ function InputField({
   );
 }
 
+function DetailRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-gray-500">{label}</span>
+      <span className={valueClass ?? "text-gray-300"}>{value}</span>
+    </div>
+  );
+}
+
+function statusStyle(status: string | null) {
+  switch (status) {
+    case "active": return "text-emerald-400";
+    case "trialing": return "text-sky-400";
+    case "cancelled": case "canceled": return "text-red-400";
+    case "past_due": return "text-amber-400";
+    default: return "text-gray-400";
+  }
+}
+
+function formatPeriod(period: string | null) {
+  if (period === "premium_monthly") return "Monthly ($2.99/mo)";
+  if (period === "premium_yearly") return "Yearly ($2.39/mo)";
+  return "—";
+}
+
+function formatDate(iso: string | null) {
+  if (!iso) return null;
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: "numeric", month: "long", day: "numeric",
+  });
+}
+
 export function AccountSettings() {
   const { supabase, user } = useSupabase();
   const isMas = useMas();
+  const { setModal, modal } = useModal();
 
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
-  const [billingPlan, setBillingPlan] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle");
@@ -66,31 +107,40 @@ export function AccountSettings() {
   const [signingOut, setSigningOut] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const fetchSubscription = async () => {
+    if (!user) return;
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("billing_plan, billing_period, next_billing_date, status, auto_renew")
+      .eq("user_id", user.id)
+      .single();
+    setSubscription(sub ?? { billing_plan: "free", billing_period: null, next_billing_date: null, status: null, auto_renew: null });
+    setLoadingPlan(false);
+  };
+
   useEffect(() => {
     if (!user) return;
-
     const fetchProfile = async () => {
       const { data: profile } = await supabase
         .from("profiles")
         .select("name, preferred_username")
         .eq("id", user.id)
         .single();
-
       setName(profile?.name ?? user.user_metadata?.name ?? "");
       setUsername(profile?.preferred_username ?? "");
-
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("billing_plan")
-        .eq("user_id", user.id)
-        .single();
-
-      setBillingPlan(sub?.billing_plan ?? "free");
-      setLoadingPlan(false);
+      await fetchSubscription();
     };
-
     fetchProfile();
   }, [user, supabase]);
+
+  // Re-fetch when the premium purchase modal closes
+  const prevModal = useRef(modal);
+  useEffect(() => {
+    if (prevModal.current === ModalType.PREMIUM_PURCHASE && modal === ModalType.NONE) {
+      fetchSubscription();
+    }
+    prevModal.current = modal;
+  }, [modal]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -104,7 +154,6 @@ export function AccountSettings() {
         preferred_username: username.trim(),
       });
       if (error) {
-        // Postgres unique violation
         if (error.code === "23505") throw new Error("That username is already taken.");
         throw error;
       }
@@ -142,39 +191,20 @@ export function AccountSettings() {
 
   if (!user) return null;
 
+  const isPremium = subscription?.billing_plan === "premium";
+  const nextDate = formatDate(subscription?.next_billing_date ?? null);
+
   return (
     <div className="flex flex-col gap-6">
 
       {/* Profile */}
       <div className="flex flex-col gap-4">
-        <InputField
-          id="email"
-          label="Email"
-          description="Your sign-in email address."
-          value={user.email ?? ""}
-          readOnly
-        />
-        <InputField
-          id="name"
-          label="Display name"
-          value={name}
-          onChange={setName}
-        />
-        <InputField
-          id="username"
-          label="Username"
-          description="Used on the leaderboard."
-          value={username}
-          onChange={setUsername}
-        />
-
+        <InputField id="email" label="Email" description="Your sign-in email address." value={user.email ?? ""} readOnly />
+        <InputField id="name" label="Display name" value={name} onChange={setName} />
+        <InputField id="username" label="Username" description="Used on the leaderboard." value={username} onChange={setUsername} />
         <div className="flex items-center justify-end gap-3">
-          {saveStatus === "saved" && (
-            <span className="text-sm text-green-400">Saved</span>
-          )}
-          {saveStatus === "error" && (
-            <span className="text-sm text-red-400">{saveError ?? "Failed to save"}</span>
-          )}
+          {saveStatus === "saved" && <span className="text-sm text-green-400">Saved</span>}
+          {saveStatus === "error" && <span className="text-sm text-red-400">{saveError ?? "Failed to save"}</span>}
           <Button onClick={handleSave} disabled={saving}>
             {saving ? <FontAwesomeIcon icon={faSpinner} spin /> : "Save changes"}
           </Button>
@@ -183,41 +213,60 @@ export function AccountSettings() {
 
       <hr className="border-white/10" />
 
-      {/* Plan — hidden on MAS (billing handled by App Store) */}
+      {/* Subscription — hidden on MAS */}
       {!isMas && (
         <>
           <div className="flex flex-col gap-3">
             <div>
               <p className="text-sm font-medium text-white">Subscription</p>
-              <p className="text-sm text-gray-500 mt-0.5">Your current plan and features.</p>
+              <p className="text-sm text-gray-500 mt-0.5">Your current plan and billing details.</p>
             </div>
 
             {loadingPlan ? (
               <p className="text-sm text-gray-500">
-                <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
-                Loading…
+                <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />Loading…
               </p>
             ) : (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-300">You are on the</span>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-3">
+                {/* Plan badge + action */}
+                <div className="flex items-center justify-between">
                   <span className={clsx(
-                    "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold capitalize",
-                    billingPlan === "premium"
-                      ? "bg-sky-400/10 text-sky-400 border border-sky-400/20"
+                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize",
+                    isPremium
+                      ? "bg-violet-400/10 text-violet-400 border border-violet-400/20"
                       : "bg-white/5 text-gray-400 border border-white/10"
                   )}>
-                    {billingPlan}
+                    {subscription?.billing_plan ?? "free"}
                   </span>
-                  <span className="text-sm text-gray-300">plan.</span>
+                  <button
+                    onClick={() => setModal(ModalType.PREMIUM_PURCHASE)}
+                    className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors cursor-pointer"
+                  >
+                    {isPremium ? "Manage plan" : "Upgrade to Premium →"}
+                  </button>
                 </div>
-                <button
-                  onClick={() => window.open(process.env["NEXT_PUBLIC_ACCOUNT_LINK"], "_blank")}
-                  className="flex items-center gap-1.5 text-sm font-medium text-sky-400 hover:text-sky-300 transition-colors cursor-pointer"
-                >
-                  Manage plan
-                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="w-3 h-3" />
-                </button>
+
+                {isPremium && (
+                  <div className="border-t border-white/10 pt-3 flex flex-col gap-2">
+                    <DetailRow label="Billing period" value={formatPeriod(subscription?.billing_period ?? null)} />
+                    <DetailRow
+                      label={subscription?.auto_renew === false ? "Expires on" : "Renews on"}
+                      value={nextDate ?? "—"}
+                    />
+                    {subscription?.status && (
+                      <DetailRow
+                        label="Status"
+                        value={subscription.status.replace("_", " ")}
+                        valueClass={statusStyle(subscription.status)}
+                      />
+                    )}
+                    {subscription?.auto_renew === false && (
+                      <p className="text-xs text-amber-400 mt-1">
+                        Auto-renew is off — your plan ends on the expiry date.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -230,9 +279,7 @@ export function AccountSettings() {
       <Field as="div" className="flex items-center justify-between">
         <span className="flex flex-grow flex-col">
           <Label className="text-sm font-medium text-white">Sign out</Label>
-          <Description className="text-sm text-gray-500">
-            Sign out of your account on this device.
-          </Description>
+          <Description className="text-sm text-gray-500">Sign out of your account on this device.</Description>
         </span>
         <div className="w-40 flex-shrink-0">
           <Button onClick={handleSignOut} disabled={signingOut}>

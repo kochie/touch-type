@@ -18,6 +18,7 @@ export interface HeatmapKey {
   avg_ms: number;
   error_rate: number;
   count: number;
+  keyboard?: string;
 }
 
 export interface AiInsight {

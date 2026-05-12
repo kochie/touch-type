@@ -10,7 +10,6 @@ import {
   useSettingsDispatch,
 } from "@/lib/settings_hook";
 import { Description, Field, Label, Select, Switch } from "@headlessui/react";
-import { platform } from "os";
 import KeyboardSelect from "../KeyboardSelect";
 import clsx from "clsx";
 import { LANGUAGES } from "@/lib/languages";
@@ -18,6 +17,7 @@ import { NotificationSettings } from "./NotificationSettings";
 import { CalendarSettings } from "./CalendarSettings";
 import { StartupSettings } from "./StartupSettings";
 import { DebugSettings } from "./DebugSettings";
+import { AboutSettings } from "./AboutSettings";
 import { AccountSettings } from "./AccountSettings";
 import { CodeSettings } from "./CodeSettings";
 import { AiAssistantSettings } from "./AiAssistantSettings";
@@ -80,6 +80,10 @@ function AppearanceSettings() {
   const settings = useSettings();
   const dispatchSettings = useSettingsDispatch();
   const { t } = useTranslation();
+  const [isElectron, setIsElectron] = useState(false);
+  useEffect(() => {
+    setIsElectron(!!window.electronAPI);
+  }, []);
 
   return (
     <form className="flex flex-col gap-6">
@@ -113,7 +117,7 @@ function AppearanceSettings() {
         </span>
         <Select
           className={clsx(
-            "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+            "block w-28 appearance-none rounded-lg border border-slate-300 dark:border-transparent bg-slate-100 dark:bg-white/5 py-1.5 px-3 text-sm/6 text-slate-900 dark:text-white",
             "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
             "*:text-black",
           )}
@@ -152,6 +156,40 @@ function AppearanceSettings() {
         description={t("settings.appearance.blinkerDesc")}
       />
 
+      {isElectron && (
+        <Field as="div" className="flex flex-col gap-2">
+          <span className="flex flex-grow flex-col">
+            <Label as="span" className="text-sm font-medium leading-6 text-slate-900 dark:text-white">
+              Background opacity
+            </Label>
+            <Description as="span" className="text-sm text-gray-500">
+              Controls how much of the native window effect (vibrancy on macOS, Mica on Windows) shows through. Drag right for a more solid background.
+            </Description>
+          </span>
+          <div className="flex items-center gap-3 pt-1">
+            <span className="text-xs text-slate-400 w-20 shrink-0">Transparent</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={settings.backgroundOpacity}
+              onChange={(e) =>
+                dispatchSettings({
+                  type: "SET_BACKGROUND_OPACITY",
+                  opacity: parseFloat(e.target.value),
+                })
+              }
+              className="flex-1 accent-sky-400 cursor-pointer"
+            />
+            <span className="text-xs text-slate-400 w-12 shrink-0 text-right">Opaque</span>
+            <span className="text-xs font-mono text-slate-500 w-8 text-right">
+              {Math.round(settings.backgroundOpacity * 100)}%
+            </span>
+          </div>
+        </Field>
+      )}
+
       <Field as="div" className="flex items-center justify-between">
         <span className="flex flex-grow flex-col">
           <Label>{t("settings.appearance.appLanguage")}</Label>
@@ -161,7 +199,7 @@ function AppearanceSettings() {
         </span>
         <Select
           className={clsx(
-            "block w-44 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+            "block w-44 appearance-none rounded-lg border border-slate-300 dark:border-transparent bg-slate-100 dark:bg-white/5 py-1.5 px-3 text-sm/6 text-slate-900 dark:text-white",
             "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
             "*:text-black",
             settings.autoDetectAppLanguage && "opacity-50 cursor-not-allowed",
@@ -247,7 +285,7 @@ function KeyboardSettingsPanel() {
         </span>
         <Select
           className={clsx(
-            "block w-44 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+            "block w-44 appearance-none rounded-lg border border-slate-300 dark:border-transparent bg-slate-100 dark:bg-white/5 py-1.5 px-3 text-sm/6 text-slate-900 dark:text-white",
             "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
             "*:text-black",
           )}
@@ -326,7 +364,7 @@ function PracticeSettingsPanel() {
           </span>
           <Select
             className={clsx(
-              "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+              "block w-28 appearance-none rounded-lg border border-slate-300 dark:border-transparent bg-slate-100 dark:bg-white/5 py-1.5 px-3 text-sm/6 text-slate-900 dark:text-white",
               "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
               "*:text-black",
             )}
@@ -381,9 +419,9 @@ function NotificationsPanel() {
   return (
     <div className="flex flex-col gap-6">
       <NotificationSettings />
-      <hr className="border-white/10" />
+      <hr className="border-slate-200 dark:border-white/10" />
       <CalendarSettings />
-      <hr className="border-white/10" />
+      <hr className="border-slate-200 dark:border-white/10" />
       <StartupSettings />
     </div>
   );
@@ -400,6 +438,7 @@ function AccountPanel() {
 function AboutPanel() {
   return (
     <div className="flex flex-col gap-6">
+      <AboutSettings />
       <DebugSettings />
     </div>
   );
@@ -476,10 +515,7 @@ function SettingsSwitch({
       <span className="flex flex-grow flex-col">
         <Label
           as="span"
-          className={clsx(
-            "text-sm font-medium leading-6",
-            platform() === "darwin" ? "text-white" : "",
-          )}
+          className="text-sm font-medium leading-6 text-slate-900 dark:text-white"
           passive
         >
           {label}

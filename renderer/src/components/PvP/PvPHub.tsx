@@ -9,6 +9,7 @@ import {
   faSpinnerThird,
   faUserSlash,
 } from "@fortawesome/pro-duotone-svg-icons";
+import { faXmark, faPencil } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -240,7 +241,10 @@ export default function PvPHub() {
   );
 
   // Stats from completed games
-  const completedOnly = myCompletedGames.filter(g => g.status === "completed");
+  const completedOnly = useMemo(
+    () => myCompletedGames.filter((g) => g.status === "completed"),
+    [myCompletedGames],
+  );
   const wins = user ? completedOnly.filter(g => g.winner_id === user.id).length : 0;
 
   const { bestCpm, bestCpmGame } = useMemo(() => {
@@ -333,8 +337,11 @@ export default function PvPHub() {
                       <p className="text-sm font-semibold text-violet-300">You</p>
                       <p className="text-xs text-violet-400/60">Tap to customise avatar</p>
                     </div>
-                    <span className="text-[11px] font-bold text-violet-400 bg-violet-500/15 border border-violet-500/25 rounded-full px-2.5 py-0.5">
-                      {pickerOpen ? "✕ Close" : "✎ Edit"}
+                    <span className="text-[11px] font-bold text-violet-400 bg-violet-500/15 border border-violet-500/25 rounded-full px-2.5 py-0.5 flex items-center gap-1">
+                      {pickerOpen
+                        ? <><FontAwesomeIcon icon={faXmark} className="w-2.5 h-2.5" /> Close</>
+                        : <><FontAwesomeIcon icon={faPencil} className="w-2.5 h-2.5" /> Edit</>
+                      }
                     </span>
                   </button>
                   <Link

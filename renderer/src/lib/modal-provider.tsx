@@ -4,6 +4,9 @@ import Login from "@/components/Login";
 import Modal from "@/components/Modal";
 import SignUp from "@/components/SignUp";
 import WhatsNew from "@/components/WhatsNew";
+import PracticeSettingsModal from "@/components/PracticeSettingsModal";
+import StreakFreezePurchaseModal from "@/components/StreakFreezePurchaseModal";
+import PremiumPurchaseModal from "@/components/PremiumPurchaseModal";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -20,6 +23,9 @@ export enum ModalType {
   RECOVER_ACCOUNT = "RECOVER_ACCOUNT",
   ACCOUNT = "ACCOUNT",
   WHATS_NEW = "WHATS_NEW",
+  PRACTICE_SETTINGS = "PRACTICE_SETTINGS",
+  STREAK_FREEZE_PURCHASE = "STREAK_FREEZE_PURCHASE",
+  PREMIUM_PURCHASE = "PREMIUM_PURCHASE",
   NONE = "NONE",
 }
 
@@ -90,6 +96,18 @@ export function ModalController() {
             onCancel={closeModal}
           />
         </Suspense>
+      </Modal>
+
+      <Modal open={modal === ModalType.PRACTICE_SETTINGS} onClose={closeModal} panelClassName="relative transform rounded-2xl bg-transparent shadow-2xl transition-all my-8">
+        <PracticeSettingsModal onClose={closeModal} />
+      </Modal>
+
+      <Modal open={modal === ModalType.STREAK_FREEZE_PURCHASE} onClose={closeModal} panelClassName="relative transform rounded-2xl bg-slate-900 border border-white/10 shadow-2xl transition-all my-8 w-full max-w-md mx-4">
+        <StreakFreezePurchaseModal onClose={closeModal} />
+      </Modal>
+
+      <Modal open={modal === ModalType.PREMIUM_PURCHASE} onClose={closeModal} panelClassName="relative transform rounded-2xl bg-slate-900 border border-white/10 shadow-2xl transition-all my-8 w-full max-w-md mx-4">
+        <PremiumPurchaseModal onClose={closeModal} />
       </Modal>
     </>
   );

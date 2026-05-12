@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useSettings, useSettingsDispatch } from "@/lib/settings_hook";
 import { Description, Field, Label, Switch } from "@headlessui/react";
 import clsx from "clsx";
-import { platform } from "os";
 
 export function StartupSettings() {
   const settings = useSettings();
@@ -113,10 +112,7 @@ export function StartupSettings() {
           <span className="flex grow flex-col">
             <Label
               as="span"
-              className={clsx(
-                "text-sm font-medium leading-6",
-                platform() === "darwin" ? "text-white" : ""
-              )}
+              className="text-sm font-medium leading-6 text-slate-900 dark:text-white"
               passive
             >
               Launch at Startup
@@ -148,8 +144,7 @@ export function StartupSettings() {
             <Label
               as="span"
               className={clsx(
-                "text-sm font-medium leading-6",
-                platform() === "darwin" ? "text-white" : "",
+                "text-sm font-medium leading-6 text-slate-900 dark:text-white",
                 !settings.launchAtStartup ? "opacity-50" : ""
               )}
               passive

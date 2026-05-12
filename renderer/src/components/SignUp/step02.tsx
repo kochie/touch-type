@@ -1,25 +1,22 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { Transition } from "@headlessui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Error from "../Errors";
 import Button from "../Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faEnvelope } from "@fortawesome/pro-regular-svg-icons";
 import { useSupabaseClient } from "@/lib/supabase-provider";
 
+const RESEND_COOLDOWN = 60;
+
 const SignupSchema = Yup.object().shape({
-  code: Yup.string().length(6).required(),
-  email: Yup.string().email().required(),
+  code: Yup.string().length(6, "Code must be 6 digits").required("Required"),
 });
 
 const Spinner = (
-  <FontAwesomeIcon
-    icon={faSpinner}
-    className="text-white"
-    spin={true}
-    size="xl"
-  />
+  <FontAwesomeIcon icon={faSpinner} className="text-white" spin={true} size="xl" />
 );
 
 const Tick = (
@@ -28,33 +25,46 @@ const Tick = (
 
 export default function Step02({ onContinue, email }) {
   const [formErrors, setFormErrors] = useState<string>();
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendMessage, setResendMessage] = useState<string>();
   const supabase = useSupabaseClient();
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleResend = async () => {
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email });
+      if (error) throw error;
+      setResendMessage("Email resent — check your inbox.");
+      setResendCooldown(RESEND_COOLDOWN);
+    } catch (error: any) {
+      setFormErrors(error.message || String(error));
+    }
+  };
 
   return (
     <Formik
-      initialValues={{
-        email: email,
-        code: "",
-      }}
+      initialValues={{ code: "" }}
       initialStatus={"PENDING"}
       validationSchema={SignupSchema}
       onSubmit={async (values, { setSubmitting, setStatus }) => {
         setFormErrors("");
 
         try {
-          // Verify the OTP code sent to email
-          const { data, error } = await supabase.auth.verifyOtp({
-            email: values.email,
+          const { error } = await supabase.auth.verifyOtp({
+            email,
             token: values.code,
-            type: 'signup',
+            type: "signup",
           });
 
-          if (error) {
-            throw error;
-          }
+          if (error) throw error;
 
-          setSubmitting(false);
           setStatus("COMPLETE");
+          await new Promise((resolve) => setTimeout(resolve, 800));
           onContinue();
         } catch (error: any) {
           setFormErrors(error.message || String(error));
@@ -65,6 +75,15 @@ export default function Step02({ onContinue, email }) {
     >
       {({ isSubmitting, errors, touched, status }) => (
         <Form className="space-y-6">
+          <div className="flex items-start gap-3 rounded-lg bg-indigo-50 border border-indigo-100 px-4 py-3">
+            <FontAwesomeIcon icon={faEnvelope} className="text-indigo-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-indigo-700">
+              We sent a 6-digit confirmation code to{" "}
+              <span className="font-semibold">{email}</span>. Enter it below to
+              activate your account.
+            </p>
+          </div>
+
           <Transition
             as="div"
             appear={true}
@@ -78,58 +97,29 @@ export default function Step02({ onContinue, email }) {
           >
             <Error errors={formErrors} />
           </Transition>
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              Email address
-            </label>
-            <div className="mt-2">
-              <Field
-                id="email"
-                name="email"
-                type="email"
-                disabled
-                autoComplete="email"
-                required
-                className="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 disabled:ring-gray-200 "
-              />
-              {errors.email && touched.email && (
-                <ErrorMessage name="email">
-                  {(msg) => (
-                    <p className="mt-2 text-sm text-red-600" id="email-error">
-                      {msg}
-                    </p>
-                  )}
-                </ErrorMessage>
-              )}
-            </div>
-          </div>
 
           <div>
             <label
               htmlFor="code"
               className="block text-sm font-medium leading-6 text-gray-900"
             >
-              Authentication Code
+              Confirmation code
             </label>
             <div className="mt-2">
               <Field
                 id="code"
                 name="code"
                 type="text"
-                autoComplete="otp"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="123456"
                 required
-                className="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 tracking-widest text-center"
               />
               {errors.code && touched.code && (
-                <ErrorMessage name="password">
+                <ErrorMessage name="code">
                   {(msg) => (
-                    <p
-                      className="mt-2 text-sm text-red-600"
-                      id="password-error"
-                    >
+                    <p className="mt-2 text-sm text-red-600" id="code-error">
                       {msg}
                     </p>
                   )}
@@ -139,14 +129,30 @@ export default function Step02({ onContinue, email }) {
           </div>
 
           <div>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && status === "PENDING" && Spinner}
-              {!isSubmitting && status === "PENDING" && "Confirm Sign Up"}
-              {!isSubmitting && status === "COMPLETE" && Tick}
+              {!isSubmitting && status === "PENDING" && "Confirm account"}
+              {status === "COMPLETE" && Tick}
             </Button>
+          </div>
+
+          <div className="text-center text-sm text-gray-500">
+            {resendMessage && !resendCooldown ? (
+              <span>{resendMessage}</span>
+            ) : resendCooldown > 0 ? (
+              <span>Resend available in {resendCooldown}s</span>
+            ) : (
+              <span>
+                Didn&apos;t receive it?{" "}
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  className="font-semibold text-indigo-600 hover:text-indigo-500"
+                >
+                  Resend email
+                </button>
+              </span>
+            )}
           </div>
         </Form>
       )}

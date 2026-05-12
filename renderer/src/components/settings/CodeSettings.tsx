@@ -7,7 +7,6 @@ import {
   useSettingsDispatch,
 } from "@/lib/settings_hook";
 import { Description, Field, Label, Select, Switch } from "@headlessui/react";
-import { platform } from "os";
 import clsx from "clsx";
 import { useState } from "react";
 
@@ -70,10 +69,7 @@ export function CodeSettings() {
         <span className="flex flex-grow flex-col">
           <Label
             as="span"
-            className={clsx(
-              "text-sm font-medium leading-6",
-              platform() === "darwin" ? "text-white" : "",
-            )}
+            className="text-sm font-medium leading-6 text-slate-900 dark:text-white"
           >
             Enable Code Mode
           </Label>
@@ -114,7 +110,7 @@ export function CodeSettings() {
             </span>
             <Select
               className={clsx(
-                "block w-32 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+                "block w-32 appearance-none rounded-lg border border-slate-300 dark:border-transparent bg-slate-100 dark:bg-white/5 py-1.5 px-3 text-sm/6 text-slate-900 dark:text-white",
                 "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
                 "*:text-black",
               )}
@@ -144,7 +140,7 @@ export function CodeSettings() {
             </span>
             <Select
               className={clsx(
-                "block w-40 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+                "block w-40 appearance-none rounded-lg border border-slate-300 dark:border-transparent bg-slate-100 dark:bg-white/5 py-1.5 px-3 text-sm/6 text-slate-900 dark:text-white",
                 "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
                 "*:text-black",
               )}
@@ -200,7 +196,7 @@ export function CodeSettings() {
             </span>
             <Select
               className={clsx(
-                "block w-28 appearance-none rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-white",
+                "block w-28 appearance-none rounded-lg border border-slate-300 dark:border-transparent bg-slate-100 dark:bg-white/5 py-1.5 px-3 text-sm/6 text-slate-900 dark:text-white",
                 "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
                 "*:text-black",
               )}

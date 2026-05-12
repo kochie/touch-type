@@ -79,6 +79,7 @@ function ModalSetup() {
         handleSignIn={() => setModal(ModalType.SIGN_IN)}
         handleAccount={() => setModal(ModalType.ACCOUNT)}
         handleWhatsNew={() => setModal(ModalType.WHATS_NEW)}
+        handlePracticeSettings={() => setModal(ModalType.PRACTICE_SETTINGS)}
       />
       <ModalController />
     </>

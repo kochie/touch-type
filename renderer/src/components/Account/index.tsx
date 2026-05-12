@@ -9,6 +9,7 @@ import { useMas } from "@/lib/mas_hook";
 import clsx from "clsx";
 import { useSupabase } from "@/lib/supabase-provider";
 import { Tables } from "@/types/supabase";
+import { ModalType, useModal } from "@/lib/modal-provider";
 
 enum PlanType {
   FREE = "free",
@@ -36,6 +37,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   const [error, setError] = useState<string | null>(null);
   
   const { supabase, user } = useSupabase();
+  const { setModal } = useModal();
 
   const handleSignOut = async () => {
     setSubmitting(true);
@@ -113,7 +115,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
       // Get subscription
       const { data: sub, error: subError } = await supabase
         .from('subscriptions')
-        .select('*')
+        .select('billing_plan, billing_period, next_billing_date, status, auto_renew, stripe_customer_id')
         .eq('user_id', user.id)
         .single();
 
@@ -359,12 +361,40 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                       <>
                         <p className="text-gray-600 text-sm leading-6">
                           <span>You're currently on the</span>
-                          <span className="mx-1 inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                          <span className={`mx-1 inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${subscription.billing_plan === "premium" ? "bg-violet-100 text-violet-700" : "bg-gray-100 text-gray-600"}`}>
                             {subscription.billing_plan}
                           </span>
                           <span>plan.</span>
                         </p>
-                        <div className="flex gap-1 mt-4">
+                        {subscription.billing_plan === "premium" && (
+                          <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col gap-1.5 text-sm">
+                            {subscription.billing_period && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Billing period</span>
+                                <span className="text-gray-700 font-medium">
+                                  {subscription.billing_period === "premium_monthly" ? "Monthly ($2.99/mo)" : "Yearly ($2.39/mo)"}
+                                </span>
+                              </div>
+                            )}
+                            {subscription.next_billing_date && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">{subscription.auto_renew === false ? "Expires on" : "Renews on"}</span>
+                                <span className="text-gray-700 font-medium">
+                                  {new Date(subscription.next_billing_date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+                                </span>
+                              </div>
+                            )}
+                            {subscription.status && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Status</span>
+                                <span className={`font-medium capitalize ${subscription.status === "active" ? "text-emerald-600" : subscription.status === "trialing" ? "text-sky-600" : subscription.status === "cancelled" || subscription.status === "canceled" ? "text-red-500" : "text-amber-500"}`}>
+                                  {subscription.status.replace("_", " ")}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <div className="flex gap-1 mt-3">
                           {features[subscription.billing_plan as PlanType]?.map(
                             (feature) => (
                               <span
@@ -397,16 +427,13 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     <button
                       onClick={(event) => {
                         event.preventDefault();
-                        window.open(
-                          process.env["NEXT_PUBLIC_ACCOUNT_LINK"],
-                          "_blank",
-                        );
+                        setModal(ModalType.PREMIUM_PURCHASE);
                       }}
                       type="button"
                       disabled={deleteSubmitting}
                       className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
                     >
-                      Change Plan
+                      {subscription?.billing_plan === "premium" ? "Manage Plan" : "Upgrade to Premium"}
                     </button>
                   </div>
                 </div>

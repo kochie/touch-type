@@ -21,8 +21,7 @@ import { init } from "@sentry/electron/main";
 import { readFile } from "fs/promises";
 import serve from "electron-serve";
 
-import "./in-app-purchase"
-import { getProducts } from "./in-app-purchase";
+import { setupInAppPurchase, getProducts } from "./in-app-purchase";
 
 // Deep linking, notifications, and tray support
 import { setupDeepLinkHandlers, setMainWindow, handleInitialDeepLink } from "./deep-link";
@@ -108,9 +107,30 @@ app.on("ready", async () => {
   const isDev = await import("electron-is-dev");
   isDevMode = isDev.default;
 
+  // Setup in-app purchase listener (macOS/MAS only; no-ops on other platforms)
+  setupInAppPurchase();
+
   ipcMain.handle("getWordSet", handleWordSet);
   ipcMain.handle("getProducts", getProducts);
   ipcMain.handle("isMas", () => !!process.mas);
+
+  // MAS streak freeze consumable purchase
+  const FREEZE_PRODUCT_IDS = [
+    'io.kochie.touch-typer.freeze1',
+    'io.kochie.touch-typer.freeze3',
+    'io.kochie.touch-typer.freeze10',
+  ];
+  ipcMain.handle("purchaseStreakFreeze", async (_event: IpcMainInvokeEvent, productId: string) => {
+    if (!FREEZE_PRODUCT_IDS.includes(productId)) {
+      return { queued: false, error: 'Invalid product ID' };
+    }
+    const { inAppPurchase } = await import('electron');
+    if (!inAppPurchase.canMakePayments()) {
+      return { queued: false, error: 'Payments not available' };
+    }
+    const isValid = await inAppPurchase.purchaseProduct(productId, 1);
+    return { queued: isValid };
+  });
   
   // Code mode IPC handlers
   ipcMain.handle("getCodeSnippets", handleGetCodeSnippets);
@@ -135,7 +155,10 @@ app.on("ready", async () => {
     platform: process.platform,
     electronVersion: process.versions.electron,
     nodeVersion: process.versions.node,
+    appVersion: app.getVersion(),
   }));
+
+  ipcMain.handle("openExternal", (_event, url: string) => shell.openExternal(url));
 
   ipcMain.handle("getSystemLocale", () => app.getLocale());
 
@@ -203,6 +226,28 @@ app.on("ready", async () => {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url); // Open URL in user's browser.
     return { action: "deny" }; // Prevent the app from opening the URL.
+  });
+
+  // 3DS fallback: Stripe redirects to the finalize endpoint after authentication.
+  // For most cards, payment completes without redirect (handled in the renderer).
+  // This only fires for 3DS-required cards.
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    const { net } = require("electron");
+    if (url.includes("finalize-streak-freeze-checkout")) {
+      event.preventDefault();
+      net.fetch(url).catch((err: Error) => {
+        console.error("Failed to call finalize-streak-freeze-checkout:", err);
+      }).finally(() => {
+        mainWindow.webContents.send("freeze-purchase-complete");
+      });
+    } else if (url.includes("finalize-checkout-session")) {
+      event.preventDefault();
+      net.fetch(url).catch((err: Error) => {
+        console.error("Failed to call finalize-checkout-session:", err);
+      }).finally(() => {
+        mainWindow.webContents.send("subscription-purchase-complete");
+      });
+    }
   });
 
   mainWindow.on("resize", () => {

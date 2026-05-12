@@ -8,8 +8,6 @@ import {
   useSettings,
   useSettingsDispatch,
 } from "@/lib/settings_hook";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCode } from "@fortawesome/pro-regular-svg-icons";
 import clsx from "clsx";
 
 const CODE_LANGUAGES: { value: CodeLanguages; label: string }[] = [
@@ -79,23 +77,6 @@ function CodePageInner() {
 
   return (
     <div className="w-full">
-      {/* Header */}
-      <div className="px-6 pt-5 pb-2">
-        <div className="flex items-start gap-4">
-          <div className="w-13 h-13 rounded-2xl flex items-center justify-center flex-shrink-0 bg-sky-400/10">
-            <FontAwesomeIcon icon={faCode} className="w-6 h-6 text-sky-400" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
-              Code
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              Practice real code snippets with proper indentation and syntax
-            </p>
-          </div>
-        </div>
-      </div>
-
       <Tracker mode="code" rightPanel={rightPanel} />
     </div>
   );

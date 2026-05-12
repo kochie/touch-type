@@ -62,7 +62,7 @@ function Toggle({ label, enabled, onChange }: ToggleProps) {
   );
 }
 
-export default function NewChallengePrompt() {
+export default function NewChallengePrompt({ onDone }: { onDone?: () => void }) {
   const router = useRouter();
   const settings = useSettings();
   const [wordList] = useWords();
@@ -99,6 +99,7 @@ export default function NewChallengePrompt() {
     const game = await createGame(challengeSettings);
     setCreating(false);
     if (game) {
+      onDone?.();
       router.push(`/pvp/challenge?id=${game.id}`);
     }
   };

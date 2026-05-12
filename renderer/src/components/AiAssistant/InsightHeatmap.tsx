@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import type { HeatmapKey } from "@/types/ai-insights";
 import { KeyboardCanvas } from "@/components/KeyboardCanvas";
 import { useSettings } from "@/lib/settings_hook";
+import KeyboardSelect from "@/components/KeyboardHeatmapSelect";
+import { KeyboardLayoutNames } from "@/keyboards";
 
 interface PopoverInfo {
   key: string;
@@ -17,25 +19,34 @@ interface InsightHeatmapProps {
 }
 
 export function InsightHeatmap({ heatmapData }: InsightHeatmapProps) {
-  const { keyboardName } = useSettings();
+  const { keyboardName: settingsKeyboard } = useSettings();
+  const [selectedKeyboard, setSelectedKeyboard] = useState<KeyboardLayoutNames>(
+    settingsKeyboard ?? KeyboardLayoutNames.MACOS_US_QWERTY,
+  );
   const [popover, setPopover] = useState<PopoverInfo | null>(null);
 
   const { colorMap, keyDataMap } = useMemo(() => {
-    if (heatmapData.length === 0) {
+    // Keep entries for the selected keyboard; fall back to all if none have a keyboard field (old data)
+    const withKb = heatmapData.filter((k) => k.keyboard);
+    const filtered = withKb.length > 0
+      ? heatmapData.filter((k) => k.keyboard === selectedKeyboard)
+      : heatmapData;
+
+    if (filtered.length === 0) {
       return {
         colorMap: new Map<string, string>(),
         keyDataMap: new Map<string, HeatmapKey>(),
       };
     }
 
-    const maxMs = Math.max(...heatmapData.map((k) => k.avg_ms));
-    const minMs = Math.min(...heatmapData.map((k) => k.avg_ms));
+    const maxMs = Math.max(...filtered.map((k) => k.avg_ms));
+    const minMs = Math.min(...filtered.map((k) => k.avg_ms));
     const range = maxMs - minMs || 1;
 
     const colorMap = new Map<string, string>();
     const keyDataMap = new Map<string, HeatmapKey>();
 
-    for (const k of heatmapData) {
+    for (const k of filtered) {
       const t = (k.avg_ms - minMs) / range;
       const r = Math.round(59 + t * (239 - 59));
       const g = Math.round(130 + t * (68 - 130));
@@ -46,7 +57,7 @@ export function InsightHeatmap({ heatmapData }: InsightHeatmapProps) {
     }
 
     return { colorMap, keyDataMap };
-  }, [heatmapData]);
+  }, [heatmapData, selectedKeyboard]);
 
   const handleKeyClick = (key: string) => {
     const data = keyDataMap.get(key);
@@ -63,8 +74,16 @@ export function InsightHeatmap({ heatmapData }: InsightHeatmapProps) {
 
   return (
     <div>
+      <div className="mb-4 max-w-xs">
+        <KeyboardSelect
+          selectedKeyboardName={selectedKeyboard}
+          setSelectedKeyboard={setSelectedKeyboard}
+          label="Keyboard layout"
+          description=""
+        />
+      </div>
       <KeyboardCanvas
-        keyboardName={keyboardName}
+        keyboardName={selectedKeyboard}
         colorMap={colorMap}
         onKeyClick={handleKeyClick}
       />

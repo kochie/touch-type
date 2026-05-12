@@ -79,15 +79,15 @@ export function useDeepLink(handlers?: DeepLinkHandlers): void {
       return;
     }
 
-    // Register deep link handler
-    window.electronAPI.onDeepLink(handleDeepLink);
-
-    // Register navigation handler (for tray menu)
-    window.electronAPI.onNavigate(handleNavigate);
+    // Register deep link handler — store the wrapper so we can remove the
+    // exact listener reference on cleanup (avoids removeAllListeners nuking
+    // sibling instances in React Strict Mode's double-mount cycle).
+    const deepLinkWrapper = window.electronAPI.onDeepLink(handleDeepLink);
+    const navigateWrapper = window.electronAPI.onNavigate(handleNavigate);
 
     return () => {
-      window.electronAPI?.offDeepLink?.();
-      window.electronAPI?.offNavigate?.();
+      if (deepLinkWrapper) window.electronAPI?.offDeepLink?.(deepLinkWrapper);
+      if (navigateWrapper) window.electronAPI?.offNavigate?.(navigateWrapper);
     };
   }, [handleDeepLink, handleNavigate]);
 }

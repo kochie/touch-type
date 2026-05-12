@@ -9,7 +9,7 @@ import { useResults } from "@/lib/result-provider";
 import { DateTime } from "luxon";
 import ActivityCalendar from "@/components/ActivityCalendar";
 import clsx from "clsx";
-import Link from "next/link";
+import { ModalType, useModal } from "@/lib/modal-provider";
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -24,6 +24,7 @@ function StreakPageInner() {
     isLoading,
   } = useStreak();
   const { results } = useResults();
+  const { setModal } = useModal();
 
   // Build a week indicator: which days this week are "done"
   const today = new Date();
@@ -119,22 +120,13 @@ function StreakPageInner() {
             ))}
           </div>
 
-          {isPremium ? (
-            <Link
-              href="/settings"
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border-dashed border-2 border-slate-200 dark:border-white/[0.08] text-xs font-semibold text-slate-400 dark:text-slate-500 hover:border-sky-400/40 hover:text-sky-400 transition-colors duration-150"
-            >
-              <span>+</span>
-              <span>Get more freezes</span>
-            </Link>
-          ) : (
-            <Link
-              href="/settings"
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-sky-400/10 border border-sky-400/30 text-xs font-semibold text-sky-400 hover:bg-sky-400/15 transition-colors duration-150"
-            >
-              Upgrade for freezes
-            </Link>
-          )}
+          <button
+            onClick={() => setModal(ModalType.STREAK_FREEZE_PURCHASE)}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-sky-400/10 border border-sky-400/30 text-xs font-semibold text-sky-400 hover:bg-sky-400/20 hover:border-sky-400/50 transition-colors duration-150 cursor-pointer"
+          >
+            <span>+</span>
+            <span>Get more freezes</span>
+          </button>
         </div>
 
         {/* Longest streak + stats */}

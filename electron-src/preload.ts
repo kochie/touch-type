@@ -91,8 +91,10 @@ declare global {
       getProducts: () => Promise<Electron.Product[]>;
       isMas: () => Promise<boolean>;
       // Deep linking
-      onDeepLink: (callback: (data: DeepLinkData) => void) => void;
-      onNavigate: (callback: (path: string) => void) => void;
+      onDeepLink: (callback: (data: DeepLinkData) => void) => (...args: unknown[]) => void;
+      offDeepLink: (wrapper: (...args: unknown[]) => void) => void;
+      onNavigate: (callback: (path: string) => void) => (...args: unknown[]) => void;
+      offNavigate: (wrapper: (...args: unknown[]) => void) => void;
       // Push notifications
       registerPushNotifications: () => Promise<PushRegistrationResult>;
       unregisterPushNotifications: () => Promise<ScheduleResult>;
@@ -138,15 +140,23 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   // Deep linking - listen for deep link events from main process
   onDeepLink: (callback: (data: DeepLinkData) => void) => {
-    ipcRenderer.on("deep-link", (_, data: DeepLinkData) => callback(data));
+    const wrapper = (_event: Electron.IpcRendererEvent, data: DeepLinkData) => callback(data);
+    ipcRenderer.on("deep-link", wrapper);
+    return wrapper;
   },
-  offDeepLink: () => ipcRenderer.removeAllListeners("deep-link"),
+  offDeepLink: (wrapper: (...args: unknown[]) => void) => {
+    ipcRenderer.removeListener("deep-link", wrapper);
+  },
 
   // Navigation - listen for navigation requests from tray menu
   onNavigate: (callback: (path: string) => void) => {
-    ipcRenderer.on("navigate", (_, path: string) => callback(path));
+    const wrapper = (_event: Electron.IpcRendererEvent, path: string) => callback(path);
+    ipcRenderer.on("navigate", wrapper);
+    return wrapper;
   },
-  offNavigate: () => ipcRenderer.removeAllListeners("navigate"),
+  offNavigate: (wrapper: (...args: unknown[]) => void) => {
+    ipcRenderer.removeListener("navigate", wrapper);
+  },
 
   // Push notifications (APNS/WNS)
   registerPushNotifications: (): Promise<PushRegistrationResult> =>
@@ -232,4 +242,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onSubscriptionPurchaseComplete: (callback: () => void): void => {
     ipcRenderer.on("subscription-purchase-complete", () => callback());
   },
+
+  openExternal: (url: string): Promise<void> =>
+    ipcRenderer.invoke("openExternal", url),
 });

@@ -6,9 +6,10 @@ interface PageHeaderProps {
   icon: IconDefinition;
   title: string;
   subtitle: string;
-  iconBg: string;   // e.g. "bg-sky-400/10"
-  iconColor: string; // e.g. "text-sky-400"
-  children?: React.ReactNode; // filter bar, action buttons, etc.
+  iconBg: string;
+  iconColor: string;
+  headerRight?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export default function PageHeader({
@@ -17,6 +18,7 @@ export default function PageHeader({
   subtitle,
   iconBg,
   iconColor,
+  headerRight,
   children,
 }: PageHeaderProps) {
   return (
@@ -30,13 +32,18 @@ export default function PageHeader({
         >
           <FontAwesomeIcon icon={icon} className={clsx("w-6 h-6", iconColor)} />
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
-            {title}
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {subtitle}
-          </p>
+        <div className="flex-1 flex items-start justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
+              {title}
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              {subtitle}
+            </p>
+          </div>
+          {headerRight && (
+            <div className="flex items-center">{headerRight}</div>
+          )}
         </div>
       </div>
       {children}

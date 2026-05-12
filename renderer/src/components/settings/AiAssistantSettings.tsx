@@ -2,7 +2,6 @@
 
 import { useSettings, useSettingsDispatch } from "@/lib/settings_hook";
 import { Description, Field, Label, Switch } from "@headlessui/react";
-import { platform } from "os";
 import clsx from "clsx";
 
 export function AiAssistantSettings() {
@@ -15,10 +14,7 @@ export function AiAssistantSettings() {
         <span className="flex flex-grow flex-col">
           <Label
             as="span"
-            className={clsx(
-              "text-sm font-medium leading-6",
-              platform() === "darwin" ? "text-white" : "",
-            )}
+            className="text-sm font-medium leading-6 text-slate-900 dark:text-white"
             passive
           >
             Weekly email report

@@ -100,6 +100,7 @@ const SettingsContext = createContext({
   appLanguage: Languages.ENGLISH,
   autoDetectAppLanguage: true,
   aiWeeklyEmail: false,
+  backgroundOpacity: 0.85,
 });
 
 export const defaultSettings = {
@@ -134,6 +135,7 @@ export const defaultSettings = {
   appLanguage: Languages.ENGLISH,
   autoDetectAppLanguage: true,
   aiWeeklyEmail: false,
+  backgroundOpacity: 0.85,
 };
 
 type ChangeSettingsAction =
@@ -256,6 +258,10 @@ type ChangeSettingsAction =
   | {
       type: "SET_AI_WEEKLY_EMAIL";
       aiWeeklyEmail: boolean;
+    }
+  | {
+      type: "SET_BACKGROUND_OPACITY";
+      opacity: number;
     };
 
 
@@ -440,6 +446,9 @@ const reducer = (
     case "SET_AI_WEEKLY_EMAIL":
       return { ...state, aiWeeklyEmail: action.aiWeeklyEmail };
 
+    case "SET_BACKGROUND_OPACITY":
+      return { ...state, backgroundOpacity: Math.max(0, Math.min(1, action.opacity)) };
+
     default:
       return { ...state };
   }
@@ -523,6 +532,7 @@ export const SettingsProvider = ({ children }) => {
           appLanguage: (data.app_language as Languages) ?? Languages.ENGLISH,
           // autoDetectAppLanguage is NOT fetched from DB — machine-specific (localStorage only)
           aiWeeklyEmail: data.ai_weekly_email ?? false,
+          backgroundOpacity: (data as any).background_opacity ?? 0.85,
         };
         dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
         dbSettingsLoaded.current = true;
@@ -567,6 +577,7 @@ export const SettingsProvider = ({ children }) => {
         tab_width: safeSettings.tabWidth,
         app_language: safeSettings.appLanguage,
         // auto_detect_app_language is NOT saved to DB — machine-specific, same treatment as launchAtStartup
+        // background_opacity is NOT saved to DB — device-specific; stored in localStorage only
         ai_weekly_email: safeSettings.aiWeeklyEmail,
       };
 
@@ -575,7 +586,7 @@ export const SettingsProvider = ({ children }) => {
         .upsert(dbSettings, { onConflict: 'user_id' });
 
       if (error) {
-        console.error('Error saving settings:', error);
+        console.error('Error saving settings:', (error as any).message ?? JSON.stringify(error), error);
       }
     },
     [user, supabase],
@@ -598,6 +609,11 @@ export const SettingsProvider = ({ children }) => {
     // ColorScheme values map 1:1 to nativeTheme.themeSource.
     window.electronAPI?.setThemeSource?.(settings.theme);
   }, [settings.theme]);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    document.documentElement.style.setProperty("--bg-opacity", String(settings.backgroundOpacity));
+  }, [settings.backgroundOpacity]);
 
   useEffect(() => {
     i18n.changeLanguage(settings.appLanguage).catch((err) => {

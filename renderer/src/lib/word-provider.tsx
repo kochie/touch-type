@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { Levels, useSettings } from "./settings_hook";
@@ -12,9 +13,18 @@ import * as regexp from "./levels";
 import { KeyboardLayoutNames } from "@/keyboards";
 import naughty from "naughty-words";
 
-type UserContextProps = [string[]];
+export interface DrillInfo {
+  focus_keys: string[];
+  rationale: string;
+}
 
-const WordContext = createContext<UserContextProps>([[""]]);
+type WordContextProps = [
+  string[],
+  (words: string[] | null, drill?: DrillInfo | null) => void,
+  DrillInfo | null,
+];
+
+const WordContext = createContext<WordContextProps>([[""], () => {}, null]);
 
 const regExpMap = {
   [KeyboardLayoutNames.MACOS_US_QWERTY]: {
@@ -122,12 +132,11 @@ function getRegExp(levelName: Levels, keyboardName: KeyboardLayoutNames) {
 export const WordProvider = ({ children }) => {
   const settings = useSettings();
   const [wordList, setWordList] = useState([""]);
+  const [customWordList, setCustomWordList] = useState<string[] | null>(null);
+  const [drillInfo, setDrillInfo] = useState<DrillInfo | null>(null);
 
   const getWordList = useCallback(async () => {
     if (typeof window === "undefined" || !window.electronAPI?.getWordSet) {
-      // Renderer is running outside Electron (e.g. `pnpm dev:next`) or the
-      // preload bridge isn't ready yet during HMR. Render an empty list
-      // rather than crashing the provider tree with an unhandled rejection.
       console.warn("electronAPI.getWordSet is not available — skipping word load.");
       setWordList([""]);
       return;
@@ -170,8 +179,23 @@ export const WordProvider = ({ children }) => {
     getWordList();
   }, [getWordList]);
 
+  // Clear drill when the user changes level, language, or keyboard
+  const isMountRef = useRef(true);
+  useEffect(() => {
+    if (isMountRef.current) { isMountRef.current = false; return; }
+    setCustomWordList(null);
+    setDrillInfo(null);
+  }, [settings.levelName, settings.language, settings.keyboardName]);
+
+  const setWords = useCallback((words: string[] | null, drill?: DrillInfo | null) => {
+    setCustomWordList(words);
+    setDrillInfo(drill ?? null);
+  }, []);
+
   return (
-    <WordContext.Provider value={[wordList]}>{children}</WordContext.Provider>
+    <WordContext.Provider value={[customWordList ?? wordList, setWords, drillInfo]}>
+      {children}
+    </WordContext.Provider>
   );
 };
 

@@ -53,6 +53,7 @@ export interface DebugInfo {
   platform: string;
   electronVersion: string;
   nodeVersion: string;
+  appVersion: string;
 }
 
 export interface LoginItemSettings {
@@ -73,10 +74,10 @@ export interface ElectronAPI {
   getDebugInfo: () => Promise<DebugInfo>;
   getSystemLocale: () => Promise<string>;
   // Deep linking
-  onDeepLink: (callback: (data: DeepLinkData) => void) => void;
-  offDeepLink: () => void;
-  onNavigate: (callback: (path: string) => void) => void;
-  offNavigate: () => void;
+  onDeepLink: (callback: (data: DeepLinkData) => void) => (...args: unknown[]) => void;
+  offDeepLink: (wrapper: (...args: unknown[]) => void) => void;
+  onNavigate: (callback: (path: string) => void) => (...args: unknown[]) => void;
+  offNavigate: (wrapper: (...args: unknown[]) => void) => void;
   // Push notifications
   registerPushNotifications: () => Promise<PushRegistrationResult>;
   unregisterPushNotifications: () => Promise<ScheduleResult>;
@@ -108,6 +109,7 @@ export interface ElectronAPI {
   onFreezePurchaseComplete: (callback: () => void) => void;
   // Fired by main process after Stripe subscription checkout completes (3DS fallback)
   onSubscriptionPurchaseComplete: (callback: () => void) => void;
+  openExternal: (url: string) => Promise<void>;
 }
 
 declare global {

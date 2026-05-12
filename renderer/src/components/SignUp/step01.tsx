@@ -1,4 +1,5 @@
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeSlash } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -12,7 +13,6 @@ const SignupSchema = Yup.object().shape({
   name: Yup.string().max(50, "Too Long!").required("Required"),
   email: Yup.string().email("Invalid email").required("Required"),
   password: Yup.string().min(8).required(),
-  phone: Yup.string().required(),
 });
 
 const Spinner = (
@@ -30,6 +30,7 @@ const Tick = (
 
 export default function Step01({ onContinue }) {
   const [formErrors, setFormErrors] = useState<string>();
+  const [showPassword, setShowPassword] = useState(false);
   const supabase = useSupabaseClient();
 
   return (
@@ -38,7 +39,6 @@ export default function Step01({ onContinue }) {
         name: "",
         password: "",
         email: "",
-        phone: "",
       }}
       initialStatus={"PENDING"}
       validationSchema={SignupSchema}
@@ -52,7 +52,6 @@ export default function Step01({ onContinue }) {
             options: {
               data: {
                 name: values.name,
-                phone_number: values.phone,
               },
             },
           });
@@ -122,28 +121,36 @@ export default function Step01({ onContinue }) {
             >
               Password
             </label>
-            <div className="mt-2">
+            <div className="mt-2 relative">
               <Field
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 required
-                className="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 pr-10 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
-              {errors.password && touched.password && (
-                <ErrorMessage name="password">
-                  {(msg) => (
-                    <p
-                      className="mt-2 text-sm text-red-600"
-                      id="password-error"
-                    >
-                      {msg}
-                    </p>
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+              >
+                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="w-4 h-4" />
+              </button>
+            </div>
+            {errors.password && touched.password && (
+              <ErrorMessage name="password">
+                {(msg) => (
+                  <p
+                    className="mt-2 text-sm text-red-600"
+                    id="password-error"
+                  >
+                    {msg}
+                  </p>
                   )}
                 </ErrorMessage>
               )}
-            </div>
           </div>
 
           <div>
@@ -174,33 +181,6 @@ export default function Step01({ onContinue }) {
             </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              Phone Number (for MFA)
-            </label>
-            <div className="mt-2">
-              <Field
-                id="phone"
-                name="phone"
-                type="tel"
-                autoComplete="phone"
-                required
-                className="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-              {errors.phone && touched.phone && (
-                <ErrorMessage name="phone">
-                  {(msg) => (
-                    <p className="mt-2 text-sm text-red-600" id="phone-error">
-                      {msg}
-                    </p>
-                  )}
-                </ErrorMessage>
-              )}
-            </div>
-          </div>
           <div>
             <Button
               type="submit"

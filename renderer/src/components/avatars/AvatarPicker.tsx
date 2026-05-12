@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { FACES, HATS, isHatUnlocked, type HatDef } from "@/lib/avatars";
 import { AvatarComposite } from "./AvatarComposite";
 import { useSupabaseClient } from "@/lib/supabase-provider";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLock } from "@fortawesome/free-solid-svg-icons";
 
 interface AvatarPickerProps {
   userId: string;
@@ -118,8 +120,8 @@ export function AvatarPicker({
           {HatComp && <HatComp />}
         </svg>
         {!unlocked && (
-          <span className="absolute bottom-0.5 right-0.5 text-[9px] leading-none">
-            🔒
+          <span className="absolute bottom-0.5 right-0.5">
+            <FontAwesomeIcon icon={faLock} className="w-2.5 h-2.5 text-slate-400" />
           </span>
         )}
         {progress && (

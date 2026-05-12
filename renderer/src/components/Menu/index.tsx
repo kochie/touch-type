@@ -12,7 +12,8 @@ import {
   faMicrochipAi,
   faCode,
 } from "@fortawesome/pro-regular-svg-icons";
-import { faFire, faSparkles, faSwords } from "@fortawesome/pro-duotone-svg-icons";
+import { faDumbbell, faFire, faSparkles, faSwords } from "@fortawesome/pro-duotone-svg-icons";
+import { faXmark } from "@fortawesome/pro-regular-svg-icons";
 import { usePvP } from "@/lib/pvp-provider";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
@@ -25,11 +26,13 @@ import { LANGUAGES } from "@/lib/languages";
 import { useMas } from "@/lib/mas_hook";
 import { usePlan } from "@/lib/plan_hook";
 import { useStreak } from "@/lib/streak_hook";
+import { useWords } from "@/lib/word-provider";
 
 interface MenuProps {
   handleWhatsNew?: () => void;
   handleSignIn?: () => void;
   handleAccount?: () => void;
+  handlePracticeSettings?: () => void;
 }
 
 interface NavItemProps {
@@ -72,6 +75,7 @@ export default function Menu({
   handleWhatsNew,
   handleSignIn,
   handleAccount,
+  handlePracticeSettings,
 }: MenuProps) {
   const pathname = usePathname();
   const settings = useSettings();
@@ -79,6 +83,7 @@ export default function Menu({
   const plan = usePlan();
   const { currentStreak, isAtRisk, isLoading: streakLoading } = useStreak();
   const { myActiveGames } = usePvP();
+  const [, setWords, drillInfo] = useWords();
 
   const [hydratedSettings, setHydratedSettings] = useState(defaultSettings);
   useLayoutEffect(() => {
@@ -211,21 +216,43 @@ export default function Menu({
       {/* Center context — absolutely centered within the nav bar */}
       {pathname === "/" && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 select-none">
-            <span>Level {hydratedSettings.levelName}</span>
-            <span className="opacity-40">•</span>
-            <span>
-              {keyboards.find(
-                (k) => k.layout === hydratedSettings.keyboardName
-              )?.name ?? hydratedSettings.keyboardName}
-            </span>
-            <span className="opacity-40">•</span>
-            <span>
-              {LANGUAGES.find(
-                (l) => l.value === hydratedSettings.language
-              )?.label ?? hydratedSettings.language}
-            </span>
-          </div>
+          {drillInfo ? (
+            <div className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 select-none">
+              <FontAwesomeIcon icon={faDumbbell} className="w-3 h-3 text-violet-400" />
+              <span className="text-xs font-semibold text-violet-300">AI Drill</span>
+              <span className="opacity-40 text-violet-400">•</span>
+              <span className="text-xs text-violet-300/80">
+                Focusing on{" "}
+                {drillInfo.focus_keys.map(k => k.toUpperCase()).join(", ")}
+              </span>
+              <button
+                onClick={() => setWords(null)}
+                title="Exit drill"
+                className="ml-1 flex items-center justify-center w-4 h-4 rounded-full text-violet-400/60 hover:text-violet-300 hover:bg-violet-400/10 transition-colors duration-150 cursor-pointer"
+              >
+                <FontAwesomeIcon icon={faXmark} className="w-2.5 h-2.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handlePracticeSettings}
+              className="pointer-events-auto flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/[0.05] transition-colors duration-150 select-none"
+            >
+              <span>Level {hydratedSettings.levelName}</span>
+              <span className="opacity-40">•</span>
+              <span>
+                {keyboards.find(
+                  (k) => k.layout === hydratedSettings.keyboardName
+                )?.name ?? hydratedSettings.keyboardName}
+              </span>
+              <span className="opacity-40">•</span>
+              <span>
+                {LANGUAGES.find(
+                  (l) => l.value === hydratedSettings.language
+                )?.label ?? hydratedSettings.language}
+              </span>
+            </button>
+          )}
         </div>
       )}
     </div>
