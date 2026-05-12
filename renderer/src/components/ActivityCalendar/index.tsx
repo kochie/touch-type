@@ -1,7 +1,6 @@
 "use client";
 
 import { useResults } from "@/lib/result-provider";
-import { DateTime } from "luxon";
 import { useMemo, useState } from "react";
 import clsx from "clsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,15 +12,17 @@ interface ActivityCalendarProps {
 
 export default function ActivityCalendar({ className }: ActivityCalendarProps) {
   const { results } = useResults();
-  const [selectedMonth, setSelectedMonth] = useState(() => DateTime.now());
+  const [selectedMonth, setSelectedMonth] = useState(() => Temporal.Now.plainDateISO());
 
   // Get unique activity dates for the selected month
   const activityDates = useMemo(() => {
     const dates = new Set<string>();
     results.forEach((result) => {
-      const date = DateTime.fromISO(result.datetime);
-      if (date.hasSame(selectedMonth, "month")) {
-        dates.add(date.toISODate() ?? "");
+      const date = Temporal.Instant.from(result.datetime)
+        .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+        .toPlainDate();
+      if (date.month === selectedMonth.month && date.year === selectedMonth.year) {
+        dates.add(date.toString());
       }
     });
     return dates;
@@ -31,7 +32,10 @@ export default function ActivityCalendar({ className }: ActivityCalendarProps) {
   const allActivityCounts = useMemo(() => {
     const counts = new Map<string, number>();
     results.forEach((result) => {
-      const dateStr = DateTime.fromISO(result.datetime).toISODate() ?? "";
+      const dateStr = Temporal.Instant.from(result.datetime)
+        .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+        .toPlainDate()
+        .toString();
       counts.set(dateStr, (counts.get(dateStr) || 0) + 1);
     });
     return counts;
@@ -39,32 +43,34 @@ export default function ActivityCalendar({ className }: ActivityCalendarProps) {
 
   // Generate calendar days for the selected month
   const calendarDays = useMemo(() => {
-    const startOfMonth = selectedMonth.startOf("month");
-    const endOfMonth = selectedMonth.endOf("month");
-    const startOfCalendar = startOfMonth.startOf("week");
-    const endOfCalendar = endOfMonth.endOf("week");
+    const startOfMonth = selectedMonth.with({ day: 1 });
+    const endOfMonth = selectedMonth.with({ day: selectedMonth.daysInMonth });
+    // Temporal dayOfWeek: 1=Mon, so dayOfWeek-1 days back = Monday of that week
+    const startOfCalendar = startOfMonth.subtract({ days: startOfMonth.dayOfWeek - 1 });
+    // End of week containing last day of month = add (7 - dayOfWeek) days to reach Sunday
+    const endOfCalendar = endOfMonth.add({ days: 7 - endOfMonth.dayOfWeek });
 
-    const days: DateTime[] = [];
+    const days: Temporal.PlainDate[] = [];
     let current = startOfCalendar;
-    while (current <= endOfCalendar) {
+    while (Temporal.PlainDate.compare(current, endOfCalendar) <= 0) {
       days.push(current);
-      current = current.plus({ days: 1 });
+      current = current.add({ days: 1 });
     }
     return days;
   }, [selectedMonth]);
 
-  const today = DateTime.now().startOf("day");
+  const today = Temporal.Now.plainDateISO();
 
   const goToPrevMonth = () => {
-    setSelectedMonth((prev) => prev.minus({ months: 1 }));
+    setSelectedMonth((prev) => prev.subtract({ months: 1 }));
   };
 
   const goToNextMonth = () => {
-    setSelectedMonth((prev) => prev.plus({ months: 1 }));
+    setSelectedMonth((prev) => prev.add({ months: 1 }));
   };
 
   const goToToday = () => {
-    setSelectedMonth(DateTime.now());
+    setSelectedMonth(Temporal.Now.plainDateISO());
   };
 
   // Get intensity level (0-4) based on session count
@@ -83,8 +89,8 @@ export default function ActivityCalendar({ className }: ActivityCalendarProps) {
     let activeDays = 0;
     let totalSessions = 0;
     calendarDays.forEach((day) => {
-      if (day.hasSame(selectedMonth, "month")) {
-        const dateStr = day.toISODate() ?? "";
+      if (day.month === selectedMonth.month && day.year === selectedMonth.year) {
+        const dateStr = day.toString();
         const count = allActivityCounts.get(dateStr) || 0;
         if (count > 0) {
           activeDays++;
@@ -101,7 +107,8 @@ export default function ActivityCalendar({ className }: ActivityCalendarProps) {
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium text-white">Activity Calendar</h4>
         <div className="flex items-center gap-2">
-          {!selectedMonth.hasSame(DateTime.now(), "month") && (
+          {!(selectedMonth.month === Temporal.Now.plainDateISO().month &&
+            selectedMonth.year === Temporal.Now.plainDateISO().year) && (
             <button
               onClick={goToToday}
               className="cursor-pointer px-2 py-1 text-xs text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded transition-colors"
@@ -118,19 +125,21 @@ export default function ActivityCalendar({ className }: ActivityCalendarProps) {
               <FontAwesomeIcon icon={faChevronLeft} className="w-5 h-5" />
             </button>
             <span className="w-32 text-center text-sm text-gray-300">
-              {selectedMonth.toFormat("MMMM yyyy")}
+              {selectedMonth.toLocaleString("en", { month: "long", year: "numeric" })}
             </span>
             <button
               onClick={goToNextMonth}
-              className={clsx("p-1 text-gray-400 transition-colors", !selectedMonth.hasSame(DateTime.now(), "month") && "hover:text-white cursor-pointer")}
-              disabled={selectedMonth.hasSame(DateTime.now(), "month")}
+              className={clsx("p-1 text-gray-400 transition-colors", !(selectedMonth.month === Temporal.Now.plainDateISO().month && selectedMonth.year === Temporal.Now.plainDateISO().year) && "hover:text-white cursor-pointer")}
+              disabled={selectedMonth.month === Temporal.Now.plainDateISO().month &&
+                selectedMonth.year === Temporal.Now.plainDateISO().year}
               aria-label="Next month"
             >
               <FontAwesomeIcon
                 icon={faChevronRight}
                 className={clsx(
                   "w-5 h-5",
-                  selectedMonth.hasSame(DateTime.now(), "month") && "opacity-30"
+                  selectedMonth.month === Temporal.Now.plainDateISO().month &&
+                    selectedMonth.year === Temporal.Now.plainDateISO().year && "opacity-30"
                 )}
               />
             </button>
@@ -155,9 +164,9 @@ export default function ActivityCalendar({ className }: ActivityCalendarProps) {
         {/* Calendar days */}
         <div className="grid grid-cols-7 gap-1">
           {calendarDays.map((day, index) => {
-            const dateStr = day.toISODate() ?? "";
-            const isCurrentMonth = day.hasSame(selectedMonth, "month");
-            const isToday = day.hasSame(today, "day");
+            const dateStr = day.toString();
+            const isCurrentMonth = day.month === selectedMonth.month && day.year === selectedMonth.year;
+            const isToday = day.equals(today);
             const hasActivity = activityDates.has(dateStr);
             const sessionCount = allActivityCounts.get(dateStr) || 0;
             const intensity = getIntensityLevel(sessionCount);
@@ -181,8 +190,8 @@ export default function ActivityCalendar({ className }: ActivityCalendarProps) {
                 )}
                 title={
                   hasActivity
-                    ? `${day.toFormat("LLL d")}: ${sessionCount} session${sessionCount !== 1 ? "s" : ""}`
-                    : day.toFormat("LLL d")
+                    ? `${day.toLocaleString("en", { month: "short", day: "numeric" })}: ${sessionCount} session${sessionCount !== 1 ? "s" : ""}`
+                    : day.toLocaleString("en", { month: "short", day: "numeric" })
                 }
               >
                 {day.day}
