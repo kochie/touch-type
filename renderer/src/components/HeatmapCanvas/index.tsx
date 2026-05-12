@@ -26,12 +26,10 @@ interface HeatmapCanvasProps {
   timeRange: TimeRange;
 }
 
-function getDateCutoff(timeRange: TimeRange): Date | null {
+function getDateCutoff(timeRange: TimeRange): Temporal.Instant | null {
   if (timeRange === "all") return null;
   const days = timeRange === "7d" ? 7 : 30;
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  return cutoff;
+  return Temporal.Now.instant().subtract({ hours: days * 24 });
 }
 
 type ResizerAction = { type: "RESIZE" } | { type: "PR" };
@@ -66,7 +64,7 @@ export function HeatmapCanvas({ keyboardName, timeRange }: HeatmapCanvasProps) {
     const keyResults = results
       .filter((res) => {
         if (res.keyboard !== keyboardName) return false;
-        if (cutoff && new Date(res.datetime) < cutoff) return false;
+        if (cutoff && Temporal.Instant.compare(Temporal.Instant.from(res.datetime), cutoff) < 0) return false;
         return true;
       })
       .reduce((acc, result) => {

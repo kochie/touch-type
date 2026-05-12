@@ -213,7 +213,7 @@ export function AboutSettings() {
     }
   }, []);
 
-  const year = new Date().getFullYear();
+  const year = Temporal.Now.plainDateISO().year;
 
   return (
     <div className="flex flex-col gap-6">

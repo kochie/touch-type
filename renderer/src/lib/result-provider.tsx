@@ -6,7 +6,6 @@ import { openDB } from "idb";
 import { createContext, useContext, useEffect, useState } from "react";
 import { CodeLanguages, Languages, Levels } from "./settings_hook";
 import { KeyboardLayoutNames } from "@/keyboards";
-import { Duration } from "luxon";
 import { useSupabase } from "./supabase-provider";
 
 const DB_NAME = "touch-type-db";
@@ -134,7 +133,7 @@ export function ResultsProvider({ children }) {
 
     if (allResults.length > 0) {
       await updateBulkDB(allResults);
-      localStorage.setItem("lastSync", new Date().toISOString());
+      localStorage.setItem("lastSync", Temporal.Now.instant().toString());
     }
   }
 
@@ -153,14 +152,13 @@ export function ResultsProvider({ children }) {
             const results = JSON.parse(oldResults);
             const store = tx.objectStore("results");
             for (const result of results) {
-              const time =
-                Duration.fromISO(result.time) ?? Duration.fromMillis(1_000_000);
+              const time = Temporal.Duration.from(result.time);
               store.put({
                 datetime: new Date().toISOString(),
-                time: time.toISO(),
+                time: time.toString(),
                 cpm:
                   (result.correct + result.incorrect) /
-                  (time.toMillis() / 1000 / 60),
+                  (time.total("milliseconds") / 1000 / 60),
                 ...result,
               });
             }
@@ -266,7 +264,7 @@ export function ResultsProvider({ children }) {
       // The edge function checks publish_to_leaderboard and only keeps the
       // user's best CPM for each keyboard+level+language combination.
       if (!result.codeMode) {
-        const timeMs = Duration.fromISO(result.time).toMillis();
+        const timeMs = Temporal.Duration.from(result.time).total("milliseconds");
         if (Number.isFinite(timeMs) && timeMs > 0) {
           supabase.functions.invoke('leaderboards', {
             body: {
@@ -313,10 +311,10 @@ async function runTempUpdates() {
     if (result.datetime) {
       await store.put({
         ...result,
-        datetime: new Date(result.datetime).toISOString(),
+        datetime: Temporal.Instant.from(result.datetime).toString(),
         cpm:
           (result.correct + result.incorrect) /
-          (Duration.fromISO(result.time).toMillis() / 1000 / 60),
+          (Temporal.Duration.from(result.time).total("milliseconds") / 1000 / 60),
       });
     }
   }

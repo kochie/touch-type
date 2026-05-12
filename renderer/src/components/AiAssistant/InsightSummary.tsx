@@ -33,10 +33,11 @@ export function InsightSummary({
     return () => clearInterval(interval);
   }, [summary, animate]);
 
-  const weekLabel = new Date(weekStart + "T12:00:00Z").toLocaleDateString(
-    "en-US",
-    { month: "long", day: "numeric", year: "numeric" },
-  );
+  const weekLabel = Temporal.PlainDate.from(weekStart).toLocaleString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
   return (
     <div className="rounded-xl bg-slate-800/30 border border-slate-700/40 px-5 py-4">

@@ -6,7 +6,6 @@ import { faFire, faSnowflake } from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useStreak, getNextMilestone, STREAK_MILESTONES } from "@/lib/streak_hook";
 import { useResults } from "@/lib/result-provider";
-import { DateTime } from "luxon";
 import ActivityCalendar from "@/components/ActivityCalendar";
 import clsx from "clsx";
 import { ModalType, useModal } from "@/lib/modal-provider";
@@ -27,8 +26,9 @@ function StreakPageInner() {
   const { setModal } = useModal();
 
   // Build a week indicator: which days this week are "done"
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0 = Sunday
+  const now = Temporal.Now.zonedDateTimeISO();
+  // Temporal: 1=Mon..7=Sun. Map to 0=Sun..6=Sat, then to Mon=0..Sun=6:
+  const dayOfWeek = now.dayOfWeek % 7;
   // Map Sunday=0 to index 6, Monday=1 to index 0, etc.
   const todayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
@@ -191,9 +191,10 @@ function StreakPageInner() {
               <div className="text-sm font-semibold text-slate-300">
                 {lastActivityDate
                   ? (() => {
-                      const days = Math.floor(
-                        DateTime.now().startOf("day").diff(DateTime.fromISO(lastActivityDate), "days").days
-                      );
+                      const days = Temporal.Now.plainDateISO().since(
+                        Temporal.PlainDate.from(lastActivityDate),
+                        { largestUnit: "days" }
+                      ).days;
                       return days === 0 ? "Today" : days === 1 ? "Yesterday" : `${days} days ago`;
                     })()
                   : "Never"}

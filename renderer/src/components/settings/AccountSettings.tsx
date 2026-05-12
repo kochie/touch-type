@@ -87,9 +87,12 @@ function formatPeriod(period: string | null) {
 
 function formatDate(iso: string | null) {
   if (!iso) return null;
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: "numeric", month: "long", day: "numeric",
-  });
+  return Temporal.Instant.from(iso)
+    .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+    .toPlainDate()
+    .toLocaleString(undefined, {
+      year: "numeric", month: "long", day: "numeric",
+    });
 }
 
 export function AccountSettings() {
