@@ -1,0 +1,1264 @@
+{
+  "MIT": [
+    {
+      "name": "@babel/runtime",
+      "version": "7.29.2",
+      "homepage": "https://babel.dev/docs/en/next/babel-runtime",
+      "author": "The Babel Team"
+    },
+    {
+      "name": "@fastify/otel",
+      "version": "0.18.0",
+      "homepage": "https://github.com/fastify/otel#readme",
+      "author": "Carlos Fuentes - @metcoder95"
+    },
+    {
+      "name": "@sentry-internal/browser-utils",
+      "version": "10.50.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/browser-utils",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry-internal/feedback",
+      "version": "10.50.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/feedback",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry-internal/replay",
+      "version": "10.50.0",
+      "homepage": "https://docs.sentry.io/platforms/javascript/session-replay/",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry-internal/replay-canvas",
+      "version": "10.50.0",
+      "homepage": "https://docs.sentry.io/platforms/javascript/session-replay/",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/browser",
+      "version": "10.50.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/browser",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/core",
+      "version": "10.50.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/core",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/electron",
+      "version": "7.13.0",
+      "homepage": "https://github.com/getsentry/sentry-electron#readme",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/node",
+      "version": "10.50.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/node",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/node-core",
+      "version": "10.50.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/node-core",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/opentelemetry",
+      "version": "10.50.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/opentelemetry",
+      "author": "Sentry"
+    },
+    {
+      "name": "@types/connect",
+      "version": "3.4.38",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/connect",
+      "author": ""
+    },
+    {
+      "name": "@types/debug",
+      "version": "4.1.12",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/debug",
+      "author": ""
+    },
+    {
+      "name": "@types/estree",
+      "version": "1.0.8",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/estree",
+      "author": ""
+    },
+    {
+      "name": "@types/estree-jsx",
+      "version": "1.0.5",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/estree-jsx",
+      "author": ""
+    },
+    {
+      "name": "@types/hast",
+      "version": "3.0.4",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/hast",
+      "author": ""
+    },
+    {
+      "name": "@types/mdast",
+      "version": "4.0.4",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/mdast",
+      "author": ""
+    },
+    {
+      "name": "@types/ms",
+      "version": "2.1.0",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/ms",
+      "author": ""
+    },
+    {
+      "name": "@types/mysql",
+      "version": "2.15.27",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/mysql",
+      "author": ""
+    },
+    {
+      "name": "@types/node",
+      "version": "25.6.2",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node",
+      "author": ""
+    },
+    {
+      "name": "@types/pg",
+      "version": "8.15.6",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/pg",
+      "author": ""
+    },
+    {
+      "name": "@types/pg-pool",
+      "version": "2.0.7",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/pg-pool",
+      "author": ""
+    },
+    {
+      "name": "@types/plist",
+      "version": "3.0.5",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/plist",
+      "author": ""
+    },
+    {
+      "name": "@types/react",
+      "version": "19.2.14",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react",
+      "author": ""
+    },
+    {
+      "name": "@types/tedious",
+      "version": "4.0.14",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/tedious",
+      "author": ""
+    },
+    {
+      "name": "@types/unist",
+      "version": "2.0.11",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/unist",
+      "author": ""
+    },
+    {
+      "name": "@types/verror",
+      "version": "1.10.11",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/verror",
+      "author": ""
+    },
+    {
+      "name": "@xmldom/xmldom",
+      "version": "0.8.11",
+      "homepage": "https://github.com/xmldom/xmldom",
+      "author": ""
+    },
+    {
+      "name": "acorn",
+      "version": "8.15.0",
+      "homepage": "https://github.com/acornjs/acorn",
+      "author": ""
+    },
+    {
+      "name": "acorn-import-attributes",
+      "version": "1.9.5",
+      "homepage": "https://github.com/xtuc/acorn-import-attributes#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "ajv",
+      "version": "6.12.6",
+      "homepage": "https://github.com/ajv-validator/ajv",
+      "author": "Evgeny Poberezkin"
+    },
+    {
+      "name": "ansi-regex",
+      "version": "5.0.1",
+      "homepage": "https://github.com/chalk/ansi-regex#readme",
+      "author": "Sindre Sorhus"
+    },
+    {
+      "name": "ansi-styles",
+      "version": "4.3.0",
+      "homepage": "https://github.com/chalk/ansi-styles#readme",
+      "author": "Sindre Sorhus"
+    },
+    {
+      "name": "app-root-path",
+      "version": "3.1.0",
+      "homepage": "https://github.com/inxilpro/node-app-root-path",
+      "author": "Chris Morrell"
+    },
+    {
+      "name": "assert-plus",
+      "version": "1.0.0",
+      "homepage": "https://github.com/mcavage/node-assert-plus#readme",
+      "author": "Mark Cavage"
+    },
+    {
+      "name": "astral-regex",
+      "version": "2.0.0",
+      "homepage": "https://github.com/kevva/astral-regex#readme",
+      "author": "Kevin M\u00e5rtensson"
+    },
+    {
+      "name": "bail",
+      "version": "2.0.2",
+      "homepage": "https://github.com/wooorm/bail#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "balanced-match",
+      "version": "4.0.4",
+      "homepage": "https://github.com/juliangruber/balanced-match#readme",
+      "author": ""
+    },
+    {
+      "name": "base64-js",
+      "version": "1.5.1",
+      "homepage": "https://github.com/beatgammit/base64-js",
+      "author": "T. Jameson Little"
+    },
+    {
+      "name": "brace-expansion",
+      "version": "5.0.5",
+      "homepage": "https://github.com/juliangruber/brace-expansion#readme",
+      "author": ""
+    },
+    {
+      "name": "buffer",
+      "version": "5.7.1",
+      "homepage": "https://github.com/feross/buffer",
+      "author": "Feross Aboukhadijeh"
+    },
+    {
+      "name": "builder-util-runtime",
+      "version": "9.5.1",
+      "homepage": "https://github.com/electron-userland/electron-builder",
+      "author": "Vladimir Krivosheev"
+    },
+    {
+      "name": "ccount",
+      "version": "2.0.1",
+      "homepage": "https://github.com/wooorm/ccount#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "character-entities",
+      "version": "2.0.2",
+      "homepage": "https://github.com/wooorm/character-entities#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "character-entities-html4",
+      "version": "2.1.0",
+      "homepage": "https://github.com/wooorm/character-entities-html4#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "character-entities-legacy",
+      "version": "3.0.0",
+      "homepage": "https://github.com/wooorm/character-entities-legacy#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "character-reference-invalid",
+      "version": "2.0.1",
+      "homepage": "https://github.com/wooorm/character-reference-invalid#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "cjs-module-lexer",
+      "version": "2.2.0",
+      "homepage": "https://github.com/nodejs/cjs-module-lexer#readme",
+      "author": "Guy Bedford"
+    },
+    {
+      "name": "cli-truncate",
+      "version": "2.1.0",
+      "homepage": "https://github.com/sindresorhus/cli-truncate#readme",
+      "author": "Sindre Sorhus"
+    },
+    {
+      "name": "color-convert",
+      "version": "2.0.1",
+      "homepage": "https://github.com/Qix-/color-convert#readme",
+      "author": "Heather Arthur"
+    },
+    {
+      "name": "color-name",
+      "version": "1.1.4",
+      "homepage": "https://github.com/colorjs/color-name",
+      "author": "DY"
+    },
+    {
+      "name": "comma-separated-tokens",
+      "version": "2.0.3",
+      "homepage": "https://github.com/wooorm/comma-separated-tokens#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "core-util-is",
+      "version": "1.0.2",
+      "homepage": "https://github.com/isaacs/core-util-is#readme",
+      "author": "Isaac Z. Schlueter"
+    },
+    {
+      "name": "crc",
+      "version": "3.8.0",
+      "homepage": "https://github.com/alexgorbatchev/node-crc",
+      "author": "Alex Gorbatchev"
+    },
+    {
+      "name": "csstype",
+      "version": "3.2.3",
+      "homepage": "https://github.com/frenic/csstype#readme",
+      "author": "Fredrik Nicol"
+    },
+    {
+      "name": "debug",
+      "version": "4.4.3",
+      "homepage": "https://github.com/debug-js/debug#readme",
+      "author": "Josh Junon"
+    },
+    {
+      "name": "decode-named-character-reference",
+      "version": "1.3.0",
+      "homepage": "https://github.com/wooorm/decode-named-character-reference#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "dequal",
+      "version": "2.0.3",
+      "homepage": "https://github.com/lukeed/dequal#readme",
+      "author": "Luke Edwards"
+    },
+    {
+      "name": "devlop",
+      "version": "1.1.0",
+      "homepage": "https://github.com/wooorm/devlop#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "dmg-license",
+      "version": "1.0.11",
+      "homepage": "https://github.com/argv-minus-one/dmg-license#readme",
+      "author": "argvminusone"
+    },
+    {
+      "name": "electron-updater",
+      "version": "6.8.3",
+      "homepage": "https://github.com/electron-userland/electron-builder",
+      "author": "Vladimir Krivosheev"
+    },
+    {
+      "name": "emoji-regex",
+      "version": "8.0.0",
+      "homepage": "https://mths.be/emoji-regex",
+      "author": "Mathias Bynens"
+    },
+    {
+      "name": "estree-util-is-identifier-name",
+      "version": "3.0.0",
+      "homepage": "https://github.com/syntax-tree/estree-util-is-identifier-name#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "extend",
+      "version": "3.0.2",
+      "homepage": "https://github.com/justmoon/node-extend#readme",
+      "author": "Stefan Thomas"
+    },
+    {
+      "name": "extsprintf",
+      "version": "1.4.1",
+      "homepage": "https://github.com/davepacheco/node-extsprintf#readme",
+      "author": ""
+    },
+    {
+      "name": "fast-deep-equal",
+      "version": "3.1.3",
+      "homepage": "https://github.com/epoberezkin/fast-deep-equal#readme",
+      "author": "Evgeny Poberezkin"
+    },
+    {
+      "name": "fast-json-stable-stringify",
+      "version": "2.1.0",
+      "homepage": "https://github.com/epoberezkin/fast-json-stable-stringify",
+      "author": "James Halliday"
+    },
+    {
+      "name": "forwarded-parse",
+      "version": "2.1.2",
+      "homepage": "https://github.com/lpinca/forwarded-parse",
+      "author": "Luigi Pinca"
+    },
+    {
+      "name": "fs-extra",
+      "version": "10.1.0",
+      "homepage": "https://github.com/jprichardson/node-fs-extra",
+      "author": "JP Richardson"
+    },
+    {
+      "name": "hast-util-to-jsx-runtime",
+      "version": "2.3.6",
+      "homepage": "https://github.com/syntax-tree/hast-util-to-jsx-runtime#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "hast-util-whitespace",
+      "version": "3.0.0",
+      "homepage": "https://github.com/syntax-tree/hast-util-whitespace#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "html-parse-stringify",
+      "version": "3.0.1",
+      "homepage": "https://github.com/henrikjoreteg/html-parse-stringify",
+      "author": "Henrik Joreteg"
+    },
+    {
+      "name": "html-url-attributes",
+      "version": "3.0.1",
+      "homepage": "https://github.com/rehypejs/rehype-minify/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "i18next",
+      "version": "26.0.10",
+      "homepage": "https://www.i18next.com",
+      "author": "Jan M\u00fchlemann"
+    },
+    {
+      "name": "iconv-corefoundation",
+      "version": "1.1.7",
+      "homepage": "https://github.com/argv-minus-one/iconv-corefoundation#readme",
+      "author": "argv-minus-one"
+    },
+    {
+      "name": "inline-style-parser",
+      "version": "0.2.7",
+      "homepage": "https://github.com/remarkablemark/inline-style-parser#readme",
+      "author": ""
+    },
+    {
+      "name": "is-alphabetical",
+      "version": "2.0.1",
+      "homepage": "https://github.com/wooorm/is-alphabetical#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "is-alphanumerical",
+      "version": "2.0.1",
+      "homepage": "https://github.com/wooorm/is-alphanumerical#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "is-decimal",
+      "version": "2.0.1",
+      "homepage": "https://github.com/wooorm/is-decimal#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "is-fullwidth-code-point",
+      "version": "3.0.0",
+      "homepage": "https://github.com/sindresorhus/is-fullwidth-code-point#readme",
+      "author": "Sindre Sorhus"
+    },
+    {
+      "name": "is-hexadecimal",
+      "version": "2.0.1",
+      "homepage": "https://github.com/wooorm/is-hexadecimal#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "is-plain-obj",
+      "version": "4.1.0",
+      "homepage": "https://github.com/sindresorhus/is-plain-obj#readme",
+      "author": "Sindre Sorhus"
+    },
+    {
+      "name": "js-yaml",
+      "version": "4.1.1",
+      "homepage": "https://github.com/nodeca/js-yaml#readme",
+      "author": "Vladimir Zapparov"
+    },
+    {
+      "name": "json-schema-traverse",
+      "version": "0.4.1",
+      "homepage": "https://github.com/epoberezkin/json-schema-traverse#readme",
+      "author": "Evgeny Poberezkin"
+    },
+    {
+      "name": "jsonfile",
+      "version": "6.2.0",
+      "homepage": "https://github.com/jprichardson/node-jsonfile#readme",
+      "author": "JP Richardson"
+    },
+    {
+      "name": "lazy-val",
+      "version": "1.0.5",
+      "homepage": "https://github.com/develar/lazy-val",
+      "author": "Vladimir Krivosheev"
+    },
+    {
+      "name": "lodash.escaperegexp",
+      "version": "4.1.2",
+      "homepage": "https://lodash.com/",
+      "author": "John-David Dalton"
+    },
+    {
+      "name": "lodash.isequal",
+      "version": "4.5.0",
+      "homepage": "https://lodash.com/",
+      "author": "John-David Dalton"
+    },
+    {
+      "name": "longest-streak",
+      "version": "3.1.0",
+      "homepage": "https://github.com/wooorm/longest-streak#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "mdast-util-from-markdown",
+      "version": "2.0.3",
+      "homepage": "https://github.com/syntax-tree/mdast-util-from-markdown#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "mdast-util-mdx-expression",
+      "version": "2.0.1",
+      "homepage": "https://github.com/syntax-tree/mdast-util-mdx-expression#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "mdast-util-mdx-jsx",
+      "version": "3.2.0",
+      "homepage": "https://github.com/syntax-tree/mdast-util-mdx-jsx#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "mdast-util-mdxjs-esm",
+      "version": "2.0.1",
+      "homepage": "https://github.com/syntax-tree/mdast-util-mdxjs-esm#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "mdast-util-phrasing",
+      "version": "4.1.0",
+      "homepage": "https://github.com/syntax-tree/mdast-util-phrasing#readme",
+      "author": "Victor Felder"
+    },
+    {
+      "name": "mdast-util-to-hast",
+      "version": "13.2.1",
+      "homepage": "https://github.com/syntax-tree/mdast-util-to-hast#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "mdast-util-to-markdown",
+      "version": "2.1.2",
+      "homepage": "https://github.com/syntax-tree/mdast-util-to-markdown#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "mdast-util-to-string",
+      "version": "4.0.0",
+      "homepage": "https://github.com/syntax-tree/mdast-util-to-string#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark",
+      "version": "4.0.2",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-core-commonmark",
+      "version": "2.0.3",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-factory-destination",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-factory-label",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-factory-space",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-factory-title",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-factory-whitespace",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-character",
+      "version": "2.1.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-chunked",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-classify-character",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-combine-extensions",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-decode-numeric-character-reference",
+      "version": "2.0.2",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-decode-string",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-encode",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-html-tag-name",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-normalize-identifier",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-resolve-all",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-sanitize-uri",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-subtokenize",
+      "version": "2.1.0",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-symbol",
+      "version": "2.0.1",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "micromark-util-types",
+      "version": "2.0.2",
+      "homepage": "https://github.com/micromark/micromark/tree/main#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "module-details-from-path",
+      "version": "1.0.4",
+      "homepage": "https://github.com/watson/module-details-from-path#readme",
+      "author": "Thomas Watson"
+    },
+    {
+      "name": "ms",
+      "version": "2.1.3",
+      "homepage": "https://github.com/vercel/ms#readme",
+      "author": ""
+    },
+    {
+      "name": "node-addon-api",
+      "version": "1.7.2",
+      "homepage": "https://github.com/nodejs/node-addon-api",
+      "author": ""
+    },
+    {
+      "name": "parse-entities",
+      "version": "4.0.2",
+      "homepage": "https://github.com/wooorm/parse-entities#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "pg-protocol",
+      "version": "1.11.0",
+      "homepage": "https://github.com/brianc/node-postgres#readme",
+      "author": ""
+    },
+    {
+      "name": "pg-types",
+      "version": "2.2.0",
+      "homepage": "https://github.com/brianc/node-pg-types",
+      "author": "Brian M. Carlson"
+    },
+    {
+      "name": "plist",
+      "version": "3.1.0",
+      "homepage": "https://github.com/TooTallNate/node-plist#readme",
+      "author": "Nathan Rajlich"
+    },
+    {
+      "name": "postgres-array",
+      "version": "2.0.0",
+      "homepage": "https://github.com/bendrucker/postgres-array#readme",
+      "author": "Ben Drucker"
+    },
+    {
+      "name": "postgres-bytea",
+      "version": "1.0.1",
+      "homepage": "https://github.com/bendrucker/postgres-bytea#readme",
+      "author": "Ben Drucker"
+    },
+    {
+      "name": "postgres-date",
+      "version": "1.0.7",
+      "homepage": "https://github.com/bendrucker/postgres-date#readme",
+      "author": "Ben Drucker"
+    },
+    {
+      "name": "postgres-interval",
+      "version": "1.2.0",
+      "homepage": "https://github.com/bendrucker/postgres-interval#readme",
+      "author": "Ben Drucker"
+    },
+    {
+      "name": "property-information",
+      "version": "7.1.0",
+      "homepage": "https://github.com/wooorm/property-information#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "punycode",
+      "version": "2.3.1",
+      "homepage": "https://mths.be/punycode",
+      "author": "Mathias Bynens"
+    },
+    {
+      "name": "react",
+      "version": "19.2.6",
+      "homepage": "https://react.dev/",
+      "author": ""
+    },
+    {
+      "name": "react-dom",
+      "version": "19.2.6",
+      "homepage": "https://react.dev/",
+      "author": ""
+    },
+    {
+      "name": "react-i18next",
+      "version": "17.0.7",
+      "homepage": "https://github.com/i18next/react-i18next",
+      "author": "Jan M\u00fchlemann"
+    },
+    {
+      "name": "react-markdown",
+      "version": "10.1.0",
+      "homepage": "https://github.com/remarkjs/react-markdown#readme",
+      "author": "Espen Hovlandsdal"
+    },
+    {
+      "name": "remark-parse",
+      "version": "11.0.0",
+      "homepage": "https://remark.js.org",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "remark-rehype",
+      "version": "11.1.2",
+      "homepage": "https://github.com/remarkjs/remark-rehype#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "require-in-the-middle",
+      "version": "8.0.1",
+      "homepage": "https://github.com/nodejs/require-in-the-middle#readme",
+      "author": "Thomas Watson Steen"
+    },
+    {
+      "name": "scheduler",
+      "version": "0.27.0",
+      "homepage": "https://react.dev/",
+      "author": ""
+    },
+    {
+      "name": "slice-ansi",
+      "version": "3.0.0",
+      "homepage": "https://github.com/chalk/slice-ansi#readme",
+      "author": ""
+    },
+    {
+      "name": "smart-buffer",
+      "version": "4.2.0",
+      "homepage": "https://github.com/JoshGlazebrook/smart-buffer/",
+      "author": "Josh Glazebrook"
+    },
+    {
+      "name": "space-separated-tokens",
+      "version": "2.0.2",
+      "homepage": "https://github.com/wooorm/space-separated-tokens#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "string-width",
+      "version": "4.2.3",
+      "homepage": "https://github.com/sindresorhus/string-width#readme",
+      "author": "Sindre Sorhus"
+    },
+    {
+      "name": "stringify-entities",
+      "version": "4.0.4",
+      "homepage": "https://github.com/wooorm/stringify-entities#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "strip-ansi",
+      "version": "6.0.1",
+      "homepage": "https://github.com/chalk/strip-ansi#readme",
+      "author": "Sindre Sorhus"
+    },
+    {
+      "name": "style-to-js",
+      "version": "1.1.21",
+      "homepage": "https://github.com/remarkablemark/style-to-js#readme",
+      "author": "Mark"
+    },
+    {
+      "name": "style-to-object",
+      "version": "1.0.14",
+      "homepage": "https://github.com/remarkablemark/style-to-object#readme",
+      "author": "Mark"
+    },
+    {
+      "name": "tiny-typed-emitter",
+      "version": "2.1.0",
+      "homepage": "https://github.com/binier/tiny-typed-emitter#readme",
+      "author": "Zurab Benashvili"
+    },
+    {
+      "name": "trim-lines",
+      "version": "3.0.1",
+      "homepage": "https://github.com/wooorm/trim-lines#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "trough",
+      "version": "2.2.0",
+      "homepage": "https://github.com/wooorm/trough#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "undici-types",
+      "version": "7.19.2",
+      "homepage": "https://undici.nodejs.org",
+      "author": ""
+    },
+    {
+      "name": "unified",
+      "version": "11.0.5",
+      "homepage": "https://unifiedjs.com",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "unist-util-is",
+      "version": "6.0.1",
+      "homepage": "https://github.com/syntax-tree/unist-util-is#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "unist-util-position",
+      "version": "5.0.0",
+      "homepage": "https://github.com/syntax-tree/unist-util-position#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "unist-util-stringify-position",
+      "version": "4.0.0",
+      "homepage": "https://github.com/syntax-tree/unist-util-stringify-position#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "unist-util-visit",
+      "version": "5.1.0",
+      "homepage": "https://github.com/syntax-tree/unist-util-visit#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "unist-util-visit-parents",
+      "version": "6.0.2",
+      "homepage": "https://github.com/syntax-tree/unist-util-visit-parents#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "universalify",
+      "version": "2.0.1",
+      "homepage": "https://github.com/RyanZim/universalify#readme",
+      "author": "Ryan Zimmerman"
+    },
+    {
+      "name": "use-sync-external-store",
+      "version": "1.6.0",
+      "homepage": "https://github.com/facebook/react#readme",
+      "author": ""
+    },
+    {
+      "name": "verror",
+      "version": "1.10.1",
+      "homepage": "https://github.com/joyent/node-verror#readme",
+      "author": ""
+    },
+    {
+      "name": "vfile",
+      "version": "6.0.3",
+      "homepage": "https://github.com/vfile/vfile#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "vfile-message",
+      "version": "4.0.3",
+      "homepage": "https://github.com/vfile/vfile-message#readme",
+      "author": "Titus Wormer"
+    },
+    {
+      "name": "void-elements",
+      "version": "3.1.0",
+      "homepage": "https://github.com/jadejs/void-elements",
+      "author": "hemanth.hm"
+    },
+    {
+      "name": "xmlbuilder",
+      "version": "15.1.1",
+      "homepage": "http://github.com/oozcitak/xmlbuilder-js",
+      "author": "Ozgur Ozcitak"
+    },
+    {
+      "name": "xtend",
+      "version": "4.0.2",
+      "homepage": "https://github.com/Raynos/xtend",
+      "author": "Raynos"
+    },
+    {
+      "name": "zwitch",
+      "version": "2.0.4",
+      "homepage": "https://github.com/wooorm/zwitch#readme",
+      "author": "Titus Wormer"
+    }
+  ],
+  "Apache-2.0": [
+    {
+      "name": "@opentelemetry/api",
+      "version": "1.9.1",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/api",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/api-logs",
+      "version": "0.207.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/api-logs",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/core",
+      "version": "2.6.1",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-core",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation",
+      "version": "0.207.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-amqplib",
+      "version": "0.61.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-amqplib#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-connect",
+      "version": "0.57.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-connect#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-dataloader",
+      "version": "0.31.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-dataloader#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-fs",
+      "version": "0.33.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-fs#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-generic-pool",
+      "version": "0.57.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-generic-pool#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-graphql",
+      "version": "0.62.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-graphql#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-hapi",
+      "version": "0.60.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-hapi#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-http",
+      "version": "0.214.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation-http",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-ioredis",
+      "version": "0.62.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-ioredis#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-kafkajs",
+      "version": "0.23.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-kafkajs#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-knex",
+      "version": "0.58.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-knex#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-koa",
+      "version": "0.62.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-koa#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-lru-memoizer",
+      "version": "0.58.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-lru-memoizer#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-mongodb",
+      "version": "0.67.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-mongodb#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-mongoose",
+      "version": "0.60.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-mongoose#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-mysql",
+      "version": "0.60.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-mysql#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-mysql2",
+      "version": "0.60.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-mysql2#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-pg",
+      "version": "0.66.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-pg#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-redis",
+      "version": "0.62.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-redis#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/instrumentation-tedious",
+      "version": "0.33.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-tedious#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/redis-common",
+      "version": "0.38.2",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/redis-common#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/resources",
+      "version": "2.7.1",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-resources",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/sdk-trace-base",
+      "version": "2.7.1",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-base",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/semantic-conventions",
+      "version": "1.40.0",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/semantic-conventions",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@opentelemetry/sql-common",
+      "version": "0.41.2",
+      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/sql-common#readme",
+      "author": "OpenTelemetry Authors"
+    },
+    {
+      "name": "@prisma/instrumentation",
+      "version": "7.6.0",
+      "homepage": "https://www.prisma.io",
+      "author": ""
+    },
+    {
+      "name": "import-in-the-middle",
+      "version": "2.0.4",
+      "homepage": "https://github.com/nodejs/import-in-the-middle#readme",
+      "author": "Bryan English"
+    },
+    {
+      "name": "typescript",
+      "version": "6.0.3",
+      "homepage": "https://www.typescriptlang.org/",
+      "author": "Microsoft Corp."
+    }
+  ],
+  "ISC": [
+    {
+      "name": "@ungap/structured-clone",
+      "version": "1.3.1",
+      "homepage": "https://github.com/ungap/structured-clone#readme",
+      "author": "Andrea Giammarchi"
+    },
+    {
+      "name": "graceful-fs",
+      "version": "4.2.11",
+      "homepage": "https://github.com/isaacs/node-graceful-fs#readme",
+      "author": ""
+    },
+    {
+      "name": "pg-int8",
+      "version": "1.0.1",
+      "homepage": "https://github.com/charmander/pg-int8#readme",
+      "author": ""
+    },
+    {
+      "name": "semver",
+      "version": "7.7.3",
+      "homepage": "https://github.com/npm/node-semver#readme",
+      "author": "GitHub Inc."
+    }
+  ],
+  "Python-2.0": [
+    {
+      "name": "argparse",
+      "version": "2.0.1",
+      "homepage": "https://github.com/nodeca/argparse#readme",
+      "author": ""
+    }
+  ],
+  "BSD-3-Clause": [
+    {
+      "name": "ieee754",
+      "version": "1.2.1",
+      "homepage": "https://github.com/feross/ieee754#readme",
+      "author": "Feross Aboukhadijeh"
+    }
+  ],
+  "BlueOak-1.0.0": [
+    {
+      "name": "minimatch",
+      "version": "10.2.5",
+      "homepage": "https://github.com/isaacs/minimatch#readme",
+      "author": "Isaac Z. Schlueter"
+    },
+    {
+      "name": "sax",
+      "version": "1.4.4",
+      "homepage": "https://github.com/isaacs/sax-js#readme",
+      "author": "Isaac Z. Schlueter"
+    }
+  ],
+  "BSD-2-Clause": [
+    {
+      "name": "uri-js",
+      "version": "4.4.1",
+      "homepage": "https://github.com/garycourt/uri-js",
+      "author": "Gary Court"
+    }
+  ]
+}
