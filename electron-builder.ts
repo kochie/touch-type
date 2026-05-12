@@ -198,11 +198,15 @@ const config: Configuration = {
     "renderer/out",
     "wordsets",
     "codesnippets",
-    // pg-int8 compiles a native C++ binding on x64 but not arm64, making the
-    // two asars diverge during universal binary merging. It's safe to drop:
-    // pg-types (which requires it) only falls back to pg-int8 when BigInt is
-    // unavailable, and Electron 42 has native BigInt.
+    // pg-types transitive deps (pg-int8, postgres-array, postgres-interval, xtend)
+    // cause x64/arm64 asar divergence during universal binary merging. They arrive
+    // via @sentry/electron → @opentelemetry/instrumentation-pg → @types/pg → pg-types.
+    // Safe to drop: the app uses Supabase (HTTP), not direct pg connections, and
+    // Electron 42 has native BigInt so pg-int8's fallback is never triggered.
     "!**/node_modules/pg-int8/**",
+    "!**/node_modules/postgres-array/**",
+    "!**/node_modules/postgres-interval/**",
+    "!**/node_modules/xtend/**",
   ],
   // Mac and Windows use this; Linux uses linux.publish (GitHub + snapStore + flatpak build only)
   publish: [
