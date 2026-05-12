@@ -4,7 +4,7 @@
 
 **Goal:** Build a keystroke-level AI analytics dashboard for premium users — Claude analyses per-keypress timing data weekly, stores structured insights, and the app renders insight cards, a natural-language summary, and a keyboard heatmap.
 
-**Architecture:** A new `generate-ai-insights` Supabase edge function aggregates raw `key_presses` JSONB data, calls Claude with prompt caching, and upserts results into a new `ai_insights` table. The renderer reads that table via a Supabase Realtime subscription and renders three zones: insight cards, a typewriter summary, and an SVG heatmap. A settings toggle controls the optional weekly digest email.
+**Architecture:** A new `generate-ai-insights` Supabase edge function aggregates raw `key_presses` JSONB data, calls Claude with prompt caching, and upserts results into a new `ai_insights` table. The renderer reads that table via a Supabase Realtime subscription and renders three zones: insight cards, a typewriter summary, and a keyboard heatmap. The heatmap is built on a shared `KeyboardCanvas` component — a purely presentational canvas renderer that takes `keyboardName` + a `colorMap` — used by both the new `InsightHeatmap` and the existing `HeatmapCanvas`. A settings toggle controls the optional weekly digest email.
 
 **Tech Stack:** Deno edge functions, Anthropic SDK (`npm:@anthropic-ai/sdk`), Supabase Postgres + Realtime, Next.js App Router, Tailwind v4, FontAwesome Pro, Headless UI.
 
@@ -30,7 +30,9 @@
 | `transactions/refreshAiInsights.ts` | Create | Invoke edge function + wait for Realtime update |
 | `components/AiAssistant/InsightCard.tsx` | Create | Single insight card (icon, title, body, metric, delta badge) |
 | `components/AiAssistant/InsightSummary.tsx` | Create | Prose block with typewriter animation on refresh |
-| `components/AiAssistant/InsightHeatmap.tsx` | Create | SVG QWERTY keyboard coloured by `avg_ms`, popover on click |
+| `components/KeyboardCanvas/index.tsx` | Create | Shared presentational canvas: `keyboardName` + `colorMap` → coloured keyboard |
+| `components/HeatmapCanvas/index.tsx` | Modify | Refactor to use `KeyboardCanvas` for rendering; keep data logic |
+| `components/AiAssistant/InsightHeatmap.tsx` | Create | Computes `colorMap` from `avg_ms`, reads keyboard from settings, renders via `KeyboardCanvas` |
 | `app/assistant/client.tsx` | Modify | Replace logged-in render path with new dashboard |
 | `lib/settings_hook.tsx` | Modify | Add `aiWeeklyEmail` to settings state, action, reducer, DB sync |
 | `components/settings/AiAssistantSettings.tsx` | Create | "AI Assistant" settings panel with email toggle |
@@ -1111,7 +1113,272 @@ git commit -m "feat: add InsightSummary component with typewriter animation"
 
 ---
 
-## Task 10: InsightHeatmap Component
+## Task 10: Shared `KeyboardCanvas` Component
+
+The existing `HeatmapCanvas` is a D3 canvas renderer tightly coupled to error-count data from `useResults()`. Rather than duplicating canvas logic, extract a purely presentational `KeyboardCanvas` component that accepts any `colorMap`. Both `HeatmapCanvas` and the new `InsightHeatmap` use it.
+
+**Files:**
+- Create: `touch-type/renderer/src/components/KeyboardCanvas/index.tsx`
+- Modify: `touch-type/renderer/src/components/HeatmapCanvas/index.tsx`
+
+- [ ] **Step 1: Create `KeyboardCanvas`**
+
+```tsx
+// touch-type/renderer/src/components/KeyboardCanvas/index.tsx
+'use client';
+
+import {
+  useCallback,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
+import { KeyboardLayoutNames, lookupKeyboard } from '@/keyboards';
+import { Keyboard } from '@/keyboards/key';
+
+// @ts-ignore
+import RobotoMono from '@/assets/RobotoMono-Regular.ttf';
+// @ts-ignore
+import FontAwesomeRegular from '@/assets/fontawesome-pro-6.1.2-web/webfonts/fa-regular-400.ttf';
+// @ts-ignore
+import FontAwesomeSolid from '@/assets/fontawesome-pro-6.1.2-web/webfonts/fa-solid-900.ttf';
+
+interface ResizerState { width: number; height: number; pr: number }
+type ResizerAction = { type: 'RESIZE' } | { type: 'PR' };
+
+const marginWidth = 120;
+const marginHeight = 350;
+
+function resizer(state: ResizerState, action: ResizerAction): ResizerState {
+  switch (action.type) {
+    case 'RESIZE':
+      return { ...state, width: window.innerWidth - marginWidth, height: window.innerHeight - marginHeight };
+    case 'PR':
+      return { ...state, pr: window.devicePixelRatio };
+    default:
+      return state;
+  }
+}
+
+export interface KeyboardCanvasProps {
+  keyboardName: KeyboardLayoutNames;
+  /**
+   * Maps Key.key string (e.g. "e", "shift") to a CSS colour string.
+   * Keys absent from the map are drawn in the default base colour.
+   */
+  colorMap: Map<string, string>;
+  onKeyClick?: (key: string) => void;
+}
+
+const BASE_COLOR = 'rgba(0,0,0,0.5)';
+
+export function KeyboardCanvas({ keyboardName, colorMap, onKeyClick }: KeyboardCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [fontLoaded, setFontLoaded] = useState(false);
+  const [{ width, height, pr }, dispatch] = useReducer(resizer, { width: 0, height: 0, pr: 1 });
+
+  const keyboardLayout = lookupKeyboard(keyboardName);
+  const keyboard = new Keyboard(keyboardLayout, 0.9);
+
+  // Load fonts once
+  useLayoutEffect(() => {
+    Promise.all([
+      new FontFace('Roboto Mono', `url(${RobotoMono})`).load(),
+      new FontFace('FontAwesome', `url(${FontAwesomeSolid})`, { weight: '900' }).load(),
+      new FontFace('FontAwesome', `url(${FontAwesomeRegular})`, { weight: '400' }).load(),
+    ]).then((fonts) => {
+      fonts.forEach((f) => document.fonts.add(f));
+      setFontLoaded(true);
+    });
+  }, []);
+
+  // Resize listener
+  useLayoutEffect(() => {
+    const onResize = () => dispatch({ type: 'RESIZE' });
+    window.addEventListener('resize', onResize);
+    onResize();
+
+    const updatePr = () => {
+      dispatch({ type: 'PR' });
+      matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener('change', updatePr, { once: true });
+    };
+    updatePr();
+
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Draw
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || width === 0) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    canvas.width = width * pr;
+    canvas.height = height * pr;
+
+    // Draw base keyboard
+    keyboard.drawKeyboard(ctx);
+
+    // Overlay coloured keys
+    keyboard.rows.forEach((row, i) => {
+      row.forEach((cell, j) => {
+        const keys = Array.isArray(cell) ? cell : [cell];
+        keys.forEach((key) => {
+          const color = colorMap.get(key.key) ?? colorMap.get(key.secondaryKey ?? '') ?? null;
+          if (color) keyboard.drawKey(ctx, i, j, cell, color);
+        });
+      });
+    });
+
+    return () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }, [width, height, pr, fontLoaded, keyboardName, colorMap]);
+
+  // Click hit-testing: find which Key.key was clicked based on canvas position
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!onKeyClick || !canvasRef.current) return;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * pr;
+      const y = (e.clientY - rect.top) * pr;
+
+      // Walk rows to find the key at (x, y) — mirror of drawKey's coordinate logic
+      const w = 80 * 0.9;
+      const h = 80 * 0.9;
+      const gap = 5 * 0.9;
+
+      for (let i = 0; i < keyboard.rows.length; i++) {
+        const row = keyboard.rows[i];
+        const rowWidth = keyboard.getRowWidth(0);
+        const OFFSETS = [0, 15, 30, 45, 0, 0]; // mirror canvas_utils OFFSETS
+        const offsetX = (window.innerWidth - marginWidth - rowWidth) / 2 + OFFSETS[i];
+        let cx = offsetX * 0.9 * pr;
+        const cy = (i * (80 + 5) * 0.9) * pr;
+
+        for (let j = 0; j < row.length; j++) {
+          const cell = row[j];
+          const key = Array.isArray(cell) ? cell[0] : cell;
+          const kw = (key.width || 80) * 0.9 * pr;
+          const kh = (key.height || 80) * 0.9 * pr;
+          if (x >= cx && x <= cx + kw && y >= cy && y <= cy + kh) {
+            onKeyClick(key.key);
+            return;
+          }
+          cx += kw + gap * pr;
+        }
+      }
+    },
+    [onKeyClick, keyboard, pr],
+  );
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="mx-auto cursor-pointer"
+      onClick={handleClick}
+    />
+  );
+}
+```
+
+- [ ] **Step 2: Refactor `HeatmapCanvas` to use `KeyboardCanvas`**
+
+Replace the `return (...)` block and the `generateHeatmap` / `loadAndSetFonts` / canvas setup code in `HeatmapCanvas/index.tsx`, keeping only the data computation:
+
+```tsx
+// touch-type/renderer/src/components/HeatmapCanvas/index.tsx
+'use client';
+
+import { useCallback, useMemo } from 'react';
+import { KeyboardLayoutNames } from '@/keyboards';
+import { interpolateRgb, scaleSequential, max } from 'd3';
+import { useResults } from '@/lib/result-provider';
+import { KeyboardCanvas } from '@/components/KeyboardCanvas';
+
+type TimeRange = '7d' | '30d' | 'all';
+
+interface HeatmapCanvasProps {
+  keyboardName: KeyboardLayoutNames;
+  timeRange: TimeRange;
+}
+
+function getDateCutoff(timeRange: TimeRange): Date | null {
+  if (timeRange === 'all') return null;
+  const days = timeRange === '7d' ? 7 : 30;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  return cutoff;
+}
+
+export function HeatmapCanvas({ keyboardName, timeRange }: HeatmapCanvasProps) {
+  const { results } = useResults();
+
+  const colorMap = useMemo(() => {
+    const cutoff = getDateCutoff(timeRange);
+    const keyResults = results
+      .filter((res) => {
+        if (res.keyboard !== keyboardName) return false;
+        if (cutoff && new Date(res.datetime) < cutoff) return false;
+        return true;
+      })
+      .reduce((acc, result) => {
+        result.keyPresses?.forEach((kp) => {
+          if (!acc.has(kp.key)) acc.set(kp.key, { correct: 0, incorrect: 0 });
+          const k = acc.get(kp.key)!;
+          kp.correct ? (k.correct += 1) : (k.incorrect += 1);
+        });
+        return acc;
+      }, new Map<string, { correct: number; incorrect: number }>());
+
+    const maxIncorrect = max(Array.from(keyResults.values()).map((v) => v.incorrect)) ?? 1;
+    const colorScale = scaleSequential()
+      .interpolator(interpolateRgb('rgba(0,0,0,0.5)', 'rgba(255,0,0,1)'))
+      .domain([0, maxIncorrect]);
+
+    const map = new Map<string, string>();
+    keyResults.forEach((value, key) => {
+      map.set(key, colorScale(value.incorrect));
+    });
+    return map;
+  }, [results, keyboardName, timeRange]);
+
+  return <KeyboardCanvas keyboardName={keyboardName} colorMap={colorMap} />;
+}
+```
+
+- [ ] **Step 3: Type-check**
+
+```bash
+cd touch-type && pnpm type-check
+```
+
+Expected: exits 0.
+
+- [ ] **Step 4: Verify the Heatmap page still renders**
+
+```bash
+cd touch-type && pnpm dev:next
+```
+
+Open http://localhost:3000/heatmap. The keyboard heatmap should render identically to before.
+
+- [ ] **Step 5: Commit**
+
+```bash
+cd touch-type
+git add renderer/src/components/KeyboardCanvas/index.tsx \
+        renderer/src/components/HeatmapCanvas/index.tsx
+git commit -m "refactor: extract KeyboardCanvas shared component from HeatmapCanvas"
+```
+
+---
+
+## Task 11: InsightHeatmap Component
+
+Uses `KeyboardCanvas` directly, reading the user's active keyboard from settings.
 
 **Files:**
 - Create: `touch-type/renderer/src/components/AiAssistant/InsightHeatmap.tsx`
@@ -1122,44 +1389,16 @@ git commit -m "feat: add InsightSummary component with typewriter animation"
 // touch-type/renderer/src/components/AiAssistant/InsightHeatmap.tsx
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { HeatmapKey } from '@/types/ai-insights';
+import { KeyboardCanvas } from '@/components/KeyboardCanvas';
+import { useSettings } from '@/lib/settings_hook';
 
-// Standard QWERTY rows (display labels → key lookup names)
-const ROWS: { label: string; key: string }[][] = [
-  [
-    { label: 'Q', key: 'q' }, { label: 'W', key: 'w' }, { label: 'E', key: 'e' },
-    { label: 'R', key: 'r' }, { label: 'T', key: 't' }, { label: 'Y', key: 'y' },
-    { label: 'U', key: 'u' }, { label: 'I', key: 'i' }, { label: 'O', key: 'o' },
-    { label: 'P', key: 'p' },
-  ],
-  [
-    { label: 'A', key: 'a' }, { label: 'S', key: 's' }, { label: 'D', key: 'd' },
-    { label: 'F', key: 'f' }, { label: 'G', key: 'g' }, { label: 'H', key: 'h' },
-    { label: 'J', key: 'j' }, { label: 'K', key: 'k' }, { label: 'L', key: 'l' },
-  ],
-  [
-    { label: 'Z', key: 'z' }, { label: 'X', key: 'x' }, { label: 'C', key: 'c' },
-    { label: 'V', key: 'v' }, { label: 'B', key: 'b' }, { label: 'N', key: 'n' },
-    { label: 'M', key: 'm' },
-  ],
-];
-
-function lerpColor(t: number): string {
-  // t = 0 → cool blue (fast), t = 1 → warm red (slow)
-  const r = Math.round(59 + t * (239 - 59));
-  const g = Math.round(130 + t * (68 - 130));
-  const b = Math.round(246 + t * (68 - 246));
-  return `rgb(${r},${g},${b})`;
-}
-
-interface PopoverData {
+interface PopoverInfo {
   key: string;
   avg_ms: number;
   error_rate: number;
   count: number;
-  x: number;
-  y: number;
 }
 
 interface InsightHeatmapProps {
@@ -1167,81 +1406,61 @@ interface InsightHeatmapProps {
 }
 
 export function InsightHeatmap({ heatmapData }: InsightHeatmapProps) {
-  const [popover, setPopover] = useState<PopoverData | null>(null);
+  const { keyboardName } = useSettings();
+  const [popover, setPopover] = useState<PopoverInfo | null>(null);
 
-  const keyMap = new Map(heatmapData.map((k) => [k.key, k]));
-  const maxMs = Math.max(...heatmapData.map((k) => k.avg_ms), 1);
-  const minMs = Math.min(...heatmapData.map((k) => k.avg_ms), 0);
-  const range = maxMs - minMs || 1;
+  const { colorMap, keyDataMap } = useMemo(() => {
+    if (heatmapData.length === 0) return { colorMap: new Map<string, string>(), keyDataMap: new Map<string, HeatmapKey>() };
 
-  const handleKeyClick = (keyName: string, e: React.MouseEvent) => {
-    const stat = keyMap.get(keyName);
-    if (!stat) return;
-    const rect = (e.target as HTMLElement).getBoundingClientRect();
-    setPopover({
-      key: keyName,
-      avg_ms: stat.avg_ms,
-      error_rate: stat.error_rate,
-      count: stat.count,
-      x: rect.left + rect.width / 2,
-      y: rect.top,
-    });
+    const maxMs = Math.max(...heatmapData.map((k) => k.avg_ms));
+    const minMs = Math.min(...heatmapData.map((k) => k.avg_ms));
+    const range = maxMs - minMs || 1;
+
+    const colorMap = new Map<string, string>();
+    const keyDataMap = new Map<string, HeatmapKey>();
+
+    for (const k of heatmapData) {
+      const t = (k.avg_ms - minMs) / range; // 0 = fast (blue), 1 = slow (red)
+      const r = Math.round(59 + t * (239 - 59));
+      const g = Math.round(130 + t * (68 - 130));
+      const b = Math.round(246 + t * (68 - 246));
+      // Blend in error rate as red overlay
+      const errR = Math.round(r + k.error_rate * (239 - r));
+      colorMap.set(k.key, `rgb(${errR},${g},${b})`);
+      keyDataMap.set(k.key, k);
+    }
+
+    return { colorMap, keyDataMap };
+  }, [heatmapData]);
+
+  const handleKeyClick = (key: string) => {
+    const data = keyDataMap.get(key);
+    if (!data) { setPopover(null); return; }
+    setPopover(popover?.key === key ? null : { key, avg_ms: data.avg_ms, error_rate: data.error_rate, count: data.count });
   };
 
   return (
-    <div className="relative">
-      <div className="flex flex-col gap-1.5 items-center select-none">
-        {ROWS.map((row, rowIdx) => (
-          <div key={rowIdx} className="flex gap-1.5">
-            {row.map(({ label, key }) => {
-              const stat = keyMap.get(key);
-              const t = stat ? (stat.avg_ms - minMs) / range : 0;
-              const bg = stat ? lerpColor(t) : '#334155';
-              const errorAlpha = stat ? Math.round(stat.error_rate * 180) : 0;
-              return (
-                <button
-                  key={key}
-                  onClick={(e) =>
-                    popover?.key === key ? setPopover(null) : handleKeyClick(key, e)
-                  }
-                  style={{ backgroundColor: bg }}
-                  className="relative w-9 h-9 rounded-md text-xs font-bold text-white/90 shadow-md transition-transform hover:scale-110 focus:outline-none"
-                  title={stat ? `${stat.avg_ms}ms avg` : 'No data'}
-                >
-                  {label}
-                  {errorAlpha > 0 && (
-                    <span
-                      className="absolute inset-0 rounded-md pointer-events-none"
-                      style={{ backgroundColor: `rgba(239,68,68,${errorAlpha / 255})` }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+    <div className="relative" onClick={(e) => { if (e.target === e.currentTarget) setPopover(null); }}>
+      <KeyboardCanvas
+        keyboardName={keyboardName}
+        colorMap={colorMap}
+        onKeyClick={handleKeyClick}
+      />
 
       {/* Legend */}
       <div className="flex items-center gap-2 justify-center mt-4">
         <span className="text-xs text-slate-500">Fast</span>
-        <div
-          className="w-24 h-2 rounded-full"
-          style={{ background: 'linear-gradient(to right, rgb(59,130,246), rgb(239,68,68))' }}
-        />
+        <div className="w-24 h-2 rounded-full" style={{ background: 'linear-gradient(to right, rgb(59,130,246), rgb(239,68,68))' }} />
         <span className="text-xs text-slate-500">Slow</span>
       </div>
 
       {/* Popover */}
       {popover && (
-        <div
-          className="fixed z-50 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 shadow-xl pointer-events-none"
-          style={{ left: popover.x, top: popover.y - 80, transform: 'translateX(-50%)' }}
-        >
-          <p className="font-bold uppercase mb-1">{popover.key}</p>
-          <p>Avg: {popover.avg_ms}ms</p>
-          <p>Error rate: {(popover.error_rate * 100).toFixed(1)}%</p>
-          <p>Presses: {popover.count.toLocaleString()}</p>
+        <div className="mt-3 mx-auto max-w-xs rounded-lg bg-slate-900 border border-slate-700 px-4 py-3 text-xs text-slate-200">
+          <p className="font-bold uppercase mb-1 text-slate-100">{popover.key}</p>
+          <p>Avg timing: <span className="font-semibold">{popover.avg_ms}ms</span></p>
+          <p>Error rate: <span className="font-semibold">{(popover.error_rate * 100).toFixed(1)}%</span></p>
+          <p>Total presses: <span className="font-semibold">{popover.count.toLocaleString()}</span></p>
         </div>
       )}
     </div>
@@ -1262,7 +1481,7 @@ Expected: exits 0.
 ```bash
 cd touch-type
 git add renderer/src/components/AiAssistant/InsightHeatmap.tsx
-git commit -m "feat: add InsightHeatmap SVG keyboard component"
+git commit -m "feat: add InsightHeatmap using KeyboardCanvas with user keyboard setting"
 ```
 
 ---
