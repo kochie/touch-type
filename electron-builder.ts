@@ -123,15 +123,15 @@ const config: Configuration = {
     category: "public.app-category.productivity",
     icon: "build/icon.icon",
     // stable channel → production APS; everything else (beta, alpha, dev) → sandbox APS
-    entitlements: buildingMas ? undefined : (
-      buildingDev || channel !== "stable"
-        ? "build/entitlements.mac.dev.plist"
-        : "build/entitlements.mac.plist"
-    ),
-    // Provisioning profile required for push notifications with Developer ID
-    provisioningProfile: buildingMas ? undefined : (
-      process.env["MAC_PROVISIONING_PROFILE"] || "build/mac-touchtyper.provisionprofile"
-    ),
+    // No buildingMas guard here — the mas/masDev configs override entitlements for
+    // those targets. Guarding here caused --mac default --mac mas to always set
+    // entitlements=undefined for the default target (isMasBuild sees 'mas' in argv).
+    entitlements: buildingDev || channel !== "stable"
+      ? "build/entitlements.mac.dev.plist"
+      : "build/entitlements.mac.plist",
+    // Provisioning profile required for push notifications with Developer ID.
+    // Same reasoning — mas/masDev configs override this for App Store targets.
+    provisioningProfile: process.env["MAC_PROVISIONING_PROFILE"] || "build/mac-touchtyper.provisionprofile",
     extendInfo: {
       ITSAppUsesNonExemptEncryption: false
     },
