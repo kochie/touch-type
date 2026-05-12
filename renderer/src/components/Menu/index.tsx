@@ -167,11 +167,20 @@ export default function Menu({
                 currentStreak === 0
                   ? "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                   : isAtRisk
-                  ? "text-orange-500 animate-pulse hover:bg-orange-500/10"
+                  ? "text-orange-500 hover:bg-orange-500/10"
                   : "text-orange-400 hover:bg-orange-400/10"
               )}
             >
-              <FontAwesomeIcon icon={faFire} className="w-4 h-4" />
+              <FontAwesomeIcon
+                icon={faFire}
+                className={clsx(
+                  "w-4 h-4",
+                  isAtRisk && currentStreak > 0 && [
+                    "animate-bounce",
+                    "[filter:drop-shadow(0_0_6px_rgb(249_115_22))]",
+                  ]
+                )}
+              />
               <span>{currentStreak}</span>
             </Link>
           )}
