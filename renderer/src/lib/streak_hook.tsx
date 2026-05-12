@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { useSupabase } from "./supabase-provider";
 import { usePlan } from "./plan_hook";
 import { useResults } from "./result-provider";
-import { DateTime } from "luxon";
 
 export interface StreakData {
   currentStreak: number;
@@ -57,10 +56,10 @@ export function getNextMilestone(streak: number): number | null {
 export function getDaysUntilStreakLost(lastActivityDate: string | null): number {
   if (!lastActivityDate) return 0;
   
-  const lastDate = DateTime.fromISO(lastActivityDate);
-  const today = DateTime.now().startOf("day");
-  const daysSince = Math.floor(today.diff(lastDate, "days").days);
-  
+  const lastDate = Temporal.PlainDate.from(lastActivityDate);
+  const today = Temporal.Now.plainDateISO();
+  const daysSince = today.since(lastDate, { largestUnit: "days" }).days;
+
   // If practiced today, have until end of tomorrow (returns 1)
   // If practiced yesterday, have until end of today (returns 0)
   // If more than 1 day ago, streak is already at risk (returns -1 or less)
@@ -80,7 +79,12 @@ function calculateStreakFromResults(results: { datetime: string }[]): {
   // Get unique dates sorted in descending order (most recent first)
   const uniqueDates = Array.from(
     new Set(
-      results.map((r) => DateTime.fromISO(r.datetime).toISODate())
+      results.map((r) =>
+        Temporal.Instant.from(r.datetime)
+          .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+          .toPlainDate()
+          .toString()
+      )
     )
   )
     .filter((d): d is string => d !== null)
@@ -91,11 +95,11 @@ function calculateStreakFromResults(results: { datetime: string }[]): {
   }
 
   const lastActivityDate = uniqueDates[0];
-  const today = DateTime.now().startOf("day");
-  const lastDate = DateTime.fromISO(lastActivityDate);
+  const today = Temporal.Now.plainDateISO();
+  const lastDate = Temporal.PlainDate.from(lastActivityDate);
 
   // Check if the most recent activity is today or yesterday
-  const daysSinceLastActivity = Math.floor(today.diff(lastDate, "days").days);
+  const daysSinceLastActivity = today.since(lastDate, { largestUnit: "days" }).days;
   
   // If more than 1 day since last activity, streak is broken
   if (daysSinceLastActivity > 1) {
@@ -103,9 +107,9 @@ function calculateStreakFromResults(results: { datetime: string }[]): {
     let longestStreak = 1;
     let tempStreak = 1;
     for (let i = 1; i < uniqueDates.length; i++) {
-      const curr = DateTime.fromISO(uniqueDates[i - 1]);
-      const prev = DateTime.fromISO(uniqueDates[i]);
-      const diff = Math.floor(curr.diff(prev, "days").days);
+      const curr = Temporal.PlainDate.from(uniqueDates[i - 1]);
+      const prev = Temporal.PlainDate.from(uniqueDates[i]);
+      const diff = curr.since(prev, { largestUnit: "days" }).days;
       if (diff === 1) {
         tempStreak++;
         longestStreak = Math.max(longestStreak, tempStreak);
@@ -119,9 +123,9 @@ function calculateStreakFromResults(results: { datetime: string }[]): {
   // Calculate current streak
   let currentStreak = 1;
   for (let i = 1; i < uniqueDates.length; i++) {
-    const curr = DateTime.fromISO(uniqueDates[i - 1]);
-    const prev = DateTime.fromISO(uniqueDates[i]);
-    const diff = Math.floor(curr.diff(prev, "days").days);
+    const curr = Temporal.PlainDate.from(uniqueDates[i - 1]);
+    const prev = Temporal.PlainDate.from(uniqueDates[i]);
+    const diff = curr.since(prev, { largestUnit: "days" }).days;
     if (diff === 1) {
       currentStreak++;
     } else {
@@ -133,9 +137,9 @@ function calculateStreakFromResults(results: { datetime: string }[]): {
   let longestStreak = currentStreak;
   let tempStreak = 1;
   for (let i = 1; i < uniqueDates.length; i++) {
-    const curr = DateTime.fromISO(uniqueDates[i - 1]);
-    const prev = DateTime.fromISO(uniqueDates[i]);
-    const diff = Math.floor(curr.diff(prev, "days").days);
+    const curr = Temporal.PlainDate.from(uniqueDates[i - 1]);
+    const prev = Temporal.PlainDate.from(uniqueDates[i]);
+    const diff = curr.since(prev, { largestUnit: "days" }).days;
     if (diff === 1) {
       tempStreak++;
       longestStreak = Math.max(longestStreak, tempStreak);
@@ -158,11 +162,9 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
   // Calculate streak from local results as fallback
   const calculateFromResults = useCallback(() => {
     const calculated = calculateStreakFromResults(results);
-    const today = DateTime.now().startOf("day");
-    const lastDate = calculated.lastActivityDate
-      ? DateTime.fromISO(calculated.lastActivityDate)
-      : null;
-    const isAtRisk = lastDate ? !lastDate.hasSame(today, "day") : true;
+    const isAtRisk = calculated.lastActivityDate
+      ? !Temporal.PlainDate.from(calculated.lastActivityDate).equals(Temporal.Now.plainDateISO())
+      : true;
 
     setStreak({
       currentStreak: calculated.currentStreak,
@@ -205,14 +207,10 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (data) {
         const lastActivityDate = data.last_activity_date;
-        const today = DateTime.now().startOf("day");
-        const lastDate = lastActivityDate
-          ? DateTime.fromISO(lastActivityDate)
-          : null;
 
         // Check if at risk (no activity today)
-        const isAtRisk = lastDate
-          ? !lastDate.hasSame(today, "day")
+        const isAtRisk = lastActivityDate
+          ? !Temporal.PlainDate.from(lastActivityDate).equals(Temporal.Now.plainDateISO())
           : true;
 
         setStreak({
@@ -248,14 +246,14 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error || !data) return;
 
-      const lastRefresh = data.last_freeze_refresh
-        ? DateTime.fromISO(data.last_freeze_refresh)
+      const lastRefreshDate = data.last_freeze_refresh
+        ? Temporal.PlainDate.from(data.last_freeze_refresh)
         : null;
-      const now = DateTime.now();
 
       // Check if it's been a week since last refresh
       const shouldRefresh =
-        !lastRefresh || now.diff(lastRefresh, "days").days >= 7;
+        !lastRefreshDate ||
+        Temporal.Now.plainDateISO().since(lastRefreshDate, { largestUnit: "days" }).days >= 7;
 
       if (shouldRefresh && (data.streak_freeze_count ?? 0) < 1) {
         // Grant 1 freeze per week for premium users
@@ -263,7 +261,7 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
           .from("streaks")
           .update({
             streak_freeze_count: 1,
-            last_freeze_refresh: now.toISODate(),
+            last_freeze_refresh: Temporal.Now.plainDateISO().toString(),
           })
           .eq("user_id", user.id);
 
