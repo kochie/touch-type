@@ -114,7 +114,7 @@ jobs:
         env:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.provisioning_profile }}
           PP_PATH: build/mas-touchtyper.provisionprofile
-          MAC_PROVISION_PROFILE_BASE64: ${{ secrets.mac_provisioning_profile }}
+          MAC_PROVISION_PROFILE_BASE64: ${{ secrets.mac_provisioning_profile_dev }}
           MAC_PP_PATH: build/mac-touchtyper.provisionprofile
           API_KEY_BASE64: ${{ secrets.api_key }}
           API_KEY_PATH: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
