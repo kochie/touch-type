@@ -132,6 +132,12 @@ const config: Configuration = {
     },
 
     type: buildingDev ? "development" : "distribution",
+    // Pure-JS packages from @sentry/electron's OpenTelemetry stack (acorn,
+    // import-in-the-middle, etc.) end up in one arch asar but not the other
+    // because @electron/rebuild runs twice and pnpm re-resolves optional deps
+    // differently each pass. They are safe to be arch-unique since they are
+    // pure JS and work on both architectures regardless.
+    singleArchFiles: "node_modules/**",
     // NOTE: Targets are specified via CLI, not hardcoded here.
     // Build commands:
     //   Local unsigned:     electron-builder build --mac -c.mac.identity=null
@@ -198,15 +204,12 @@ const config: Configuration = {
     "renderer/out",
     "wordsets",
     "codesnippets",
-    // pg-types transitive deps (pg-int8, postgres-array, postgres-interval, xtend)
-    // cause x64/arm64 asar divergence during universal binary merging. They arrive
-    // via @sentry/electron → @opentelemetry/instrumentation-pg → @types/pg → pg-types.
-    // Safe to drop: the app uses Supabase (HTTP), not direct pg connections, and
-    // Electron 42 has native BigInt so pg-int8's fallback is never triggered.
+    // pg-int8 has a native C++ binding that compiles for x64 but fails for
+    // arm64, causing a mach-o count mismatch when merging universal binaries.
+    // Safe to drop: pg-types only uses it as a BigInt fallback, and Electron
+    // 42 has native BigInt. Pure-JS arch divergences (postgres-array etc.)
+    // are handled by singleArchFiles above.
     "!**/node_modules/pg-int8/**",
-    "!**/node_modules/postgres-array/**",
-    "!**/node_modules/postgres-interval/**",
-    "!**/node_modules/xtend/**",
   ],
   // Mac and Windows use this; Linux uses linux.publish (GitHub + snapStore + flatpak build only)
   publish: [
