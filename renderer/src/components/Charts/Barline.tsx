@@ -20,7 +20,6 @@ import {
   scaleSequential,
   select,
 } from "d3";
-import { Duration } from "luxon";
 import { range } from "lodash";
 
 import styles from "@/styles/stats.module.css";

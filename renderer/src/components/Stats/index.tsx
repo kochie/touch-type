@@ -7,7 +7,6 @@ import { faFire, faSnowflake } from "@fortawesome/pro-duotone-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
-import { Duration, DateTime } from "luxon";
 import { useEffect, useState } from "react";
 
 interface Stat {
