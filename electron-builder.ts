@@ -193,6 +193,12 @@ const config: Configuration = {
     oneClick: false,
   },
   asar: true,
+  // Native modules with arch-specific binaries must live outside the asar so the
+  // universal merger can keep separate x64/arm64 copies rather than trying to merge
+  // identical-path binaries that differ per architecture.
+  asarUnpack: [
+    "node_modules/pg-int8/**",
+  ],
   files: ["main", "renderer/out", "wordsets", "codesnippets"],
   // Mac and Windows use this; Linux uses linux.publish (GitHub + snapStore + flatpak build only)
   publish: [
