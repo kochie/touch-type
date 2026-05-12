@@ -1,5 +1,3 @@
-import { DateTime, Interval } from "luxon";
-
 export type StatAction =
   | { type: "CORRECT"; key: string }
   | { type: "INCORRECT"; key: string; pressedKey: string }
@@ -18,8 +16,8 @@ export interface LetterStat {
 export interface StatState {
   correct: number;
   incorrect: number;
-  start: DateTime;
-  time: Interval;
+  start: Temporal.Instant;
+  time: Temporal.Duration;
   letters: LetterStat[];
   immutableLetters: LetterStat[];
 }
@@ -30,11 +28,11 @@ export const statsReducer = (state: StatState, action: StatAction) => {
       return {
         ...state,
         correct: state.correct + 1,
-        time: Interval.fromDateTimes(state.start, DateTime.now()),
+        time: state.start.until(Temporal.Now.instant()),
         letters: [...state.letters, { key: action.key, correct: true }],
         immutableLetters: [
           ...state.immutableLetters,
-          { key: action.key, correct: true, timestamp: DateTime.now().toMillis()},
+          { key: action.key, correct: true, timestamp: Temporal.Now.instant().epochMilliseconds },
         ],
       };
     }
@@ -42,7 +40,7 @@ export const statsReducer = (state: StatState, action: StatAction) => {
       return {
         ...state,
         incorrect: state.incorrect + 1,
-        time: Interval.fromDateTimes(state.start, DateTime.now()),
+        time: state.start.until(Temporal.Now.instant()),
         letters: [
           ...state.letters,
           { key: action.key, correct: false, pressedKey: action.pressedKey },
@@ -52,7 +50,7 @@ export const statsReducer = (state: StatState, action: StatAction) => {
           {
             key: action.key,
             correct: false,
-            timestamp: DateTime.now().toMillis(),
+            timestamp: Temporal.Now.instant().epochMilliseconds,
             pressedKey: action.pressedKey,
           },
         ],
@@ -61,26 +59,27 @@ export const statsReducer = (state: StatState, action: StatAction) => {
     case "BACKSPACE":
       return {
         ...state,
-        time: Interval.fromDateTimes(state.start, DateTime.now()),
+        time: state.start.until(Temporal.Now.instant()),
         letters: [...state.letters.slice(0, -1)],
       };
     case "START":
       return {
         ...state,
-        start: DateTime.now(),
+        start: Temporal.Now.instant(),
       };
     case "RESET":
       return {
         correct: 0,
         incorrect: 0,
-        time: Interval.after(DateTime.now(), 0),
+        start: Temporal.Now.instant(),
+        time: Temporal.Duration.from({ milliseconds: 0 }),
         letters: [] as LetterStat[],
         immutableLetters: [] as LetterStat[],
       };
     case "TICK":
       return {
         ...state,
-        time: Interval.fromDateTimes(state.start, DateTime.now()),
+        time: state.start.until(Temporal.Now.instant()),
       };
     default:
       return state;
