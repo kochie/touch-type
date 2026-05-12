@@ -122,7 +122,12 @@ const config: Configuration = {
     bundleShortVersion: version.replace(/-beta\.\d+$/, ""),
     category: "public.app-category.productivity",
     icon: "build/icon.icon",
-    entitlements: buildingMas ? undefined : (buildingDev ? "build/entitlements.mac.dev.plist" : "build/entitlements.mac.plist"),
+    // stable channel → production APS; everything else (beta, alpha, dev) → sandbox APS
+    entitlements: buildingMas ? undefined : (
+      buildingDev || channel !== "stable"
+        ? "build/entitlements.mac.dev.plist"
+        : "build/entitlements.mac.plist"
+    ),
     // Provisioning profile required for push notifications with Developer ID
     provisioningProfile: buildingMas ? undefined : (
       process.env["MAC_PROVISIONING_PROFILE"] || "build/mac-touchtyper.provisionprofile"

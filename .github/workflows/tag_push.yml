@@ -128,6 +128,8 @@ jobs:
         env:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.provisioning_profile }}
           PP_PATH: build/mas-touchtyper.provisionprofile
+          MAC_PROVISION_PROFILE_BASE64: ${{ secrets.mac_provisioning_profile }}
+          MAC_PP_PATH: build/mac-touchtyper.provisionprofile
           API_KEY_BASE64: ${{ secrets.api_key }}
           API_KEY_PATH: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
         # Import Apple API key for app notarization on macOS
@@ -135,6 +137,7 @@ jobs:
           mkdir -p private_keys
           echo -n "$API_KEY_BASE64" | base64 --decode --output $API_KEY_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
+          echo -n "$MAC_PROVISION_PROFILE_BASE64" | base64 --decode --output $MAC_PP_PATH
       
       - name: Build Electron app
         run: |
