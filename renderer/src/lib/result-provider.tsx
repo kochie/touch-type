@@ -13,17 +13,14 @@ const DB_NAME = "touch-type-db";
 // caused ConstraintError on any sync that re-fetched a locally-written
 // result (datetime collision between putResult and syncResults).
 const DB_VERSION = 2;
-/**
- * Converts a JSON value from Supabase to a LetterStat array.
- * Validates the structure and provides defaults for missing optional fields.
- */
+
 function convertToLetterStats(json: unknown): LetterStat[] {
   if (!json || !Array.isArray(json)) {
     return [];
   }
 
   return json
-    .filter((item): item is Record<string, unknown> => 
+    .filter((item): item is Record<string, unknown> =>
       typeof item === "object" && item !== null && !Array.isArray(item)
     )
     .map((item) => ({
@@ -34,9 +31,6 @@ function convertToLetterStats(json: unknown): LetterStat[] {
     }));
 }
 
-/**
- * Converts LetterStat array to a JSON-compatible format for Supabase.
- */
 function letterStatsToJson(stats: LetterStat[]): { [key: string]: string | number | boolean | undefined }[] {
   return stats.map((stat) => ({
     key: stat.key,
@@ -47,6 +41,8 @@ function letterStatsToJson(stats: LetterStat[]): { [key: string]: string | numbe
 }
 
 export interface Result {
+  /** IndexedDB auto-generated key — not sent to Supabase. */
+  id?: number;
   correct: number;
   incorrect: number;
   keyPresses: LetterStat[];
@@ -62,6 +58,12 @@ export interface Result {
   // Code mode fields (optional for backwards compatibility)
   codeMode?: boolean;
   codeLang?: CodeLanguages;
+  /**
+   * Upload status: false = saved locally but not yet in Supabase (offline or
+   * failed insert); true = confirmed in Supabase; undefined = pre-existing
+   * record from before this feature was added (assumed synced).
+   */
+  synced?: boolean;
 }
 
 const ResultsContext = createContext({
@@ -106,8 +108,7 @@ export function ResultsProvider({ children }) {
       }
 
       if (data && data.length > 0) {
-        // Convert from DB format to app format
-        const convertedResults = data.map(r => ({
+        const convertedResults: Result[] = data.map(r => ({
           correct: r.correct,
           incorrect: r.incorrect,
           keyPresses: convertToLetterStats(r.key_presses),
@@ -122,6 +123,7 @@ export function ResultsProvider({ children }) {
           cpm: r.cpm,
           codeMode: r.code_mode ?? undefined,
           codeLang: r.code_lang as CodeLanguages,
+          synced: true,
         }));
         allResults.push(...convertedResults);
         offset += limit;
@@ -167,8 +169,6 @@ export function ResultsProvider({ children }) {
         }
 
         if (oldVersion < 2) {
-          // Drop+recreate the `datetime` index without the unique flag.
-          // Existing data is preserved — only the index definition changes.
           const store = tx.objectStore("results");
           if (store.indexNames.contains("datetime")) {
             store.deleteIndex("datetime");
@@ -188,20 +188,10 @@ export function ResultsProvider({ children }) {
     );
   }
 
-  useEffect(() => {
-    initializeDB()
-      .then(syncResults)
-      .catch((err) => {
-        console.error("Failed to initialize/sync results:", err);
-      });
-  }, [user]);
-
-  async function updateDB(result: Result) {
+  /** Persist a result to IndexedDB and return the auto-assigned key. */
+  async function updateDB(result: Result): Promise<number> {
     const db = await openDB(DB_NAME, DB_VERSION);
-    const tx = db.transaction("results", "readwrite");
-    const store = tx.objectStore("results");
-
-    await store.put(result);
+    return db.put("results", result) as Promise<number>;
   }
 
   async function updateBulkDB(results: Result[]) {
@@ -222,12 +212,109 @@ export function ResultsProvider({ children }) {
     );
   }
 
+  /**
+   * Upload all locally-cached results that haven't reached Supabase yet.
+   * Inserts in chronological order so the DB streak trigger processes days
+   * in the correct sequence.
+   */
+  async function syncPending() {
+    if (!user) return;
+
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const allStored: Result[] = await db.getAll("results");
+    const pending = allStored
+      .filter(r => r.synced === false)
+      .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+
+    if (pending.length === 0) return;
+
+    console.log(`Syncing ${pending.length} pending result(s) to Supabase...`);
+
+    for (const result of pending) {
+      try {
+        const { error } = await supabase
+          .from('results')
+          .insert({
+            user_id: user.id,
+            correct: result.correct,
+            incorrect: result.incorrect,
+            time: result.time,
+            datetime: result.datetime,
+            level: result.level,
+            keyboard: result.keyboard,
+            language: result.language,
+            capital: result.capital,
+            punctuation: result.punctuation,
+            numbers: result.numbers,
+            cpm: result.cpm,
+            key_presses: letterStatsToJson(result.keyPresses),
+            code_mode: result.codeMode,
+            code_lang: result.codeLang,
+          });
+
+        if (!error && result.id !== undefined) {
+          await db.put("results", { ...result, synced: true });
+
+          // Fire-and-forget leaderboard upsert (keeps best score per config).
+          if (!result.codeMode) {
+            const timeMs = Temporal.Duration.from(result.time).total("milliseconds");
+            if (Number.isFinite(timeMs) && timeMs > 0) {
+              supabase.functions.invoke('leaderboards', {
+                body: {
+                  correct: result.correct,
+                  incorrect: result.incorrect,
+                  cpm: result.cpm,
+                  keyboard: result.keyboard,
+                  level: result.level,
+                  language: result.language ?? 'en',
+                  capital: result.capital,
+                  punctuation: result.punctuation,
+                  numbers: result.numbers,
+                  time: timeMs,
+                },
+              }).catch((err) => console.warn('Leaderboard submission failed silently:', err));
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to sync pending result:', err);
+      }
+    }
+
+    // Refresh state to reflect updated synced flags.
+    const updated: Result[] = await db.getAll("results");
+    _setResults(
+      updated.sort(
+        (a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime(),
+      ),
+    );
+  }
+
+  useEffect(() => {
+    initializeDB()
+      .then(syncResults)
+      .then(syncPending)
+      .catch((err) => {
+        console.error("Failed to initialize/sync results:", err);
+      });
+  }, [user]);
+
+  // Upload pending results as soon as the network comes back.
+  useEffect(() => {
+    const handleOnline = () => { syncPending(); };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [user]);
+
   const putResult = async (
     result: Result,
   ): Promise<{ id: string } | null> => {
-    _setResults((prev) => [result, ...prev]);
+    const pending: Result = { ...result, synced: false };
+    _setResults((prev) => [pending, ...prev]);
+
+    let idbKey: number | undefined;
     try {
-      await updateDB(result);
+      idbKey = await updateDB(pending);
     } catch (err) {
       console.error("Failed to persist result to IndexedDB:", err);
     }
@@ -257,12 +344,19 @@ export function ResultsProvider({ children }) {
 
       if (error) {
         console.error('Error uploading result:', error);
+        // synced: false remains — syncPending will retry on next online event.
         return null;
       }
 
-      // Submit to leaderboard as a best-score upsert (fire-and-forget).
-      // The edge function checks publish_to_leaderboard and only keeps the
-      // user's best CPM for each keyboard+level+language combination.
+      // Mark synced in IDB (best-effort; if this fails the record will be
+      // re-uploaded by syncPending, which is harmless for the leaderboard
+      // upsert but produces a duplicate row in results — acceptable edge case).
+      if (idbKey !== undefined) {
+        updateDB({ ...pending, id: idbKey, synced: true }).catch(
+          err => console.error("Failed to mark result as synced in IDB:", err)
+        );
+      }
+
       if (!result.codeMode) {
         const timeMs = Temporal.Duration.from(result.time).total("milliseconds");
         if (Number.isFinite(timeMs) && timeMs > 0) {
@@ -298,24 +392,3 @@ export function ResultsProvider({ children }) {
 export const useResults = () => {
   return useContext(ResultsContext);
 };
-
-async function runTempUpdates() {
-  const db = await openDB(DB_NAME, DB_VERSION);
-  const tx = db.transaction("results", "readwrite");
-  const store = tx.objectStore("results");
-
-  const results = await store.getAll();
-  await store.clear();
-
-  for (const result of results) {
-    if (result.datetime) {
-      await store.put({
-        ...result,
-        datetime: Temporal.Instant.from(result.datetime).toString(),
-        cpm:
-          (result.correct + result.incorrect) /
-          (Temporal.Duration.from(result.time).total("milliseconds") / 1000 / 60),
-      });
-    }
-  }
-}
