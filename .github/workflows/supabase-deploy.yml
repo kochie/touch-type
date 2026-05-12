@@ -20,11 +20,8 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
 
     steps:
-      - name: Check out touch-type-backend
+      - name: Check out Git repository
         uses: actions/checkout@v4
-        with:
-          repository: kochie/touch-type-backend
-          token: ${{ secrets.GH_PAT }}
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -39,25 +36,8 @@ jobs:
 
       - name: Deploy Edge Functions
         run: |
-          supabase functions deploy ai-coach-chat
-          supabase functions deploy billing-portal
           supabase functions deploy challenges
-          supabase functions deploy confirm-checkout-session
-          supabase functions deploy create-checkout-session
-          supabase functions deploy create-streak-freeze-checkout
           supabase functions deploy delete-user
-          supabase functions deploy finalize-checkout-session
-          supabase functions deploy finalize-streak-freeze-checkout
-          supabase functions deploy generate-ai-insights
-          supabase functions deploy generate-custom-drill
           supabase functions deploy goals
-          supabase functions deploy iap-webhook
           supabase functions deploy leaderboards
-          supabase functions deploy map-transaction
           supabase functions deploy recommendations
-          supabase functions deploy refresh-streak-freezes
-          supabase functions deploy results
-          supabase functions deploy send-notifications
-          supabase functions deploy settings
-          supabase functions deploy subscription
-          supabase functions deploy update-subscription-interval
