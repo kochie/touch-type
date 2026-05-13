@@ -209,6 +209,8 @@ export type Database = {
           cpm: number
           created_at: string | null
           datetime: string
+          equipped_face: string
+          equipped_hat: string | null
           id: string
           incorrect: number
           keyboard: string
@@ -226,6 +228,8 @@ export type Database = {
           cpm: number
           created_at?: string | null
           datetime?: string
+          equipped_face?: string
+          equipped_hat?: string | null
           id?: string
           incorrect: number
           keyboard: string
@@ -243,6 +247,8 @@ export type Database = {
           cpm?: number
           created_at?: string | null
           datetime?: string
+          equipped_face?: string
+          equipped_hat?: string | null
           id?: string
           incorrect?: number
           keyboard?: string
@@ -533,6 +539,7 @@ export type Database = {
           code_lang: string | null
           code_mode: boolean | null
           code_snippet_source: string | null
+          confetti_on_personal_best: boolean
           created_at: string | null
           custom_code_path: string | null
           id: string
@@ -564,6 +571,7 @@ export type Database = {
           code_lang?: string | null
           code_mode?: boolean | null
           code_snippet_source?: string | null
+          confetti_on_personal_best?: boolean
           created_at?: string | null
           custom_code_path?: string | null
           id?: string
@@ -595,6 +603,7 @@ export type Database = {
           code_lang?: string | null
           code_mode?: boolean | null
           code_snippet_source?: string | null
+          confetti_on_personal_best?: boolean
           created_at?: string | null
           custom_code_path?: string | null
           id?: string
@@ -1010,6 +1019,28 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_user_leaderboard_rank: {
+        Args: {
+          p_capital: boolean
+          p_keyboard: string
+          p_language: string
+          p_level: string
+          p_numbers: boolean
+          p_punctuation: boolean
+          p_user_id: string
+        }
+        Returns: {
+          correct: number
+          cpm: number
+          datetime: string
+          equipped_face: string
+          equipped_hat: string
+          incorrect: number
+          rank: number
+          time: number
+          username: string
+        }[]
+      }
       join_match_by_invite: {
         Args: { _code: string }
         Returns: {
@@ -1163,6 +1194,48 @@ export type Database = {
         }
       }
       trigger_send_notifications: { Args: never; Returns: undefined }
+      upsert_leaderboard_score: {
+        Args: {
+          p_capital: boolean
+          p_correct: number
+          p_equipped_face?: string
+          p_equipped_hat?: string
+          p_incorrect: number
+          p_keyboard: string
+          p_language: string
+          p_level: string
+          p_numbers: boolean
+          p_punctuation: boolean
+          p_time: number
+          p_user_id: string
+          p_username: string
+        }
+        Returns: {
+          capital: boolean | null
+          correct: number
+          cpm: number
+          created_at: string | null
+          datetime: string
+          equipped_face: string
+          equipped_hat: string | null
+          id: string
+          incorrect: number
+          keyboard: string
+          language: string | null
+          level: string
+          numbers: boolean | null
+          punctuation: boolean | null
+          time: number
+          user_id: string
+          username: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "leaderboard_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never

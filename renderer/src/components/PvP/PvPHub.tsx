@@ -162,23 +162,27 @@ export default function PvPHub() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [myFace, setMyFace] = useState("classic");
   const [myHat, setMyHat] = useState<string | null>(null);
+  const [myUsername, setMyUsername] = useState<string>("");
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [draftUsername, setDraftUsername] = useState("");
 
   const allGames = useMemo(() => [...myActiveGames, ...myAwaitingGames, ...myCompletedGames], [myActiveGames, myAwaitingGames, myCompletedGames]);
   const challengeGames = useMemo(() => [...myActiveGames, ...myAwaitingGames], [myActiveGames, myAwaitingGames]);
   const historyGames = useMemo(() => myCompletedGames, [myCompletedGames]);
 
-  // Fetch own avatar on mount
+  // Fetch own avatar and username on mount
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("equipped_face, equipped_hat")
+      .select("equipped_face, equipped_hat, preferred_username, name")
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
         if (!data) return;
         setMyFace(data.equipped_face ?? "classic");
         setMyHat(data.equipped_hat ?? null);
+        setMyUsername(data.preferred_username || data.name || "");
       });
   }, [user, supabase]);
 
@@ -242,6 +246,23 @@ export default function PvPHub() {
     [myFace, myHat, saveAvatar],
   );
 
+  const handleUsernameSave = useCallback(async () => {
+    if (!user) return;
+    const trimmed = draftUsername.trim();
+    if (!trimmed || trimmed === myUsername) { setEditingUsername(false); return; }
+    const { error } = await supabase
+      .from("profiles")
+      .update({ preferred_username: trimmed })
+      .eq("id", user.id);
+    if (error) {
+      toast.error("Couldn't save username.");
+    } else {
+      setMyUsername(trimmed);
+      toast.success("Username updated.");
+    }
+    setEditingUsername(false);
+  }, [user, supabase, draftUsername, myUsername]);
+
   // Stats from completed games
   const completedOnly = useMemo(
     () => myCompletedGames.filter((g) => g.status === "completed"),
@@ -296,7 +317,11 @@ export default function PvPHub() {
         iconColor="text-amber-400"
       />
 
-      <div className="px-6 pb-8 flex flex-col gap-5">
+      <div className="px-6 pb-8">
+        <div className={clsx(
+          "mx-auto w-full flex flex-col gap-5",
+          activeTab === "leaderboard" ? "max-w-5xl" : "max-w-3xl",
+        )}>
         {/* Tab bar */}
         <div className="flex gap-2">
           {tabs.map(tab => (
@@ -328,31 +353,6 @@ export default function PvPHub() {
           <div className="flex gap-5 items-start">
             {/* Left: game list */}
             <div className="flex flex-col gap-2 flex-1 min-w-0">
-              {/* Your avatar row */}
-              {user && (
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => setPickerOpen((o) => !o)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-violet-500/10 border border-dashed border-violet-500/30 hover:bg-violet-500/12 hover:border-violet-500/50 transition-all duration-150 text-left"
-                  >
-                    <AvatarComposite face={myFace} hat={myHat} size={40} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-violet-300">You</p>
-                      <p className="text-xs text-violet-400/60">Tap to customise avatar</p>
-                    </div>
-                    <span className="text-[11px] font-bold text-violet-400 bg-violet-500/15 border border-violet-500/25 rounded-full px-2.5 py-0.5 flex items-center gap-1">
-                      <FontAwesomeIcon icon={faPencil} className="w-2.5 h-2.5" /> Edit
-                    </span>
-                  </button>
-                  <Link
-                    href="/pvp/profile"
-                    className="text-[10px] text-slate-600 hover:text-slate-400 text-right px-2 transition-colors"
-                  >
-                    View profile →
-                  </Link>
-                </div>
-              )}
-
               {challengeGames.length > 0 && (
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">Active</p>
               )}
@@ -375,8 +375,73 @@ export default function PvPHub() {
               </button>
             </div>
 
-            {/* Right: stat cards */}
+            {/* Right: avatar + stat cards */}
             <div className="w-64 flex-shrink-0 flex flex-col gap-3">
+              {user && (
+                <div className="rounded-xl bg-slate-800/60 border border-slate-700/60 overflow-hidden">
+                  {/* Avatar row */}
+                  <button
+                    onClick={() => setPickerOpen((o) => !o)}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700/40 transition-colors duration-150 text-left"
+                  >
+                    <AvatarComposite face={myFace} hat={myHat} size={44} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-400">Your avatar</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Tap to customise</p>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 bg-slate-700/60 border border-slate-600/60 rounded-full px-2 py-0.5 flex items-center gap-1 flex-shrink-0">
+                      <FontAwesomeIcon icon={faPencil} className="w-2 h-2" /> Edit
+                    </span>
+                  </button>
+
+                  {/* Divider */}
+                  <div className="h-px bg-slate-700/60 mx-4" />
+
+                  {/* Username row — always visible */}
+                  <div className="px-4 py-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1.5">Username</p>
+                    {editingUsername ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          autoFocus
+                          value={draftUsername}
+                          onChange={e => setDraftUsername(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") handleUsernameSave();
+                            if (e.key === "Escape") setEditingUsername(false);
+                          }}
+                          maxLength={32}
+                          className="flex-1 min-w-0 bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                          placeholder="Enter username…"
+                        />
+                        <button onClick={handleUsernameSave} className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 px-2 py-1 rounded transition-colors">Save</button>
+                        <button onClick={() => setEditingUsername(false)} className="text-xs text-slate-500 hover:text-slate-300 px-1 py-1 rounded transition-colors">✕</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setDraftUsername(myUsername); setEditingUsername(true); }}
+                        className="w-full flex items-center justify-between gap-2 group"
+                      >
+                        <span className="text-sm font-semibold text-slate-200 truncate">
+                          {myUsername || <span className="text-slate-500 font-normal italic">No username set</span>}
+                        </span>
+                        <span className="text-[10px] font-semibold text-violet-400 bg-violet-500/15 border border-violet-500/25 rounded-full px-2 py-0.5 flex items-center gap-1 flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
+                          <FontAwesomeIcon icon={faPencil} className="w-2 h-2" /> Change
+                        </span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* View profile link */}
+                  <div className="h-px bg-slate-700/60 mx-4" />
+                  <Link
+                    href="/pvp/profile"
+                    className="flex items-center justify-center px-4 py-2 text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    View full profile →
+                  </Link>
+                </div>
+              )}
               <RecordCard wins={wins} played={completedOnly.length} />
               <BestCpmCard
                 cpm={bestCpm}
@@ -403,6 +468,7 @@ export default function PvPHub() {
           /* Leaderboard tab */
           <LeaderboardTab />
         )}
+        </div>
       </div>
 
       {/* New challenge modal */}

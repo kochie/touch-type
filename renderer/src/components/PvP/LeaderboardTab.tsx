@@ -14,6 +14,7 @@ import { KeyboardLayoutNames } from "@/keyboards";
 import { Levels, Languages } from "@/lib/settings_hook";
 import clsx from "clsx";
 import { formatDistanceToNow } from "@/lib/relative-time";
+import { AvatarComposite } from "@/components/avatars/AvatarComposite";
 
 interface LeaderboardScore {
   user_id: string;
@@ -26,6 +27,8 @@ interface LeaderboardScore {
   level: string;
   keyboard: string;
   language: string | null;
+  equipped_face: string | null;
+  equipped_hat: string | null;
 }
 
 interface UserRankRow {
@@ -36,6 +39,8 @@ interface UserRankRow {
   incorrect: number;
   time: number;
   datetime: string;
+  equipped_face: string | null;
+  equipped_hat: string | null;
 }
 
 const rankColor = (rank: number) => {
@@ -46,9 +51,9 @@ const rankColor = (rank: number) => {
 };
 
 const selectClass =
-  "appearance-none bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 pr-7 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer *:text-black";
+  "appearance-none bg-none bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 pr-7 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer *:text-black";
 
-const COLS = "grid-cols-[2rem_1fr_5rem_5rem_5rem_5rem]";
+const COLS = "grid-cols-[2rem_2.25rem_1fr_5rem_5rem_5rem_9rem]";
 
 function ScoreRow({
   rank,
@@ -56,12 +61,21 @@ function ScoreRow({
   highlight,
 }: {
   rank: number;
-  score: { username: string; cpm: number; correct: number; incorrect: number; time: number; datetime: string };
+  score: {
+    username: string;
+    cpm: number;
+    correct: number;
+    incorrect: number;
+    time: number;
+    datetime: string;
+    equipped_face: string | null;
+    equipped_hat: string | null;
+  };
   highlight?: boolean;
 }) {
   const total = score.correct + score.incorrect;
   const accuracy = total > 0 ? (score.correct / total) * 100 : 0;
-  const cpm = Number.isFinite(score.cpm) ? score.cpm : total / (score.time / 1000 / 60);
+  const cpm = Number.isFinite(score.cpm) ? score.cpm : score.correct / (score.time / 1000 / 60);
   const duration = Temporal.Duration.from({ milliseconds: score.time });
 
   return (
@@ -76,6 +90,7 @@ function ScoreRow({
       )}
     >
       <span className={clsx("text-sm font-bold tabular-nums", rankColor(rank))}>{rank}</span>
+      <AvatarComposite face={score.equipped_face ?? "classic"} hat={score.equipped_hat} size={28} />
       <span className={clsx("text-sm font-medium truncate", highlight ? "text-sky-300" : "text-slate-200")}>
         {score.username}
         {highlight && <span className="ml-1.5 text-[10px] text-sky-500 font-semibold uppercase tracking-wide">you</span>}
@@ -94,6 +109,23 @@ function ScoreRow({
   );
 }
 
+function ModifierToggle({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={clsx(
+        "text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors cursor-pointer",
+        active
+          ? "bg-sky-500/15 border-sky-500/50 text-sky-300"
+          : "bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function LeaderboardTab() {
   const { supabase, user } = useSupabase();
   const settings = useSettings();
@@ -101,6 +133,9 @@ export default function LeaderboardTab() {
   const [keyboard, setKeyboard] = useState<KeyboardLayoutNames>(settings.keyboardName);
   const [level, setLevel] = useState<Levels>(settings.levelName);
   const [language, setLanguage] = useState<Languages>(settings.language);
+  const [capital, setCapital] = useState<boolean>(!!settings.capital);
+  const [punctuation, setPunctuation] = useState<boolean>(!!settings.punctuation);
+  const [numbers, setNumbers] = useState<boolean>(!!settings.numbers);
 
   const [scores, setScores] = useState<LeaderboardScore[]>([]);
   const [userRank, setUserRank] = useState<UserRankRow | null>(null);
@@ -119,10 +154,13 @@ export default function LeaderboardTab() {
         // Top 50
         const { data, error: err } = await supabase
           .from("leaderboard_scores")
-          .select("user_id, username, time, correct, incorrect, datetime, cpm, level, keyboard, language")
+          .select("user_id, username, time, correct, incorrect, datetime, cpm, level, keyboard, language, equipped_face, equipped_hat")
           .eq("keyboard", keyboard)
           .eq("level", level)
           .eq("language", language)
+          .eq("capital", capital)
+          .eq("punctuation", punctuation)
+          .eq("numbers", numbers)
           .order("cpm", { ascending: false })
           .limit(50);
 
@@ -136,10 +174,13 @@ export default function LeaderboardTab() {
         if (user && !top50.some((s) => s.user_id === user.id)) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: rankData } = await (supabase as any).rpc("get_user_leaderboard_rank", {
-            p_user_id:  user.id,
-            p_keyboard: keyboard,
-            p_level:    level,
-            p_language: language,
+            p_user_id:     user.id,
+            p_keyboard:    keyboard,
+            p_level:       level,
+            p_language:    language,
+            p_capital:     capital,
+            p_punctuation: punctuation,
+            p_numbers:     numbers,
           });
           if (!cancelled && Array.isArray(rankData) && rankData.length > 0) {
             setUserRank(rankData[0] as UserRankRow);
@@ -154,14 +195,22 @@ export default function LeaderboardTab() {
 
     fetch();
     return () => { cancelled = true; };
-  }, [keyboard, level, language, supabase, user]);
+  }, [keyboard, level, language, capital, punctuation, numbers, supabase, user]);
 
   const userInTop50 = user ? scores.findIndex((s) => s.user_id === user.id) : -1;
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Scoring explainer */}
+      <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 px-4 py-3 text-xs text-slate-400 leading-relaxed">
+        Ranked by <span className="text-sky-300 font-semibold">net CPM</span> — correct characters per minute.
+        Typos don&apos;t count toward speed, so accuracy is built into the rank.
+        Each difficulty combination (level, keyboard, language, caps/punct/nums) has its own board;
+        a higher score on the selected combination replaces your previous best.
+      </div>
+
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex gap-2 items-center">
         <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 mr-1">Filter</span>
 
         <div className="relative">
@@ -184,6 +233,10 @@ export default function LeaderboardTab() {
           </select>
           <FontAwesomeIcon icon={faChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
         </div>
+
+        <ModifierToggle label="Caps"  active={capital}     onClick={() => setCapital(v => !v)} />
+        <ModifierToggle label="Punct" active={punctuation} onClick={() => setPunctuation(v => !v)} />
+        <ModifierToggle label="Nums"  active={numbers}     onClick={() => setNumbers(v => !v)} />
       </div>
 
       {/* Content */}
@@ -204,8 +257,9 @@ export default function LeaderboardTab() {
           {/* Header */}
           <div className={`grid ${COLS} gap-2 px-4 py-2 bg-slate-800/60 border-b border-slate-700/50`}>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">#</span>
+            <span />
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Player</span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">CPM</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Net CPM</span>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Accuracy</span>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Time</span>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">When</span>
