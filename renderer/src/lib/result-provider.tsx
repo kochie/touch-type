@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { CodeLanguages, Languages, Levels } from "./settings_hook";
 import { KeyboardLayoutNames } from "@/keyboards";
 import { useSupabase } from "./supabase-provider";
+import { toast } from "sonner";
 
 const DB_NAME = "touch-type-db";
 // v2 drops the unique constraint on the `datetime` index. The constraint
@@ -270,9 +271,11 @@ export function ResultsProvider({ children }) {
                   capital: result.capital,
                   punctuation: result.punctuation,
                   numbers: result.numbers,
-                  time: timeMs,
+                  time: Math.round(timeMs),
                 },
-              }).catch((err) => console.warn('Leaderboard submission failed silently:', err));
+              }).then(({ error: lbErr }) => {
+                if (lbErr) console.warn('Leaderboard submission failed:', lbErr);
+              }).catch((err) => console.warn('Leaderboard submission error:', err));
             }
           }
         }
@@ -344,6 +347,7 @@ export function ResultsProvider({ children }) {
 
       if (error) {
         console.error('Error uploading result:', error);
+        toast.error("Result saved locally but couldn't sync to the cloud. It will retry when you're back online.");
         // synced: false remains — syncPending will retry on next online event.
         return null;
       }
@@ -371,9 +375,17 @@ export function ResultsProvider({ children }) {
               capital:     result.capital,
               punctuation: result.punctuation,
               numbers:     result.numbers,
-              time:        timeMs,
+              time:        Math.round(timeMs),
             },
-          }).catch((err) => console.warn('Leaderboard submission failed silently:', err));
+          }).then(({ error: lbErr }) => {
+                if (lbErr) {
+                  console.warn('Leaderboard submission failed:', lbErr);
+                  toast.error("Score saved but couldn't reach the leaderboard. Check your connection.");
+                }
+              }).catch((err) => {
+                console.warn('Leaderboard submission error:', err);
+                toast.error("Score saved but couldn't reach the leaderboard. Check your connection.");
+              });
         }
       }
 
