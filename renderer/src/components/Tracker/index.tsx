@@ -18,6 +18,9 @@ import {
   faSwords,
   faFlag,
   faCode,
+  faClock,
+  faCircleCheck,
+  faBullseye,
 } from "@fortawesome/pro-duotone-svg-icons";
 import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/keyboards/key";
@@ -30,6 +33,41 @@ import { Result, useResults } from "@/lib/result-provider";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { usePvP } from "@/lib/pvp-provider";
 import clsx from "clsx";
+import confetti from "canvas-confetti";
+
+function netCpmOf(r: Result): number {
+  const minutes = Temporal.Duration.from(r.time).total("milliseconds") / 60000;
+  return minutes > 0 ? r.correct / minutes : 0;
+}
+
+function totalSecondsOf(timeStr: string): number {
+  return Temporal.Duration.from(timeStr).total("milliseconds") / 1000;
+}
+
+// Format an elapsed-time number of seconds as "12s", "12.3s", or "1:23".
+function formatElapsed(secs: number, decimals = 1): string {
+  if (!Number.isFinite(secs) || secs < 0) return "0s";
+  if (secs >= 60) {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }
+  return `${secs.toFixed(decimals)}s`;
+}
+
+function celebratePersonalBest() {
+  const opts = {
+    particleCount: 80,
+    spread: 65,
+    startVelocity: 55,
+    ticks: 220,
+    gravity: 0.9,
+    scalar: 0.9,
+    colors: ["#38bdf8", "#a78bfa", "#fbbf24", "#34d399", "#f472b6"],
+  };
+  confetti({ ...opts, angle: 60,  origin: { x: 0, y: 0.75 } });
+  confetti({ ...opts, angle: 120, origin: { x: 1, y: 0.75 } });
+}
 
 export interface KeyPress {
   key: Key;
@@ -71,6 +109,9 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   const [wordList] = useWords();
   const { currentSnippet, nextSnippet } = useCode();
   const [showChange, setShowChange] = useState(false);
+  const [showNetCpm, setShowNetCpm] = useState(false);
+  const [showCorrect, setShowCorrect] = useState(false);
+  const [showTimeElapsed, setShowTimeElapsed] = useState(false);
 
   const { putResult } = useResults();
 
@@ -146,7 +187,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   const d = time;
   const total = correct + incorrect;
   const m = d.total("milliseconds") / 1000 / 60;
-  const cpm = total / m;
+  const cpm = (showNetCpm ? correct : total) / m;
   const p = (correct / total) * 100;
 
   // PvP mode locks in the game's keyboard at creation time; race-time
@@ -298,6 +339,32 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
           }
         });
       } else {
+        // Personal-best celebration. Compare against prior runs in the same
+        // partition (matches the leaderboard partition + codeMode/codeLang).
+        // No prior runs in the partition = silent no-op (per design).
+        if (settings.confettiOnPersonalBest) {
+          const minutes = time.total("milliseconds") / 60000;
+          const finalNetCpm = minutes > 0 ? correct / minutes : 0;
+          let prevBest = -Infinity;
+          for (const r of resultsRef.current) {
+            if (
+              r.keyboard !== settings.keyboardName ||
+              r.level !== settings.levelName ||
+              r.language !== settings.language ||
+              r.capital !== settings.capital ||
+              r.punctuation !== settings.punctuation ||
+              r.numbers !== settings.numbers ||
+              !!r.codeMode !== effectiveCodeMode ||
+              (effectiveCodeMode && r.codeLang !== settings.codeLang)
+            ) continue;
+            const cpmN = netCpmOf(r);
+            if (cpmN > prevBest) prevBest = cpmN;
+          }
+          if (Number.isFinite(prevBest) && finalNetCpm > prevBest) {
+            celebratePersonalBest();
+          }
+        }
+
         const results: Result = {
           correct,
           incorrect,
@@ -328,21 +395,39 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   };
 
   const { results } = useResults();
-  // get the typo diff between the last two results
-  const typoDiff =
-    results.length > 1 ? results[0].incorrect - results[1].incorrect : 0;
+
+  // Captured in a ref so checkCompletion can read the latest snapshot without
+  // re-binding the keypress handler on every result update.
+  const resultsRef = useRef<Result[]>(results);
+  useEffect(() => { resultsRef.current = results; }, [results]);
+  // get the typo/correct diff between the last two results
+  const typoDiff = results.length > 1
+    ? (showCorrect
+        ? results[0].correct   - results[1].correct
+        : results[0].incorrect - results[1].incorrect)
+    : 0;
+  // For "typos" fewer is better (green when ≤ 0); for "correct" more is better (green when ≥ 0).
+  const typoDiffIsGood = showCorrect ? typoDiff >= 0 : typoDiff <= 0;
 
   let cpmDiff = 0;
   let accuracyDiff = 0;
+  let timeDiff = 0;
   if (results.length > 1) {
-    cpmDiff = results[0].cpm - results[1].cpm;
+    cpmDiff = showNetCpm
+      ? netCpmOf(results[0]) - netCpmOf(results[1])
+      : results[0].cpm - results[1].cpm;
 
     const total0 = results[0].correct + results[0].incorrect;
     const total1 = results[1].correct + results[1].incorrect;
     const acc0 = total0 > 0 ? results[0].correct / total0 : 0;
     const acc1 = total1 > 0 ? results[1].correct / total1 : 0;
     accuracyDiff = acc0 - acc1;
+
+    timeDiff = totalSecondsOf(results[0].time) - totalSecondsOf(results[1].time);
   }
+  // For accuracy more is better (green when ≥ 0); for time fewer seconds is better (green when ≤ 0).
+  const accuracyDisplayDiff = showTimeElapsed ? timeDiff : accuracyDiff;
+  const accuracyDiffIsGood = showTimeElapsed ? timeDiff <= 0 : accuracyDiff >= 0;
 
   // PvP banner content
   const pvpBanner = currentRace ? (
@@ -395,25 +480,37 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   const horizontalStats = (
     <div className="flex justify-center pt-6 font-mono">
       <div className="flex w-[740px] rounded-2xl overflow-hidden bg-white/[0.03] border border-white/[0.07]">
-        {/* Typos */}
-        <div className="flex flex-1 items-center justify-center gap-4 py-4 px-6">
+        {/* Typos — click to toggle between typos and correct count */}
+        <button
+          type="button"
+          onClick={() => setShowCorrect(v => !v)}
+          title={showCorrect ? "Showing correct keypresses. Click for typos." : "Showing typos. Click for correct keypresses."}
+          className="flex flex-1 items-center justify-center gap-4 py-4 px-6 cursor-pointer hover:bg-white/[0.02] transition-colors"
+        >
           <FontAwesomeIcon
-            icon={effectiveCodeMode ? faCode : faDungeon}
+            icon={showCorrect ? faCircleCheck : (effectiveCodeMode ? faCode : faDungeon)}
             className="text-slate-500 dark:text-slate-500 text-3xl flex-shrink-0"
           />
           <span className="text-4xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
-            {incorrect}
+            {showCorrect ? correct : incorrect}
           </span>
           <div className="flex flex-col gap-0.5">
-            <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? typoDiff <= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
+            <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? typoDiffIsGood ? "text-green-400" : "text-red-400" : "invisible")}>
               {sign(typoDiff)}{typoDiff}
             </span>
-            <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">typos</span>
+            <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">
+              {showCorrect ? "correct" : "typos"}
+            </span>
           </div>
-        </div>
-        {/* Speed */}
-        <div className="flex flex-1 items-center justify-center gap-4 py-4 px-6 border-x border-white/[0.07]">
-          <FontAwesomeIcon icon={faPersonRunning} className="text-slate-500 dark:text-slate-500 text-3xl flex-shrink-0" />
+        </button>
+        {/* Speed — click to toggle gross vs net CPM */}
+        <button
+          type="button"
+          onClick={() => setShowNetCpm(v => !v)}
+          title={showNetCpm ? "Showing net CPM (correct chars only). Click for gross CPM." : "Showing gross CPM (all keypresses). Click for net CPM."}
+          className="flex flex-1 items-center justify-center gap-4 py-4 px-6 border-x border-white/[0.07] cursor-pointer hover:bg-white/[0.02] transition-colors"
+        >
+          <FontAwesomeIcon icon={showNetCpm ? faBullseye : faPersonRunning} className="text-slate-500 dark:text-slate-500 text-3xl flex-shrink-0" />
           <span className="text-4xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
             {Number.isFinite(cpm) ? cpm.toFixed(0) : 0}
           </span>
@@ -421,55 +518,91 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
             <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? cpmDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
               {sign(cpmDiff)}{Number.isFinite(cpmDiff) ? cpmDiff.toFixed(0) : "0"}
             </span>
-            <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">char/min</span>
+            <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">
+              {showNetCpm ? "net char/min" : "char/min"}
+            </span>
           </div>
-        </div>
-        {/* Accuracy */}
-        <div className="flex flex-1 items-center justify-center gap-4 py-4 px-6">
-          <FontAwesomeIcon icon={faPercentage} className="text-slate-500 dark:text-slate-500 text-3xl flex-shrink-0" />
+        </button>
+        {/* Accuracy — click to toggle between accuracy and elapsed time */}
+        <button
+          type="button"
+          onClick={() => setShowTimeElapsed(v => !v)}
+          title={showTimeElapsed ? "Showing elapsed time. Click for accuracy." : "Showing accuracy. Click for elapsed time."}
+          className="flex flex-1 items-center justify-center gap-4 py-4 px-6 cursor-pointer hover:bg-white/[0.02] transition-colors"
+        >
+          <FontAwesomeIcon icon={showTimeElapsed ? faClock : faPercentage} className="text-slate-500 dark:text-slate-500 text-3xl flex-shrink-0" />
           <span className="text-4xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
-            {Number.isFinite(p) ? p.toFixed(0) : 0}
+            {showTimeElapsed
+              ? formatElapsed(d.total("milliseconds") / 1000, 0)
+              : (Number.isFinite(p) ? p.toFixed(0) : 0)}
           </span>
           <div className="flex flex-col gap-0.5">
-            <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? accuracyDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
-              {sign(accuracyDiff)}{Number.isFinite(accuracyDiff) ? (accuracyDiff * 100).toFixed(1) : "0.0"}%
+            <span className={clsx("text-[13px] font-semibold tabular-nums leading-none", showChange && !currentRace ? accuracyDiffIsGood ? "text-green-400" : "text-red-400" : "invisible")}>
+              {showTimeElapsed
+                ? `${sign(accuracyDisplayDiff)}${Number.isFinite(accuracyDisplayDiff) ? accuracyDisplayDiff.toFixed(1) : "0.0"}s`
+                : `${sign(accuracyDisplayDiff)}${Number.isFinite(accuracyDisplayDiff) ? (accuracyDisplayDiff * 100).toFixed(1) : "0.0"}%`}
             </span>
-            <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">accuracy</span>
+            <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold leading-none">
+              {showTimeElapsed ? "elapsed" : "accuracy"}
+            </span>
           </div>
-        </div>
+        </button>
       </div>
     </div>
   );
 
   const verticalStats = (
     <div className="flex flex-col gap-2 w-20 flex-shrink-0 font-mono">
-      {/* Typos */}
-      <div className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07]">
-        <FontAwesomeIcon icon={faCode} className="text-slate-500 text-base" />
-        <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{incorrect}</span>
-        <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">typos</span>
-        <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? typoDiff <= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
+      {/* Typos — click to toggle between typos and correct count */}
+      <button
+        type="button"
+        onClick={() => setShowCorrect(v => !v)}
+        title={showCorrect ? "Showing correct keypresses. Click for typos." : "Showing typos. Click for correct keypresses."}
+        className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07] cursor-pointer hover:bg-white/[0.06] transition-colors"
+      >
+        <FontAwesomeIcon icon={showCorrect ? faCircleCheck : faCode} className="text-slate-500 text-base" />
+        <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{showCorrect ? correct : incorrect}</span>
+        <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">{showCorrect ? "correct" : "typos"}</span>
+        <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? typoDiffIsGood ? "text-green-400" : "text-red-400" : "invisible")}>
           {sign(typoDiff)}{typoDiff}
         </span>
-      </div>
-      {/* Speed */}
-      <div className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07]">
-        <FontAwesomeIcon icon={faPersonRunning} className="text-slate-500 text-base" />
+      </button>
+      {/* Speed — click to toggle gross vs net CPM */}
+      <button
+        type="button"
+        onClick={() => setShowNetCpm(v => !v)}
+        title={showNetCpm ? "Showing net CPM (correct chars only). Click for gross CPM." : "Showing gross CPM (all keypresses). Click for net CPM."}
+        className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07] cursor-pointer hover:bg-white/[0.06] transition-colors"
+      >
+        <FontAwesomeIcon icon={showNetCpm ? faBullseye : faPersonRunning} className="text-slate-500 text-base" />
         <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{Number.isFinite(cpm) ? cpm.toFixed(0) : 0}</span>
-        <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">chr/min</span>
+        <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">
+          {showNetCpm ? "net chr/min" : "chr/min"}
+        </span>
         <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? cpmDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
           {sign(cpmDiff)}{Number.isFinite(cpmDiff) ? cpmDiff.toFixed(0) : "0"}
         </span>
-      </div>
-      {/* Accuracy */}
-      <div className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07]">
-        <FontAwesomeIcon icon={faPercentage} className="text-slate-500 text-base" />
-        <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{Number.isFinite(p) ? p.toFixed(0) : 0}</span>
-        <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">accur.</span>
-        <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? accuracyDiff >= 0 ? "text-green-400" : "text-red-400" : "invisible")}>
-          {sign(accuracyDiff)}{Number.isFinite(accuracyDiff) ? (accuracyDiff * 100).toFixed(0) : "0"}%
+      </button>
+      {/* Accuracy — click to toggle between accuracy and elapsed time */}
+      <button
+        type="button"
+        onClick={() => setShowTimeElapsed(v => !v)}
+        title={showTimeElapsed ? "Showing elapsed time. Click for accuracy." : "Showing accuracy. Click for elapsed time."}
+        className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/[0.03] border border-white/[0.07] cursor-pointer hover:bg-white/[0.06] transition-colors"
+      >
+        <FontAwesomeIcon icon={showTimeElapsed ? faClock : faPercentage} className="text-slate-500 text-base" />
+        <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
+          {showTimeElapsed
+            ? formatElapsed(d.total("milliseconds") / 1000, 0)
+            : (Number.isFinite(p) ? p.toFixed(0) : 0)}
         </span>
-      </div>
+        <span className="text-[8px] uppercase tracking-widest text-gray-500 dark:text-gray-600 font-semibold">{showTimeElapsed ? "elapsed" : "accur."}</span>
+        <span className={clsx("text-[10px] font-semibold tabular-nums", showChange && !currentRace ? accuracyDiffIsGood ? "text-green-400" : "text-red-400" : "invisible")}>
+          {showTimeElapsed
+            ? `${sign(accuracyDisplayDiff)}${Number.isFinite(accuracyDisplayDiff) ? accuracyDisplayDiff.toFixed(1) : "0.0"}s`
+            : `${sign(accuracyDisplayDiff)}${Number.isFinite(accuracyDisplayDiff) ? (accuracyDisplayDiff * 100).toFixed(0) : "0"}%`}
+        </span>
+      </button>
     </div>
   );
 
@@ -582,6 +715,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
         keys={keys}
         intervalFn={intervalFn}
         keyboardName={activeKeyboardName}
+        heightSubtraction={effectiveCodeMode && !currentRace ? 455 : 300}
       />
     </div>
   );

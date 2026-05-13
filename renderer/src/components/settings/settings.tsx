@@ -8,9 +8,11 @@ import {
   Levels,
   useSettings,
   useSettingsDispatch,
+  useSettingsSyncStatus,
 } from "@/lib/settings_hook";
 import { Description, Field, Label, Select, Switch } from "@headlessui/react";
 import KeyboardSelect from "../KeyboardSelect";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import { LANGUAGES } from "@/lib/languages";
 import { NotificationSettings } from "./NotificationSettings";
@@ -22,7 +24,8 @@ import { AccountSettings } from "./AccountSettings";
 import { CodeSettings } from "./CodeSettings";
 import { AiAssistantSettings } from "./AiAssistantSettings";
 import PageHeader from "../PageHeader";
-import { faGear } from "@fortawesome/free-solid-svg-icons";
+import { faGear, faCheck } from "@fortawesome/free-solid-svg-icons";
+import { faSpinnerThird } from "@fortawesome/pro-duotone-svg-icons";
 import { useState, useRef, useEffect } from "react";
 import { keyboards } from "../KeyboardSelect";
 import { useTranslation } from "react-i18next";
@@ -145,6 +148,18 @@ function AppearanceSettings() {
         }
         label={t("settings.appearance.publishLeaderboard")}
         description={t("settings.appearance.publishLeaderboardDesc")}
+      />
+
+      <SettingsSwitch
+        enabled={settings.confettiOnPersonalBest}
+        setEnabled={(enabled: boolean) =>
+          dispatchSettings({
+            type: "SET_CONFETTI_ON_PERSONAL_BEST",
+            confettiOnPersonalBest: enabled,
+          })
+        }
+        label="Confetti on personal best"
+        description="Burst a little confetti when you beat your previous best net CPM for the current settings."
       />
 
       <SettingsSwitch
@@ -450,6 +465,23 @@ const Settings = () => {
   const [activeCategory, setActiveCategory] =
     useState<SettingsCategoryId>("appearance");
   const { t } = useTranslation();
+  const syncStatus = useSettingsSyncStatus();
+
+  const syncIndicator = syncStatus === "idle" ? null : (
+    <div className={clsx(
+      "flex items-center gap-1.5 text-xs font-medium transition-all duration-300",
+      syncStatus === "syncing" && "text-slate-400",
+      syncStatus === "saved" && "text-emerald-400",
+      syncStatus === "error" && "text-red-400",
+    )}>
+      <FontAwesomeIcon
+        icon={syncStatus === "syncing" ? faSpinnerThird : faCheck}
+        spin={syncStatus === "syncing"}
+        className="w-3.5 h-3.5"
+      />
+      <span>{syncStatus === "syncing" ? "Saving…" : syncStatus === "saved" ? "Saved" : "Error"}</span>
+    </div>
+  );
 
   return (
     <div>
@@ -459,6 +491,7 @@ const Settings = () => {
         subtitle={t("settings.subtitle")}
         iconBg="bg-slate-400/10"
         iconColor="text-slate-400 dark:text-slate-300"
+        headerRight={syncIndicator}
       />
 
       <div className="px-6 pb-8 flex gap-6 max-w-5xl">

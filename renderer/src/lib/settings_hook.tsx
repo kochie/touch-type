@@ -9,10 +9,12 @@ import {
   useLayoutEffect,
   useReducer,
   useRef,
+  useState,
 } from "react";
 import { KeyboardLayout, KeyboardLayoutNames } from "@/keyboards";
 import { useSupabase } from "./supabase-provider";
 import i18n from "@/lib/i18n";
+import { toast } from "sonner";
 import { detectAppLanguage } from "@/lib/locale-detect";
 
 export interface Settings {
@@ -101,6 +103,7 @@ const SettingsContext = createContext({
   autoDetectAppLanguage: true,
   aiWeeklyEmail: false,
   backgroundOpacity: 0.85,
+  confettiOnPersonalBest: true,
 });
 
 export const defaultSettings = {
@@ -136,6 +139,7 @@ export const defaultSettings = {
   autoDetectAppLanguage: true,
   aiWeeklyEmail: false,
   backgroundOpacity: 0.85,
+  confettiOnPersonalBest: true,
 };
 
 type ChangeSettingsAction =
@@ -262,6 +266,10 @@ type ChangeSettingsAction =
   | {
       type: "SET_BACKGROUND_OPACITY";
       opacity: number;
+    }
+  | {
+      type: "SET_CONFETTI_ON_PERSONAL_BEST";
+      confettiOnPersonalBest: boolean;
     };
 
 
@@ -449,6 +457,9 @@ const reducer = (
     case "SET_BACKGROUND_OPACITY":
       return { ...state, backgroundOpacity: Math.max(0, Math.min(1, action.opacity)) };
 
+    case "SET_CONFETTI_ON_PERSONAL_BEST":
+      return { ...state, confettiOnPersonalBest: action.confettiOnPersonalBest };
+
     default:
       return { ...state };
   }
@@ -458,8 +469,13 @@ const SettingsDispatchContext = createContext<Dispatch<ChangeSettingsAction>>(
   () => {},
 );
 
+export type SettingsSyncStatus = "idle" | "syncing" | "saved" | "error";
+const SettingsSyncStatusContext = createContext<SettingsSyncStatus>("idle");
+
 export const SettingsProvider = ({ children }) => {
   const [settings, dispatch] = useReducer(reducer, defaultSettings);
+  const [syncStatus, setSyncStatus] = useState<SettingsSyncStatus>("idle");
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dbSettingsLoaded = useRef(false);
 
   const { supabase, user } = useSupabase();
@@ -497,6 +513,7 @@ export const SettingsProvider = ({ children }) => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching settings:', error);
+        toast.error("Couldn't load your settings from the cloud.");
         return;
       }
 
@@ -533,6 +550,7 @@ export const SettingsProvider = ({ children }) => {
           // autoDetectAppLanguage is NOT fetched from DB — machine-specific (localStorage only)
           aiWeeklyEmail: data.ai_weekly_email ?? false,
           backgroundOpacity: (data as any).background_opacity ?? 0.85,
+          confettiOnPersonalBest: (data as any).confetti_on_personal_best ?? true,
         };
         dispatch({ type: "LOAD_SETTINGS", settings: dbSettings });
         dbSettingsLoaded.current = true;
@@ -545,6 +563,9 @@ export const SettingsProvider = ({ children }) => {
   const saveSettings = useCallback(
     async (safeSettings: typeof defaultSettings) => {
       if (!user) return;
+
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      setSyncStatus("syncing");
 
       // Convert camelCase to snake_case for DB
       const dbSettings = {
@@ -579,6 +600,7 @@ export const SettingsProvider = ({ children }) => {
         // auto_detect_app_language is NOT saved to DB — machine-specific, same treatment as launchAtStartup
         // background_opacity is NOT saved to DB — device-specific; stored in localStorage only
         ai_weekly_email: safeSettings.aiWeeklyEmail,
+        confetti_on_personal_best: safeSettings.confettiOnPersonalBest,
       };
 
       const { error } = await supabase
@@ -587,6 +609,12 @@ export const SettingsProvider = ({ children }) => {
 
       if (error) {
         console.error('Error saving settings:', (error as any).message ?? JSON.stringify(error), error);
+        toast.error("Couldn't save your settings to the cloud.");
+        setSyncStatus("error");
+        savedTimerRef.current = setTimeout(() => setSyncStatus("idle"), 3000);
+      } else {
+        setSyncStatus("saved");
+        savedTimerRef.current = setTimeout(() => setSyncStatus("idle"), 2000);
       }
     },
     [user, supabase],
@@ -638,11 +666,13 @@ export const SettingsProvider = ({ children }) => {
   }
 
   return (
-    <SettingsContext.Provider value={settings}>
-      <SettingsDispatchContext.Provider value={dispatch}>
-        {children}
-      </SettingsDispatchContext.Provider>
-    </SettingsContext.Provider>
+    <SettingsSyncStatusContext.Provider value={syncStatus}>
+      <SettingsContext.Provider value={settings}>
+        <SettingsDispatchContext.Provider value={dispatch}>
+          {children}
+        </SettingsDispatchContext.Provider>
+      </SettingsContext.Provider>
+    </SettingsSyncStatusContext.Provider>
   );
 };
 
@@ -653,4 +683,8 @@ export function useSettings() {
 
 export function useSettingsDispatch() {
   return useContext(SettingsDispatchContext);
+}
+
+export function useSettingsSyncStatus() {
+  return useContext(SettingsSyncStatusContext);
 }
