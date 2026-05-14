@@ -1,5 +1,3 @@
-console.log(`>>> [electron-builder.ts] top-of-file pid=${process.pid} argv=${process.argv.slice(-6).join(' ')}`);
-
 import { Configuration } from "electron-builder";
 import { version } from "./package.json"
 
@@ -93,14 +91,10 @@ function shouldNotarize(): boolean {
   return false;
 }
 
-console.log(`>>> [electron-builder.ts] before shouldNotarize`);
 const notarizeConfig = shouldNotarize();
-console.log(`>>> [electron-builder.ts] before isMasBuild`);
 const buildingMas = isMasBuild();
-console.log(`>>> [electron-builder.ts] after isMasBuild, buildingMas=${buildingMas}`);
 const buildingDev = isDevBuild();
 const isCI = isCIBuild();
-console.log(`>>> [electron-builder.ts] all consts initialized, building config object`);
 
 const config: Configuration = {
   appId: "io.kochie.touch-typer",
@@ -147,14 +141,11 @@ const config: Configuration = {
     // building MAS, this MUST point at the MAS profile too — otherwise the
     // MAS .pkg ships with the Developer ID profile embedded and altool
     // rejects with "Missing code-signing certificate".
-    provisioningProfile: (() => {
-      const v = process.env["MAC_PROVISIONING_PROFILE"]
-        || (buildingMas
-              ? "build/mas-touchtyper.provisionprofile"
-              : "build/mac-touchtyper.provisionprofile");
-      console.log(`>>> [mac.provisioningProfile IIFE] buildingMas=${buildingMas}, MAC_PROVISIONING_PROFILE=${JSON.stringify(process.env["MAC_PROVISIONING_PROFILE"])}, argv=${process.argv.slice(-6).join(' ')}, resolved=${v}`);
-      return v;
-    })(),
+    provisioningProfile:
+      process.env["MAC_PROVISIONING_PROFILE"]
+      || (buildingMas
+            ? "build/mas-touchtyper.provisionprofile"
+            : "build/mac-touchtyper.provisionprofile"),
     extendInfo: {
       ITSAppUsesNonExemptEncryption: false
     },
@@ -178,7 +169,7 @@ const config: Configuration = {
     hardenedRuntime: false,
     // Explicitly specify identity to use App Store distribution certificate
     // identity: "3rd Party Mac Developer Application",
-    provisioningProfile: "build/CACHEPROBE_mas-touchtyper.provisionprofile",
+    provisioningProfile: "build/mas-touchtyper.provisionprofile",
     entitlementsLoginHelper: "build/entitlements.mas.loginhelper.plist",
     entitlements: "build/entitlements.mas.plist",
     entitlementsInherit: "build/entitlements.mas.inherit.plist",
