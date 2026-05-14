@@ -21,23 +21,18 @@ interface ResizerState {
   pr: number;
 }
 
-const resizer = (state: ResizerState, action: ResizerAction) => {
-  switch (action.type) {
-    case "RESIZE":
-      return {
-        ...state,
-        width: window.innerWidth,
-        height: window.innerHeight - 300,
-      };
-    case "PR":
-      return {
-        ...state,
-        pr: window.devicePixelRatio,
-      };
-    default:
-      return state;
-  }
-};
+function makeResizer(sub: number) {
+  return (state: ResizerState, action: ResizerAction) => {
+    switch (action.type) {
+      case "RESIZE":
+        return { ...state, width: window.innerWidth, height: window.innerHeight - sub };
+      case "PR":
+        return { ...state, pr: window.devicePixelRatio };
+      default:
+        return state;
+    }
+  };
+}
 
 interface CanvasProps {
   letters: LetterStat[];
@@ -52,12 +47,15 @@ interface CanvasProps {
    * player's current setting.
    */
   keyboardName?: KeyboardLayoutNames;
+  /** Pixels to subtract from window.innerHeight for the canvas height. Default 300. */
+  heightSubtraction?: number;
 }
 
-const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey, keyboardName }: CanvasProps) => {
+const Canvas = ({ letters, keyDown, keys, intervalFn, currentKey, keyboardName, heightSubtraction = 300 }: CanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const resizer = useRef(makeResizer(heightSubtraction));
 
-  const [{ width, height, pr }, resizeDispatch] = useReducer(resizer, {
+  const [{ width, height, pr }, resizeDispatch] = useReducer(resizer.current, {
     width: 0,
     height: 0,
     pr: 1,
