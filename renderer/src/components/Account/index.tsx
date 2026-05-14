@@ -10,6 +10,7 @@ import clsx from "clsx";
 import { useSupabase } from "@/lib/supabase-provider";
 import { Tables } from "@/types/supabase";
 import { ModalType, useModal } from "@/lib/modal-provider";
+import { toast } from "sonner";
 
 enum PlanType {
   FREE = "free",
@@ -25,6 +26,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   const [submitting, setSubmitting] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [reloading, setReloading] = useState(false);
+  const [togglingAutoRenew, setTogglingAutoRenew] = useState(false);
   const isMas = useMas();
   const [attributes, setAttributes] = useState({
     email: "",
@@ -72,7 +74,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
         onError();
       } catch (err: any) {
         console.error("Error deleting account:", err);
-        alert("Failed to delete account. Please contact support.");
+        toast.error("Failed to delete account. Please contact support.");
       }
     }
     setDeleteSubmitting(false);
@@ -147,6 +149,27 @@ export default function Account({ onError, onCancel, onChangePassword }) {
     setReloading(false);
   };
 
+  const handleToggleAutoRenew = async () => {
+    if (!subscription || togglingAutoRenew) return;
+    const newValue = !subscription.auto_renew;
+    setTogglingAutoRenew(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('toggle-auto-renew', {
+        body: { auto_renew: newValue },
+      });
+      if (error) {
+        const body = await (error as any).context?.json?.().catch(() => null);
+        throw new Error(body?.error ?? error.message);
+      }
+      setSubscription((prev) => prev ? { ...prev, auto_renew: data.auto_renew } : prev);
+      toast.success(data.auto_renew ? 'Auto-renew enabled.' : 'Auto-renew disabled. Your plan will expire at the end of the billing period.');
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Failed to update auto-renew setting.');
+    } finally {
+      setTogglingAutoRenew(false);
+    }
+  };
+
   return (
     <div className="h-full">
       <div className="flex min-h-full max-h-[80vh] max-w-7xl">
@@ -200,9 +223,10 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     });
 
                     if (metaError) throw metaError;
+                    toast.success(values.email !== user?.email ? "Profile updated. Check your email to confirm the address change." : "Profile updated.");
                   } catch (err: any) {
                     console.error("Error updating profile:", err);
-                    alert(`Failed to update profile: ${err.message}`);
+                    toast.error(`Failed to update profile: ${err.message}`);
                   }
 
                   setSubmitting(false);
@@ -343,92 +367,31 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                   Account Features
                 </h2>
 
-                <div className="flex gap-12 justify-between">
+                {/* Top row: description + action buttons */}
+                <div className="flex items-start justify-between gap-4 mt-1">
                   <div>
-                    <p className="mt-1 text-sm leading-6 text-gray-600">
+                    <p className="text-sm leading-6 text-gray-600">
                       Control what features are available to you.
                     </p>
-
-                    {error && (
-                      <div className="text-black">
-                        <p>There was an error checking your subscription</p>
-                      </div>
-                    )}
-
-                    {loading || !subscription ? (
-                      <p className="text-black">Loading...</p>
-                    ) : (
-                      <>
-                        <p className="text-gray-600 text-sm leading-6">
-                          <span>You're currently on the</span>
-                          <span className={`mx-1 inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${subscription.billing_plan === "premium" ? "bg-violet-100 text-violet-700" : "bg-gray-100 text-gray-600"}`}>
-                            {subscription.billing_plan}
-                          </span>
-                          <span>plan.</span>
-                        </p>
-                        {subscription.billing_plan === "premium" && (
-                          <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col gap-1.5 text-sm">
-                            {subscription.billing_period && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Billing period</span>
-                                <span className="text-gray-700 font-medium">
-                                  {subscription.billing_period === "premium_monthly" ? "Monthly ($2.99/mo)" : "Yearly ($2.39/mo)"}
-                                </span>
-                              </div>
-                            )}
-                            {subscription.next_billing_date && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">{subscription.auto_renew === false ? "Expires on" : "Renews on"}</span>
-                                <span className="text-gray-700 font-medium">
-                                  {new Date(subscription.next_billing_date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
-                                </span>
-                              </div>
-                            )}
-                            {subscription.status && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Status</span>
-                                <span className={`font-medium capitalize ${subscription.status === "active" ? "text-emerald-600" : subscription.status === "trialing" ? "text-sky-600" : subscription.status === "cancelled" || subscription.status === "canceled" ? "text-red-500" : "text-amber-500"}`}>
-                                  {subscription.status.replace("_", " ")}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        <div className="flex gap-1 mt-3">
-                          {features[subscription.billing_plan as PlanType]?.map(
-                            (feature) => (
-                              <span
-                                key={feature}
-                                className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
-                              >
-                                {feature}
-                              </span>
-                            ),
-                          )}
-                        </div>
-                      </>
+                    {!loading && subscription && (
+                      <p className="text-gray-600 text-sm leading-6">
+                        <span>You're currently on the</span>
+                        <span className={`mx-1 inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${subscription.billing_plan === "premium" ? "bg-violet-100 text-violet-700" : "bg-gray-100 text-gray-600"}`}>
+                          {subscription.billing_plan}
+                        </span>
+                        <span>plan.</span>
+                      </p>
                     )}
                   </div>
-
-                  <div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <button
-                      className="w-12 text-black"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        refetch();
-                      }}
+                      className="text-black"
+                      onClick={(event) => { event.preventDefault(); refetch(); }}
                     >
-                      <FontAwesomeIcon
-                        icon={faArrowsRotate}
-                        spin={reloading}
-                        size="lg"
-                      />
+                      <FontAwesomeIcon icon={faArrowsRotate} spin={reloading} size="lg" />
                     </button>
                     <button
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setModal(ModalType.PREMIUM_PURCHASE);
-                      }}
+                      onClick={(event) => { event.preventDefault(); setModal(ModalType.PREMIUM_PURCHASE); }}
                       type="button"
                       disabled={deleteSubmitting}
                       className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
@@ -437,6 +400,71 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     </button>
                   </div>
                 </div>
+
+                {/* Full-width billing details + feature chips */}
+                {error && <p className="text-sm text-red-500 mt-2">There was an error checking your subscription.</p>}
+                {loading || !subscription ? (
+                  <p className="text-black mt-2">Loading...</p>
+                ) : (
+                  <>
+                    {subscription.billing_plan === "premium" && (
+                      <div className="mt-3 w-full rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col gap-1.5 text-sm">
+                        {subscription.billing_period && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Billing period</span>
+                            <span className="text-gray-700 font-medium">
+                              {subscription.billing_period === "premium_monthly" ? "Monthly ($2.99/mo)" : "Yearly ($2.39/mo)"}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">{subscription.auto_renew === false ? "Expires on" : "Renews on"}</span>
+                          <span className="text-gray-700 font-medium">
+                            {subscription.next_billing_date
+                              ? new Date(subscription.next_billing_date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })
+                              : "—"}
+                          </span>
+                        </div>
+                        {subscription.status && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Status</span>
+                            <span className={`font-medium capitalize ${subscription.status === "active" ? "text-emerald-600" : subscription.status === "trialing" ? "text-sky-600" : subscription.status === "cancelled" || subscription.status === "canceled" ? "text-red-500" : "text-amber-500"}`}>
+                              {(() => {
+                                if (subscription.status === "trialing" && subscription.next_billing_date) {
+                                  try {
+                                    const end = Temporal.Instant.from(subscription.next_billing_date).toZonedDateTimeISO(Temporal.Now.timeZoneId()).toPlainDate();
+                                    const days = Temporal.Now.plainDateISO().until(end, { largestUnit: "days" }).days;
+                                    return days > 0 ? `Trialing (${days} day${days === 1 ? "" : "s"} left)` : "Trialing (ends today)";
+                                  } catch {
+                                    return "Trialing";
+                                  }
+                                }
+                                return subscription.status.replace("_", " ");
+                              })()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">Auto-renew</span>
+                          <button
+                            onClick={handleToggleAutoRenew}
+                            disabled={togglingAutoRenew}
+                            className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${subscription.auto_renew ? "bg-emerald-500" : "bg-gray-300"}`}
+                          >
+                            <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${subscription.auto_renew ? "translate-x-4" : "translate-x-0"}`} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex gap-1 mt-3">
+                      {features[subscription.billing_plan as PlanType]?.map((feature) => (
+                        <span key={feature} className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="border-b border-gray-900/10 my-6" />
