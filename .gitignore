@@ -48,3 +48,7 @@ next-env.d.ts
 main/
 
 private_keys/
+
+# local agent tool state
+.serena/
+.superpowers/
