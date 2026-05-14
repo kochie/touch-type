@@ -96,6 +96,14 @@ const buildingMas = isMasBuild();
 const buildingDev = isDevBuild();
 const isCI = isCIBuild();
 
+const macProvisioningProfile =
+  process.env["MAC_PROVISIONING_PROFILE"]
+  || (buildingMas
+        ? "build/mas-touchtyper.provisionprofile"
+        : "build/mac-touchtyper.provisionprofile");
+
+console.log(`>>> DEBUG mac.provisioningProfile resolution: buildingMas=${buildingMas}, MAC_PROVISIONING_PROFILE=${JSON.stringify(process.env["MAC_PROVISIONING_PROFILE"])}, argv=${JSON.stringify(process.argv)}, resolved=${macProvisioningProfile}`);
+
 const config: Configuration = {
   appId: "io.kochie.touch-typer",
   copyright: "Copyright © 2022 Robert Koch",
@@ -141,11 +149,7 @@ const config: Configuration = {
     // building MAS, this MUST point at the MAS profile too — otherwise the
     // MAS .pkg ships with the Developer ID profile embedded and altool
     // rejects with "Missing code-signing certificate".
-    provisioningProfile:
-      process.env["MAC_PROVISIONING_PROFILE"]
-      || (buildingMas
-            ? "build/mas-touchtyper.provisionprofile"
-            : "build/mac-touchtyper.provisionprofile"),
+    provisioningProfile: macProvisioningProfile,
     extendInfo: {
       ITSAppUsesNonExemptEncryption: false
     },
