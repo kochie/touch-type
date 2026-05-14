@@ -40,15 +40,15 @@ const PLANS: Plan[] = [
     id: "monthly",
     lookupKey: "premium_monthly",
     title: "Monthly",
-    price: "$2.99",
-    perMonth: "$2.99/month",
+    price: "$2.99 USD",
+    perMonth: "$2.99 USD/month",
   },
   {
     id: "yearly",
     lookupKey: "premium_yearly",
     title: "Yearly",
-    price: "$28.70/year",
-    perMonth: "$2.39/month",
+    price: "$28.70 USD/year",
+    perMonth: "$2.39 USD/month",
     badge: "Best Value",
     trial: "First 7 days free",
     savings: "Save 20%",
@@ -403,6 +403,7 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
 
           <p className="text-[11px] text-slate-500 text-center mt-1">
             {isPremium ? "Changes take effect at the next billing cycle." : "Secure payment via Stripe. Cancel anytime."}
+            {" "}All prices in USD.
           </p>
         </div>
       )}

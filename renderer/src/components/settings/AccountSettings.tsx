@@ -83,8 +83,8 @@ function statusStyle(status: string | null) {
 }
 
 function formatPeriod(period: string | null) {
-  if (period === "premium_monthly") return "Monthly ($2.99/mo)";
-  if (period === "premium_yearly") return "Yearly ($2.39/mo)";
+  if (period === "premium_monthly") return "Monthly ($2.99 USD/mo)";
+  if (period === "premium_yearly") return "Yearly ($2.39 USD/mo)";
   return "—";
 }
 

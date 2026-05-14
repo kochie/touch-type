@@ -416,7 +416,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                           <div className="flex justify-between">
                             <span className="text-gray-500">Billing period</span>
                             <span className="text-gray-700 font-medium">
-                              {subscription.billing_period === "premium_monthly" ? "Monthly ($2.99/mo)" : "Yearly ($2.39/mo)"}
+                              {subscription.billing_period === "premium_monthly" ? "Monthly ($2.99 USD/mo)" : "Yearly ($2.39 USD/mo)"}
                             </span>
                           </div>
                         )}

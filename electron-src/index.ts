@@ -117,11 +117,13 @@ app.on("ready", async () => {
   ipcMain.handle("getProducts", getProducts);
   ipcMain.handle("isMas", () => !!process.mas);
 
-  // MAS streak freeze consumable purchase
+  // MAS streak freeze consumable purchase. Product IDs must match the
+  // identifiers in App Store Connect exactly — these get passed verbatim to
+  // StoreKit via inAppPurchase.purchaseProduct().
   const FREEZE_PRODUCT_IDS = [
-    'io.kochie.touch-typer.freeze1',
-    'io.kochie.touch-typer.freeze3',
-    'io.kochie.touch-typer.freeze10',
+    'io.kochie.touch-typer.streak_freeze_x1',
+    'io.kochie.touch-typer.streak_freeze_x3',
+    'io.kochie.touch-typer.streak_freeze_x10',
   ];
   ipcMain.handle("purchaseStreakFreeze", async (_event: IpcMainInvokeEvent, productId: string) => {
     if (!FREEZE_PRODUCT_IDS.includes(productId)) {

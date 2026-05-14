@@ -33,24 +33,24 @@ interface FreezePackage {
 const PACKAGES: FreezePackage[] = [
   {
     quantity: 1,
-    price: "$1.00",
+    price: "$1.00 USD",
     label: "1 Freeze",
     savings: null,
-    masProductId: "io.kochie.touch-typer.freeze1",
+    masProductId: "io.kochie.touch-typer.streak_freeze_x1",
   },
   {
     quantity: 3,
-    price: "$2.00",
+    price: "$2.00 USD",
     label: "3 Freezes",
     savings: "Save 33%",
-    masProductId: "io.kochie.touch-typer.freeze3",
+    masProductId: "io.kochie.touch-typer.streak_freeze_x3",
   },
   {
     quantity: 10,
-    price: "$6.00",
+    price: "$6.00 USD",
     label: "10 Freezes",
     savings: "Save 40%",
-    masProductId: "io.kochie.touch-typer.freeze10",
+    masProductId: "io.kochie.touch-typer.streak_freeze_x10",
     highlight: true,
   },
 ];
@@ -289,6 +289,7 @@ export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => 
           ))}
           <p className="text-[11px] text-slate-500 text-center mt-1">
             {isMas ? "Purchases handled securely by the App Store." : "Secure payment via Stripe."}
+            {" "}All prices in USD.
           </p>
         </div>
       )}

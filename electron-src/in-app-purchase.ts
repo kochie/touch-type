@@ -1,8 +1,16 @@
 // Main process
 import { Event, inAppPurchase, Transaction } from 'electron'
 import { metrics } from './metrics'
-const PRODUCT_IDS = ['io.kochie.touch-typer.monthly', 'io.kochie.touch-typer.yearly']
-// const PRODUCT_IDS = ['monthly', 'yearly']
+
+// Only consumable streak-freeze packs are live in App Store Connect today.
+// Auto-renewable subscription products (premium monthly/yearly) are NOT
+// available on MAS yet — premium upgrade for MAS users currently routes
+// through the website Stripe flow.
+const PRODUCT_IDS = [
+  'io.kochie.touch-typer.streak_freeze_x1',
+  'io.kochie.touch-typer.streak_freeze_x3',
+  'io.kochie.touch-typer.streak_freeze_x10',
+]
 
 export function setupInAppPurchase(): void {
   // inAppPurchase is macOS-only; skip on other platforms.
