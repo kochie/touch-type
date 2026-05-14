@@ -105,6 +105,23 @@ export interface ElectronAPI {
   showOpenDialog: () => Promise<{ canceled: boolean; filePaths: string[] }>;
   // MAS streak freeze consumable purchase
   purchaseStreakFreeze: (productId: string) => Promise<{ queued: boolean; error?: string }>;
+  // MAS premium subscription purchase (auto-renewable)
+  purchaseSubscription: (productId: string) => Promise<{ queued: boolean; error?: string }>;
+  // MAS Restore Purchases — required by App Store review
+  restorePurchases: () => Promise<{ restored: boolean; error?: string }>;
+  // StoreKit transaction forwarded from main proc; the renderer must
+  // register it via map-transaction and then call finishIapTransaction.
+  onIapTransactionPurchased: (
+    callback: (payload: {
+      transactionId: string;
+      originalTransactionId: string;
+      productId: string;
+      transactionDate: string;
+      state: 'purchased' | 'restored';
+    }) => void,
+  ) => (...args: unknown[]) => void;
+  offIapTransactionPurchased: (wrapper: (...args: unknown[]) => void) => void;
+  finishIapTransaction: (transactionDate: string) => Promise<{ finished: boolean }>;
   // Fired by main process after Stripe freeze checkout completes
   onFreezePurchaseComplete: (callback: () => void) => void;
   // Fired by main process after Stripe subscription checkout completes (3DS fallback)

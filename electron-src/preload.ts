@@ -122,6 +122,25 @@ declare global {
       showOpenDialog: () => Promise<OpenDialogResult>;
       // MAS streak freeze in-app purchase
       purchaseStreakFreeze: (productId: string) => Promise<{ queued: boolean; error?: string }>;
+      // MAS premium subscription in-app purchase
+      purchaseSubscription: (productId: string) => Promise<{ queued: boolean; error?: string }>;
+      // MAS Restore Purchases (required by App Store review)
+      restorePurchases: () => Promise<{ restored: boolean; error?: string }>;
+      // Renderer subscribes to forwarded StoreKit `purchased`/`restored`
+      // events. After registering the transaction server-side via
+      // map-transaction, the renderer must call finishIapTransaction with
+      // the same transactionDate to take it off the StoreKit queue.
+      onIapTransactionPurchased: (
+        callback: (payload: {
+          transactionId: string;
+          originalTransactionId: string;
+          productId: string;
+          transactionDate: string;
+          state: 'purchased' | 'restored';
+        }) => void,
+      ) => (...args: unknown[]) => void;
+      offIapTransactionPurchased: (wrapper: (...args: unknown[]) => void) => void;
+      finishIapTransaction: (transactionDate: string) => Promise<{ finished: boolean }>;
       // Notified by main process after Stripe freeze checkout completes
       onFreezePurchaseComplete: (callback: () => void) => void;
       // Notified by main process after Stripe subscription checkout completes (3DS fallback)
@@ -234,6 +253,32 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   purchaseStreakFreeze: (productId: string): Promise<{ queued: boolean; error?: string }> =>
     ipcRenderer.invoke("purchaseStreakFreeze", productId),
+
+  purchaseSubscription: (productId: string): Promise<{ queued: boolean; error?: string }> =>
+    ipcRenderer.invoke("purchaseSubscription", productId),
+
+  restorePurchases: (): Promise<{ restored: boolean; error?: string }> =>
+    ipcRenderer.invoke("restorePurchases"),
+
+  onIapTransactionPurchased: (
+    callback: (payload: {
+      transactionId: string;
+      originalTransactionId: string;
+      productId: string;
+      transactionDate: string;
+      state: 'purchased' | 'restored';
+    }) => void,
+  ) => {
+    const wrapper = (_event: Electron.IpcRendererEvent, payload: Parameters<typeof callback>[0]) => callback(payload);
+    ipcRenderer.on("iap-transaction-purchased", wrapper);
+    return wrapper;
+  },
+  offIapTransactionPurchased: (wrapper: (...args: unknown[]) => void) => {
+    ipcRenderer.removeListener("iap-transaction-purchased", wrapper);
+  },
+
+  finishIapTransaction: (transactionDate: string): Promise<{ finished: boolean }> =>
+    ipcRenderer.invoke("finishIapTransaction", transactionDate),
 
   onFreezePurchaseComplete: (callback: () => void): void => {
     ipcRenderer.on("freeze-purchase-complete", () => callback());

@@ -363,7 +363,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                 )}
               </Formik>
 
-              <div className={clsx(isMas && "hidden")}>
+              <div>
                 <div className="border-b border-gray-900/10 my-6" />
 
                 <h2 className="text-base font-semibold leading-7 text-gray-900">
@@ -393,14 +393,24 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     >
                       <FontAwesomeIcon icon={faArrowsRotate} spin={reloading} size="lg" />
                     </button>
-                    <button
-                      onClick={(event) => { event.preventDefault(); setModal(ModalType.PREMIUM_PURCHASE); }}
-                      type="button"
-                      disabled={deleteSubmitting}
-                      className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
-                    >
-                      {subscription?.billing_plan === "premium" ? "Manage Plan" : "Upgrade to Premium"}
-                    </button>
+                    {isMas && subscription?.billing_plan === "premium" ? (
+                      <a
+                        href="https://apps.apple.com/account/subscriptions"
+                        onClick={(e) => { e.preventDefault(); window.electronAPI?.openExternal?.("https://apps.apple.com/account/subscriptions"); }}
+                        className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+                      >
+                        Manage in App Store
+                      </a>
+                    ) : (
+                      <button
+                        onClick={(event) => { event.preventDefault(); setModal(ModalType.PREMIUM_PURCHASE); }}
+                        type="button"
+                        disabled={deleteSubmitting}
+                        className="rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+                      >
+                        {subscription?.billing_plan === "premium" ? "Manage Plan" : "Upgrade to Premium"}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -447,16 +457,23 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                             </span>
                           </div>
                         )}
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Auto-renew</span>
-                          <button
-                            onClick={handleToggleAutoRenew}
-                            disabled={togglingAutoRenew}
-                            className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${subscription.auto_renew ? "bg-emerald-500" : "bg-gray-300"}`}
-                          >
-                            <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${subscription.auto_renew ? "translate-x-4" : "translate-x-0"}`} />
-                          </button>
-                        </div>
+                        {!isMas && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Auto-renew</span>
+                            <button
+                              onClick={handleToggleAutoRenew}
+                              disabled={togglingAutoRenew}
+                              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${subscription.auto_renew ? "bg-emerald-500" : "bg-gray-300"}`}
+                            >
+                              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${subscription.auto_renew ? "translate-x-4" : "translate-x-0"}`} />
+                            </button>
+                          </div>
+                        )}
+                        {isMas && (
+                          <p className="text-[11px] text-gray-500 pt-2 mt-1 border-t border-gray-200">
+                            Apple handles billing and cancellation. Manage your subscription in App Store settings.
+                          </p>
+                        )}
                       </div>
                     )}
                     <div className="flex gap-1 mt-3">

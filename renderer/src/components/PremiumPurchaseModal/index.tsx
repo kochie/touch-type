@@ -20,12 +20,15 @@ import {
 import type { Appearance } from "@stripe/stripe-js";
 import clsx from "clsx";
 import { useSupabase, useSupabaseClient } from "@/lib/supabase-provider";
+import { useMas } from "@/lib/mas_hook";
 import { metrics } from "@/lib/metrics";
 import { stripePromise } from "@/components/Payment";
 
 interface Plan {
   id: "monthly" | "yearly";
   lookupKey: string;
+  /** Apple App Store product identifier — same suffix as lookupKey. */
+  masProductId: string;
   title: string;
   price: string;
   perMonth: string;
@@ -39,6 +42,7 @@ const PLANS: Plan[] = [
   {
     id: "monthly",
     lookupKey: "premium_monthly",
+    masProductId: "io.kochie.touch-typer.premium_monthly",
     title: "Monthly",
     price: "$2.99 USD",
     perMonth: "$2.99 USD/month",
@@ -46,6 +50,7 @@ const PLANS: Plan[] = [
   {
     id: "yearly",
     lookupKey: "premium_yearly",
+    masProductId: "io.kochie.touch-typer.premium_yearly",
     title: "Yearly",
     price: "$28.70 USD/year",
     perMonth: "$2.39 USD/month",
@@ -55,6 +60,10 @@ const PLANS: Plan[] = [
     highlight: true,
   },
 ];
+
+const MANAGE_SUBSCRIPTIONS_URL = "https://apps.apple.com/account/subscriptions";
+const TERMS_URL = "https://touch-typer.kochie.io/terms";
+const PRIVACY_URL = "https://touch-typer.kochie.io/privacy";
 
 const FEATURES = [
   { icon: faMicrochipAi, label: "AI Typing Coach" },
@@ -164,7 +173,7 @@ function SubscriptionCheckoutForm({
   );
 }
 
-type Phase = "loading" | "pick" | "checkout" | "switching" | "switch_success" | "success" | "error";
+type Phase = "loading" | "pick" | "checkout" | "mas-purchasing" | "switching" | "switch_success" | "success" | "error";
 
 export default function PremiumPurchaseModal({ onClose }: { onClose: () => void }) {
   const [phase, setPhase] = useState<Phase>("loading");
@@ -176,7 +185,9 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
+  const [restoring, setRestoring] = useState(false);
   const { supabase } = useSupabase();
+  const isMas = useMas();
 
   // Fetch subscription to determine if user is already premium
   useEffect(() => {
@@ -203,6 +214,16 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
   // 3DS redirect fallback: Electron intercepts the Stripe redirect and notifies us
   useEffect(() => {
     window.electronAPI?.onSubscriptionPurchaseComplete?.(() => setPhase("success"));
+  }, []);
+
+  // MAS purchase completion: fired by IapBridge once map-transaction has
+  // registered the StoreKit transaction server-side. The subscription row
+  // may take a moment to populate (Apple's webhook upserts it), but the
+  // purchase itself has succeeded by this point.
+  useEffect(() => {
+    const onIap = () => setPhase("success");
+    window.addEventListener("touchtyper:iap-subscription-purchased", onIap);
+    return () => window.removeEventListener("touchtyper:iap-subscription-purchased", onIap);
   }, []);
 
   const isPremium = currentPlanId !== null;
@@ -246,12 +267,38 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
     }
     setLoadingPlan(plan.id);
     setErrorMsg(null);
+
+    // MAS path: hand control to StoreKit. IapBridge will pick up the
+    // resulting transaction and dispatch touchtyper:iap-subscription-
+    // purchased once registered server-side; the listener above flips us
+    // into the success phase.
+    if (isMas) {
+      try {
+        const result = await window.electronAPI?.purchaseSubscription?.(plan.masProductId);
+        if (!result?.queued) {
+          throw new Error(result?.error ?? "Purchase could not be initiated.");
+        }
+        setSelectedPlan(plan);
+        metrics.count("checkout.initiated", 1, { plan: plan.id, surface: "mas" });
+        setPhase("mas-purchasing");
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+        metrics.count("checkout.failed", 1, { plan: plan.id, surface: "mas" });
+        setErrorMsg(msg);
+        toast.error(msg);
+        setPhase("error");
+      } finally {
+        setLoadingPlan(null);
+      }
+      return;
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: { lookup_key: plan.lookupKey },
       });
       if (error) {
-        const body = await (error as any).context?.json?.().catch(() => null);
+        const body = await (error as { context?: { json?: () => Promise<{ error?: string }> } }).context?.json?.().catch(() => null);
         throw new Error(body?.error ?? error.message);
       }
       if (!data?.clientSecret || !data?.sessionId) {
@@ -260,16 +307,40 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
       setClientSecret(data.clientSecret);
       setSessionId(data.sessionId);
       setSelectedPlan(plan);
-      metrics.count("checkout.initiated", 1, { plan: plan.id });
+      metrics.count("checkout.initiated", 1, { plan: plan.id, surface: "stripe" });
       setPhase("checkout");
     } catch (err: any) {
       const msg = err?.message ?? "Something went wrong. Please try again.";
-      metrics.count("checkout.failed", 1, { plan: plan.id });
+      metrics.count("checkout.failed", 1, { plan: plan.id, surface: "stripe" });
       setErrorMsg(msg);
       toast.error(msg);
       setPhase("error");
     } finally {
       setLoadingPlan(null);
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    setRestoring(true);
+    setErrorMsg(null);
+    try {
+      const result = await window.electronAPI?.restorePurchases?.();
+      if (!result?.restored) {
+        throw new Error(result?.error ?? "Restore could not be initiated.");
+      }
+      // StoreKit will replay transactions via IapBridge. We don't know how
+      // many will arrive; the bridge's per-transaction event will flip the
+      // modal to success if any was a subscription. After ~5s with no
+      // event, give up and tell the user.
+      setTimeout(() => {
+        setRestoring(false);
+        toast.success("Restore complete. If you had an active subscription it should now be reflected.");
+      }, 5000);
+      metrics.count("iap.restore.invoked");
+    } catch (err: unknown) {
+      setRestoring(false);
+      const msg = err instanceof Error ? err.message : "Restore failed.";
+      toast.error(msg);
     }
   };
 
@@ -401,10 +472,67 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
             );
           })}
 
-          <p className="text-[11px] text-slate-500 text-center mt-1">
-            {isPremium ? "Changes take effect at the next billing cycle." : "Secure payment via Stripe. Cancel anytime."}
-            {" "}All prices in USD.
-          </p>
+          {isMas ? (
+            <div className="mt-2 flex flex-col gap-2 text-[11px] text-slate-500 text-center">
+              <p>
+                {isPremium
+                  ? "Plan changes are managed in App Store settings on this Apple ID."
+                  : "Subscriptions auto-renew unless cancelled at least 24 hours before the current period ends. Manage or cancel anytime in App Store settings."}
+                {" "}All prices in USD.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleRestorePurchases}
+                  disabled={restoring}
+                  className="text-[11px] font-medium text-violet-400 hover:text-violet-300 disabled:text-slate-500"
+                >
+                  {restoring ? "Restoring…" : "Restore Purchases"}
+                </button>
+                <span aria-hidden className="text-slate-700">·</span>
+                <a
+                  href={MANAGE_SUBSCRIPTIONS_URL}
+                  onClick={(e) => { e.preventDefault(); window.electronAPI?.openExternal?.(MANAGE_SUBSCRIPTIONS_URL); }}
+                  className="text-[11px] font-medium text-violet-400 hover:text-violet-300"
+                >
+                  Manage in App Store
+                </a>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-[10px] text-slate-600">
+                <a
+                  href={TERMS_URL}
+                  onClick={(e) => { e.preventDefault(); window.electronAPI?.openExternal?.(TERMS_URL); }}
+                  className="hover:text-slate-400"
+                >
+                  Terms of Use
+                </a>
+                <span aria-hidden>·</span>
+                <a
+                  href={PRIVACY_URL}
+                  onClick={(e) => { e.preventDefault(); window.electronAPI?.openExternal?.(PRIVACY_URL); }}
+                  className="hover:text-slate-400"
+                >
+                  Privacy Policy
+                </a>
+              </div>
+            </div>
+          ) : (
+            <p className="text-[11px] text-slate-500 text-center mt-1">
+              {isPremium ? "Changes take effect at the next billing cycle." : "Secure payment via Stripe. Cancel anytime."}
+              {" "}All prices in USD.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Phase: MAS purchasing — StoreKit has the dialog up */}
+      {phase === "mas-purchasing" && selectedPlan && (
+        <div className="px-6 pb-6 flex flex-col items-center gap-4 py-6">
+          <FontAwesomeIcon icon={faSpinnerThird} spin className="w-8 h-8 text-violet-400" />
+          <div className="text-center">
+            <p className="text-sm font-semibold text-slate-200">Confirm in the App Store dialog</p>
+            <p className="text-xs text-slate-500 mt-1">{selectedPlan.title} · {selectedPlan.perMonth}</p>
+          </div>
         </div>
       )}
 

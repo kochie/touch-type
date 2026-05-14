@@ -20,12 +20,14 @@ import { Toaster } from "sonner";
 import { useDeepLink, DeepLinkData } from "@/lib/deep-link-hook";
 import { StreakProvider } from "@/lib/streak_hook";
 import { ProfileTimezoneProvider } from "@/lib/profile-timezone";
+import { IapBridge } from "@/lib/iap-bridge";
 
 export default function Providers({ children }) {
   return (
     <SupabaseProvider>
       <ProfileTimezoneProvider>
       <MasProvider>
+      <IapBridge />
         <SettingsProvider>
           <ResultsProvider>
             <PlanProvider>

@@ -1,12 +1,16 @@
 // Main process
 import { Event, inAppPurchase, Transaction } from 'electron'
 import { metrics } from './metrics'
+import { getMainWindow } from './deep-link'
 
-// Only consumable streak-freeze packs are live in App Store Connect today.
-// Auto-renewable subscription products (premium monthly/yearly) are NOT
-// available on MAS yet — premium upgrade for MAS users currently routes
-// through the website Stripe flow.
+// Every product ID we surface in App Store Connect. The two premium SKUs
+// are auto-renewable subscriptions; the streak_freeze_xN SKUs are
+// consumables. Suffixes mirror the Stripe lookup_keys exactly (premium_*
+// and streak_freeze_*) so backend code can use the same identifier on
+// both billing surfaces.
 const PRODUCT_IDS = [
+  'io.kochie.touch-typer.premium_monthly',
+  'io.kochie.touch-typer.premium_yearly',
   'io.kochie.touch-typer.streak_freeze_x1',
   'io.kochie.touch-typer.streak_freeze_x3',
   'io.kochie.touch-typer.streak_freeze_x10',
@@ -36,31 +40,42 @@ export function setupInAppPurchase(): void {
           console.log(`Purchasing ${product}...`)
           metrics.count("iap.transaction", 1, { state: "purchasing", product })
           break
-        case 'purchased': {
-          console.log(`${product} purchased.`)
-          metrics.count("iap.transaction", 1, { state: "purchased", product })
-          // Get the receipt url.
-          const receiptURL = inAppPurchase.getReceiptURL()
-          console.log(`Receipt URL: ${receiptURL}`)
-
-          // Submit the receipt file to the server and check if it is valid.
-          // @see https://developer.apple.com/library/content/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateRemotely.html
-          // ...
-          // If the receipt is valid, the product is purchased
-          // ...
-          // Finish the transaction.
-          inAppPurchase.finishTransactionByDate(transaction.transactionDate)
+        case 'purchased':
+        case 'restored': {
+          // 'purchased' = brand-new transaction StoreKit just completed.
+          // 'restored' = a prior transaction StoreKit is re-delivering
+          // because the user clicked Restore Purchases. Both follow the
+          // same flow: forward to the renderer so it can register the
+          // (user_id, transaction_id, product_id) tuple via the
+          // map-transaction edge function. The renderer then calls
+          // `finish-iap-transaction` IPC to finalize. Until that round
+          // trip completes, StoreKit will keep re-delivering on every
+          // app launch (at-least-once), so a crash between purchase
+          // and finish is recoverable.
+          console.log(`${product} ${transaction.transactionState}: ${transaction.transactionIdentifier}`)
+          metrics.count("iap.transaction", 1, { state: transaction.transactionState, product })
+          const win = getMainWindow()
+          if (win && !win.isDestroyed()) {
+            win.webContents.send('iap-transaction-purchased', {
+              transactionId: transaction.transactionIdentifier,
+              originalTransactionId: transaction.originalTransactionIdentifier ?? transaction.transactionIdentifier,
+              productId: product,
+              transactionDate: transaction.transactionDate,
+              state: transaction.transactionState,
+            })
+          } else {
+            // No window yet (e.g. transaction queued before launch finishes).
+            // StoreKit will redeliver this on the next 'transactions-updated'
+            // event after the window opens, so we just defer.
+            console.warn('iap-transaction-purchased: no main window yet, deferring finish until renderer is up')
+          }
           break
         }
         case 'failed':
           console.log(`Failed to purchase ${product}.`)
           metrics.count("iap.transaction", 1, { state: "failed", product })
-          // Finish the transaction.
+          // Finish the transaction so StoreKit stops re-delivering it.
           inAppPurchase.finishTransactionByDate(transaction.transactionDate)
-          break
-        case 'restored':
-          console.log(`The purchase of ${product} has been restored.`)
-          metrics.count("iap.transaction", 1, { state: "restored", product })
           break
         case 'deferred':
           console.log(`The purchase of ${product} has been deferred.`)

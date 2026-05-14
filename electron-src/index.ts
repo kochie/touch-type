@@ -117,16 +117,21 @@ app.on("ready", async () => {
   ipcMain.handle("getProducts", getProducts);
   ipcMain.handle("isMas", () => !!process.mas);
 
-  // MAS streak freeze consumable purchase. Product IDs must match the
-  // identifiers in App Store Connect exactly — these get passed verbatim to
-  // StoreKit via inAppPurchase.purchaseProduct().
-  const FREEZE_PRODUCT_IDS = [
+  // MAS in-app purchase product IDs. Must match the identifiers in App
+  // Store Connect verbatim — they get passed straight to
+  // inAppPurchase.purchaseProduct().
+  const FREEZE_PRODUCT_IDS = new Set([
     'io.kochie.touch-typer.streak_freeze_x1',
     'io.kochie.touch-typer.streak_freeze_x3',
     'io.kochie.touch-typer.streak_freeze_x10',
-  ];
+  ]);
+  const SUBSCRIPTION_PRODUCT_IDS = new Set([
+    'io.kochie.touch-typer.premium_monthly',
+    'io.kochie.touch-typer.premium_yearly',
+  ]);
+
   ipcMain.handle("purchaseStreakFreeze", async (_event: IpcMainInvokeEvent, productId: string) => {
-    if (!FREEZE_PRODUCT_IDS.includes(productId)) {
+    if (!FREEZE_PRODUCT_IDS.has(productId)) {
       return { queued: false, error: 'Invalid product ID' };
     }
     const { inAppPurchase } = await import('electron');
@@ -135,6 +140,48 @@ app.on("ready", async () => {
     }
     const isValid = await inAppPurchase.purchaseProduct(productId, 1);
     return { queued: isValid };
+  });
+
+  // Premium subscription purchase. StoreKit handles the user-facing flow
+  // (auth, confirmation, payment). The transaction comes back through the
+  // `transactions-updated` listener in in-app-purchase.ts, which forwards
+  // it to the renderer for backend registration via map-transaction.
+  ipcMain.handle("purchaseSubscription", async (_event: IpcMainInvokeEvent, productId: string) => {
+    if (!SUBSCRIPTION_PRODUCT_IDS.has(productId)) {
+      return { queued: false, error: 'Invalid product ID' };
+    }
+    const { inAppPurchase } = await import('electron');
+    if (!inAppPurchase.canMakePayments()) {
+      return { queued: false, error: 'Payments not available' };
+    }
+    const isValid = await inAppPurchase.purchaseProduct(productId, 1);
+    return { queued: isValid };
+  });
+
+  // Restore Purchases — required by App Store review for any IAP UI.
+  // Triggers StoreKit to re-deliver every active transaction for the
+  // signed-in Apple ID via the `transactions-updated` listener with
+  // state='restored'. Each one is then routed through the same
+  // map-transaction path as a fresh purchase.
+  ipcMain.handle("restorePurchases", async () => {
+    const { inAppPurchase } = await import('electron');
+    if (!inAppPurchase.canMakePayments()) {
+      return { restored: false, error: 'Payments not available' };
+    }
+    // Electron's restoreCompletedTransactions doesn't return a count;
+    // the renderer just waits for transactions-updated events.
+    inAppPurchase.restoreCompletedTransactions();
+    return { restored: true };
+  });
+
+  // Called by the renderer once map-transaction has confirmed the
+  // transaction is registered server-side. Only then is it safe to finish
+  // — otherwise a crash between StoreKit purchase and backend registration
+  // would orphan the receipt.
+  ipcMain.handle("finishIapTransaction", async (_event: IpcMainInvokeEvent, transactionDate: string) => {
+    const { inAppPurchase } = await import('electron');
+    inAppPurchase.finishTransactionByDate(transactionDate);
+    return { finished: true };
   });
   
   // Code mode IPC handlers

@@ -247,90 +247,104 @@ export function AccountSettings() {
 
       <hr className="border-white/10" />
 
-      {/* Subscription — hidden on MAS */}
-      {!isMas && (
-        <>
-          <div className="flex flex-col gap-3">
-            <div>
-              <p className="text-sm font-medium text-white">Subscription</p>
-              <p className="text-sm text-gray-500 mt-0.5">Your current plan and billing details.</p>
+      {/* Subscription */}
+      <div className="flex flex-col gap-3">
+        <div>
+          <p className="text-sm font-medium text-white">Subscription</p>
+          <p className="text-sm text-gray-500 mt-0.5">Your current plan and billing details.</p>
+        </div>
+
+        {loadingPlan ? (
+          <p className="text-sm text-gray-500">
+            <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />Loading…
+          </p>
+        ) : (
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-3">
+            {/* Plan badge + action */}
+            <div className="flex items-center justify-between">
+              <span className={clsx(
+                "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize",
+                isPremium
+                  ? "bg-violet-400/10 text-violet-400 border border-violet-400/20"
+                  : "bg-white/5 text-gray-400 border border-white/10"
+              )}>
+                {subscription?.billing_plan ?? "free"}
+              </span>
+              {isMas && isPremium ? (
+                <a
+                  href="https://apps.apple.com/account/subscriptions"
+                  onClick={(e) => { e.preventDefault(); window.electronAPI?.openExternal?.("https://apps.apple.com/account/subscriptions"); }}
+                  className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors cursor-pointer"
+                >
+                  Manage in App Store →
+                </a>
+              ) : (
+                <button
+                  onClick={() => setModal(ModalType.PREMIUM_PURCHASE)}
+                  className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors cursor-pointer"
+                >
+                  {isPremium ? "Manage plan" : "Upgrade to Premium →"}
+                </button>
+              )}
             </div>
 
-            {loadingPlan ? (
-              <p className="text-sm text-gray-500">
-                <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />Loading…
-              </p>
-            ) : (
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-3">
-                {/* Plan badge + action */}
-                <div className="flex items-center justify-between">
-                  <span className={clsx(
-                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize",
-                    isPremium
-                      ? "bg-violet-400/10 text-violet-400 border border-violet-400/20"
-                      : "bg-white/5 text-gray-400 border border-white/10"
-                  )}>
-                    {subscription?.billing_plan ?? "free"}
-                  </span>
-                  <button
-                    onClick={() => setModal(ModalType.PREMIUM_PURCHASE)}
-                    className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors cursor-pointer"
-                  >
-                    {isPremium ? "Manage plan" : "Upgrade to Premium →"}
-                  </button>
-                </div>
-
-                {isPremium && (
-                  <div className="border-t border-white/10 pt-3 flex flex-col gap-2">
-                    <DetailRow label="Billing period" value={formatPeriod(subscription?.billing_period ?? null)} />
-                    <DetailRow
-                      label={subscription?.auto_renew === false ? "Expires on" : "Renews on"}
-                      value={nextDate ?? "—"}
-                    />
-                    {subscription?.status && (
-                      <DetailRow
-                        label="Status"
-                        value={(() => {
-                          if (subscription.status === "trialing" && subscription.next_billing_date) {
-                            try {
-                              const end = Temporal.Instant.from(subscription.next_billing_date).toZonedDateTimeISO(Temporal.Now.timeZoneId()).toPlainDate();
-                              const days = Temporal.Now.plainDateISO().until(end, { largestUnit: "days" }).days;
-                              return days > 0 ? `Trialing (${days} day${days === 1 ? "" : "s"} left)` : "Trialing (ends today)";
-                            } catch {
-                              return "Trialing";
-                            }
-                          }
-                          return subscription.status!.replace("_", " ");
-                        })()}
-                        valueClass={statusStyle(subscription.status)}
-                      />
-                    )}
-                    {/* Auto-renew toggle */}
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Auto-renew</span>
-                      <button
-                        onClick={handleToggleAutoRenew}
-                        disabled={togglingAutoRenew}
-                        className={clsx(
-                          "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50",
-                          subscription.auto_renew ? "bg-emerald-500" : "bg-white/20"
-                        )}
-                      >
-                        <span className={clsx(
-                          "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                          subscription.auto_renew ? "translate-x-4" : "translate-x-0"
-                        )} />
-                      </button>
-                    </div>
+            {isPremium && (
+              <div className="border-t border-white/10 pt-3 flex flex-col gap-2">
+                <DetailRow label="Billing period" value={formatPeriod(subscription?.billing_period ?? null)} />
+                <DetailRow
+                  label={subscription?.auto_renew === false ? "Expires on" : "Renews on"}
+                  value={nextDate ?? "—"}
+                />
+                {subscription?.status && (
+                  <DetailRow
+                    label="Status"
+                    value={(() => {
+                      if (subscription.status === "trialing" && subscription.next_billing_date) {
+                        try {
+                          const end = Temporal.Instant.from(subscription.next_billing_date).toZonedDateTimeISO(Temporal.Now.timeZoneId()).toPlainDate();
+                          const days = Temporal.Now.plainDateISO().until(end, { largestUnit: "days" }).days;
+                          return days > 0 ? `Trialing (${days} day${days === 1 ? "" : "s"} left)` : "Trialing (ends today)";
+                        } catch {
+                          return "Trialing";
+                        }
+                      }
+                      return subscription.status!.replace("_", " ");
+                    })()}
+                    valueClass={statusStyle(subscription.status)}
+                  />
+                )}
+                {/* Auto-renew toggle — only on Stripe; App Store handles its own. */}
+                {!isMas && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Auto-renew</span>
+                    <button
+                      onClick={handleToggleAutoRenew}
+                      disabled={togglingAutoRenew}
+                      className={clsx(
+                        "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50",
+                        subscription.auto_renew ? "bg-emerald-500" : "bg-white/20"
+                      )}
+                    >
+                      <span className={clsx(
+                        "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                        subscription.auto_renew ? "translate-x-4" : "translate-x-0"
+                      )} />
+                    </button>
                   </div>
                 )}
               </div>
             )}
-          </div>
 
-          <hr className="border-white/10" />
-        </>
-      )}
+            {isMas && (
+              <p className="text-[11px] text-gray-500 pt-1 border-t border-white/10">
+                Apple handles billing and cancellation. Manage your subscription in App Store settings.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <hr className="border-white/10" />
 
       {/* Sign out */}
       <Field as="div" className="flex items-center justify-between">
