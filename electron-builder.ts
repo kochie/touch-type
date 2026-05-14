@@ -178,7 +178,7 @@ const config: Configuration = {
     hardenedRuntime: false,
     // Explicitly specify identity to use App Store distribution certificate
     // identity: "3rd Party Mac Developer Application",
-    provisioningProfile: "build/mas-touchtyper.provisionprofile",
+    provisioningProfile: "build/CACHEPROBE_mas-touchtyper.provisionprofile",
     entitlementsLoginHelper: "build/entitlements.mas.loginhelper.plist",
     entitlements: "build/entitlements.mas.plist",
     entitlementsInherit: "build/entitlements.mas.inherit.plist",
