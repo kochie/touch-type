@@ -83,18 +83,14 @@ export interface CurrentKeyRef {
   j: number;
 }
 
-// Lazily initialised so `Temporal` is only accessed in a browser context
-// (Temporal is not available in the Next.js Node server used by `next dev`).
-function makeInitialStat(): StatState {
-  return {
-    correct: 0,
-    incorrect: 0,
-    time: Temporal.Duration.from({ milliseconds: 0 }),
-    start: Temporal.Now.instant(),
-    letters: [] as LetterStat[],
-    immutableLetters: [] as LetterStat[],
-  };
-}
+const initialStat: StatState = {
+  correct: 0,
+  incorrect: 0,
+  time: Temporal.Duration.from({ milliseconds: 0 }),
+  start: Temporal.Now.instant(),
+  letters: [] as LetterStat[],
+  immutableLetters: [] as LetterStat[],
+};
 
 function sign(num: number): string {
   if (num > 0) return "+";
@@ -122,7 +118,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   const [
     { correct, incorrect, time, letters, immutableLetters },
     statsDispatch,
-  ] = useReducer(statsReducer, undefined, makeInitialStat);
+  ] = useReducer(statsReducer, initialStat);
 
   // Get the current text based on mode
   const currentText = effectiveCodeMode ? currentSnippet : words;
