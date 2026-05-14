@@ -1,3 +1,5 @@
+import { ZERO_DURATION } from "@/lib/duration";
+
 export type StatAction =
   | { type: "CORRECT"; key: string }
   | { type: "INCORRECT"; key: string; pressedKey: string }
@@ -72,7 +74,7 @@ export const statsReducer = (state: StatState, action: StatAction) => {
         correct: 0,
         incorrect: 0,
         start: Temporal.Now.instant(),
-        time: Temporal.Duration.from({ milliseconds: 0 }),
+        time: ZERO_DURATION,
         letters: [] as LetterStat[],
         immutableLetters: [] as LetterStat[],
       };

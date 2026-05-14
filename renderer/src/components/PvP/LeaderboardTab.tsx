@@ -6,7 +6,7 @@ import { useSettings } from "@/lib/settings_hook";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinnerThird, faTrophy } from "@fortawesome/pro-duotone-svg-icons";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import { formatDuration } from "@/lib/duration-utils";
+import { formatDuration, msToDuration } from "@/lib/duration";
 import { keyboards } from "@/components/KeyboardSelect";
 import { levels } from "@/components/settings/settings";
 import { LANGUAGES } from "@/lib/languages";
@@ -76,7 +76,7 @@ function ScoreRow({
   const total = score.correct + score.incorrect;
   const accuracy = total > 0 ? (score.correct / total) * 100 : 0;
   const cpm = Number.isFinite(score.cpm) ? score.cpm : score.correct / (score.time / 1000 / 60);
-  const duration = Temporal.Duration.from({ milliseconds: score.time });
+  const duration = msToDuration(score.time);
 
   return (
     <div

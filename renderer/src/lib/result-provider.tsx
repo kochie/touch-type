@@ -9,6 +9,7 @@ import { KeyboardLayoutNames } from "@/keyboards";
 import { useSupabase } from "./supabase-provider";
 import { metrics } from "./metrics";
 import { toast } from "sonner";
+import { durationToMs, parseDuration } from "./duration";
 
 const DB_NAME = "touch-type-db";
 // v2 drops the unique constraint on the `datetime` index. The constraint
@@ -156,7 +157,7 @@ export function ResultsProvider({ children }) {
             const results = JSON.parse(oldResults);
             const store = tx.objectStore("results");
             for (const result of results) {
-              const time = Temporal.Duration.from(result.time);
+              const time = parseDuration(result.time);
               store.put({
                 datetime: new Date().toISOString(),
                 time: time.toString(),
@@ -259,7 +260,7 @@ export function ResultsProvider({ children }) {
 
           // Fire-and-forget leaderboard upsert (keeps best score per config).
           if (!result.codeMode) {
-            const timeMs = Temporal.Duration.from(result.time).total("milliseconds");
+            const timeMs = durationToMs(result.time);
             if (Number.isFinite(timeMs) && timeMs > 0) {
               supabase.functions.invoke('leaderboards', {
                 body: {
@@ -372,7 +373,7 @@ export function ResultsProvider({ children }) {
       }
 
       if (!result.codeMode) {
-        const timeMs = Temporal.Duration.from(result.time).total("milliseconds");
+        const timeMs = durationToMs(result.time);
         if (Number.isFinite(timeMs) && timeMs > 0) {
           metrics.distribution("test.duration", timeMs, "millisecond", { level: result.level });
           supabase.functions.invoke('leaderboards', {

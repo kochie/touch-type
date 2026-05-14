@@ -3,7 +3,7 @@
 import { KeyboardLayoutNames } from "@/keyboards";
 import { Result, useResults } from "@/lib/result-provider";
 import { Levels } from "@/lib/settings_hook";
-import { formatDuration } from "@/lib/duration-utils";
+import { formatDuration, parseDuration, ZERO_DURATION } from "@/lib/duration";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { faStar, faStarHalf } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -18,37 +18,37 @@ const initialState = [
     level: Levels.LEVEL_1,
     cpm: 0,
     incorrect: 0,
-    time: Temporal.Duration.from("PT0S"),
+    time: ZERO_DURATION,
   },
   {
     level: Levels.LEVEL_2,
     cpm: 0,
     incorrect: 0,
-    time: Temporal.Duration.from("PT0S"),
+    time: ZERO_DURATION,
   },
   {
     level: Levels.LEVEL_3,
     cpm: 0,
     incorrect: 0,
-    time: Temporal.Duration.from("PT0S"),
+    time: ZERO_DURATION,
   },
   {
     level: Levels.LEVEL_4,
     cpm: 0,
     incorrect: 0,
-    time: Temporal.Duration.from("PT0S"),
+    time: ZERO_DURATION,
   },
   {
     level: Levels.LEVEL_5,
     cpm: 0,
     incorrect: 0,
-    time: Temporal.Duration.from("PT0S"),
+    time: ZERO_DURATION,
   },
   {
     level: Levels.LEVEL_6,
     cpm: 0,
     incorrect: 0,
-    time: Temporal.Duration.from("PT0S"),
+    time: ZERO_DURATION,
   },
 ];
 
@@ -94,7 +94,7 @@ export default function BestForEachLevel({ keyboard }: BestForEachLevelProps) {
             level: result.level,
             cpm: result.cpm,
             incorrect: result.incorrect,
-            time: Temporal.Duration.from(result.time),
+            time: parseDuration(result.time),
           };
         }
         return b;

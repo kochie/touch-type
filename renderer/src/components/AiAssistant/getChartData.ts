@@ -1,4 +1,5 @@
 import { Result, useResults } from "@/lib/result-provider";
+import { durationToMs } from "@/lib/duration";
 
 type ChartDatum = { name: string; [key: string]: string | number };
 
@@ -89,11 +90,7 @@ export const getChartData = (category): ChartDatum[] => {
             ? res.reduce((acc, r) => acc + r.cpm, 0) / res.length
             : 0;
           const durationMs = res
-            ? res.reduce(
-                // TODO: old data breaks this
-                (acc, r) => acc + Temporal.Duration.from(r.time).total("milliseconds"),
-                0,
-              )
+            ? res.reduce((acc, r) => acc + durationToMs(r.time), 0)
             : 0;
           const durationMinutes = durationMs / 1000 / 60;
           // break frequency is the gap between each test summed together
@@ -102,12 +99,7 @@ export const getChartData = (category): ChartDatum[] => {
                 if (i === 0) return acc;
                 const previousMs = Temporal.Instant.from(res[i - 1].datetime).epochMilliseconds;
                 const currentMs = Temporal.Instant.from(r.datetime).epochMilliseconds;
-                return (
-                  acc +
-                  (currentMs -
-                    previousMs +
-                    Temporal.Duration.from(r.time).total("milliseconds"))
-                );
+                return acc + (currentMs - previousMs + durationToMs(r.time));
               }, 0)
             : 0;
 
@@ -136,10 +128,7 @@ export const getChartData = (category): ChartDatum[] => {
           const dateString = plainDate.toLocaleString("en");
           const res = resultsByDate.get(dateString);
           const totalMs = res
-            ? res.reduce(
-                (acc, r) => acc + Temporal.Duration.from(r.time).total("milliseconds"),
-                0,
-              )
+            ? res.reduce((acc, r) => acc + durationToMs(r.time), 0)
             : 0;
           const totalMinutes = totalMs / 1000 / 60;
           const totalSecs = Math.floor(totalMs / 1000);

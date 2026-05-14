@@ -2,6 +2,7 @@
 
 import { KeyboardLayoutNames } from "@/keyboards";
 import { useResults } from "@/lib/result-provider";
+import { durationToSeconds } from "@/lib/duration";
 import {
   axisBottom,
   axisLeft,
@@ -80,7 +81,7 @@ export default function LineChart({keyboard}: LineChartProps) {
 
     // Add Y axis
     const maxTime = max(computed, function (d) {
-      return Temporal.Duration.from(d.time).total("milliseconds") / 1000
+      return durationToSeconds(d.time);
     });
     if (maxTime === undefined) return;
     const y = scaleLinear().domain([0, maxTime]).range([height, 0]);
@@ -109,7 +110,7 @@ export default function LineChart({keyboard}: LineChartProps) {
         "d",
         line(
           (d) => x(new Date(d.datetime)),
-          (d) => y(Temporal.Duration.from(d.time).total("milliseconds") / 1000),
+          (d) => y(durationToSeconds(d.time)),
         ),
       );
 

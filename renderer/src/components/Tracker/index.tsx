@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { LetterStat, statsReducer, StatState } from "./reducers";
+import { durationToMinutes, durationToSeconds, ZERO_DURATION } from "@/lib/duration";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDungeon,
@@ -36,12 +37,12 @@ import clsx from "clsx";
 import confetti from "canvas-confetti";
 
 function netCpmOf(r: Result): number {
-  const minutes = Temporal.Duration.from(r.time).total("milliseconds") / 60000;
+  const minutes = durationToMinutes(r.time);
   return minutes > 0 ? r.correct / minutes : 0;
 }
 
 function totalSecondsOf(timeStr: string): number {
-  return Temporal.Duration.from(timeStr).total("milliseconds") / 1000;
+  return durationToSeconds(timeStr);
 }
 
 // Format an elapsed-time number of seconds as "12s", "12.3s", or "1:23".
@@ -86,7 +87,7 @@ export interface CurrentKeyRef {
 const initialStat: StatState = {
   correct: 0,
   incorrect: 0,
-  time: Temporal.Duration.from({ milliseconds: 0 }),
+  time: ZERO_DURATION,
   start: Temporal.Now.instant(),
   letters: [] as LetterStat[],
   immutableLetters: [] as LetterStat[],

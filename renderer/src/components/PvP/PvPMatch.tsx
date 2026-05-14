@@ -21,7 +21,7 @@ import Canvas from "../Canvas";
 import { Key, Keyboard } from "@/keyboards/key";
 import { lookupKeyboard, KeyboardLayoutNames } from "@/keyboards";
 import { ModalType, useModal } from "@/lib/modal-provider";
-import { formatDuration } from "@/lib/duration-utils";
+import { formatDuration, ZERO_DURATION } from "@/lib/duration";
 
 export interface PvPRaceResult {
   cpm: number;
@@ -42,7 +42,7 @@ interface PvPMatchProps {
 const initialStat: StatState = {
   correct: 0,
   incorrect: 0,
-  time: Temporal.Duration.from({ milliseconds: 0 }),
+  time: ZERO_DURATION,
   start: Temporal.Now.instant(),
   letters: [] as LetterStat[],
   immutableLetters: [] as LetterStat[],
