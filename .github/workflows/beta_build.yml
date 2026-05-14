@@ -143,7 +143,15 @@ jobs:
         run: |
           echo "Building for ${{ matrix.os }}, CHANNEL=beta, publish=always"
           if [[ "${{ matrix.os }}" == macos* ]]; then
-            pnpm exec electron-builder --config electron-builder.ts --mac default --mac mas --universal --publish always
+            # Build mac default and mas in SEPARATE invocations. Combining
+            # them (`--mac default --mac mas`) makes electron-builder share
+            # universal-merge intermediates between targets — the MAS .app
+            # ends up signed twice (Developer ID first, MAS second) and
+            # codesign --force does NOT replace embedded.provisionprofile,
+            # so MAS bundles ship with the Developer ID profile baked in
+            # and altool rejects them with "Missing code-signing certificate".
+            pnpm exec electron-builder --config electron-builder.ts --mac default --universal --publish always
+            pnpm exec electron-builder --config electron-builder.ts --mac mas --universal --publish always
           elif [[ "${{ matrix.os }}" == windows* ]]; then
             pnpm exec electron-builder --config electron-builder.ts -w --publish always
           else
