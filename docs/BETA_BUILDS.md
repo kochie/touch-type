@@ -4,7 +4,7 @@ This document describes how to produce and consume **beta** (and alpha) builds f
 
 ## Overview
 
-- **Stable releases**: Built from **tags** via the [Building Release](.github/workflows/tag_push.yml) workflow (e.g. `v1.2.3`). They appear as the **Latest release** and use the `latest` update channel.
+- **Stable releases**: Built from **tags** via the [Release Build](.github/workflows/release_build.yml) workflow (e.g. `v1.2.3`). They appear as the **Latest release** and use the `latest` update channel.
 - **Beta builds**: Built from the **beta** (or **develop**) branch, or manually from any branch, via the [Beta Build](.github/workflows/beta_build.yml) workflow. They produce **GitHub pre-releases** (under "Pre-releases") and use the **beta** update channel so they do not replace "Latest release".
 
 Beta installs receive updates from the **beta** channel only (plus stable when you promote). Stable installs receive only **latest** channel updates.
@@ -38,7 +38,7 @@ The workflow checks out the selected ref, sets the version to `2.1.0-beta.<run_n
 ## GitHub pre-releases
 
 - Beta builds are published as **GitHub pre-releases** (via `releaseType: "prerelease"` in electron-builder when the channel is beta or alpha). They appear under **Pre-releases** on the repo, not as **Latest release**.
-- Tag-based beta/alpha releases (e.g. `v2.1.0-beta.1`) are also created as pre-releases by the Building Release workflow.
+- Beta/alpha builds are owned by this workflow; the Release Build workflow only triggers on stable tags (`v[0-9]+.[0-9]+.[0-9]+`, no pre-release suffix).
 
 ## Store uploads (default: skipped)
 
