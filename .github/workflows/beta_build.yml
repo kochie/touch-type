@@ -124,6 +124,15 @@ jobs:
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
           echo -n "$MAC_PROVISION_PROFILE_BASE64" | base64 --decode --output $MAC_PP_PATH
 
+          # Verify which profile is in each file (UUID is unique per profile,
+          # secret-masking won't redact it like it does the Name field).
+          echo "=== Profile UUIDs after decode ==="
+          for f in "$PP_PATH" "$MAC_PP_PATH"; do
+            uuid=$(security cms -D -i "$f" 2>/dev/null | plutil -convert xml1 -o - - | awk '/<key>UUID<\/key>/{getline; gsub(/.*<string>|<\/string>.*/,""); print; exit}')
+            size=$(wc -c <"$f")
+            echo "  $f : UUID=$uuid (size=$size bytes)"
+          done
+
       - name: Build Electron app
         run: pnpm run build
         env:
