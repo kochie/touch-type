@@ -42,5 +42,5 @@ jobs:
 
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.supabase_anon_key }}
-          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.stripe_publishable_key }}
           NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
