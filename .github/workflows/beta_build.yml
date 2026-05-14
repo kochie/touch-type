@@ -182,10 +182,35 @@ jobs:
 
       - name: Upload to App Store Connect
         if: startsWith(matrix.os, 'macos') && github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_stores == 'true'
+        shell: bash
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
+          APPLE_API_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
         run: |
+          set -euo pipefail
           version=$(jq -r .version package.json)
-          xcrun altool --validate-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
-          xcrun altool --upload-app -f dist/mas-universal/Touch\ Typer-$version-universal.pkg --type macos --apiKey ${{ secrets.api_key_id }} --apiIssuer ${{ secrets.api_key_issuer_id }}
+          pkg="dist/mas-universal/Touch Typer-$version-universal.pkg"
+
+          # altool exits 0 even when validation/upload fail (long-standing Apple
+          # bug). Capture stdout+stderr and grep for the failure banner so the
+          # step actually fails the workflow.
+          echo "Validating $pkg..."
+          xcrun altool --validate-app -f "$pkg" --type macos \
+            --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER_ID" \
+            2>&1 | tee altool-validate.log
+          if grep -qE 'VERIFY FAILED|UPLOAD FAILED|Failed to validate' altool-validate.log; then
+            echo "::error::altool reported validation errors above"
+            exit 1
+          fi
+
+          echo "Uploading $pkg..."
+          xcrun altool --upload-app -f "$pkg" --type macos \
+            --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER_ID" \
+            2>&1 | tee altool-upload.log
+          if grep -qE 'VERIFY FAILED|UPLOAD FAILED|Failed to upload' altool-upload.log; then
+            echo "::error::altool reported upload errors above"
+            exit 1
+          fi
 
       - name: Upload to Windows Dev Center
         if: startsWith(matrix.os, 'windows') && github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_stores == 'true'
