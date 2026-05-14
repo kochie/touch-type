@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSparkles,
@@ -19,6 +20,7 @@ import {
 import type { Appearance } from "@stripe/stripe-js";
 import clsx from "clsx";
 import { useSupabase, useSupabaseClient } from "@/lib/supabase-provider";
+import { metrics } from "@/lib/metrics";
 import { stripePromise } from "@/components/Payment";
 
 interface Plan {
@@ -118,8 +120,10 @@ function SubscriptionCheckoutForm({
         const body = await (fnError as any).context?.json?.().catch(() => null);
         throw new Error(body?.error ?? "Subscription could not be activated. Contact support.");
       }
+      metrics.count("checkout.completed", 1, { plan: plan.id });
       onSuccess();
     } catch (err: any) {
+      metrics.count("checkout.failed", 1, { plan: plan.id });
       onError(err?.message ?? "Payment failed. Please try again.");
     } finally {
       setLoading(false);
@@ -222,9 +226,13 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
         : null;
       setNextBillingDate(formatted);
       setSelectedPlan(plan);
+      metrics.count("subscription.switched", 1, { from: currentPlanId ?? "unknown", to: plan.id });
       setPhase("switch_success");
     } catch (err: any) {
-      setErrorMsg(err?.message ?? "Something went wrong. Please try again.");
+      const msg = err?.message ?? "Something went wrong. Please try again.";
+      metrics.count("subscription.switch_failed", 1, { plan: plan.id });
+      setErrorMsg(msg);
+      toast.error(msg);
       setPhase("error");
     } finally {
       setLoadingPlan(null);
@@ -246,12 +254,19 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
         const body = await (error as any).context?.json?.().catch(() => null);
         throw new Error(body?.error ?? error.message);
       }
+      if (!data?.clientSecret || !data?.sessionId) {
+        throw new Error("Checkout session could not be created. Please try again.");
+      }
       setClientSecret(data.clientSecret);
       setSessionId(data.sessionId);
       setSelectedPlan(plan);
+      metrics.count("checkout.initiated", 1, { plan: plan.id });
       setPhase("checkout");
     } catch (err: any) {
-      setErrorMsg(err?.message ?? "Something went wrong. Please try again.");
+      const msg = err?.message ?? "Something went wrong. Please try again.";
+      metrics.count("checkout.failed", 1, { plan: plan.id });
+      setErrorMsg(msg);
+      toast.error(msg);
       setPhase("error");
     } finally {
       setLoadingPlan(null);
@@ -407,7 +422,7 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
               plan={selectedPlan}
               email={userEmail}
               onSuccess={() => setPhase("success")}
-              onError={(msg) => { setErrorMsg(msg); setPhase("error"); }}
+              onError={(msg) => { setErrorMsg(msg); toast.error(msg); setPhase("error"); }}
             />
           </CheckoutElementsProvider>
         </div>

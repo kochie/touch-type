@@ -14,4 +14,8 @@ export function register() {
     // `release` value here - use the environment variable `SENTRY_RELEASE`, so
     // that it will also get attached to your source maps
   });
+
+  Sentry.getGlobalScope().setAttributes({
+    app_version: process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown",
+  });
 }

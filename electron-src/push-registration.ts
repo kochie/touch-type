@@ -9,6 +9,7 @@
 
 import { app, pushNotifications, Notification } from 'electron';
 import log from 'electron-log';
+import { metrics } from './metrics';
 
 export interface PushRegistrationResult {
   success: boolean;
@@ -42,25 +43,31 @@ export function setPushNotificationHandler(
  */
 export async function registerForPushNotifications(): Promise<PushRegistrationResult> {
   const platform = process.platform;
+  const pushPlatform = getPushPlatform();
+  metrics.count("push.registration_attempt", 1, { platform: pushPlatform });
 
+  let result: PushRegistrationResult;
   switch (platform) {
     case 'darwin':
-      return registerAPNS();
+      result = await registerAPNS();
+      break;
     case 'win32':
-      return registerWNS();
+      result = await registerWNS();
+      break;
     case 'linux':
-      return {
-        success: true,
-        platform: 'linux',
-        // Linux doesn't support native push, will use local scheduler fallback
-      };
+      result = { success: true, platform: 'linux' };
+      break;
     default:
-      return {
-        success: false,
-        platform: 'linux',
-        error: `Unsupported platform: ${platform}`,
-      };
+      result = { success: false, platform: 'linux', error: `Unsupported platform: ${platform}` };
   }
+
+  if (result.success) {
+    metrics.count("push.registration_success", 1, { platform: result.platform });
+  } else {
+    metrics.count("push.registration_failed", 1, { platform: result.platform });
+  }
+
+  return result;
 }
 
 /**

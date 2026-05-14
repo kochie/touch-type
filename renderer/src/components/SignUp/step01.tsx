@@ -8,6 +8,7 @@ import Error from "../Errors";
 import { useState } from "react";
 import { Transition } from "@headlessui/react";
 import { useSupabaseClient } from "@/lib/supabase-provider";
+import { metrics } from "@/lib/metrics";
 
 const SignupSchema = Yup.object().shape({
   name: Yup.string().max(50, "Too Long!").required("Required"),
@@ -45,6 +46,7 @@ export default function Step01({ onContinue }) {
       onSubmit={async (values, { setSubmitting, setStatus }) => {
         setFormErrors("");
 
+        metrics.count("auth.signup_attempt");
         try {
           const { data, error } = await supabase.auth.signUp({
             email: values.email,
@@ -60,6 +62,7 @@ export default function Step01({ onContinue }) {
             throw error;
           }
 
+          metrics.count("auth.signup_success");
           setSubmitting(false);
           setStatus("COMPLETE");
           await new Promise((resolve) => setTimeout(resolve, 1000));

@@ -8,7 +8,9 @@ import clsx from "clsx";
 import { useSupabase } from "@/lib/supabase-provider";
 import { useMas } from "@/lib/mas_hook";
 import { useModal, ModalType } from "@/lib/modal-provider";
+import { metrics } from "@/lib/metrics";
 import Button from "../Button";
+import { toast } from "sonner";
 
 interface Subscription {
   billing_plan: string | null;
@@ -109,6 +111,7 @@ export function AccountSettings() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [togglingAutoRenew, setTogglingAutoRenew] = useState(false);
 
   const fetchSubscription = async () => {
     if (!user) return;
@@ -175,7 +178,29 @@ export function AccountSettings() {
   const handleSignOut = async () => {
     setSigningOut(true);
     await supabase.auth.signOut();
+    metrics.count("auth.signout");
     setSigningOut(false);
+  };
+
+  const handleToggleAutoRenew = async () => {
+    if (!subscription || togglingAutoRenew) return;
+    const newValue = !subscription.auto_renew;
+    setTogglingAutoRenew(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("toggle-auto-renew", {
+        body: { auto_renew: newValue },
+      });
+      if (error) {
+        const body = await (error as any).context?.json?.().catch(() => null);
+        throw new Error(body?.error ?? error.message);
+      }
+      setSubscription((prev) => prev ? { ...prev, auto_renew: data.auto_renew } : prev);
+      toast.success(data.auto_renew ? "Auto-renew enabled." : "Auto-renew disabled. Your plan will expire at the end of the billing period.");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to update auto-renew setting.");
+    } finally {
+      setTogglingAutoRenew(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -184,9 +209,10 @@ export function AccountSettings() {
     try {
       const { error } = await supabase.functions.invoke("delete-user");
       if (error) throw error;
+      metrics.count("auth.account_deleted");
       await supabase.auth.signOut();
     } catch {
-      alert("Failed to delete account. Please contact support.");
+      toast.error("Failed to delete account. Please contact support.");
     } finally {
       setDeleting(false);
     }
@@ -259,15 +285,38 @@ export function AccountSettings() {
                     {subscription?.status && (
                       <DetailRow
                         label="Status"
-                        value={subscription.status.replace("_", " ")}
+                        value={(() => {
+                          if (subscription.status === "trialing" && subscription.next_billing_date) {
+                            try {
+                              const end = Temporal.Instant.from(subscription.next_billing_date).toZonedDateTimeISO(Temporal.Now.timeZoneId()).toPlainDate();
+                              const days = Temporal.Now.plainDateISO().until(end, { largestUnit: "days" }).days;
+                              return days > 0 ? `Trialing (${days} day${days === 1 ? "" : "s"} left)` : "Trialing (ends today)";
+                            } catch {
+                              return "Trialing";
+                            }
+                          }
+                          return subscription.status!.replace("_", " ");
+                        })()}
                         valueClass={statusStyle(subscription.status)}
                       />
                     )}
-                    {subscription?.auto_renew === false && (
-                      <p className="text-xs text-amber-400 mt-1">
-                        Auto-renew is off — your plan ends on the expiry date.
-                      </p>
-                    )}
+                    {/* Auto-renew toggle */}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">Auto-renew</span>
+                      <button
+                        onClick={handleToggleAutoRenew}
+                        disabled={togglingAutoRenew}
+                        className={clsx(
+                          "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50",
+                          subscription.auto_renew ? "bg-emerald-500" : "bg-white/20"
+                        )}
+                      >
+                        <span className={clsx(
+                          "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                          subscription.auto_renew ? "translate-x-4" : "translate-x-0"
+                        )} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

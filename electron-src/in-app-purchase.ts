@@ -1,5 +1,6 @@
 // Main process
 import { Event, inAppPurchase, Transaction } from 'electron'
+import { metrics } from './metrics'
 const PRODUCT_IDS = ['io.kochie.touch-typer.monthly', 'io.kochie.touch-typer.yearly']
 // const PRODUCT_IDS = ['monthly', 'yearly']
 
@@ -21,12 +22,15 @@ export function setupInAppPurchase(): void {
     for (const transaction of transactions) {
       const payment = transaction.payment
 
+      const product = payment.productIdentifier;
       switch (transaction.transactionState) {
         case 'purchasing':
-          console.log(`Purchasing ${payment.productIdentifier}...`)
+          console.log(`Purchasing ${product}...`)
+          metrics.count("iap.transaction", 1, { state: "purchasing", product })
           break
         case 'purchased': {
-          console.log(`${payment.productIdentifier} purchased.`)
+          console.log(`${product} purchased.`)
+          metrics.count("iap.transaction", 1, { state: "purchased", product })
           // Get the receipt url.
           const receiptURL = inAppPurchase.getReceiptURL()
           console.log(`Receipt URL: ${receiptURL}`)
@@ -41,15 +45,18 @@ export function setupInAppPurchase(): void {
           break
         }
         case 'failed':
-          console.log(`Failed to purchase ${payment.productIdentifier}.`)
+          console.log(`Failed to purchase ${product}.`)
+          metrics.count("iap.transaction", 1, { state: "failed", product })
           // Finish the transaction.
           inAppPurchase.finishTransactionByDate(transaction.transactionDate)
           break
         case 'restored':
-          console.log(`The purchase of ${payment.productIdentifier} has been restored.`)
+          console.log(`The purchase of ${product} has been restored.`)
+          metrics.count("iap.transaction", 1, { state: "restored", product })
           break
         case 'deferred':
-          console.log(`The purchase of ${payment.productIdentifier} has been deferred.`)
+          console.log(`The purchase of ${product} has been deferred.`)
+          metrics.count("iap.transaction", 1, { state: "deferred", product })
           break
         default:
           break

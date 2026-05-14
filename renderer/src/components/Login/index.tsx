@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useSupabaseClient } from "@/lib/supabase-provider";
+import { metrics } from "@/lib/metrics";
 import { toast } from "sonner";
 
 const SignupSchema = Yup.object().shape({
@@ -46,6 +47,7 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
             initialStatus={"PENDING"}
             validationSchema={SignupSchema}
             onSubmit={async (values, { setSubmitting, setStatus }) => {
+              metrics.count("auth.signin_attempt");
               try {
                 const { data, error } = await supabase.auth.signInWithPassword({
                   email: values.email,
@@ -56,10 +58,11 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
                   throw error;
                 }
 
+                metrics.count("auth.signin_success");
                 setSubmitting(false);
                 setStatus("COMPLETE");
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                
+
                 onContinue(values);
               } catch (error: any) {
                 console.error(error);

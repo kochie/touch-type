@@ -1,5 +1,9 @@
 import MDX from "@next/mdx";
 import { withSentryConfig } from "@sentry/nextjs";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const { version: APP_VERSION } = require("../package.json");
 
 const sentryWebpackPluginOptions = {
   // Additional config options for the Sentry Webpack plugin. Keep in mind that
@@ -19,6 +23,9 @@ const sentryWebpackPluginOptions = {
  */
 const nextConfig = {
   /* config options here */
+  env: {
+    NEXT_PUBLIC_APP_VERSION: APP_VERSION,
+  },
   webpack: (
     config,
     { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack },

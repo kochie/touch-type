@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { CodeLanguages, Languages, Levels } from "./settings_hook";
 import { KeyboardLayoutNames } from "@/keyboards";
 import { useSupabase } from "./supabase-provider";
+import { metrics } from "./metrics";
 import { toast } from "sonner";
 
 const DB_NAME = "touch-type-db";
@@ -352,6 +353,15 @@ export function ResultsProvider({ children }) {
         return null;
       }
 
+      const totalKeyPresses = result.correct + result.incorrect;
+      const accuracy = totalKeyPresses > 0 ? (result.correct / totalKeyPresses) * 100 : 100;
+      const wpm = result.cpm / 5;
+      const mode = result.codeMode ? "code" : "words";
+
+      metrics.count("test.completed", 1, { mode, language: result.language ?? "en", level: result.level });
+      metrics.distribution("test.wpm", wpm, "none", { mode, language: result.language ?? "en" });
+      metrics.distribution("test.accuracy", accuracy, "percent", { mode });
+
       // Mark synced in IDB (best-effort; if this fails the record will be
       // re-uploaded by syncPending, which is harmless for the leaderboard
       // upsert but produces a duplicate row in results — acceptable edge case).
@@ -364,6 +374,7 @@ export function ResultsProvider({ children }) {
       if (!result.codeMode) {
         const timeMs = Temporal.Duration.from(result.time).total("milliseconds");
         if (Number.isFinite(timeMs) && timeMs > 0) {
+          metrics.distribution("test.duration", timeMs, "millisecond", { level: result.level });
           supabase.functions.invoke('leaderboards', {
             body: {
               correct:     result.correct,
@@ -381,10 +392,14 @@ export function ResultsProvider({ children }) {
                 if (lbErr) {
                   console.warn('Leaderboard submission failed:', lbErr);
                   toast.error("Score saved but couldn't reach the leaderboard. Check your connection.");
+                  metrics.count("leaderboard.submission", 1, { success: "false" });
+                } else {
+                  metrics.count("leaderboard.submission", 1, { success: "true" });
                 }
               }).catch((err) => {
                 console.warn('Leaderboard submission error:', err);
                 toast.error("Score saved but couldn't reach the leaderboard. Check your connection.");
+                metrics.count("leaderboard.submission", 1, { success: "false" });
               });
         }
       }

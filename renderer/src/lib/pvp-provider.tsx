@@ -9,6 +9,7 @@ import {
   ReactNode,
 } from "react";
 import { useSupabase } from "./supabase-provider";
+import { metrics } from "./metrics";
 import type { Json, TablesInsert } from "@/types/supabase";
 import { toast } from "sonner";
 
@@ -256,6 +257,11 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           .single();
 
         if (insertError) throw insertError;
+        metrics.count("pvp.match_created", 1, {
+          language: settings.language,
+          level: settings.level,
+          keyboard: settings.keyboard,
+        });
         await refreshGames();
         return data as unknown as PvPGame;
       } catch (err) {
@@ -293,6 +299,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           toast.error("Couldn't join — game already has a joiner or is closed");
           return null;
         }
+        metrics.count("pvp.match_joined");
         await refreshGames();
         return data as unknown as PvPGame;
       } catch (err) {
@@ -319,6 +326,7 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           toast.error("Couldn't cancel — game state changed or not yours");
           return false;
         }
+        metrics.count("pvp.match_cancelled");
         await refreshGames();
         return true;
       } catch (err) {
@@ -335,8 +343,14 @@ export function PvPProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const forfeitRace = useCallback(() => {
+    if (currentRace) {
+      metrics.count("pvp.match_forfeited", 1, {
+        language: currentRace.game.language,
+        level: currentRace.game.level,
+      });
+    }
     setCurrentRace(null);
-  }, []);
+  }, [currentRace]);
 
   const completeRace = useCallback(
     async (result: PvPRaceResult): Promise<PvPGame | null> => {
@@ -381,6 +395,15 @@ export function PvPProvider({ children }: { children: ReactNode }) {
           toast.error("Couldn't submit — game state changed");
           return null;
         }
+        const totalPresses = result.correct + result.incorrect;
+        const accuracy = totalPresses > 0 ? (result.correct / totalPresses) * 100 : 100;
+        metrics.count("pvp.round_completed", 1, {
+          language: game.language,
+          level: game.level,
+          role: isCreator ? "creator" : "joiner",
+        });
+        metrics.distribution("pvp.wpm", result.cpm / 5, "none", { language: game.language });
+        metrics.distribution("pvp.accuracy", accuracy, "percent");
         await refreshGames();
         return data as unknown as PvPGame;
       } catch (err) {

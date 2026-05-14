@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { useSupabase } from "./supabase-provider";
 import { usePlan } from "./plan_hook";
 import { useResults } from "./result-provider";
+import { metrics } from "./metrics";
 
 export interface StreakData {
   currentStreak: number;
@@ -346,6 +347,14 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
   }, [streak.currentStreak, streak.isAtRisk]);
+
+  // Emit streak gauges whenever values settle (skip while initial load is in flight)
+  useEffect(() => {
+    if (streak.isLoading) return;
+    metrics.gauge("streak.current", streak.currentStreak);
+    metrics.gauge("streak.longest", streak.longestStreak);
+    metrics.gauge("streak.freezes_available", streak.freezesAvailable);
+  }, [streak.currentStreak, streak.longestStreak, streak.freezesAvailable, streak.isLoading]);
 
   const contextValue: StreakContextType = {
     ...streak,

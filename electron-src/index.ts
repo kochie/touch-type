@@ -18,6 +18,7 @@ import {autoUpdater} from 'electron-updater';
 
 import log from "electron-log";
 import { init } from "@sentry/electron/main";
+import { metrics } from "./metrics";
 import { readFile } from "fs/promises";
 import serve from "electron-serve";
 
@@ -97,6 +98,8 @@ async function handleShowOpenDialog() {
 }
 
 const loadURL = serve({ directory: "renderer/out" });
+
+const appStartTime = Date.now();
 
 // Prepare the renderer once the app is ready
 // Store isDev status globally after import
@@ -279,6 +282,11 @@ app.on("ready", async () => {
   // Handle deep link if app was launched with one
   mainWindow.webContents.once("did-finish-load", () => {
     handleInitialDeepLink();
+    metrics.distribution("app.startup_duration", Date.now() - appStartTime, "millisecond", {
+      platform: process.platform,
+      is_dev: isDevMode,
+    });
+    metrics.count("app.started", 1, { platform: process.platform });
   });
 
   // const url = isDev.default
