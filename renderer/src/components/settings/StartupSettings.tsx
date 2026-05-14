@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSettings, useSettingsDispatch } from "@/lib/settings_hook";
 import { Description, Field, Label, Switch } from "@headlessui/react";
 import clsx from "clsx";
+import { toast } from "sonner";
 
 export function StartupSettings() {
   const settings = useSettings();
@@ -56,9 +57,11 @@ export function StartupSettings() {
         });
       } else {
         console.error("Failed to set launch at startup:", result.error);
+        toast.error("Couldn't update launch at startup setting.");
       }
     } catch (error) {
       console.error("Failed to set launch at startup:", error);
+      toast.error("Couldn't update launch at startup setting.");
     }
   };
 
@@ -74,9 +77,11 @@ export function StartupSettings() {
         });
       } else {
         console.error("Failed to set start minimized:", result.error);
+        toast.error("Couldn't update start minimized setting.");
       }
     } catch (error) {
       console.error("Failed to set start minimized:", error);
+      toast.error("Couldn't update start minimized setting.");
     }
   };
 

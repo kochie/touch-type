@@ -10,6 +10,7 @@ import { Skeleton } from "../Skeleton";
 import Button from "../Button";
 import { getGoal, newGoal } from "@/transactions/getGoal";
 import { Tables } from "@/types/supabase";
+import { toast } from "sonner";
 
 function Progress({ value }) {
   return (
@@ -120,8 +121,10 @@ export function GoalCard({ category }: { category: Category }) {
       const newGoalData = await newGoal(category);
       setGoalData(newGoalData);
       setConfetti(false);
+      toast.success("Goal reset.");
     } catch (err: any) {
       console.error('Error resetting goal:', err);
+      toast.error("Couldn't reset goal.");
     } finally {
       setResetting(false);
     }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Field, Label, Description, Select } from "@headlessui/react";
 import clsx from "clsx";
+import { toast } from "sonner";
 import {
   createPracticeSession,
   downloadICS,
@@ -66,8 +67,10 @@ export function CalendarSettings() {
     try {
       const session = createPracticeSession(getSessionConfig());
       downloadICS(session, "touch-typer-practice");
+      toast.success("Calendar file downloaded.");
     } catch (err) {
       console.error("Failed to generate ICS:", err);
+      toast.error("Couldn't generate the calendar file.");
     } finally {
       setIsDownloading(false);
     }
@@ -82,6 +85,7 @@ export function CalendarSettings() {
       window.open(url, "_blank");
     } catch (err) {
       console.error("Failed to open Google Calendar:", err);
+      toast.error("Couldn't open Google Calendar.");
     }
   };
 
@@ -94,6 +98,7 @@ export function CalendarSettings() {
       window.open(url, "_blank");
     } catch (err) {
       console.error("Failed to open Outlook:", err);
+      toast.error("Couldn't open Outlook.");
     }
   };
 

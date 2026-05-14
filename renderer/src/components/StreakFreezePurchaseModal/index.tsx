@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSnowflake,
@@ -192,7 +193,9 @@ export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => 
         setPhase("checkout");
       }
     } catch (err: any) {
-      setErrorMsg(err?.message ?? "Something went wrong. Please try again.");
+      const msg = err?.message ?? "Something went wrong. Please try again.";
+      setErrorMsg(msg);
+      toast.error(msg);
       setPhase("error");
     } finally {
       setLoadingQty(null);
@@ -301,7 +304,7 @@ export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => 
               clientSecret={clientSecret}
               price={selectedPkg.price}
               onSuccess={() => setPhase("success")}
-              onError={(msg) => { setErrorMsg(msg); setPhase("error"); }}
+              onError={(msg) => { setErrorMsg(msg); toast.error(msg); setPhase("error"); }}
             />
           </Elements>
         </div>
