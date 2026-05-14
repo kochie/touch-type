@@ -41,11 +41,11 @@ export function Step01({ onContinue }) {
         setFormErrors("");
 
         try {
+          // No redirectTo: Electron can't handle the magic-link callback.
+          // Supabase still sends the 6-digit OTP code in the same email,
+          // which is what Step02 uses.
           const { error } = await supabase.auth.resetPasswordForEmail(
             values.email,
-            {
-              redirectTo: `${window.location.origin}/auth/reset-password`,
-            }
           );
 
           if (error) {
