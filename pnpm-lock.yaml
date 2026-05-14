@@ -23,6 +23,9 @@ importers:
       i18next:
         specifier: ^26.0.10
         version: 26.1.0(typescript@6.0.3)
+      module-details-from-path:
+        specifier: 1.0.4
+        version: 1.0.4
       ms:
         specifier: 2.1.3
         version: 2.1.3

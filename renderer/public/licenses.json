@@ -1205,6 +1205,12 @@
       "author": "Andrea Giammarchi"
     },
     {
+      "name": "canvas-confetti",
+      "version": "1.9.4",
+      "homepage": "https://github.com/catdad/canvas-confetti#readme",
+      "author": "Kiril Vatev"
+    },
+    {
       "name": "graceful-fs",
       "version": "4.2.11",
       "homepage": "https://github.com/isaacs/node-graceful-fs#readme",
