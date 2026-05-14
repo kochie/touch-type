@@ -1,4 +1,20 @@
 import * as Sentry from "@sentry/nextjs";
+import { Temporal, toTemporalInstant } from "temporal-polyfill";
+
+// Polyfill `Temporal` for the Node.js server environment used by `next dev`.
+// In production the app is statically exported and runs in Chromium (Electron),
+// which has native Temporal support — this polyfill only ever activates on the
+// server side during development and e2e test runs.
+if (typeof globalThis.Temporal === "undefined") {
+  Object.defineProperty(globalThis, "Temporal", {
+    value: Temporal,
+    writable: false,
+    configurable: false,
+  });
+}
+if (typeof Date.prototype.toTemporalInstant === "undefined") {
+  Date.prototype.toTemporalInstant = toTemporalInstant;
+}
 
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 
