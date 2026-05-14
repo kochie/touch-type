@@ -132,8 +132,20 @@ const config: Configuration = {
       ? "build/entitlements.mac.dev.plist"
       : "build/entitlements.mac.plist",
     // Provisioning profile required for push notifications with Developer ID.
-    // Same reasoning — mas/masDev configs override this for App Store targets.
-    provisioningProfile: process.env["MAC_PROVISIONING_PROFILE"] || "build/mac-touchtyper.provisionprofile",
+    // When building MAS, electron-builder runs an intermediate "darwin sign"
+    // pass on the universal MAS bundle that uses this top-level `mac` config
+    // BEFORE the final `mas` resign. That intermediate pass copies whatever
+    // file this points at into Contents/embedded.provisionprofile, and the
+    // final MAS sign does NOT replace that file (codesign --force replaces
+    // only the code signature, not embedded.provisionprofile). So when
+    // building MAS, this MUST point at the MAS profile too — otherwise the
+    // MAS .pkg ships with the Developer ID profile embedded and altool
+    // rejects with "Missing code-signing certificate".
+    provisioningProfile:
+      process.env["MAC_PROVISIONING_PROFILE"]
+      || (buildingMas
+            ? "build/mas-touchtyper.provisionprofile"
+            : "build/mac-touchtyper.provisionprofile"),
     extendInfo: {
       ITSAppUsesNonExemptEncryption: false
     },
