@@ -1,5 +1,6 @@
 import Account from "@/components/Account";
 import ForgetPassword from "@/components/ForgotPassword";
+import ChangePassword from "@/components/ChangePassword";
 import Login from "@/components/Login";
 import Modal from "@/components/Modal";
 import SignUp from "@/components/SignUp";
@@ -21,6 +22,7 @@ export enum ModalType {
   SIGN_IN = "SIGN_IN",
   SIGN_UP = "SIGN_UP",
   RECOVER_ACCOUNT = "RECOVER_ACCOUNT",
+  CHANGE_PASSWORD = "CHANGE_PASSWORD",
   ACCOUNT = "ACCOUNT",
   WHATS_NEW = "WHATS_NEW",
   PRACTICE_SETTINGS = "PRACTICE_SETTINGS",
@@ -91,11 +93,15 @@ export function ModalController() {
       <Modal open={modal === ModalType.ACCOUNT} onClose={closeModal}>
         <Suspense fallback={<Loading />}>
           <Account
-            onChangePassword={() => setModal(ModalType.RECOVER_ACCOUNT)}
+            onChangePassword={() => setModal(ModalType.CHANGE_PASSWORD)}
             onError={closeModal}
             onCancel={closeModal}
           />
         </Suspense>
+      </Modal>
+
+      <Modal open={modal === ModalType.CHANGE_PASSWORD} onClose={closeModal}>
+        <ChangePassword onClose={closeModal} />
       </Modal>
 
       <Modal open={modal === ModalType.PRACTICE_SETTINGS} onClose={closeModal} panelClassName="relative transform rounded-2xl bg-transparent shadow-2xl transition-all my-8">
