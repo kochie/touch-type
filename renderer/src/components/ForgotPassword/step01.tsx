@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "../Button";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
@@ -8,66 +8,87 @@ import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import Error from "../Errors";
 import { Transition } from "@headlessui/react";
 import { useSupabaseClient } from "@/lib/supabase-provider";
+import { friendlyAuthError } from "@/lib/auth-errors";
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
 });
 
-const Spinner = (
-  <FontAwesomeIcon
-    icon={faSpinner}
-    className="text-white"
-    spin={true}
-    size="xl"
-  />
-);
+const RESEND_COOLDOWN_SECONDS = 60;
 
+const Spinner = (
+  <FontAwesomeIcon icon={faSpinner} className="text-white" spin size="xl" />
+);
 const Tick = (
   <FontAwesomeIcon icon={faCheck} className="text-white" size="xl" />
 );
 
-export function Step01({ onContinue }) {
+export interface Step01Values { email: string }
+interface Step01Props { onContinue: (values: Step01Values) => void }
+
+export function Step01({ onContinue }: Step01Props) {
   const [formErrors, setFormErrors] = useState<string>();
+  // Countdown counter for the rate-limit cooldown. Supabase 429s after a
+  // handful of rapid sends — disable the button locally first so users get
+  // clear feedback instead of an opaque error toast.
+  const [cooldown, setCooldown] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const supabase = useSupabaseClient();
+
+  useEffect(() => () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  }, []);
+
+  function startCooldown() {
+    setCooldown(RESEND_COOLDOWN_SECONDS);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setCooldown((s) => {
+        if (s <= 1 && intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        return Math.max(0, s - 1);
+      });
+    }, 1000);
+  }
 
   return (
     <Formik
-      initialValues={{
-        email: "",
-      }}
+      initialValues={{ email: "" }}
       initialStatus={"PENDING"}
       validationSchema={SignupSchema}
       onSubmit={async (values, { setSubmitting, setStatus }) => {
         setFormErrors("");
+        if (cooldown > 0) {
+          setSubmitting(false);
+          return;
+        }
 
         try {
           // No redirectTo: Electron can't handle the magic-link callback.
           // Supabase still sends the 6-digit OTP code in the same email,
           // which is what Step02 uses.
-          const { error } = await supabase.auth.resetPasswordForEmail(
-            values.email,
-          );
+          const { error } = await supabase.auth.resetPasswordForEmail(values.email);
 
-          if (error) {
-            throw error;
-          }
+          if (error) throw error;
 
-          setSubmitting(false);
+          startCooldown();
           setStatus("COMPLETE");
           await new Promise((resolve) => setTimeout(resolve, 1000));
           onContinue(values);
-        } catch (error: any) {
-          setFormErrors(error.message || String(error));
+        } catch (error: unknown) {
+          setFormErrors(friendlyAuthError(error, "Couldn't send recovery email."));
+        } finally {
+          setSubmitting(false);
         }
-
-        setSubmitting(false);
       }}
     >
       {({ isSubmitting, errors, touched, status }) => (
         <Form className="space-y-6">
           <Transition
             as="div"
-            appear={true}
+            appear
             show={!!formErrors}
             enter="transition-opacity duration-100"
             enterFrom="opacity-0"
@@ -79,10 +100,7 @@ export function Step01({ onContinue }) {
             <Error errors={formErrors} />
           </Transition>
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
+            <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
               Email address
             </label>
             <div className="mt-2">
@@ -94,16 +112,16 @@ export function Step01({ onContinue }) {
                 required
                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
+              {errors.email && touched.email && (
+                <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+              )}
             </div>
           </div>
 
           <div>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" disabled={isSubmitting || cooldown > 0}>
               {isSubmitting && status === "PENDING" && Spinner}
-              {!isSubmitting && status === "PENDING" && "Send Reset Email"}
+              {!isSubmitting && status === "PENDING" && (cooldown > 0 ? `Wait ${cooldown}s` : "Send Reset Email")}
               {!isSubmitting && status === "COMPLETE" && Tick}
             </Button>
           </div>

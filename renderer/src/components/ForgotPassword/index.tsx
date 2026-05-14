@@ -5,7 +5,19 @@ import { Step01 } from "./step01";
 import { Step02 } from "./step02";
 import Step03 from "./step03";
 
-const reducer = (state, action) => {
+type Stage = "STEP_01" | "STEP_02" | "STEP_03";
+
+interface State {
+  stage: Stage;
+  email?: string;
+}
+
+type Action =
+  | { type: "STEP_01" }
+  | { type: "STEP_02"; email: string }
+  | { type: "STEP_03" };
+
+const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "STEP_01":
       return { ...state, stage: "STEP_01" };
@@ -18,7 +30,13 @@ const reducer = (state, action) => {
   }
 };
 
-export default function ForgetPassword({ onSignUp, onContinue, onSignIn }) {
+interface Props {
+  onSignUp: () => void;
+  onContinue: () => void;
+  onSignIn: () => void;
+}
+
+export default function ForgetPassword({ onSignUp, onContinue, onSignIn }: Props) {
   const [{ stage, email }, dispatch] = useReducer(reducer, {
     stage: "STEP_01",
   });
@@ -40,7 +58,7 @@ export default function ForgetPassword({ onSignUp, onContinue, onSignIn }) {
               }
             />
           )}
-          {stage === "STEP_02" && (
+          {stage === "STEP_02" && email && (
             <Step02
               onContinue={() => {
                 dispatch({ type: "STEP_03" });

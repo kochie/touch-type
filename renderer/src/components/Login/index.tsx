@@ -7,6 +7,7 @@ import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useSupabaseClient } from "@/lib/supabase-provider";
 import { metrics } from "@/lib/metrics";
 import { toast } from "sonner";
+import { friendlyAuthError } from "@/lib/auth-errors";
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -64,9 +65,8 @@ export default function Login({ onSignUp, onContinue, onForgetPassword }) {
                 await new Promise((resolve) => setTimeout(resolve, 1000));
 
                 onContinue(values);
-              } catch (error: any) {
-                console.error(error);
-                toast.error(error.message || "Failed to sign in");
+              } catch (error: unknown) {
+                toast.error(friendlyAuthError(error, "Failed to sign in"));
                 setSubmitting(false);
               }
             }}

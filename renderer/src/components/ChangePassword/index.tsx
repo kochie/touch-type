@@ -7,8 +7,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useSupabaseClient } from "@/lib/supabase-provider";
 import { toast } from "sonner";
+import { friendlyAuthError } from "@/lib/auth-errors";
 
 const Schema = Yup.object().shape({
+  currentPassword: Yup.string().required("Required"),
   password: Yup.string().min(8, "Password must be at least 8 characters").required("Required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords must match")
@@ -25,17 +27,34 @@ export default function ChangePassword({ onClose }: { onClose: () => void }) {
           Change Password
         </h2>
         <p className="mt-1 text-center text-sm text-gray-500">
-          Enter a new password for your account.
+          Enter your current password to confirm, then choose a new one.
         </p>
       </div>
 
       <div className="mt-10 mx-auto w-full max-w-sm">
         <Formik
-          initialValues={{ password: "", confirmPassword: "" }}
+          initialValues={{ currentPassword: "", password: "", confirmPassword: "" }}
           initialStatus="PENDING"
           validationSchema={Schema}
           onSubmit={async (values, { setSubmitting, setStatus }) => {
             try {
+              // Re-auth with the current password BEFORE accepting the new
+              // one. Supabase's updateUser only requires a valid session, so
+              // without this check a stolen/unlocked session could silently
+              // replace the password and lock the legitimate owner out.
+              const { data: userData, error: userErr } = await supabase.auth.getUser();
+              if (userErr || !userData.user?.email) {
+                throw userErr ?? new Error("No active session.");
+              }
+              const { error: reauthErr } = await supabase.auth.signInWithPassword({
+                email: userData.user.email,
+                password: values.currentPassword,
+              });
+              if (reauthErr) {
+                toast.error("Current password is incorrect.");
+                return;
+              }
+
               const { error } = await supabase.auth.updateUser({
                 password: values.password,
               });
@@ -45,8 +64,8 @@ export default function ChangePassword({ onClose }: { onClose: () => void }) {
               toast.success("Password updated.");
               await new Promise((resolve) => setTimeout(resolve, 800));
               onClose();
-            } catch (err: any) {
-              toast.error(err?.message ?? "Failed to update password.");
+            } catch (err: unknown) {
+              toast.error(friendlyAuthError(err, "Failed to update password."));
             } finally {
               setSubmitting(false);
             }
@@ -54,6 +73,25 @@ export default function ChangePassword({ onClose }: { onClose: () => void }) {
         >
           {({ isSubmitting, errors, touched, status }) => (
             <Form className="space-y-6">
+              <div>
+                <label htmlFor="currentPassword" className="block text-sm font-medium leading-6 text-gray-900">
+                  Current Password
+                </label>
+                <div className="mt-2">
+                  <Field
+                    id="currentPassword"
+                    name="currentPassword"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
+                {errors.currentPassword && touched.currentPassword && (
+                  <p className="mt-1 text-xs text-red-500">{errors.currentPassword}</p>
+                )}
+              </div>
+
               <div>
                 <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
                   New Password

@@ -11,6 +11,7 @@ import { useSupabase } from "@/lib/supabase-provider";
 import { Tables } from "@/types/supabase";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { toast } from "sonner";
+import { friendlyAuthError } from "@/lib/auth-errors";
 
 enum PlanType {
   FREE = "free",
@@ -158,13 +159,15 @@ export default function Account({ onError, onCancel, onChangePassword }) {
         body: { auto_renew: newValue },
       });
       if (error) {
-        const body = await (error as any).context?.json?.().catch(() => null);
+        const body = await (error as { context?: { json?: () => Promise<{ error?: string }> } }).context?.json?.().catch(() => null);
         throw new Error(body?.error ?? error.message);
       }
       setSubscription((prev) => prev ? { ...prev, auto_renew: data.auto_renew } : prev);
       toast.success(data.auto_renew ? 'Auto-renew enabled.' : 'Auto-renew disabled. Your plan will expire at the end of the billing period.');
-    } catch (err: any) {
-      toast.error(err?.message ?? 'Failed to update auto-renew setting.');
+    } catch (err: unknown) {
+      // Drop stale optimistic state — Stripe may have failed mid-toggle.
+      await fetchUserData();
+      toast.error(friendlyAuthError(err, 'Failed to update auto-renew setting.'));
     } finally {
       setTogglingAutoRenew(false);
     }

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "../Button";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
@@ -8,6 +8,7 @@ import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import Error from "../Errors";
 import { Transition } from "@headlessui/react";
 import { useSupabaseClient } from "@/lib/supabase-provider";
+import { friendlyAuthError } from "@/lib/auth-errors";
 
 const Schema = Yup.object().shape({
   code: Yup.string().length(6, "Code must be 6 digits").required("Required"),
@@ -17,6 +18,8 @@ const Schema = Yup.object().shape({
     .required("Required"),
 });
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
 const Spinner = (
   <FontAwesomeIcon icon={faSpinner} className="text-white" spin={true} size="xl" />
 );
@@ -24,9 +27,57 @@ const Tick = (
   <FontAwesomeIcon icon={faCheck} className="text-white" size="xl" />
 );
 
-export function Step02({ email, onContinue }) {
+interface Step02Props { email: string; onContinue: () => void }
+
+export function Step02({ email, onContinue }: Step02Props) {
   const [formErrors, setFormErrors] = useState<string>();
+  const [resendCooldown, setResendCooldown] = useState(RESEND_COOLDOWN_SECONDS);
+  const [resending, setResending] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const supabase = useSupabaseClient();
+
+  // Start with a 60s cooldown on mount — the user just triggered a send in
+  // Step01, so don't let them immediately spam another.
+  useEffect(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setResendCooldown((s) => {
+        if (s <= 1 && intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        return Math.max(0, s - 1);
+      });
+    }, 1000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  async function handleResend() {
+    if (resendCooldown > 0 || resending) return;
+    setResending(true);
+    setFormErrors("");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(() => {
+        setResendCooldown((s) => {
+          if (s <= 1 && intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          return Math.max(0, s - 1);
+        });
+      }, 1000);
+    } catch (err: unknown) {
+      setFormErrors(friendlyAuthError(err, "Couldn't resend the code."));
+    } finally {
+      setResending(false);
+    }
+  }
 
   return (
     <Formik
@@ -35,6 +86,7 @@ export function Step02({ email, onContinue }) {
       validationSchema={Schema}
       onSubmit={async (values, { setSubmitting, setStatus }) => {
         setFormErrors("");
+        let signedInByOtp = false;
         try {
           const { error: verifyError } = await supabase.auth.verifyOtp({
             email,
@@ -42,6 +94,10 @@ export function Step02({ email, onContinue }) {
             type: "recovery",
           });
           if (verifyError) throw verifyError;
+          // verifyOtp leaves the user authenticated. From this moment until
+          // updateUser returns, an unrecovered failure must NOT leave the
+          // bearer with a live Supabase session.
+          signedInByOtp = true;
 
           const { error: updateError } = await supabase.auth.updateUser({
             password: values.password,
@@ -51,8 +107,17 @@ export function Step02({ email, onContinue }) {
           setStatus("COMPLETE");
           await new Promise((resolve) => setTimeout(resolve, 1000));
           onContinue();
-        } catch (error: any) {
-          setFormErrors(error.message || String(error));
+        } catch (error: unknown) {
+          // If verifyOtp succeeded but updateUser failed, sign out so a
+          // partial recovery doesn't leak an authenticated session.
+          if (signedInByOtp) {
+            try {
+              await supabase.auth.signOut();
+            } catch (signOutErr) {
+              console.warn("Failed to sign out after partial recovery:", signOutErr);
+            }
+          }
+          setFormErrors(friendlyAuthError(error, "Couldn't reset password."));
         } finally {
           setSubmitting(false);
         }
@@ -98,6 +163,18 @@ export function Step02({ email, onContinue }) {
             {errors.code && touched.code && (
               <p className="mt-1 text-xs text-red-500">{errors.code}</p>
             )}
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resendCooldown > 0 || resending}
+              className="mt-2 text-xs font-medium text-indigo-600 hover:text-indigo-500 disabled:text-gray-400 disabled:hover:text-gray-400"
+            >
+              {resending
+                ? "Resending…"
+                : resendCooldown > 0
+                ? `Resend code in ${resendCooldown}s`
+                : "Resend code"}
+            </button>
           </div>
 
           <div>

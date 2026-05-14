@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { Field, Label, Description } from "@headlessui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
@@ -11,6 +11,7 @@ import { useModal, ModalType } from "@/lib/modal-provider";
 import { metrics } from "@/lib/metrics";
 import Button from "../Button";
 import { toast } from "sonner";
+import { friendlyAuthError } from "@/lib/auth-errors";
 
 interface Subscription {
   billing_plan: string | null;
@@ -113,7 +114,7 @@ export function AccountSettings() {
   const [deleting, setDeleting] = useState(false);
   const [togglingAutoRenew, setTogglingAutoRenew] = useState(false);
 
-  const fetchSubscription = async () => {
+  const fetchSubscription = useCallback(async () => {
     if (!user) return;
     const { data: sub } = await supabase
       .from("subscriptions")
@@ -122,7 +123,7 @@ export function AccountSettings() {
       .single();
     setSubscription(sub ?? { billing_plan: "free", billing_period: null, next_billing_date: null, status: null, auto_renew: null });
     setLoadingPlan(false);
-  };
+  }, [user, supabase]);
 
   useEffect(() => {
     if (!user) return;
@@ -137,7 +138,7 @@ export function AccountSettings() {
       await fetchSubscription();
     };
     fetchProfile();
-  }, [user, supabase]);
+  }, [user, supabase, fetchSubscription]);
 
   // Re-fetch when the premium purchase modal closes
   const prevModal = useRef(modal);
@@ -146,7 +147,7 @@ export function AccountSettings() {
       fetchSubscription();
     }
     prevModal.current = modal;
-  }, [modal]);
+  }, [modal, fetchSubscription]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -191,13 +192,17 @@ export function AccountSettings() {
         body: { auto_renew: newValue },
       });
       if (error) {
-        const body = await (error as any).context?.json?.().catch(() => null);
+        const body = await (error as { context?: { json?: () => Promise<{ error?: string }> } }).context?.json?.().catch(() => null);
         throw new Error(body?.error ?? error.message);
       }
       setSubscription((prev) => prev ? { ...prev, auto_renew: data.auto_renew } : prev);
       toast.success(data.auto_renew ? "Auto-renew enabled." : "Auto-renew disabled. Your plan will expire at the end of the billing period.");
-    } catch (err: any) {
-      toast.error(err?.message ?? "Failed to update auto-renew setting.");
+    } catch (err: unknown) {
+      // Drop stale optimistic state by reloading the truth from Postgres.
+      // Stripe may have failed mid-update; without this, the UI shows the
+      // user's intended state but Stripe doesn't agree.
+      await fetchSubscription();
+      toast.error(friendlyAuthError(err, "Failed to update auto-renew setting."));
     } finally {
       setTogglingAutoRenew(false);
     }
