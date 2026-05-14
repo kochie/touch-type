@@ -17,6 +17,7 @@ import {
   select,
 } from "d3";
 import { useResults } from "@/lib/result-provider";
+import { useProfileTimezone } from "@/lib/profile-timezone";
 import { KeyboardCanvas } from "@/components/KeyboardCanvas";
 
 type TimeRange = "7d" | "30d" | "all";
@@ -26,10 +27,13 @@ interface HeatmapCanvasProps {
   timeRange: TimeRange;
 }
 
-function getDateCutoff(timeRange: TimeRange): Temporal.Instant | null {
+function getDateCutoff(timeRange: TimeRange, tz: string): Temporal.Instant | null {
   if (timeRange === "all") return null;
   const days = timeRange === "7d" ? 7 : 30;
-  return Temporal.Now.instant().subtract({ hours: days * 24 });
+  // Subtract calendar days in the user's profile timezone — `{hours: days*24}`
+  // ignores DST, so on a "spring forward" Sunday the 7-day window would shave
+  // off an hour at the edge and risk dropping a session.
+  return Temporal.Now.zonedDateTimeISO(tz).subtract({ days }).toInstant();
 }
 
 type ResizerAction = { type: "RESIZE" } | { type: "PR" };
@@ -48,6 +52,7 @@ export function HeatmapCanvas({ keyboardName, timeRange }: HeatmapCanvasProps) {
   const axisRef = useRef<SVGSVGElement>(null);
   const [{ pr }, resizeDispatch] = useReducer(resizer, { width: 1000, height: 50, pr: 1 });
   const { results } = useResults();
+  const tz = useProfileTimezone();
 
   useLayoutEffect(() => {
     const updatePr = () => {
@@ -60,7 +65,7 @@ export function HeatmapCanvas({ keyboardName, timeRange }: HeatmapCanvasProps) {
   }, []);
 
   const { colorMap, domain } = useMemo(() => {
-    const cutoff = getDateCutoff(timeRange);
+    const cutoff = getDateCutoff(timeRange, tz);
     const keyResults = results
       .filter((res) => {
         if (res.keyboard !== keyboardName) return false;
@@ -88,7 +93,7 @@ export function HeatmapCanvas({ keyboardName, timeRange }: HeatmapCanvasProps) {
     });
 
     return { colorMap, domain };
-  }, [results, keyboardName, timeRange]);
+  }, [results, keyboardName, timeRange, tz]);
 
   // Draw the gradient scale bar
   useLayoutEffect(() => {

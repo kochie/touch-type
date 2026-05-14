@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { useSupabase } from "./supabase-provider";
 import { usePlan } from "./plan_hook";
 import { useResults } from "./result-provider";
+import { useProfileTimezone } from "./profile-timezone";
 import { metrics } from "./metrics";
 
 export interface StreakData {
@@ -53,12 +54,14 @@ export function getNextMilestone(streak: number): number | null {
   return next ?? null;
 }
 
-// Calculate days until streak is lost (0 = today, 1 = tomorrow deadline)
-export function getDaysUntilStreakLost(lastActivityDate: string | null): number {
+// Calculate days until streak is lost (0 = today, 1 = tomorrow deadline).
+// Caller must pass the user's authoritative timezone (profiles.timezone) so
+// the result matches the server-side streak trigger's bucketing.
+export function getDaysUntilStreakLost(lastActivityDate: string | null, tz: string): number {
   if (!lastActivityDate) return 0;
-  
+
   const lastDate = Temporal.PlainDate.from(lastActivityDate);
-  const today = Temporal.Now.plainDateISO();
+  const today = Temporal.Now.zonedDateTimeISO(tz).toPlainDate();
   const daysSince = today.since(lastDate, { largestUnit: "days" }).days;
 
   // If practiced today, have until end of tomorrow (returns 1)
@@ -67,8 +70,10 @@ export function getDaysUntilStreakLost(lastActivityDate: string | null): number 
   return 1 - daysSince;
 }
 
-// Calculate streak from results array (client-side fallback)
-function calculateStreakFromResults(results: { datetime: string }[]): {
+// Calculate streak from results array (client-side fallback).
+// `tz` must be the user's profile timezone (matches the DB trigger's
+// bucketing key) so the client floor doesn't disagree with the server.
+function calculateStreakFromResults(results: { datetime: string }[], tz: string): {
   currentStreak: number;
   longestStreak: number;
   lastActivityDate: string | null;
@@ -82,7 +87,7 @@ function calculateStreakFromResults(results: { datetime: string }[]): {
     new Set(
       results.map((r) =>
         Temporal.Instant.from(r.datetime)
-          .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+          .toZonedDateTimeISO(tz)
           .toPlainDate()
           .toString()
       )
@@ -96,7 +101,7 @@ function calculateStreakFromResults(results: { datetime: string }[]): {
   }
 
   const lastActivityDate = uniqueDates[0];
-  const today = Temporal.Now.plainDateISO();
+  const today = Temporal.Now.zonedDateTimeISO(tz).toPlainDate();
   const lastDate = Temporal.PlainDate.from(lastActivityDate);
 
   // Check if the most recent activity is today or yesterday
@@ -157,14 +162,15 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
   const { supabase, user } = useSupabase();
   const plan = usePlan();
   const { results } = useResults();
+  const tz = useProfileTimezone();
 
   const isPremium = plan?.billing_plan !== "free" && plan?.status === "active";
 
   // Calculate streak from local results as fallback
   const calculateFromResults = useCallback(() => {
-    const calculated = calculateStreakFromResults(results);
+    const calculated = calculateStreakFromResults(results, tz);
     const isAtRisk = calculated.lastActivityDate
-      ? !Temporal.PlainDate.from(calculated.lastActivityDate).equals(Temporal.Now.plainDateISO())
+      ? !Temporal.PlainDate.from(calculated.lastActivityDate).equals(Temporal.Now.zonedDateTimeISO(tz).toPlainDate())
       : true;
 
     setStreak({
@@ -177,7 +183,7 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
       isPremium,
       isLoading: false,
     });
-  }, [results, isPremium]);
+  }, [results, isPremium, tz]);
 
   const fetchStreak = useCallback(async () => {
     if (!user) {
@@ -216,14 +222,14 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Check if at risk (no activity today)
       const isAtRisk = lastActivityDate
-        ? !Temporal.PlainDate.from(lastActivityDate).equals(Temporal.Now.plainDateISO())
+        ? !Temporal.PlainDate.from(lastActivityDate).equals(Temporal.Now.zonedDateTimeISO(tz).toPlainDate())
         : true;
 
       // The DB trigger only fires on successful Supabase inserts. If an insert
       // failed silently (network issue), the trigger never saw that session and
       // the DB streak is stale. Use the client calculation as a floor so a
       // locally-visible streak is never shown lower than it should be.
-      const clientCalc = calculateStreakFromResults(results);
+      const clientCalc = calculateStreakFromResults(results, tz);
 
       setStreak({
         currentStreak: Math.max(data.current_streak ?? 0, clientCalc.currentStreak),
@@ -239,7 +245,7 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Error fetching streak:", error);
       calculateFromResults();
     }
-  }, [user, supabase, isPremium, calculateFromResults, results]);
+  }, [user, supabase, isPremium, calculateFromResults, results, tz]);
 
   // Refresh freeze count for premium users (weekly)
   const refreshFreezes = useCallback(async () => {
@@ -261,7 +267,7 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
       // Check if it's been a week since last refresh
       const shouldRefresh =
         !lastRefreshDate ||
-        Temporal.Now.plainDateISO().since(lastRefreshDate, { largestUnit: "days" }).days >= 7;
+        Temporal.Now.zonedDateTimeISO(tz).toPlainDate().since(lastRefreshDate, { largestUnit: "days" }).days >= 7;
 
       if (shouldRefresh && (data.streak_freeze_count ?? 0) < 1) {
         // Grant 1 freeze per week for premium users
@@ -269,7 +275,7 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
           .from("streaks")
           .update({
             streak_freeze_count: 1,
-            last_freeze_refresh: Temporal.Now.plainDateISO().toString(),
+            last_freeze_refresh: Temporal.Now.zonedDateTimeISO(tz).toPlainDate().toString(),
           })
           .eq("user_id", user.id);
 

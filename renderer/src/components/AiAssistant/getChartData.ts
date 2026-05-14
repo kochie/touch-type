@@ -1,18 +1,20 @@
 import { Result, useResults } from "@/lib/result-provider";
 import { durationToMs } from "@/lib/duration";
+import { useProfileTimezone } from "@/lib/profile-timezone";
 
 type ChartDatum = { name: string; [key: string]: string | number };
 
 // Function to get chart data for each category
 export const getChartData = (category): ChartDatum[] => {
   const { results } = useResults();
+  const tz = useProfileTimezone();
 
   // results is an array of each typing test result
   // bucket these results into dates and calculate the average for each day
 
   const resultsByDate = results.reduce((acc, result) => {
     const date = Temporal.Instant.from(result.datetime)
-      .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+      .toZonedDateTimeISO(tz)
       .toPlainDate()
       .toLocaleString("en");
 
@@ -35,8 +37,7 @@ export const getChartData = (category): ChartDatum[] => {
 
   switch (category) {
     case "speed": {
-      const intlFormat = new Intl.DateTimeFormat("en-US", { weekday: "long" });
-      const today = Temporal.Now.plainDateISO();
+      const today = Temporal.Now.zonedDateTimeISO(tz).toPlainDate();
       const data = Array(7)
         .fill(0)
         .map((_, i) => {
@@ -46,15 +47,13 @@ export const getChartData = (category): ChartDatum[] => {
           const wpm = res
             ? res.reduce((acc, r) => acc + r.cpm, 0) / res.length
             : 0;
-          const jsDate = new Date(plainDate.toString());
-          return { name: intlFormat.format(jsDate), wpm: wpm.toFixed(0) };
+          return { name: plainDate.toLocaleString("en-US", { weekday: "long" }), wpm: wpm.toFixed(0) };
         });
 
       return data.reverse();
     }
     case "accuracy": {
-      const intlFormat = new Intl.DateTimeFormat("en-US", { weekday: "long" });
-      const today = Temporal.Now.plainDateISO();
+      const today = Temporal.Now.zonedDateTimeISO(tz).toPlainDate();
       const data = Array(7)
         .fill(0)
         .map((_, i) => {
@@ -64,9 +63,8 @@ export const getChartData = (category): ChartDatum[] => {
           const total =
             res?.reduce((acc, r) => acc + r.correct + r.incorrect, 0) ?? 0;
           const correct = res?.reduce((acc, r) => acc + r.correct, 0) ?? 0;
-          const jsDate = new Date(plainDate.toString());
           return {
-            name: intlFormat.format(jsDate),
+            name: plainDate.toLocaleString("en-US", { weekday: "long" }),
             accuracy: ((correct / total) * 100).toFixed(0),
           };
         });
@@ -74,8 +72,7 @@ export const getChartData = (category): ChartDatum[] => {
       return data.reverse();
     }
     case "ergonomics": {
-      const intlFormat = new Intl.DateTimeFormat("en-US", { weekday: "long" });
-      const today = Temporal.Now.plainDateISO();
+      const today = Temporal.Now.zonedDateTimeISO(tz).toPlainDate();
       const data = Array(7)
         .fill(0)
         .map((_, i) => {
@@ -103,9 +100,8 @@ export const getChartData = (category): ChartDatum[] => {
               }, 0)
             : 0;
 
-          const jsDate = new Date(plainDate.toString());
           return {
-            name: intlFormat.format(jsDate),
+            name: plainDate.toLocaleString("en-US", { weekday: "long" }),
             score: (
               0.3 * wpm +
               0.3 * accuracy -
@@ -119,8 +115,7 @@ export const getChartData = (category): ChartDatum[] => {
       return data.reverse();
     }
     case "practice": {
-      const intlFormat = new Intl.DateTimeFormat("en-US", { weekday: "long" });
-      const today = Temporal.Now.plainDateISO();
+      const today = Temporal.Now.zonedDateTimeISO(tz).toPlainDate();
       const data = Array(7)
         .fill(0)
         .map((_, i) => {
@@ -135,9 +130,8 @@ export const getChartData = (category): ChartDatum[] => {
           const mins = Math.floor(totalSecs / 60);
           const secs = totalSecs % 60;
           const label = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-          const jsDate = new Date(plainDate.toString());
           return {
-            name: intlFormat.format(jsDate),
+            name: plainDate.toLocaleString("en-US", { weekday: "long" }),
             minutes: totalMinutes,
             label,
           };
@@ -146,21 +140,19 @@ export const getChartData = (category): ChartDatum[] => {
       return data.reverse();
     }
     case "rhythm": {
-      const intlFormat = new Intl.DateTimeFormat("en-US", { weekday: "long" });
-      const today = Temporal.Now.plainDateISO();
+      const today = Temporal.Now.zonedDateTimeISO(tz).toPlainDate();
       const data = Array(7)
         .fill(0)
         .map((_, i) => {
           const plainDate = today.subtract({ days: i });
           const dateString = plainDate.toLocaleString("en");
           const res = resultsByDate.get(dateString);
-          const jsDate = new Date(plainDate.toString());
           // calculate standard deviation of time for each test
-          if (!res) return { name: intlFormat.format(jsDate), consistency: 0 };
+          if (!res) return { name: plainDate.toLocaleString("en-US", { weekday: "long" }), consistency: 0 };
 
           // for each result, calculate the mean, variance, and standard deviation of the time between keypresses
 
-          if (res[0].keyPresses[0].timestamp === undefined) return { name: intlFormat.format(jsDate), consistency: 0 };
+          if (res[0].keyPresses[0].timestamp === undefined) return { name: plainDate.toLocaleString("en-US", { weekday: "long" }), consistency: 0 };
 
           const mean = res.reduce(
             (acc, r) => {
@@ -187,7 +179,7 @@ export const getChartData = (category): ChartDatum[] => {
           const stdDev = Math.sqrt(variance);
 
           return {
-            name: intlFormat.format(jsDate),
+            name: plainDate.toLocaleString("en-US", { weekday: "long" }),
             consistency: stdDev.toFixed(2),
           };
         });

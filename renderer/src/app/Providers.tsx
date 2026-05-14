@@ -19,12 +19,12 @@ import { PvPProvider } from "@/lib/pvp-provider";
 import { Toaster } from "sonner";
 import { useDeepLink, DeepLinkData } from "@/lib/deep-link-hook";
 import { StreakProvider } from "@/lib/streak_hook";
-import { ProfileTimezoneSync } from "@/lib/profile-timezone-sync";
+import { ProfileTimezoneProvider } from "@/lib/profile-timezone";
 
 export default function Providers({ children }) {
   return (
     <SupabaseProvider>
-      <ProfileTimezoneSync />
+      <ProfileTimezoneProvider>
       <MasProvider>
         <SettingsProvider>
           <ResultsProvider>
@@ -48,6 +48,7 @@ export default function Providers({ children }) {
           </ResultsProvider>
         </SettingsProvider>
       </MasProvider>
+      </ProfileTimezoneProvider>
     </SupabaseProvider>
   );
 }
