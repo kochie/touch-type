@@ -170,6 +170,48 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+          # Verbose electron-builder logging so cert selection is visible in CI
+          DEBUG: electron-builder
+
+      - name: Diagnose macOS signing
+        if: startsWith(matrix.os, 'macos') && always()
+        shell: bash
+        run: |
+          set +e
+
+          echo "=== Signing identities in keychain ==="
+          security find-identity -v -p codesigning
+
+          for variant in mas-universal mac-universal; do
+            echo ""
+            echo "============================================================"
+            echo "  $variant"
+            echo "============================================================"
+            APP=$(find "dist/$variant" -maxdepth 2 -name "*.app" -type d 2>/dev/null | head -1)
+            if [ -z "$APP" ]; then
+              echo "(no .app in dist/$variant)"
+              continue
+            fi
+            echo "App: $APP"
+
+            echo ""
+            echo "--- codesign -dvv ---"
+            codesign -dvv "$APP" 2>&1
+
+            echo ""
+            echo "--- Authority chain (cert SHA-1s) ---"
+            codesign -d --verbose=4 "$APP" 2>&1 | grep -E "Authority|TeamIdentifier|CDHash"
+
+            echo ""
+            echo "--- Embedded provisioning profile ---"
+            PP="$APP/Contents/embedded.provisionprofile"
+            if [ -f "$PP" ]; then
+              security cms -D -i "$PP" 2>/dev/null | plutil -convert xml1 -o - - \
+                | grep -A2 -E "Name|TeamIdentifier|DeveloperCertificates|aps-environment|application-identifier"
+            else
+              echo "(no embedded.provisionprofile)"
+            fi
+          done
 
       # - name: Upload to Snap Store
       #   if: startsWith(matrix.os, 'ubuntu')
