@@ -36,7 +36,9 @@ export default function Providers({ children }) {
                       <ModalProvider>
                         <Toaster richColors position="top-center" />
                         <ModalSetup />
-                        {children}
+                        <div className="flex-1 min-h-0 overflow-y-auto">
+                          {children}
+                        </div>
                       </ModalProvider>
                     </CodeProvider>
                   </WordProvider>
