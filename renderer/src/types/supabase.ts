@@ -293,7 +293,7 @@ export type Database = {
           name: string | null
           phone_number: string | null
           preferred_username: string | null
-          timezone: string | null
+          timezone: string
           updated_at: string | null
         }
         Insert: {
@@ -305,7 +305,7 @@ export type Database = {
           name?: string | null
           phone_number?: string | null
           preferred_username?: string | null
-          timezone?: string | null
+          timezone?: string
           updated_at?: string | null
         }
         Update: {
@@ -317,7 +317,7 @@ export type Database = {
           name?: string | null
           phone_number?: string | null
           preferred_username?: string | null
-          timezone?: string | null
+          timezone?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -471,6 +471,7 @@ export type Database = {
       results: {
         Row: {
           capital: boolean | null
+          client_uuid: string
           code_lang: string | null
           code_mode: boolean | null
           correct: number
@@ -490,6 +491,7 @@ export type Database = {
         }
         Insert: {
           capital?: boolean | null
+          client_uuid?: string
           code_lang?: string | null
           code_mode?: boolean | null
           correct: number
@@ -509,6 +511,7 @@ export type Database = {
         }
         Update: {
           capital?: boolean | null
+          client_uuid?: string
           code_lang?: string | null
           code_mode?: boolean | null
           correct?: number
@@ -749,9 +752,83 @@ export type Database = {
       }
     }
     Views: {
+      subscriptions_resolved: {
+        Row: {
+          apple_original_transaction_id: string | null
+          auto_renew: boolean | null
+          billing_period: string | null
+          billing_plan: string | null
+          billing_service: string | null
+          created_at: string | null
+          display_billing_period: string | null
+          effective_end_date: string | null
+          id: string | null
+          is_canceled: boolean | null
+          is_in_trial: boolean | null
+          is_past_due: boolean | null
+          is_premium: boolean | null
+          next_billing_date: string | null
+          payment_status: string | null
+          session_id: string | null
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          apple_original_transaction_id?: string | null
+          auto_renew?: boolean | null
+          billing_period?: string | null
+          billing_plan?: string | null
+          billing_service?: string | null
+          created_at?: string | null
+          display_billing_period?: never
+          effective_end_date?: never
+          id?: string | null
+          is_canceled?: never
+          is_in_trial?: never
+          is_past_due?: never
+          is_premium?: never
+          next_billing_date?: string | null
+          payment_status?: string | null
+          session_id?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          apple_original_transaction_id?: string | null
+          auto_renew?: boolean | null
+          billing_period?: string | null
+          billing_plan?: string | null
+          billing_service?: string | null
+          created_at?: string | null
+          display_billing_period?: never
+          effective_end_date?: never
+          id?: string | null
+          is_canceled?: never
+          is_in_trial?: never
+          is_past_due?: never
+          is_premium?: never
+          next_billing_date?: string | null
+          payment_status?: string | null
+          session_id?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_results_view: {
         Row: {
           capital: boolean | null
+          code_lang: string | null
+          code_mode: boolean | null
           correct: number | null
           cpm: number | null
           created_at: string | null
@@ -1371,3 +1448,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

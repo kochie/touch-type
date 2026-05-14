@@ -342,7 +342,10 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
       } else {
         // Personal-best celebration. Compare against prior runs in the same
         // partition (matches the leaderboard partition + codeMode/codeLang).
-        // No prior runs in the partition = silent no-op (per design).
+        // First run in a partition (prevBest stays -Infinity) celebrates too,
+        // as long as the score itself is meaningful (correct chars typed in
+        // measurable time). Earlier code had a `Number.isFinite(prevBest)`
+        // guard that silently swallowed every user's first PB.
         if (settings.confettiOnPersonalBest) {
           const minutes = time.total("milliseconds") / 60000;
           const finalNetCpm = minutes > 0 ? correct / minutes : 0;
@@ -361,7 +364,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
             const cpmN = netCpmOf(r);
             if (cpmN > prevBest) prevBest = cpmN;
           }
-          if (Number.isFinite(prevBest) && finalNetCpm > prevBest) {
+          if (finalNetCpm > 0 && finalNetCpm > prevBest) {
             celebratePersonalBest();
           }
         }
