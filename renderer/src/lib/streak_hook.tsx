@@ -191,49 +191,50 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
         .from("streaks")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      // Handle table not existing or other errors - fall back to results
+      // maybeSingle returns data=null with no error when no row exists; only
+      // surface to the fallback on actual transport/table errors.
       if (error) {
-        // PGRST116 = no rows found, 42P01 = table doesn't exist
-        if (error.code === "PGRST116" || error.code === "42P01" || error.message?.includes("does not exist")) {
+        if (error.code === "42P01" || error.message?.includes("does not exist")) {
           console.log("Streaks table not available, calculating from results");
-          calculateFromResults();
-          return;
+        } else {
+          console.error("Error fetching streak:", error);
         }
-        console.error("Error fetching streak:", error);
         calculateFromResults();
         return;
       }
 
-      if (data) {
-        const lastActivityDate = data.last_activity_date;
-
-        // Check if at risk (no activity today)
-        const isAtRisk = lastActivityDate
-          ? !Temporal.PlainDate.from(lastActivityDate).equals(Temporal.Now.plainDateISO())
-          : true;
-
-        // The DB trigger only fires on successful Supabase inserts. If an insert
-        // failed silently (network issue), the trigger never saw that session and
-        // the DB streak is stale. Use the client calculation as a floor so a
-        // locally-visible streak is never shown lower than it should be.
-        const clientCalc = calculateStreakFromResults(results);
-
-        setStreak({
-          currentStreak: Math.max(data.current_streak ?? 0, clientCalc.currentStreak),
-          longestStreak: Math.max(data.longest_streak ?? 0, clientCalc.longestStreak),
-          lastActivityDate: data.last_activity_date,
-          isAtRisk,
-          freezesAvailable: data.streak_freeze_count ?? 0,
-          freezeUsedAt: data.streak_freeze_used_at,
-          isPremium,
-          isLoading: false,
-        });
-      } else {
-        // No streak record yet - calculate from results
+      if (!data) {
+        // No streak row yet (new account, or trigger never fired). Fall back
+        // to local calculation; the DB row will appear after the next result.
         calculateFromResults();
+        return;
       }
+
+      const lastActivityDate = data.last_activity_date;
+
+      // Check if at risk (no activity today)
+      const isAtRisk = lastActivityDate
+        ? !Temporal.PlainDate.from(lastActivityDate).equals(Temporal.Now.plainDateISO())
+        : true;
+
+      // The DB trigger only fires on successful Supabase inserts. If an insert
+      // failed silently (network issue), the trigger never saw that session and
+      // the DB streak is stale. Use the client calculation as a floor so a
+      // locally-visible streak is never shown lower than it should be.
+      const clientCalc = calculateStreakFromResults(results);
+
+      setStreak({
+        currentStreak: Math.max(data.current_streak ?? 0, clientCalc.currentStreak),
+        longestStreak: Math.max(data.longest_streak ?? 0, clientCalc.longestStreak),
+        lastActivityDate: data.last_activity_date,
+        isAtRisk,
+        freezesAvailable: data.streak_freeze_count ?? 0,
+        freezeUsedAt: data.streak_freeze_used_at,
+        isPremium,
+        isLoading: false,
+      });
     } catch (error) {
       console.error("Error fetching streak:", error);
       calculateFromResults();

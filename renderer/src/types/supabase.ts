@@ -293,7 +293,7 @@ export type Database = {
           name: string | null
           phone_number: string | null
           preferred_username: string | null
-          timezone: string
+          timezone: string | null
           updated_at: string | null
         }
         Insert: {
@@ -305,7 +305,7 @@ export type Database = {
           name?: string | null
           phone_number?: string | null
           preferred_username?: string | null
-          timezone?: string
+          timezone?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -317,7 +317,7 @@ export type Database = {
           name?: string | null
           phone_number?: string | null
           preferred_username?: string | null
-          timezone?: string
+          timezone?: string | null
           updated_at?: string | null
         }
         Relationships: []
