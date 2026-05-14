@@ -1,3 +1,5 @@
+console.log(`>>> [electron-builder.ts] top-of-file pid=${process.pid} argv=${process.argv.slice(-6).join(' ')}`);
+
 import { Configuration } from "electron-builder";
 import { version } from "./package.json"
 
@@ -91,10 +93,14 @@ function shouldNotarize(): boolean {
   return false;
 }
 
+console.log(`>>> [electron-builder.ts] before shouldNotarize`);
 const notarizeConfig = shouldNotarize();
+console.log(`>>> [electron-builder.ts] before isMasBuild`);
 const buildingMas = isMasBuild();
+console.log(`>>> [electron-builder.ts] after isMasBuild, buildingMas=${buildingMas}`);
 const buildingDev = isDevBuild();
 const isCI = isCIBuild();
+console.log(`>>> [electron-builder.ts] all consts initialized, building config object`);
 
 const config: Configuration = {
   appId: "io.kochie.touch-typer",
