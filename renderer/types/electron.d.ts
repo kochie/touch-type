@@ -50,6 +50,13 @@ export interface StreakData {
 
 export interface DebugInfo {
   isDev: boolean;
+  /**
+   * True if this is a Mac App Development-signed build (electron-builder
+   * --mac mas-dev) — a signed sandboxed build with get-task-allow=true.
+   * Used to surface developer-only tooling in dev builds (where isDev is
+   * always false because the bundle is packaged).
+   */
+  isMasDev: boolean;
   platform: string;
   electronVersion: string;
   nodeVersion: string;

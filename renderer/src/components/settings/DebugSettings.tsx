@@ -56,7 +56,7 @@ function EmailTestButton({ label, description, onSend }: EmailButtonProps) {
 export function DebugSettings() {
   const [isElectron, setIsElectron] = useState(false);
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
-  const [isDev, setIsDev] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   const { supabase, user } = useSupabase();
 
   useEffect(() => {
@@ -66,7 +66,13 @@ export function DebugSettings() {
         try {
           const info = await window.electronAPI.getDebugInfo();
           setDebugInfo(info);
-          setIsDev(info.isDev);
+          // Show debug tools when either:
+          //   - running under `pnpm dev` (unpackaged renderer), OR
+          //   - running a packaged Mac App Development build (mas-dev) — these
+          //     are signed and sandboxed but still intended for dev testing.
+          //     `isDev` is always false for any packaged build, so we'd never
+          //     see debug tooling in mas-dev without checking isMasDev.
+          setShowDebug(info.isDev || info.isMasDev);
         } catch (err) {
           console.error("Failed to get debug info:", err);
         }
@@ -104,7 +110,7 @@ export function DebugSettings() {
     if (error) throw error;
   };
 
-  if (!isElectron || !isDev) return null;
+  if (!isElectron || !showDebug) return null;
 
   return (
     <>

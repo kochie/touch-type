@@ -53,6 +53,14 @@ export interface StartupResult {
 
 export interface DebugInfo {
   isDev: boolean;
+  /**
+   * True if this is a Mac App Development-signed build (electron-builder
+   * --mac mas-dev) — i.e. a signed-and-sandboxed build with get-task-allow,
+   * NOT a production MAS upload. Used in the renderer to surface developer-
+   * only tooling (debug panel, etc.) in dev builds even when isDev=false
+   * (which is always false for packaged builds).
+   */
+  isMasDev: boolean;
   platform: NodeJS.Platform;
   electronVersion: string;
   nodeVersion: string;

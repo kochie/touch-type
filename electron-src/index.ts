@@ -104,11 +104,41 @@ const appStartTime = Date.now();
 // Prepare the renderer once the app is ready
 // Store isDev status globally after import
 let isDevMode = false;
+let isMasDevMode = false;
+
+/**
+ * Detect a Mac App Development-signed build (i.e. `electron-builder --mac mas-dev`)
+ * by reading the embedded provisioning profile. `process.mas` is true for BOTH
+ * mas and mas-dev builds, so we can't use it to distinguish. The reliable
+ * marker is the `com.apple.security.get-task-allow` entitlement, which is
+ * present on Apple Development-signed builds and absent on Apple Distribution
+ * builds (the App Store always strips it).
+ *
+ * Runs once at app start; the result feeds isMasDev() / getDebugInfo() to
+ * conditionally surface developer tooling in the renderer.
+ */
+function detectMasDev(): boolean {
+  if (!process.mas) return false;
+  try {
+    const { spawnSync } = require("child_process") as typeof import("child_process");
+    const path = require("path") as typeof import("path");
+    // process.resourcesPath -> .app/Contents/Resources; the profile lives one
+    // directory up at .app/Contents/embedded.provisionprofile.
+    const ppPath = path.join(path.dirname(process.resourcesPath), "embedded.provisionprofile");
+    const result = spawnSync("security", ["cms", "-D", "-i", ppPath], { encoding: "utf8" });
+    if (result.status !== 0) return false;
+    return /<key>\s*com\.apple\.security\.get-task-allow\s*<\/key>\s*<true\s*\/>/.test(result.stdout);
+  } catch {
+    return false;
+  }
+}
 
 app.on("ready", async () => {
   // Import isDev at app ready to avoid issues
   const isDev = await import("electron-is-dev");
   isDevMode = isDev.default;
+  isMasDevMode = detectMasDev();
+  log.info("Build flavor:", { isDevMode, isMas: !!process.mas, isMasDevMode });
 
   // Setup in-app purchase listener (macOS/MAS only; no-ops on other platforms)
   setupInAppPurchase();
@@ -220,6 +250,7 @@ app.on("ready", async () => {
   // Debug info handler
   ipcMain.handle("getDebugInfo", () => ({
     isDev: isDevMode,
+    isMasDev: isMasDevMode,
     platform: process.platform,
     electronVersion: process.versions.electron,
     nodeVersion: process.versions.node,
