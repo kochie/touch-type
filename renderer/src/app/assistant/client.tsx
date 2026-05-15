@@ -6,6 +6,7 @@ import Button from "@/components/Button";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import { usePlan } from "@/lib/plan_hook";
+import { getSupabaseClient } from "@/lib/supabase-client";
 import { AssistantChat } from "@/components/AiAssistant/AssistantChat";
 import { InsightCard } from "@/components/AiAssistant/InsightCard";
 import { InsightSummary } from "@/components/AiAssistant/InsightSummary";
@@ -276,10 +277,54 @@ export function ClientAssistant() {
 
   useEffect(() => {
     if (!user || !plan || plan.billing_plan === "free") return;
+
+    let cancelled = false;
+
+    // Initial fetch — returns null if no row exists yet.
     getAiInsights()
-      .then(setInsight)
-      .catch(console.error)
-      .finally(() => setInsightLoading(false));
+      .then((data) => {
+        if (!cancelled) setInsight(data);
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("getAiInsights failed:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setInsightLoading(false);
+      });
+
+    // Realtime: pick up rows inserted while the page is open. Covers (a) a
+    // generate-ai-insights run that completed after we already fetched, (b)
+    // background cron generation, (c) a refresh kicked off from another tab.
+    // Without this, the page sits on EmptyState (or a stale insight) until
+    // the user remounts the route by navigating away and back.
+    const channel = getSupabaseClient()
+      .channel(`ai_insights:${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "ai_insights",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (cancelled) return;
+          const row = (payload.new ?? null) as AiInsight | null;
+          if (!row) return;
+          // Only replace if the incoming row is newer than what we have.
+          setInsight((prev) => {
+            if (!prev) return row;
+            return row.week_start >= prev.week_start ? row : prev;
+          });
+          setInsightLoading(false);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      channel.unsubscribe();
+    };
   }, [user, plan]);
 
   const handleRefresh = async () => {
