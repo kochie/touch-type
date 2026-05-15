@@ -109,10 +109,14 @@ let isMasDevMode = false;
 /**
  * Detect a Mac App Development-signed build (i.e. `electron-builder --mac mas-dev`)
  * by reading the embedded provisioning profile. `process.mas` is true for BOTH
- * mas and mas-dev builds, so we can't use it to distinguish. The reliable
- * marker is the `com.apple.security.get-task-allow` entitlement, which is
- * present on Apple Development-signed builds and absent on Apple Distribution
- * builds (the App Store always strips it).
+ * mas and mas-dev builds, so we can't use it to distinguish.
+ *
+ * The marker we use is `com.apple.developer.aps-environment = "development"`
+ * (versus "production" on App Store profiles). Apple's dev provisioning profiles
+ * always set this to "development" for the APNs sandbox; production profiles
+ * set it to "production". This is a more reliable signal than get-task-allow:
+ * profiles don't enumerate get-task-allow in their Entitlements dict (Apple
+ * gates that one specially), but aps-environment is always there.
  *
  * Runs once at app start; the result feeds isMasDev() / getDebugInfo() to
  * conditionally surface developer tooling in the renderer.
@@ -127,7 +131,9 @@ function detectMasDev(): boolean {
     const ppPath = path.join(path.dirname(process.resourcesPath), "embedded.provisionprofile");
     const result = spawnSync("security", ["cms", "-D", "-i", ppPath], { encoding: "utf8" });
     if (result.status !== 0) return false;
-    return /<key>\s*com\.apple\.security\.get-task-allow\s*<\/key>\s*<true\s*\/>/.test(result.stdout);
+    return /<key>\s*com\.apple\.developer\.aps-environment\s*<\/key>\s*<string>\s*development\s*<\/string>/.test(
+      result.stdout,
+    );
   } catch {
     return false;
   }
