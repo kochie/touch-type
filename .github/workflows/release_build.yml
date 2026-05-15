@@ -11,6 +11,11 @@ on:
         required: true
         default: ""
         type: string
+      enable_debug:
+        description: "Print signing diagnostics + verbose electron-builder logs"
+        required: false
+        default: false
+        type: boolean
 
 # Stable release workflow. Mirrors beta_build.yml's structure (macOS Xcode 26,
 # split mac default + mas invocations, altool failure detection, profile UUID
@@ -47,8 +52,20 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
+      # One macos runner per Apple target so codesign keychain operations
+      # don't serialize, and a default-target failure doesn't abort the
+      # mas-target build (or vice versa). Non-macOS rows have no mac_target.
+      fail-fast: false
       matrix:
-        os: [macos-26, ubuntu-latest, windows-latest]
+        include:
+          - os: macos-26
+            mac_target: default
+          - os: macos-26
+            mac_target: mas
+          - os: ubuntu-latest
+            mac_target: ""
+          - os: windows-latest
+            mac_target: ""
 
     steps:
       - name: Check out Git repository
@@ -141,18 +158,21 @@ jobs:
         env:
           API_KEY_BASE64: ${{ secrets.api_key }}
           API_KEY_PATH: private_keys/AuthKey_${{ secrets.api_key_id }}.p8
+          ENABLE_DEBUG: ${{ inputs.enable_debug == true }}
         run: |
           mkdir -p private_keys
           echo -n "$API_KEY_BASE64" | base64 --decode --output $API_KEY_PATH
 
-          # Provisioning profiles live in build/ (committed — not secret).
-          # Print UUIDs so logs can tell which profile is wired into the bundle.
-          echo "=== Committed provisioning profiles ==="
-          for f in build/mas-touchtyper-prod.provisionprofile build/mac-touchtyper-prod.provisionprofile; do
-            uuid=$(security cms -D -i "$f" 2>/dev/null | plutil -convert xml1 -o - - | awk '/<key>UUID<\/key>/{getline; gsub(/.*<string>|<\/string>.*/,""); print; exit}')
-            size=$(wc -c <"$f")
-            echo "  $f : UUID=$uuid (size=$size bytes)"
-          done
+          if [[ "$ENABLE_DEBUG" == "true" ]]; then
+            # Provisioning profiles live in build/ (committed — not secret).
+            # Print UUIDs so logs can tell which profile is wired into the bundle.
+            echo "=== Committed provisioning profiles ==="
+            for f in build/mas-touchtyper-prod.provisionprofile build/mac-touchtyper-prod.provisionprofile; do
+              uuid=$(security cms -D -i "$f" 2>/dev/null | plutil -convert xml1 -o - - | awk '/<key>UUID<\/key>/{getline; gsub(/.*<string>|<\/string>.*/,""); print; exit}')
+              size=$(wc -c <"$f")
+              echo "  $f : UUID=$uuid (size=$size bytes)"
+            done
+          fi
 
       - name: Build Electron app
         run: pnpm run build
@@ -170,24 +190,10 @@ jobs:
 
       - name: Build/Release Electron app (stable channel, publish always)
         shell: bash
-        run: |
-          echo "Building for ${{ matrix.os }}, CHANNEL=stable, publish=always"
-          if [[ "${{ matrix.os }}" == macos* ]]; then
-            # Same split as beta_build.yml — combining --mac default and
-            # --mac mas in one invocation causes electron-builder to share
-            # universal-merge intermediates between targets and the MAS
-            # bundle ends up with the Developer ID provisioning profile
-            # embedded (because codesign --force replaces the signature,
-            # not embedded.provisionprofile). altool then rejects with
-            # "Missing code-signing certificate".
-            pnpm exec electron-builder --config electron-builder.ts --mac default --universal --publish always
-            pnpm exec electron-builder --config electron-builder.ts --mac mas --universal --publish always
-          elif [[ "${{ matrix.os }}" == windows* ]]; then
-            pnpm exec electron-builder --config electron-builder.ts -w --publish always
-          else
-            pnpm exec electron-builder --config electron-builder.ts -l --publish always
-          fi
         env:
+          MATRIX_OS: ${{ matrix.os }}
+          MAC_TARGET: ${{ matrix.mac_target }}
+
           # macOS builds
           APPLE_API_KEY: ${{ startsWith(matrix.os, 'macos') && format('private_keys/AuthKey_{0}.p8', secrets.api_key_id) || '' }}
           APPLE_API_KEY_ID: ${{ startsWith(matrix.os, 'macos') && secrets.api_key_id || '' }}
@@ -206,47 +212,71 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
-          DEBUG: electron-builder
+          # Verbose electron-builder logging only when debug is on — otherwise
+          # the logs are full of cert selection noise that drowns out signal.
+          DEBUG: ${{ inputs.enable_debug == true && 'electron-builder' || '' }}
+        run: |
+          echo "Building for $MATRIX_OS, mac_target=$MAC_TARGET, CHANNEL=stable, publish=always"
+          if [[ "$MATRIX_OS" == macos* ]]; then
+            # mac default and mas run on SEPARATE matrix entries (parallel
+            # runners). See beta_build.yml's matching step for the full
+            # explanation of why these must not share a single invocation.
+            pnpm exec electron-builder --config electron-builder.ts --mac "$MAC_TARGET" --universal --publish always
+          elif [[ "$MATRIX_OS" == windows* ]]; then
+            pnpm exec electron-builder --config electron-builder.ts -w --publish always
+          else
+            pnpm exec electron-builder --config electron-builder.ts -l --publish always
+          fi
 
       - name: Diagnose macOS signing
-        if: startsWith(matrix.os, 'macos') && always()
+        # Verbose signing diagnostics — keychain identities, codesign output,
+        # cert chain, embedded provisioning profile. Toggle via the
+        # workflow_dispatch `enable_debug` input.
+        if: startsWith(matrix.os, 'macos') && always() && inputs.enable_debug == true
         shell: bash
+        env:
+          MAC_TARGET: ${{ matrix.mac_target }}
         run: |
           set +e
+          # mac_target=default builds land in dist/mac-universal/, mas in
+          # dist/mas-universal/. Each runner only built one of them.
+          if [[ "$MAC_TARGET" == "default" ]]; then
+            VARIANT=mac-universal
+          else
+            VARIANT=mas-universal
+          fi
 
           echo "=== Signing identities in keychain ==="
           security find-identity -v -p codesigning
 
-          for variant in mas-universal mac-universal; do
-            echo ""
-            echo "============================================================"
-            echo "  $variant"
-            echo "============================================================"
-            APP=$(find "dist/$variant" -maxdepth 2 -name "*.app" -type d 2>/dev/null | head -1)
-            if [ -z "$APP" ]; then
-              echo "(no .app in dist/$variant)"
-              continue
-            fi
-            echo "App: $APP"
+          echo ""
+          echo "============================================================"
+          echo "  $VARIANT"
+          echo "============================================================"
+          APP=$(find "dist/$VARIANT" -maxdepth 2 -name "*.app" -type d 2>/dev/null | head -1)
+          if [ -z "$APP" ]; then
+            echo "(no .app in dist/$VARIANT)"
+            exit 0
+          fi
+          echo "App: $APP"
 
-            echo ""
-            echo "--- codesign -dvv ---"
-            codesign -dvv "$APP" 2>&1
+          echo ""
+          echo "--- codesign -dvv ---"
+          codesign -dvv "$APP" 2>&1
 
-            echo ""
-            echo "--- Authority chain (cert SHA-1s) ---"
-            codesign -d --verbose=4 "$APP" 2>&1 | grep -E "Authority|TeamIdentifier|CDHash"
+          echo ""
+          echo "--- Authority chain (cert SHA-1s) ---"
+          codesign -d --verbose=4 "$APP" 2>&1 | grep -E "Authority|TeamIdentifier|CDHash"
 
-            echo ""
-            echo "--- Embedded provisioning profile ---"
-            PP="$APP/Contents/embedded.provisionprofile"
-            if [ -f "$PP" ]; then
-              security cms -D -i "$PP" 2>/dev/null | plutil -convert xml1 -o - - \
-                | grep -A2 -E "Name|TeamIdentifier|DeveloperCertificates|aps-environment|application-identifier"
-            else
-              echo "(no embedded.provisionprofile)"
-            fi
-          done
+          echo ""
+          echo "--- Embedded provisioning profile ---"
+          PP="$APP/Contents/embedded.provisionprofile"
+          if [ -f "$PP" ]; then
+            security cms -D -i "$PP" 2>/dev/null | plutil -convert xml1 -o - - \
+              | grep -A2 -E "Name|TeamIdentifier|DeveloperCertificates|aps-environment|application-identifier"
+          else
+            echo "(no embedded.provisionprofile)"
+          fi
 
       # Snap stable upload — keep commented until the package is ready for
       # the stable Snap track. Uncomment when promoting from edge/beta.
@@ -260,7 +290,9 @@ jobs:
       #     SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
 
       - name: Upload to App Store Connect
-        if: startsWith(matrix.os, 'macos')
+        # Only the mas-target build produces dist/mas-universal/*.pkg, so the
+        # default-target matrix entry has nothing to upload to ASC. Skip it.
+        if: matrix.mac_target == 'mas'
         shell: bash
         env:
           APPLE_API_KEY_ID: ${{ secrets.api_key_id }}
