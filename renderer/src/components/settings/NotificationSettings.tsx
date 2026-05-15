@@ -17,39 +17,14 @@ const DAYS = [
 ];
 
 /**
- * `settings.notificationTime` is stored as UTC "HH:MM" because that's what
- * send-notifications compares against. The picker should show the user their
- * LOCAL time (UTC is hostile UX — most users don't know their offset).
- *
- * These helpers do the conversion using today's date as a reference. Using
- * "today" means the conversion is DST-correct for the current local date,
- * which is what users expect for a recurring daily reminder.
- */
-function utcHHMMToLocal(utcHHMM: string, tz: string): string {
-  if (!/^\d{2}:\d{2}$/.test(utcHHMM)) return utcHHMM;
-  const [h, m] = utcHHMM.split(":").map(Number);
-  const todayUtc = Temporal.Now.plainDateISO("UTC");
-  const utcZdt = todayUtc
-    .toPlainDateTime({ hour: h, minute: m })
-    .toZonedDateTime("UTC");
-  const local = utcZdt.withTimeZone(tz);
-  return `${String(local.hour).padStart(2, "0")}:${String(local.minute).padStart(2, "0")}`;
-}
-
-function localHHMMToUtc(localHHMM: string, tz: string): string {
-  if (!/^\d{2}:\d{2}$/.test(localHHMM)) return localHHMM;
-  const [h, m] = localHHMM.split(":").map(Number);
-  const todayLocal = Temporal.Now.plainDateISO(tz);
-  const localZdt = todayLocal
-    .toPlainDateTime({ hour: h, minute: m })
-    .toZonedDateTime(tz);
-  const utc = localZdt.withTimeZone("UTC");
-  return `${String(utc.hour).padStart(2, "0")}:${String(utc.minute).padStart(2, "0")}`;
-}
-
-/**
  * Best-effort short timezone abbreviation (e.g. "AEST", "PDT", "GMT+5:30").
  * Falls back to the IANA name if Intl can't produce a short form.
+ *
+ * notification_time is now stored as the user's LOCAL HH:MM (per the
+ * 20260515133541 migration), so the picker no longer needs a conversion
+ * helper — it reads/writes the raw value. We still display the user's tz
+ * abbreviation alongside so they know what zone the time refers to, which
+ * matters if they're remote-pairing with someone in another zone.
  */
 function tzAbbreviation(tz: string): string {
   try {
@@ -212,23 +187,18 @@ export function NotificationSettings() {
     }
   };
 
-  // The picker emits the user's LOCAL time (HH:MM). We store UTC because
-  // send-notifications compares against UTC HH:MM. Convert on the boundary.
+  // notification_time is stored as the user's local HH:MM (per the
+  // 20260515133541 migration + notifications_due() RPC). The picker passes
+  // through unchanged; we just decorate the description with the user's
+  // current timezone abbreviation for clarity.
   const localTz = useMemo(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
     [],
   );
   const localTzAbbrev = useMemo(() => tzAbbreviation(localTz), [localTz]);
-  const localTimeForDisplay = useMemo(
-    () => utcHHMMToLocal(settings.notificationTime, localTz),
-    [settings.notificationTime, localTz],
-  );
 
-  const handleTimeChange = async (localTime: string) => {
-    const utcTime = localHHMMToUtc(localTime, localTz);
-    dispatch({ type: "SET_NOTIFICATION_TIME", time: utcTime });
-    // Settings are synced to Supabase via settings_hook
-    // The server will use the updated time for scheduling
+  const handleTimeChange = async (time: string) => {
+    dispatch({ type: "SET_NOTIFICATION_TIME", time });
   };
 
   const handleDaysChange = async (day: string) => {
@@ -367,7 +337,7 @@ export function NotificationSettings() {
         </span>
         <input
           type="time"
-          value={localTimeForDisplay}
+          value={settings.notificationTime}
           onChange={(e) => handleTimeChange(e.target.value)}
           disabled={!settings.notificationsEnabled || isScheduling}
           className={clsx(
@@ -410,7 +380,7 @@ export function NotificationSettings() {
           <p className="text-sm text-green-400">
             {platform === "linux" ? (
               <>
-                Local reminders scheduled for {localTimeForDisplay} ({localTzAbbrev}) on{" "}
+                Local reminders scheduled for {settings.notificationTime} ({localTzAbbrev}) on{" "}
                 {settings.notificationDays.length === 7
                   ? "every day"
                   : settings.notificationDays
@@ -419,7 +389,7 @@ export function NotificationSettings() {
               </>
             ) : (
               <>
-                Push notifications enabled for {localTimeForDisplay} ({localTzAbbrev}) on{" "}
+                Push notifications enabled for {settings.notificationTime} ({localTzAbbrev}) on{" "}
                 {settings.notificationDays.length === 7
                   ? "every day"
                   : settings.notificationDays

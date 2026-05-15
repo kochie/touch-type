@@ -21,6 +21,7 @@ import { useDeepLink, DeepLinkData } from "@/lib/deep-link-hook";
 import { StreakProvider } from "@/lib/streak_hook";
 import { ProfileTimezoneProvider } from "@/lib/profile-timezone";
 import { IapBridge } from "@/lib/iap-bridge";
+import { PushBridge } from "@/lib/push-bridge";
 
 export default function Providers({ children }) {
   return (
@@ -29,6 +30,7 @@ export default function Providers({ children }) {
       <MasProvider>
       <IapBridge />
         <SettingsProvider>
+          <PushBridge />
           <ResultsProvider>
             <PlanProvider>
               <StreakProvider>
