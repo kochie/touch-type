@@ -36,21 +36,21 @@ const PACKAGES: FreezePackage[] = [
     price: "$1.00 USD",
     label: "1 Freeze",
     savings: null,
-    masProductId: "io.kochie.touch-typer.streak_freeze_x1",
+    masProductId: "streak_freeze_x1",
   },
   {
     quantity: 3,
     price: "$2.00 USD",
     label: "3 Freezes",
     savings: "Save 33%",
-    masProductId: "io.kochie.touch-typer.streak_freeze_x3",
+    masProductId: "streak_freeze_x3",
   },
   {
     quantity: 10,
     price: "$6.00 USD",
     label: "10 Freezes",
     savings: "Save 40%",
-    masProductId: "io.kochie.touch-typer.streak_freeze_x10",
+    masProductId: "streak_freeze_x10",
     highlight: true,
   },
 ];
@@ -167,6 +167,16 @@ export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => 
   // 3DS fallback: Electron intercepts the Stripe redirect and notifies us here
   useEffect(() => {
     window.electronAPI?.onFreezePurchaseComplete?.(() => setPhase("success"));
+  }, []);
+
+  // MAS purchase completion: fired by IapBridge once map-transaction has
+  // registered the StoreKit transaction server-side and credited the freezes.
+  // Without this listener the modal hangs on "Waiting for App Store..."
+  // forever even though the purchase actually succeeded.
+  useEffect(() => {
+    const onIap = () => setPhase("success");
+    window.addEventListener("touchtyper:iap-freeze-purchased", onIap);
+    return () => window.removeEventListener("touchtyper:iap-freeze-purchased", onIap);
   }, []);
 
   const handleBuy = async (pkg: FreezePackage) => {

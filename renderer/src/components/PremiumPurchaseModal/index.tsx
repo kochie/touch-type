@@ -42,7 +42,7 @@ const PLANS: Plan[] = [
   {
     id: "monthly",
     lookupKey: "premium_monthly",
-    masProductId: "io.kochie.touch-typer.premium_monthly",
+    masProductId: "premium_monthly",
     title: "Monthly",
     price: "$2.99 USD",
     perMonth: "$2.99 USD/month",
@@ -50,7 +50,7 @@ const PLANS: Plan[] = [
   {
     id: "yearly",
     lookupKey: "premium_yearly",
-    masProductId: "io.kochie.touch-typer.premium_yearly",
+    masProductId: "premium_yearly",
     title: "Yearly",
     price: "$28.70 USD/year",
     perMonth: "$2.39 USD/month",

@@ -349,11 +349,7 @@ export function ClientAssistant() {
           </div>
           <div className="flex flex-col items-center gap-3">
             <div className="flex gap-4 w-72">
-              <Button
-                onClick={() =>
-                  window.open(process.env["NEXT_PUBLIC_ACCOUNT_LINK"], "_blank")
-                }
-              >
+              <Button onClick={() => setModal(ModalType.PREMIUM_PURCHASE)}>
                 Upgrade to Premium
               </Button>
             </div>

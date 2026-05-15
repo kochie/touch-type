@@ -115,31 +115,43 @@ app.on("ready", async () => {
 
   ipcMain.handle("getWordSet", handleWordSet);
   ipcMain.handle("getProducts", getProducts);
-  ipcMain.handle("isMas", () => !!process.mas);
+  ipcMain.handle("isMas", () => {
+    // Dev-only override: `IS_MAS=true pnpm dev` forces isMas=true so the
+    // renderer renders MAS-specific UI (IAP upgrade button, "Manage in
+    // App Store" link, AI nav gating) without packaging an actual mas-dev
+    // .app. Ignored in production — a Developer ID build can't be tricked
+    // into invoking StoreKit code paths that aren't linked in.
+    if (isDevMode && process.env["IS_MAS"] === "true") return true;
+    return !!process.mas;
+  });
 
   // MAS in-app purchase product IDs. Must match the identifiers in App
   // Store Connect verbatim — they get passed straight to
   // inAppPurchase.purchaseProduct().
   const FREEZE_PRODUCT_IDS = new Set([
-    'io.kochie.touch-typer.streak_freeze_x1',
-    'io.kochie.touch-typer.streak_freeze_x3',
-    'io.kochie.touch-typer.streak_freeze_x10',
+    'streak_freeze_x1',
+    'streak_freeze_x3',
+    'streak_freeze_x10',
   ]);
   const SUBSCRIPTION_PRODUCT_IDS = new Set([
-    'io.kochie.touch-typer.premium_monthly',
-    'io.kochie.touch-typer.premium_yearly',
+    'premium_monthly',
+    'premium_yearly',
   ]);
 
   ipcMain.handle("purchaseStreakFreeze", async (_event: IpcMainInvokeEvent, productId: string) => {
+    log.info(`[IAP] purchaseStreakFreeze called: productId=${productId}`);
     if (!FREEZE_PRODUCT_IDS.has(productId)) {
+      log.warn(`[IAP] purchaseStreakFreeze: invalid product ID ${productId}`);
       return { queued: false, error: 'Invalid product ID' };
     }
     const { inAppPurchase } = await import('electron');
     if (!inAppPurchase.canMakePayments()) {
+      log.error(`[IAP] purchaseStreakFreeze: canMakePayments=false`);
       return { queued: false, error: 'Payments not available' };
     }
     const isValid = await inAppPurchase.purchaseProduct(productId, 1);
-    return { queued: isValid };
+    log.info(`[IAP] purchaseStreakFreeze: purchaseProduct returned ${isValid}`);
+    return { queued: isValid, error: isValid ? undefined : 'StoreKit refused to queue the purchase. Most common cause in sandbox: no Sandbox Apple ID signed in (System Settings → Apple Account → Media & Purchases → Sandbox Account).' };
   });
 
   // Premium subscription purchase. StoreKit handles the user-facing flow
@@ -147,15 +159,19 @@ app.on("ready", async () => {
   // `transactions-updated` listener in in-app-purchase.ts, which forwards
   // it to the renderer for backend registration via map-transaction.
   ipcMain.handle("purchaseSubscription", async (_event: IpcMainInvokeEvent, productId: string) => {
+    log.info(`[IAP] purchaseSubscription called: productId=${productId}`);
     if (!SUBSCRIPTION_PRODUCT_IDS.has(productId)) {
+      log.warn(`[IAP] purchaseSubscription: invalid product ID ${productId}`);
       return { queued: false, error: 'Invalid product ID' };
     }
     const { inAppPurchase } = await import('electron');
     if (!inAppPurchase.canMakePayments()) {
+      log.error(`[IAP] purchaseSubscription: canMakePayments=false`);
       return { queued: false, error: 'Payments not available' };
     }
     const isValid = await inAppPurchase.purchaseProduct(productId, 1);
-    return { queued: isValid };
+    log.info(`[IAP] purchaseSubscription: purchaseProduct returned ${isValid}`);
+    return { queued: isValid, error: isValid ? undefined : 'StoreKit refused to queue the purchase. Most common cause in sandbox: no Sandbox Apple ID signed in (System Settings → Apple Account → Media & Purchases → Sandbox Account).' };
   });
 
   // Restore Purchases — required by App Store review for any IAP UI.
@@ -233,15 +249,23 @@ app.on("ready", async () => {
   // Setup startup handlers for launch at login
   setupStartupHandlers();
 
-  // Use beta/alpha update channel when app version is a prerelease
-  const appVersion = app.getVersion();
-  if (appVersion.includes("-beta")) {
-    autoUpdater.channel = "beta";
-  } else if (appVersion.includes("-alpha")) {
-    autoUpdater.channel = "alpha";
-  }
+  // Mac App Store builds receive updates through the App Store, not Squirrel,
+  // so electron-updater must stay completely silent for MAS. On macOS its
+  // MacUpdater spins up a local HTTP proxy server to feed the update binary
+  // to Squirrel.Mac, and `listen()` in App Sandbox fails with EPERM (since
+  // we only grant network.client, not network.server) — surfacing as an
+  // uncaught exception "Error: listen EPERM ... 127.0.0.1" a few minutes
+  // after launch once the periodic update check finds something to download.
+  if (!process.mas) {
+    const appVersion = app.getVersion();
+    if (appVersion.includes("-beta")) {
+      autoUpdater.channel = "beta";
+    } else if (appVersion.includes("-alpha")) {
+      autoUpdater.channel = "alpha";
+    }
 
-  autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.checkForUpdatesAndNotify();
+  }
 
   // Check if we should start minimized (hidden in tray)
   const startHidden = shouldStartMinimized();
@@ -349,9 +373,13 @@ app.on("ready", async () => {
   // console.log("Loading URL", url);
 });
 
-setInterval(() => {
-  autoUpdater.checkForUpdates();
-}, 60000);
+// MAS builds skip the periodic update poll — see the matching guard around
+// the initial checkForUpdatesAndNotify() call above for full context.
+if (!process.mas) {
+  setInterval(() => {
+    autoUpdater.checkForUpdates();
+  }, 60000);
+}
 
 autoUpdater.on("update-downloaded", (event) => {
   const message =

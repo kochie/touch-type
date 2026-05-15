@@ -23,8 +23,6 @@ import clsx from "clsx";
 import { defaultSettings, useSettings } from "@/lib/settings_hook";
 import { keyboards } from "../KeyboardSelect";
 import { LANGUAGES } from "@/lib/languages";
-import { useMas } from "@/lib/mas_hook";
-import { usePlan } from "@/lib/plan_hook";
 import { useStreak } from "@/lib/streak_hook";
 import { useWords } from "@/lib/word-provider";
 
@@ -79,8 +77,6 @@ export default function Menu({
 }: MenuProps) {
   const pathname = usePathname();
   const settings = useSettings();
-  const isMas = useMas();
-  const plan = usePlan();
   const { currentStreak, isAtRisk, isLoading: streakLoading } = useStreak();
   const { myActiveGames } = usePvP();
   const [, setWords, drillInfo] = useWords();
@@ -89,8 +85,6 @@ export default function Menu({
   useLayoutEffect(() => {
     setHydratedSettings((prev) => ({ ...prev, ...settings }));
   }, [settings]);
-
-  const premium = plan?.billing_plan === "premium";
 
   const [isScrolled, setIsScrolled] = useState(false);
   useEffect(() => {
@@ -141,7 +135,6 @@ export default function Menu({
             icon={faMicrochipAi}
             label="AI"
             isActive={pathname === "/assistant"}
-            hidden={isMas && !premium}
           />
           <NavItem
             href="/pvp"
