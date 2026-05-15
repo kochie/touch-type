@@ -38,6 +38,44 @@ export function setPushNotificationHandler(
   onPushNotificationReceived = handler;
 }
 
+// Track whether the listener has been wired so we don't stack duplicates if
+// the user toggles notifications off → on → off → on within the same session.
+let apnsListenerInstalled = false;
+
+/**
+ * Install the APNS `received-apns-notification` listener on the global
+ * pushNotifications module. Idempotent — safe to call from anywhere.
+ *
+ * Must be called at app startup (not just when the user toggles the setting
+ * on) — otherwise on a launch where notifications are already enabled, no
+ * code path attaches the listener and incoming pushes are silently dropped.
+ */
+export function installApnsListener(): void {
+  if (apnsListenerInstalled) return;
+  if (process.platform !== 'darwin') return;
+  if (!pushNotifications) return;
+
+  pushNotifications.on('received-apns-notification', (_event, userInfo) => {
+    log.info('Received APNS notification:', userInfo);
+
+    const payload: PushNotificationPayload = {
+      action: userInfo.action,
+      duration: userInfo.duration,
+      title: userInfo.aps?.alert?.title,
+      body: userInfo.aps?.alert?.body,
+    };
+
+    if (onPushNotificationReceived) {
+      onPushNotificationReceived(payload);
+    } else {
+      log.warn('Received push but no handler is registered; dropping payload');
+    }
+  });
+
+  apnsListenerInstalled = true;
+  log.info('[push] APNS listener installed');
+}
+
 /**
  * Register for push notifications based on platform
  */
@@ -129,23 +167,10 @@ async function registerAPNS(): Promise<PushRegistrationResult> {
         return;
       }
 
-      // Set up event handlers before registering
-      pushNotifications.on('received-apns-notification', (_event, userInfo) => {
-        log.info('Received APNS notification:', userInfo);
-        
-        const payload: PushNotificationPayload = {
-          action: userInfo.action,
-          duration: userInfo.duration,
-          title: userInfo.aps?.alert?.title,
-          body: userInfo.aps?.alert?.body,
-        };
-
-        // Always trigger the notification handler
-        // The handler will show a system notification and handle user interaction
-        if (onPushNotificationReceived) {
-          onPushNotificationReceived(payload);
-        }
-      });
+      // Listener is installed once at app startup (see installApnsListener);
+      // calling here too is harmless and protects against a path where the
+      // toggle handler races startup.
+      installApnsListener();
 
       // Check current notification permission status
       log.info('Notification supported:', Notification.isSupported());

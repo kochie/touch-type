@@ -17,6 +17,7 @@ import {
   registerForPushNotifications,
   unregisterFromPushNotifications,
   setPushNotificationHandler,
+  installApnsListener,
   isPushSupported,
   getPushPlatform,
   PushRegistrationResult,
@@ -68,6 +69,13 @@ export function setupNotificationScheduler(window: BrowserWindow): void {
 
   // Set up push notification handler
   setPushNotificationHandler(handlePushNotification);
+
+  // Install the APNs listener at app startup, regardless of whether the user
+  // has the notification toggle on. Without this, a launch where notifications
+  // were already enabled would have NO active listener (the inline attachment
+  // in registerAPNS only fires on user toggle), so incoming pushes would be
+  // silently dropped after the OS delivered them.
+  installApnsListener();
 
   // Register for push notifications (get device token)
   ipcMain.handle("registerPushNotifications", async (): Promise<PushRegistrationResult> => {
