@@ -26,6 +26,16 @@ function isMasBuild(): boolean {
 }
 
 /**
+ * Check if we're building the MAS development target specifically.
+ * This is a subset of isMasBuild() — used to route the provisioning profile
+ * path to the dev profile during the intermediate "darwin sign" pass (see
+ * the long comment on mac.provisioningProfile below).
+ */
+function isMasDevBuild(): boolean {
+  return process.argv.join(' ').includes('mas-dev');
+}
+
+/**
  * Check if we're building a development version (for APNS development environment)
  * Set MAC_DEV=true to use development APNS entitlements
  */
@@ -93,6 +103,7 @@ function shouldNotarize(): boolean {
 
 const notarizeConfig = shouldNotarize();
 const buildingMas = isMasBuild();
+const buildingMasDev = isMasDevBuild();
 const buildingDev = isDevBuild();
 const isCI = isCIBuild();
 
@@ -116,6 +127,17 @@ const config: Configuration = {
     // These are for CI/CD signing of non-MAS builds only
     cscLink: isCI ? process.env["MAC_LINK"] : undefined,
     cscKeyPassword: isCI ? process.env["MAC_KEY_PASSWORD"] : undefined,
+    // electron-builder signs MAS bundles in two passes: an intermediate
+    // "darwin sign" pass that uses this top-level `mac` config to sign all
+    // nested helper apps and Frameworks, then a final pass that uses the
+    // `mas`/`masDev` config to re-sign only the outer .app. If `mac.identity`
+    // is left undefined for a mas-dev build, the intermediate pass falls back
+    // to ad-hoc (because `package:mac-mas-dev` sets CSC_IDENTITY_AUTO_DISCOVERY=false
+    // to keep it from auto-picking the Developer ID cert). The result is
+    // outer-sig=Apple Development + inner-sigs=ad-hoc, which fails launch with
+    // RBSRequestErrorDomain code 5 / launchd error 163. Pinning the identity
+    // here ensures both passes use the same Apple Development cert.
+    identity: buildingMasDev ? "Apple Development" : undefined,
 
     bundleVersion: process.env["BUNDLE_VERSION"],
     // remove beta from version 1.2.3-beta.4 -> 1.2.3.4
@@ -143,9 +165,13 @@ const config: Configuration = {
     // rejects with "Missing code-signing certificate".
     provisioningProfile:
       process.env["MAC_PROVISIONING_PROFILE"]
-      || (buildingMas
-            ? "build/mas-touchtyper.provisionprofile"
-            : "build/mac-touchtyper.provisionprofile"),
+      || (buildingMasDev
+            ? "build/mas-touchtyper-dev.provisionprofile"
+            : buildingMas
+              ? "build/mas-touchtyper-prod.provisionprofile"
+              : buildingDev
+                ? "build/mac-touchtyper-dev.provisionprofile"
+                : "build/mac-touchtyper-prod.provisionprofile"),
     extendInfo: {
       ITSAppUsesNonExemptEncryption: false
     },
@@ -169,7 +195,7 @@ const config: Configuration = {
     hardenedRuntime: false,
     // Explicitly specify identity to use App Store distribution certificate
     // identity: "3rd Party Mac Developer Application",
-    provisioningProfile: "build/mas-touchtyper.provisionprofile",
+    provisioningProfile: "build/mas-touchtyper-prod.provisionprofile",
     entitlementsLoginHelper: "build/entitlements.mas.loginhelper.plist",
     entitlements: "build/entitlements.mas.plist",
     entitlementsInherit: "build/entitlements.mas.inherit.plist",
@@ -178,9 +204,13 @@ const config: Configuration = {
     notarize: false,
     // MAS builds use App Sandbox, not hardened runtime
     hardenedRuntime: false,
-    // Explicitly specify identity to use "Apple Development" certificate
-    // This overrides any auto-discovery and ensures correct certificate is used
-    // identity: "Apple Development",
+    // Prefix-match against any "Apple Development:" cert in the user's
+    // keychain. Required because the `package:mac-mas-dev` script sets
+    // CSC_IDENTITY_AUTO_DISCOVERY=false to prevent picking the Developer ID
+    // cert — without an explicit identity, electron-osx-sign falls back to
+    // ad-hoc signing and the resulting build won't launch. CI bypasses this
+    // by injecting CSC_LINK (a temp keychain), which provides its own identity.
+    identity: "Apple Development",
     provisioningProfile: "build/mas-touchtyper-dev.provisionprofile",
     entitlementsLoginHelper: "build/entitlements.mas-dev.loginhelper.plist",
     entitlements: "build/entitlements.mas-dev.plist",

@@ -44,7 +44,10 @@ next-env.d.ts
 # Sentry
 .sentryclirc
 
+# Provisioning profiles in build/ are committed — they embed in every shipped
+# app bundle and contain no signing secrets. Block stray profiles elsewhere.
 *.provisionprofile
+!build/*.provisionprofile
 main/
 
 private_keys/

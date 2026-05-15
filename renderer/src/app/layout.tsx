@@ -1,3 +1,4 @@
+import "@/lib/temporal-polyfill";
 import Providers from "./Providers";
 import "@/styles/globals.css";
 import Fathom from "@/components/Fathom";
