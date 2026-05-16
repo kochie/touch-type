@@ -129,6 +129,7 @@ export default function Menu({
             icon={faCode}
             label="Code"
             isActive={pathname === "/code"}
+            hidden={!hydratedSettings.codeMode}
           />
           <NavItem
             href="/assistant"

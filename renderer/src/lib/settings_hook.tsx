@@ -93,7 +93,7 @@ const SettingsContext = createContext({
   launchAtStartup: false,
   startMinimized: false,
   // Code mode settings
-  codeMode: false,
+  codeMode: true,
   codeLang: CodeLanguages.C,
   codeSnippetSource: SnippetSource.BUNDLED,
   customCodePath: "",
@@ -129,7 +129,7 @@ export const defaultSettings = {
   launchAtStartup: false,
   startMinimized: false,
   // Code mode settings
-  codeMode: false,
+  codeMode: true,
   codeLang: CodeLanguages.C,
   codeSnippetSource: SnippetSource.BUNDLED,
   customCodePath: "",
@@ -541,7 +541,7 @@ export const SettingsProvider = ({ children }) => {
           // Startup settings are NOT included - they're machine-specific
           // and will be preserved from localStorage via the reducer merge
           // Code mode settings
-          codeMode: data.code_mode ?? false,
+          codeMode: data.code_mode ?? true,
           codeLang: (data.code_lang as CodeLanguages) ?? CodeLanguages.C,
           codeSnippetSource: (data.code_snippet_source as SnippetSource) ?? SnippetSource.BUNDLED,
           customCodePath: data.custom_code_path ?? "",
