@@ -12,6 +12,7 @@ import { Tables } from "@/types/supabase";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { toast } from "sonner";
 import { friendlyAuthError } from "@/lib/auth-errors";
+import DeleteAccountConfirm from "../DeleteAccountConfirm";
 
 enum PlanType {
   FREE = "free",
@@ -26,6 +27,7 @@ const features = {
 export default function Account({ onError, onCancel, onChangePassword }) {
   const [submitting, setSubmitting] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [reloading, setReloading] = useState(false);
   const [togglingAutoRenew, setTogglingAutoRenew] = useState(false);
   const isMas = useMas();
@@ -58,27 +60,18 @@ export default function Account({ onError, onCancel, onChangePassword }) {
 
   const deleteAccount = async () => {
     setDeleteSubmitting(true);
-
-    if (
-      confirm(
-        "For real, this will delete your account and all data associated with it. Are you sure?",
-      )
-    ) {
-      // Note: Deleting a user in Supabase typically requires a server-side function
-      // or admin API. For now, we'll sign them out.
-      // You may want to create an Edge Function for actual account deletion.
-      try {
-        // Call an Edge Function to delete the user
-        const { error } = await supabase.functions.invoke('delete-user');
-        if (error) throw error;
-        await supabase.auth.signOut();
-        onError();
-      } catch (err: any) {
-        console.error("Error deleting account:", err);
-        toast.error("Failed to delete account. Please contact support.");
-      }
+    try {
+      const { error } = await supabase.functions.invoke('delete-user');
+      if (error) throw error;
+      setConfirmingDelete(false);
+      await supabase.auth.signOut();
+      onError();
+    } catch (err: any) {
+      console.error("Error deleting account:", err);
+      toast.error("Failed to delete account. Please contact support.");
+    } finally {
+      setDeleteSubmitting(false);
     }
-    setDeleteSubmitting(false);
   };
 
   const fetchUserData = async () => {
@@ -174,6 +167,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   };
 
   return (
+    <>
     <div className="h-full">
       <div className="flex min-h-full max-h-[80vh] max-w-7xl">
         <div className="flex flex-1 flex-col justify-center mx-8 my-12">
@@ -500,7 +494,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                     associated with it.
                   </p>
                   <button
-                    onClick={deleteAccount}
+                    onClick={() => setConfirmingDelete(true)}
                     type="button"
                     disabled={deleteSubmitting}
                     className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
@@ -518,5 +512,13 @@ export default function Account({ onError, onCancel, onChangePassword }) {
         </div>
       </div>
     </div>
+    <DeleteAccountConfirm
+      open={confirmingDelete}
+      email={user?.email ?? attributes.email ?? ""}
+      submitting={deleteSubmitting}
+      onCancel={() => setConfirmingDelete(false)}
+      onConfirm={deleteAccount}
+    />
+    </>
   );
 }

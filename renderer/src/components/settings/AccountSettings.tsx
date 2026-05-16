@@ -10,6 +10,7 @@ import { useMas } from "@/lib/mas_hook";
 import { useModal, ModalType } from "@/lib/modal-provider";
 import { metrics } from "@/lib/metrics";
 import Button from "../Button";
+import DeleteAccountConfirm from "../DeleteAccountConfirm";
 import { toast } from "sonner";
 import { friendlyAuthError } from "@/lib/auth-errors";
 
@@ -112,6 +113,7 @@ export function AccountSettings() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [togglingAutoRenew, setTogglingAutoRenew] = useState(false);
 
   const fetchSubscription = useCallback(async () => {
@@ -209,12 +211,12 @@ export function AccountSettings() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!confirm("This will permanently delete your account and all associated data. Are you sure?")) return;
     setDeleting(true);
     try {
       const { error } = await supabase.functions.invoke("delete-user");
       if (error) throw error;
       metrics.count("auth.account_deleted");
+      setConfirmingDelete(false);
       await supabase.auth.signOut();
     } catch {
       toast.error("Failed to delete account. Please contact support.");
@@ -371,7 +373,7 @@ export function AccountSettings() {
         </div>
         <div className="flex justify-end">
           <button
-            onClick={handleDeleteAccount}
+            onClick={() => setConfirmingDelete(true)}
             disabled={deleting}
             className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors duration-150 cursor-pointer disabled:opacity-50"
           >
@@ -379,6 +381,14 @@ export function AccountSettings() {
           </button>
         </div>
       </div>
+
+      <DeleteAccountConfirm
+        open={confirmingDelete}
+        email={user.email ?? ""}
+        submitting={deleting}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={handleDeleteAccount}
+      />
 
     </div>
   );
