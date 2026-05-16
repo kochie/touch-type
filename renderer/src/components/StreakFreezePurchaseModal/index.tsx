@@ -164,9 +164,14 @@ export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => 
   const isMas = useMas();
   const supabase = useSupabaseClient();
 
-  // 3DS fallback: Electron intercepts the Stripe redirect and notifies us here
+  // 3DS fallback: Electron intercepts the Stripe redirect and notifies us
+  // here. Without the cleanup the same listener stacks on every mount,
+  // multi-firing setPhase("success") on the Nth open.
   useEffect(() => {
-    window.electronAPI?.onFreezePurchaseComplete?.(() => setPhase("success"));
+    const wrapper = window.electronAPI?.onFreezePurchaseComplete?.(() => setPhase("success"));
+    return () => {
+      if (wrapper) window.electronAPI?.offFreezePurchaseComplete?.(wrapper);
+    };
   }, []);
 
   // MAS purchase completion: fired by IapBridge once map-transaction has

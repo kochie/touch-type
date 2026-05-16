@@ -211,9 +211,14 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
     fetchSub();
   }, []);
 
-  // 3DS redirect fallback: Electron intercepts the Stripe redirect and notifies us
+  // 3DS redirect fallback: Electron intercepts the Stripe redirect and notifies us.
+  // Without the cleanup the listener stacks on every mount, multi-firing the
+  // setPhase callback on the Nth open of the modal.
   useEffect(() => {
-    window.electronAPI?.onSubscriptionPurchaseComplete?.(() => setPhase("success"));
+    const wrapper = window.electronAPI?.onSubscriptionPurchaseComplete?.(() => setPhase("success"));
+    return () => {
+      if (wrapper) window.electronAPI?.offSubscriptionPurchaseComplete?.(wrapper);
+    };
   }, []);
 
   // MAS purchase completion: fired by IapBridge once map-transaction has

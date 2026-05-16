@@ -129,10 +129,13 @@ export interface ElectronAPI {
   ) => (...args: unknown[]) => void;
   offIapTransactionPurchased: (wrapper: (...args: unknown[]) => void) => void;
   finishIapTransaction: (transactionDate: string) => Promise<{ finished: boolean }>;
-  // Fired by main process after Stripe freeze checkout completes
-  onFreezePurchaseComplete: (callback: () => void) => void;
-  // Fired by main process after Stripe subscription checkout completes (3DS fallback)
-  onSubscriptionPurchaseComplete: (callback: () => void) => void;
+  // Fired by main process after Stripe freeze checkout completes.
+  // Returns the wrapper so the caller can remove it via the matching off.
+  onFreezePurchaseComplete: (callback: () => void) => (...args: unknown[]) => void;
+  offFreezePurchaseComplete: (wrapper: (...args: unknown[]) => void) => void;
+  // Fired by main process after Stripe subscription checkout completes (3DS fallback).
+  onSubscriptionPurchaseComplete: (callback: () => void) => (...args: unknown[]) => void;
+  offSubscriptionPurchaseComplete: (wrapper: (...args: unknown[]) => void) => void;
   openExternal: (url: string) => Promise<void>;
 }
 

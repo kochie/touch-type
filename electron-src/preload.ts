@@ -149,10 +149,13 @@ declare global {
       ) => (...args: unknown[]) => void;
       offIapTransactionPurchased: (wrapper: (...args: unknown[]) => void) => void;
       finishIapTransaction: (transactionDate: string) => Promise<{ finished: boolean }>;
-      // Notified by main process after Stripe freeze checkout completes
-      onFreezePurchaseComplete: (callback: () => void) => void;
-      // Notified by main process after Stripe subscription checkout completes (3DS fallback)
-      onSubscriptionPurchaseComplete: (callback: () => void) => void;
+      // Notified by main process after Stripe freeze checkout completes.
+      // Returns the wrapper so the caller can remove it via the matching off.
+      onFreezePurchaseComplete: (callback: () => void) => (...args: unknown[]) => void;
+      offFreezePurchaseComplete: (wrapper: (...args: unknown[]) => void) => void;
+      // Notified by main process after Stripe subscription checkout completes (3DS fallback).
+      onSubscriptionPurchaseComplete: (callback: () => void) => (...args: unknown[]) => void;
+      offSubscriptionPurchaseComplete: (wrapper: (...args: unknown[]) => void) => void;
     };
   }
 }
@@ -288,12 +291,26 @@ contextBridge.exposeInMainWorld("electronAPI", {
   finishIapTransaction: (transactionDate: string): Promise<{ finished: boolean }> =>
     ipcRenderer.invoke("finishIapTransaction", transactionDate),
 
-  onFreezePurchaseComplete: (callback: () => void): void => {
-    ipcRenderer.on("freeze-purchase-complete", () => callback());
+  onFreezePurchaseComplete: (callback: () => void) => {
+    // Return the wrapper so the caller can remove this exact listener on
+    // unmount via offFreezePurchaseComplete. Without that, every mount of
+    // the modal stacks another listener on the same channel and the Nth
+    // mount fires the callback N times.
+    const wrapper = () => callback();
+    ipcRenderer.on("freeze-purchase-complete", wrapper);
+    return wrapper;
+  },
+  offFreezePurchaseComplete: (wrapper: (...args: unknown[]) => void) => {
+    ipcRenderer.removeListener("freeze-purchase-complete", wrapper);
   },
 
-  onSubscriptionPurchaseComplete: (callback: () => void): void => {
-    ipcRenderer.on("subscription-purchase-complete", () => callback());
+  onSubscriptionPurchaseComplete: (callback: () => void) => {
+    const wrapper = () => callback();
+    ipcRenderer.on("subscription-purchase-complete", wrapper);
+    return wrapper;
+  },
+  offSubscriptionPurchaseComplete: (wrapper: (...args: unknown[]) => void) => {
+    ipcRenderer.removeListener("subscription-purchase-complete", wrapper);
   },
 
   openExternal: (url: string): Promise<void> =>
