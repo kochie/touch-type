@@ -13,12 +13,23 @@ if (process.env["CHANNEL"]) {
 }
 
 /**
- * Check if we're building a MAS target (mas or mas-dev)
- * MAS builds should NOT be notarized - they go through App Store review instead
+ * Check if we're building a MAS target (mas or mas-dev).
+ * MAS builds should NOT be notarized — they go through App Store review instead.
+ *
+ * We exact-match against argv entries (excluding the node binary + electron-builder
+ * script path at slice(0,2)) rather than substring-scanning a joined string. This
+ * avoids a real CI footgun: if the checkout path or another argument incidentally
+ * contains "mas-dev" or ends with "mas" (e.g. a runner directory named
+ * "thomas-dev"), substring matching would false-positive and route a Developer ID
+ * build through the MAS code paths, producing a broken bundle that altool rejects.
+ *
+ * electron-builder's --mac flag emits the target name as its own argv entry
+ * (`--mac mas-dev` becomes ['--mac', 'mas-dev']), so an exact-equality check
+ * over argv is both safer and unambiguous.
  */
 function isMasBuild(): boolean {
-  const args = process.argv.join(' ');
-  const isMas = args.includes('mas-dev') || args.includes('mas ') || args.endsWith('mas');
+  const targets = process.argv.slice(2);
+  const isMas = targets.includes('mas-dev') || targets.includes('mas');
   if (isMas) {
     console.log("Build target: MAS (App Store) - notarization will be skipped");
   }
@@ -27,12 +38,11 @@ function isMasBuild(): boolean {
 
 /**
  * Check if we're building the MAS development target specifically.
- * This is a subset of isMasBuild() — used to route the provisioning profile
- * path to the dev profile during the intermediate "darwin sign" pass (see
- * the long comment on mac.provisioningProfile below).
+ * Subset of isMasBuild() — routes the provisioning profile to the dev profile
+ * during the intermediate "darwin sign" pass (see comment on mac.provisioningProfile).
  */
 function isMasDevBuild(): boolean {
-  return process.argv.join(' ').includes('mas-dev');
+  return process.argv.slice(2).includes('mas-dev');
 }
 
 /**
