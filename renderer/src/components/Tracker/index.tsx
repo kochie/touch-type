@@ -101,7 +101,13 @@ function sign(num: number): string {
 
 export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPanel?: React.ReactNode }) {
   const settings = useSettings();
-  const effectiveCodeMode = mode === "code" || settings.codeMode;
+  // Whether THIS instance of the Tracker is in code mode is purely a
+  // function of the route — the /code page passes mode="code", the
+  // /practice (root) page does not. The settings.codeMode flag is only
+  // a topbar visibility toggle (gates the "Code" tab in Menu/index.tsx);
+  // it must NOT bleed into the practice page or every user who'd ever
+  // toggled the setting on would have their main typing UI hijacked.
+  const effectiveCodeMode = mode === "code";
   const { modal } = useModal();
   const router = useRouter();
   const { currentRace, completeRace, forfeitRace } = usePvP();
