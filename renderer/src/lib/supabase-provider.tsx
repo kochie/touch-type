@@ -2,7 +2,20 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+import * as Sentry from '@sentry/nextjs';
 import { getSupabaseClient, type TypedSupabaseClient } from './supabase-client';
+
+// Mirror the signed-in user onto Sentry's global scope so every crash event
+// and every feedback submission lands with a real identity instead of
+// "anonymous". setUser(null) on sign-out clears the attribution so a
+// subsequent user's events don't get tagged with the prior account.
+function applySentryUser(user: User | null): void {
+  if (user) {
+    Sentry.setUser({ id: user.id, email: user.email, username: user.user_metadata?.name });
+  } else {
+    Sentry.setUser(null);
+  }
+}
 
 interface SupabaseContextType {
   supabase: TypedSupabaseClient;
@@ -26,6 +39,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
+        applySentryUser(initialSession?.user ?? null);
       } catch (error) {
         console.error('Error getting session:', error);
       } finally {
@@ -41,6 +55,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         console.log('Auth state changed:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        applySentryUser(currentSession?.user ?? null);
         setIsLoading(false);
       }
     );
