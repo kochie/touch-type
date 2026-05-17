@@ -25,7 +25,7 @@ import serve from "electron-serve";
 import { setupInAppPurchase, getProducts } from "./in-app-purchase";
 
 // Deep linking, notifications, and tray support
-import { setupDeepLinkHandlers, setMainWindow, handleInitialDeepLink } from "./deep-link";
+import { setupDeepLinkHandlers, setMainWindow, handleInitialDeepLink, launchedWithDeepLink } from "./deep-link";
 import { setupNotificationScheduler } from "./notification-scheduler";
 import { setupTray, setIsQuitting } from "./tray";
 import { setupStartupHandlers, shouldStartMinimized } from "./startup";
@@ -151,6 +151,11 @@ app.on("ready", async () => {
 
   ipcMain.handle("getWordSet", handleWordSet);
   ipcMain.handle("getProducts", getProducts);
+  // Renderer reads this synchronously at app mount to decide whether to
+  // open startup modals (WHATS_NEW, etc). If we were launched with a
+  // touchtyper:// arg, we don't want a modal obscuring the destination
+  // page when the deep-link IPC arrives a few ms later.
+  ipcMain.handle("launchedWithDeepLink", () => launchedWithDeepLink());
   ipcMain.handle("isMas", () => {
     // Dev-only override: `IS_MAS=true pnpm dev` forces isMas=true so the
     // renderer renders MAS-specific UI (IAP upgrade button, "Manage in

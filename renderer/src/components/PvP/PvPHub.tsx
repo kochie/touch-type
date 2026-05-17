@@ -8,6 +8,7 @@ import {
   faSwords,
   faSpinnerThird,
   faUserSlash,
+  faRightToBracket,
 } from "@fortawesome/pro-duotone-svg-icons";
 import { faPencil } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -26,6 +27,34 @@ import { AvatarPicker } from "@/components/avatars/AvatarPicker";
 import Link from "next/link";
 
 type TabId = "challenges" | "history" | "leaderboard";
+
+// Invite codes are 12 uppercase alphanumerics — see generate_invite_code in
+// touch-type-backend/supabase/migrations/.../recover_pvp_schema.sql
+const INVITE_CODE_RE = /^[A-Z0-9]{12}$/;
+
+/**
+ * Pulls an invite code out of any of:
+ *   - the raw 12-char code
+ *   - a `touchtyper://pvp/invite/CODE` deep link
+ *   - a `https://touch-typer.kochie.io/pvp/invite?code=CODE` web link
+ *   - anything else with `?code=CODE` in its query string
+ * Case-insensitive on input, normalised to uppercase on output.
+ */
+function extractInviteCode(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  const deepLink = trimmed.match(/^touchtyper:\/\/pvp\/invite\/([A-Za-z0-9]{12})$/);
+  if (deepLink) return deepLink[1].toUpperCase();
+  try {
+    const url = new URL(trimmed);
+    const code = url.searchParams.get("code")?.toUpperCase() ?? null;
+    if (code && INVITE_CODE_RE.test(code)) return code;
+  } catch {
+    // not a URL — fall through to raw-code check
+  }
+  const upper = trimmed.toUpperCase();
+  return INVITE_CODE_RE.test(upper) ? upper : null;
+}
 
 // ── Game row ─────────────────────────────────────────────────────────────────
 
@@ -103,6 +132,61 @@ function ArenaMatchRow({ match, userId, usernameMap, avatarMap }: ArenaMatchRowP
 
 function isTerminalStatus(status: string): boolean {
   return status === "completed" || status === "cancelled" || status === "expired";
+}
+
+// ── Join with an invite code ──────────────────────────────────────────────────
+
+function JoinByCodeInput() {
+  const router = useRouter();
+  const [value, setValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const code = extractInviteCode(value);
+  const canSubmit = code !== null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code) {
+      setError("Enter a 12-character code or paste an invite link");
+      return;
+    }
+    setError(null);
+    router.push(`/pvp/invite?code=${code}`);
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mt-2 flex flex-col gap-1"
+    >
+      <div className="flex gap-2">
+        <input
+          data-testid="pvp-join-by-code"
+          type="text"
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            if (error) setError(null);
+          }}
+          placeholder="Paste an invite link or 12-char code"
+          autoCorrect="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-800/40 border border-slate-700/60 text-sm text-slate-200 placeholder:text-slate-500 font-mono focus:outline-none focus:border-sky-500/60"
+        />
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/15 border border-sky-500/40 text-sm font-semibold text-sky-300 hover:bg-sky-500/25 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <FontAwesomeIcon icon={faRightToBracket} className="w-3.5 h-3.5" />
+          Join
+        </button>
+      </div>
+      {error && (
+        <p className="text-xs text-red-400 px-1">{error}</p>
+      )}
+    </form>
+  );
 }
 
 // ── Stat cards ────────────────────────────────────────────────────────────────
@@ -384,6 +468,8 @@ export default function PvPHub() {
                 <FontAwesomeIcon icon={faPlus} className="w-3.5 h-3.5" />
                 New Challenge
               </button>
+
+              <JoinByCodeInput />
             </div>
 
             {/* Right: avatar + stat cards */}

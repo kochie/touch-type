@@ -1,5 +1,4 @@
 import { app, BrowserWindow } from "electron";
-import { resolve } from "path";
 import log from "electron-log";
 
 export interface DeepLinkData {
@@ -120,16 +119,20 @@ export function getDeepLinkFromArgs(args: string[]): string | undefined {
  * Returns false if another instance is already running
  */
 export function setupDeepLinkHandlers(): boolean {
-  // Register as default protocol client
-  // In development, we need to pass the path to the script
-  if (process.defaultApp) {
-    if (process.argv.length >= 2) {
-      app.setAsDefaultProtocolClient("touchtyper", process.execPath, [
-        resolve(process.argv[1]),
-      ]);
-    }
-  } else {
+  // Only register as default protocol client for packaged builds. In dev
+  // (`electron .` via `pnpm dev`) the binary identifies as the generic
+  // `com.github.Electron` bundle ID; registering would set THAT as the
+  // OS-wide touchtyper:// handler, stealing routing from the installed
+  // app (TestFlight / release / DMG). Repairing requires a manual
+  // LSSetDefaultHandlerForURLScheme call. Skipping in dev avoids the
+  // footgun — devs who need to test deep-link routing inside a dev
+  // session can dispatch handleDeepLink() directly from the main process.
+  if (app.isPackaged) {
     app.setAsDefaultProtocolClient("touchtyper");
+  } else {
+    log.info(
+      "Dev mode: skipping setAsDefaultProtocolClient to preserve the installed app's touchtyper:// registration",
+    );
   }
 
   // macOS: Handle protocol when app is already running
@@ -171,6 +174,16 @@ export function setupDeepLinkHandlers(): boolean {
 }
 
 /**
+ * Returns true if the app was launched with a deep-link URL in argv.
+ * The renderer reads this via electronAPI before deciding whether to
+ * open startup modals (which would otherwise obscure the deep-link
+ * destination page on cold start).
+ */
+export function launchedWithDeepLink(): boolean {
+  return !!getDeepLinkFromArgs(process.argv);
+}
+
+/**
  * Handle deep link from initial app launch
  * Should be called after the window is ready
  */
@@ -179,9 +192,12 @@ export function handleInitialDeepLink(): void {
   const url = getDeepLinkFromArgs(process.argv);
   if (url) {
     log.info("App launched with deep link:", url);
-    // Wait a bit for the window to fully load
+    // did-finish-load already ensures the renderer JS has run; this short
+    // delay lets React mount + useDeepLink register its listener before
+    // we dispatch. 500ms was overcautious and lengthened the window where
+    // a startup modal could open first; 50ms is enough for mount.
     setTimeout(() => {
       handleDeepLink(url);
-    }, 500);
+    }, 50);
   }
 }

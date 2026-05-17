@@ -85,6 +85,7 @@ export interface ElectronAPI {
   offDeepLink: (wrapper: (...args: unknown[]) => void) => void;
   onNavigate: (callback: (path: string) => void) => (...args: unknown[]) => void;
   offNavigate: (wrapper: (...args: unknown[]) => void) => void;
+  launchedWithDeepLink: () => Promise<boolean>;
   // Push notifications
   registerPushNotifications: () => Promise<PushRegistrationResult>;
   unregisterPushNotifications: () => Promise<ScheduleResult>;

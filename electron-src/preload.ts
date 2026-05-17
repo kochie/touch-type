@@ -103,6 +103,10 @@ declare global {
       offDeepLink: (wrapper: (...args: unknown[]) => void) => void;
       onNavigate: (callback: (path: string) => void) => (...args: unknown[]) => void;
       offNavigate: (wrapper: (...args: unknown[]) => void) => void;
+      // True iff the app was launched with a touchtyper:// URL in argv —
+      // renderer uses this to skip startup modals so they don't obscure
+      // the deep-link destination page on cold start.
+      launchedWithDeepLink: () => Promise<boolean>;
       // Push notifications
       registerPushNotifications: () => Promise<PushRegistrationResult>;
       unregisterPushNotifications: () => Promise<ScheduleResult>;
@@ -177,6 +181,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   offDeepLink: (wrapper: (...args: unknown[]) => void) => {
     ipcRenderer.removeListener("deep-link", wrapper);
   },
+  launchedWithDeepLink: () => ipcRenderer.invoke("launchedWithDeepLink"),
 
   // Navigation - listen for navigation requests from tray menu
   onNavigate: (callback: (path: string) => void) => {

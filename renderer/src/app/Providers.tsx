@@ -76,9 +76,24 @@ function ModalSetup() {
   });
 
   useLayoutEffect(() => {
+    let cancelled = false;
     const firstTimeOpen = sessionStorage.getItem("firstTimeOpen") === null;
-    if (settings.whatsNewOnStartup && firstTimeOpen)
+    if (!settings.whatsNewOnStartup || !firstTimeOpen) return;
+
+    // Cold-start via touchtyper:// deep link must NOT trigger WHATS_NEW —
+    // the modal would otherwise obscure the deep-link destination page
+    // (PvP invite, challenge, etc.) before the user can see it. When the
+    // electronAPI is unavailable (web/HMR), fall through to the normal
+    // open since deep links can't be the launch vector there.
+    const shouldOpen = async () => {
+      const viaDeepLink = await window.electronAPI?.launchedWithDeepLink?.();
+      if (cancelled || viaDeepLink) return;
       setModal(ModalType.WHATS_NEW);
+    };
+    void shouldOpen();
+    return () => {
+      cancelled = true;
+    };
   }, [settings.whatsNewOnStartup]);
 
   return (
