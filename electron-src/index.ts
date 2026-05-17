@@ -54,6 +54,23 @@ if (process.platform === "win32") {
   app.setAppUserModelId("15825koch.ie.TouchTyper");
 }
 
+// Snap-installed builds inherit Mesa DRI drivers + libdbus from the
+// gnome-platform content snap, which on arm64 (and some x64 systems) is
+// incomplete or version-mismatched:
+//
+//   MESA-LOADER: failed to open swrast
+//   ANGLE Display::initialize error 12289: Failed to get system egl display
+//   ... → GPU process crash → segfault
+//
+// Skipping GPU acceleration entirely sidesteps that whole chain — software
+// rendering is plenty for a typing app (no WebGL, no heavy canvas). Other
+// distributions (macOS, Windows, AppImage, Flatpak) keep hardware
+// acceleration via their host GPU stacks.
+if (process.env.SNAP) {
+  log.info("Running from snap — disabling hardware acceleration");
+  app.disableHardwareAcceleration();
+}
+
 // Setup deep link handlers before app is ready
 // This returns false if another instance is running
 const shouldContinue = setupDeepLinkHandlers();
