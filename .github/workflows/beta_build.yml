@@ -49,6 +49,10 @@ jobs:
             mac_target: mas
           - os: ubuntu-latest
             mac_target: ""
+          # Native arm64 Linux runner — produces aarch64 snap, AppImage, and
+          # flatpak artifacts. electron-builder auto-detects host arch.
+          - os: ubuntu-24.04-arm
+            mac_target: ""
           - os: windows-latest
             mac_target: ""
 
