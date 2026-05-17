@@ -172,10 +172,6 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
-          # Use LXD as the snapcraft build backend on Ubuntu. host fails
-          # on libc mismatch, multipass needs nested-virt which arm64
-          # doesn't have. LXD uses Linux namespaces — works everywhere.
-          SNAPCRAFT_BUILD_ENVIRONMENT: ${{ startsWith(matrix.os, 'ubuntu') && 'lxd' || '' }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
@@ -199,6 +195,10 @@ jobs:
 
           # Ubuntu builds
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
+          # See release_build.yml — the env block on "Build Electron app"
+          # doesn't propagate into this step; snapcraft needs the backend
+          # selector on THIS step to actually use LXD.
+          SNAPCRAFT_BUILD_ENVIRONMENT: ${{ startsWith(matrix.os, 'ubuntu') && 'lxd' || '' }}
 
           # Common builds
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

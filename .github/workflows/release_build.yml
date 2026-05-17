@@ -220,11 +220,6 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
-          # Use LXD as the snapcraft build backend on Ubuntu. See the
-          # "Install Snapcraft + LXD" step above for the full rationale —
-          # short version: host fails on libc mismatch, multipass needs
-          # nested-virt which arm64 doesn't have, lxd just works.
-          SNAPCRAFT_BUILD_ENVIRONMENT: ${{ startsWith(matrix.os, 'ubuntu') && 'lxd' || '' }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
@@ -248,6 +243,14 @@ jobs:
 
           # Ubuntu builds
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
+          # SNAPCRAFT_BUILD_ENVIRONMENT must be set on THIS step (where
+          # electron-builder invokes snapcraft), not just the earlier
+          # Build Electron app step where renderer compilation happens.
+          # The "Build Electron app" step's env vars are scoped to that
+          # step only — they don't carry into subsequent steps. Without
+          # it here snapcraft falls back to its default backend search,
+          # which on Ubuntu 24.04 means "look for multipass" and abort.
+          SNAPCRAFT_BUILD_ENVIRONMENT: ${{ startsWith(matrix.os, 'ubuntu') && 'lxd' || '' }}
 
           # Common
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
