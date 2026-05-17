@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTag,
@@ -12,8 +12,10 @@ import {
   faChevronDown,
   faChevronUp,
   faArrowUpRightFromSquare,
+  faComment,
 } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
+import * as Sentry from "@sentry/nextjs";
 import clsx from "clsx";
 
 const GITHUB_REPO = "https://github.com/kochie/touch-type";
@@ -72,6 +74,48 @@ function LinkRow({
         icon={faArrowUpRightFromSquare}
         className="w-3 h-3 text-slate-400 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors flex-shrink-0"
       />
+    </button>
+  );
+}
+
+/**
+ * Row that opens the Sentry user-feedback dialog. We don't use the auto-
+ * injected floating widget (autoInject:false in instrumentation.ts) — wiring
+ * a single button keeps the surface contained and consistent with the other
+ * About rows. attachTo registers a click handler and returns a cleanup
+ * function; running cleanup on unmount stops the form from leaking listeners
+ * across HMR / re-renders.
+ */
+function FeedbackRow() {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    const feedback = Sentry.getFeedback();
+    if (!feedback || !buttonRef.current) return;
+    const cleanup = feedback.attachTo(buttonRef.current);
+    return cleanup;
+  }, []);
+
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.07] transition-colors duration-150 text-left group"
+    >
+      <span className="flex items-center gap-3">
+        <FontAwesomeIcon
+          icon={faComment}
+          className="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0"
+        />
+        <span className="flex flex-col">
+          <span className="text-sm font-medium text-slate-900 dark:text-slate-200">
+            Send Feedback
+          </span>
+          <span className="text-xs text-slate-500">
+            Tell us what's working — or not — with an optional screenshot
+          </span>
+        </span>
+      </span>
     </button>
   );
 }
@@ -281,6 +325,7 @@ export function AboutSettings() {
           description="Report bugs or request features"
           href={ISSUES_URL}
         />
+        <FeedbackRow />
       </div>
 
       {/* Third-party licenses */}
