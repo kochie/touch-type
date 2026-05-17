@@ -5,6 +5,7 @@ import { Field, Label, Description } from "@headlessui/react";
 import type { DebugInfo } from "../../../types/electron";
 import Button from "../Button";
 import { useSupabase } from "@/lib/supabase-provider";
+import { PASSWORD_RESET_REDIRECT_URL } from "@/lib/auth-urls";
 
 type EmailTestStatus = "idle" | "sending" | "sent" | "error";
 
@@ -101,7 +102,7 @@ export function DebugSettings() {
     // window.location.origin in Electron is the app:// scheme which Supabase
     // rejects; point at the website's actual set-password route instead.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://touch-typer.kochie.io/auth/callback?next=/auth/set-password",
+      redirectTo: PASSWORD_RESET_REDIRECT_URL,
     });
     if (error) throw error;
   };

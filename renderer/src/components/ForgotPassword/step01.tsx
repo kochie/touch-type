@@ -9,6 +9,7 @@ import Error from "../Errors";
 import { Transition } from "@headlessui/react";
 import { useSupabaseClient } from "@/lib/supabase-provider";
 import { friendlyAuthError } from "@/lib/auth-errors";
+import { PASSWORD_RESET_REDIRECT_URL } from "@/lib/auth-urls";
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -73,7 +74,7 @@ export function Step01({ onContinue }: Step01Props) {
           // redirectTo Supabase falls back to Site URL (bare root), which
           // strands the user.
           const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-            redirectTo: "https://touch-typer.kochie.io/auth/callback?next=/auth/set-password",
+            redirectTo: PASSWORD_RESET_REDIRECT_URL,
           });
 
           if (error) throw error;

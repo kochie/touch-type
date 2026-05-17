@@ -10,6 +10,7 @@ import Error from "../Errors";
 import { Transition } from "@headlessui/react";
 import { useSupabaseClient } from "@/lib/supabase-provider";
 import { friendlyAuthError } from "@/lib/auth-errors";
+import { PASSWORD_RESET_REDIRECT_URL } from "@/lib/auth-urls";
 
 const Schema = Yup.object().shape({
   code: Yup.string().length(8, "Code must be 8 digits").required("Required"),
@@ -64,7 +65,7 @@ export function Step02({ email, onContinue }: Step02Props) {
       // set-password page instead of the bare root if the user clicks rather
       // than typing the OTP code.
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "https://touch-typer.kochie.io/auth/callback?next=/auth/set-password",
+        redirectTo: PASSWORD_RESET_REDIRECT_URL,
       });
       if (error) throw error;
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
