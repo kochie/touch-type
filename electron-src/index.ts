@@ -384,6 +384,18 @@ app.on("ready", async () => {
   // Note: Even when starting hidden, we keep the dock icon visible on macOS
   // (like Slack). Clicking the dock icon will show the window.
 
+  // Register before loadURL — BrowserWindow.loadURL() resolves only after
+  // did-finish-load fires, so any listener registered after the await would
+  // silently miss the event and wait for the next navigation instead.
+  mainWindow.webContents.once("did-finish-load", () => {
+    handleInitialDeepLink();
+    metrics.distribution("app.startup_duration", Date.now() - appStartTime, "millisecond", {
+      platform: process.platform,
+      is_dev: isDevMode,
+    });
+    metrics.count("app.started", 1, { platform: process.platform });
+  });
+
   // mainWindow.setVibrancy("under-window");
   if (isDevMode) {
     console.log("Running in development");
@@ -393,16 +405,6 @@ app.on("ready", async () => {
   } else {
     await loadURL(mainWindow);
   }
-
-  // Handle deep link if app was launched with one
-  mainWindow.webContents.once("did-finish-load", () => {
-    handleInitialDeepLink();
-    metrics.distribution("app.startup_duration", Date.now() - appStartTime, "millisecond", {
-      platform: process.platform,
-      is_dev: isDevMode,
-    });
-    metrics.count("app.started", 1, { platform: process.platform });
-  });
 
   // const url = isDev.default
   //   ? "http://localhost:8000/"
