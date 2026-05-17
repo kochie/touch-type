@@ -13,27 +13,75 @@
       <!-- _locComment_text="{MaxLength=30} App keyword 1" -->touch typing</Keyword>
     <Keyword _locID="App_keyword2">
       <!-- _locComment_text="{MaxLength=30} App keyword 2" -->keyboard</Keyword>
+    <Keyword _locID="App_keyword3">
+      <!-- _locComment_text="{MaxLength=30} App keyword 3" -->typing tutor</Keyword>
+    <Keyword _locID="App_keyword4">
+      <!-- _locComment_text="{MaxLength=30} App keyword 4" -->typing test</Keyword>
+    <Keyword _locID="App_keyword5">
+      <!-- _locComment_text="{MaxLength=30} App keyword 5" -->typing speed</Keyword>
+    <Keyword _locID="App_keyword6">
+      <!-- _locComment_text="{MaxLength=30} App keyword 6" -->learn to type</Keyword>
+    <Keyword _locID="App_keyword7">
+      <!-- _locComment_text="{MaxLength=30} App keyword 7" -->wpm</Keyword>
   </Keywords>
   <Description _locID="App_Description">
-    <!-- _locComment_text="{MaxLength=10000} App Description" -->Want to get better at typing? Touch Typer is here to help!
- 
-Learn touch typing, track your progress and continually improve your skills.</Description>
+    <!-- _locComment_text="{MaxLength=10000} App Description" -->Practice typing. Get measurably faster.
+
+Touch Typer is a serious typing tutor with the polish of a modern app — built for the way real people learn. Whether you're picking up touch typing from scratch, training your fingers on a new layout, or just trying to shave seconds off your daily output, Touch Typer turns deliberate practice into something you'll actually come back to tomorrow.
+
+What's inside
+
+• Practice for any level. Start with single-finger drills and ramp up to full paragraphs of natural English (or your language of choice). Each session is short enough to do on a coffee break but long enough to move the needle.
+
+• Code Mode. Drill real source code in Python, TypeScript, JavaScript, Rust, Go, C, Java, and more. Symbols, brackets, indentation — the stuff prose-only typing tutors don't cover. Speed and accuracy are tracked separately so you can see exactly where syntax slows you down.
+
+• Arena (PvP). Challenge a friend to a best-of-1, 3, 5, or 7 match. Both sides race blind on the same word set; scores stay hidden until you both finish. Share a one-click invite link or paste an invite code straight into the Arena. Track your win-rate, streaks, and best opponents.
+
+• AI Coach. Premium feature. An analytic engine reads every session — every key, every bigram, every pause — and surfaces drills targeted at the specific weak spots costing you the most time. No more guessing what to practice.
+
+• Heatmap. A live visualisation of every key on your keyboard, coloured by how much it's slowing you down. Filter by language, layout, level, and code mode to see exactly where the bottlenecks are.
+
+• Deep stats. Gross CPM, net CPM, accuracy, per-key dwell time, error patterns, time-of-day trends, and personal-best history. All of it filterable, all of it yours.
+
+• Daily streaks. Keep your practice habit alive. Miss a day? Streak-freeze protection holds the chain in place.
+
+• Avatars and hats. Earned by playing — not a paywall. Pick a face, equip a hat, take it into Arena races and the global leaderboard.
+
+• Global leaderboard. See how you stack up against other typists at your level, layout, and language.
+
+Built right
+
+• Cross-platform. macOS, Windows, and Linux from the same app. Sign in once, see your stats anywhere.
+
+• Dozens of keyboard layouts. QWERTY, Dvorak, Colemak, Workman, AZERTY, QWERTZ, and more — pick what matches your hardware or train on something new.
+
+• 30+ practice languages.
+
+• Beautiful, distraction-free interface in light and dark themes. Native window chrome on each platform.
+
+• Free to play. No ads. No tracking beyond anonymous error reporting. Premium tier (optional) unlocks the AI Coach and a few extras.
+
+Who it's for
+
+• Students learning to touch type for the first time.
+• Developers who want to drill code, not novels.
+• Office professionals shaving minutes off every email.
+• Speed typists who want serious analytics, not just a WPM counter.
+• Anyone who's curious whether they can really hit 100+ WPM net.
+
+Open the app, start typing. Touch Typer takes care of the rest.</Description>
   <ShortDescription _locID="App_ShortDescription">
     <!-- Only used for games. This description appears in the Information section of the Game Hub on Xbox One, and helps customers understand more about your game. -->
-    <!-- _locComment_text="{MaxLength=500} App ShortDescription" -->
-  </ShortDescription>
+    <!-- _locComment_text="{MaxLength=500} App ShortDescription" -->Practice typing. Get measurably faster. Touch Typer is a cross-platform typing tutor with PvP races, an AI coach, a heatmap, and a Code Mode for drilling real source code. Free to play.</ShortDescription>
   <ShortTitle _locID="App_ShortTitle">
     <!-- A shorter version of your product's name. If provided, this shorter name may appear in various places on Xbox One (during installation, in Achievements, etc.) in place of the full title of your product. -->
-    <!-- _locComment_text="{MaxLength=50} App ShortTitle" -->
-  </ShortTitle>
+    <!-- _locComment_text="{MaxLength=50} App ShortTitle" -->Touch Typer</ShortTitle>
   <SortTitle _locID="App_SortTitle">
     <!-- If your product could be alphabetized in different ways, you can enter another version here. This may help customers find the product more quickly when searching. -->
-    <!-- _locComment_text="{MaxLength=255} App SortTitle" -->
-  </SortTitle>
+    <!-- _locComment_text="{MaxLength=255} App SortTitle" -->Touch Typer</SortTitle>
   <VoiceTitle _locID="App_VoiceTitle">
     <!-- An alternate name for your product that, if provided, may be used in the audio experience on Xbox One when using Kinect or a headset. -->
-    <!-- _locComment_text="{MaxLength=255} App VoiceTitle" -->
-  </VoiceTitle>
+    <!-- _locComment_text="{MaxLength=255} App VoiceTitle" -->Touch Typer</VoiceTitle>
   <DevStudio _locID="App_DevStudio">
     <!-- Specify this value if you want to include a "Developed by" field in the listing. (The "Published by" field will list the publisher display name associated with your account, whether or not you provide a devStudio value.) -->
     <!-- _locComment_text="{MaxLength=255} App DevStudio" -->Robert Koch</DevStudio>
@@ -106,25 +154,43 @@ Under the hood
   </Trailers>
   <AppFeatures>
     <!-- Valid length: 200 character limit, up to 20 elements -->
+    <AppFeature _locID="App_feature1"><!-- _locComment_text="{MaxLength=200} App feature 1" -->Lessons for every level, from single-finger drills to full paragraphs of natural language.</AppFeature>
+    <AppFeature _locID="App_feature2"><!-- _locComment_text="{MaxLength=200} App feature 2" -->Code Mode: drill real source code in Python, TypeScript, Rust, Go, Java, and more. Tracks symbols and indentation separately from prose.</AppFeature>
+    <AppFeature _locID="App_feature3"><!-- _locComment_text="{MaxLength=200} App feature 3" -->Arena (PvP): best-of-1, 3, 5, or 7 races against a friend. Both sides race blind on the same word set; scores reveal when you both finish.</AppFeature>
+    <AppFeature _locID="App_feature4"><!-- _locComment_text="{MaxLength=200} App feature 4" -->AI Coach (Premium): analyses every session and recommends targeted drills for your specific weak keys, bigrams, and pauses.</AppFeature>
+    <AppFeature _locID="App_feature5"><!-- _locComment_text="{MaxLength=200} App feature 5" -->Heatmap: a live, filterable visualisation of which keys are costing you time across language, layout, and code mode.</AppFeature>
+    <AppFeature _locID="App_feature6"><!-- _locComment_text="{MaxLength=200} App feature 6" -->Deep stats: gross CPM, net CPM, accuracy, per-key dwell time, error patterns, and personal-best history.</AppFeature>
+    <AppFeature _locID="App_feature7"><!-- _locComment_text="{MaxLength=200} App feature 7" -->Daily streaks with streak-freeze protection — miss a day without losing the chain.</AppFeature>
+    <AppFeature _locID="App_feature8"><!-- _locComment_text="{MaxLength=200} App feature 8" -->Dozens of keyboard layouts: QWERTY, Dvorak, Colemak, Workman, AZERTY, QWERTZ, and more.</AppFeature>
+    <AppFeature _locID="App_feature9"><!-- _locComment_text="{MaxLength=200} App feature 9" -->30+ practice languages.</AppFeature>
+    <AppFeature _locID="App_feature10"><!-- _locComment_text="{MaxLength=200} App feature 10" -->Cross-platform: macOS, Windows, and Linux. Sign in once, see your stats anywhere.</AppFeature>
+    <AppFeature _locID="App_feature11"><!-- _locComment_text="{MaxLength=200} App feature 11" -->Unlockable avatars and hats earned through play — never paywalled.</AppFeature>
+    <AppFeature _locID="App_feature12"><!-- _locComment_text="{MaxLength=200} App feature 12" -->Global leaderboard segmented by language, layout, and level.</AppFeature>
+    <AppFeature _locID="App_feature13"><!-- _locComment_text="{MaxLength=200} App feature 13" -->Personal-best confetti — opt-in.</AppFeature>
+    <AppFeature _locID="App_feature14"><!-- _locComment_text="{MaxLength=200} App feature 14" -->Beautiful, distraction-free interface in light and dark themes.</AppFeature>
+    <AppFeature _locID="App_feature15"><!-- _locComment_text="{MaxLength=200} App feature 15" -->Free to play. No ads. No tracking beyond anonymous error reporting.</AppFeature>
   </AppFeatures>
   <RecommendedHardware>
     <!-- Valid length: 200 character limit, up to 11 elements -->
+    <Hardware _locID="App_recHardware1"><!-- _locComment_text="{MaxLength=200} Recommended hardware 1" -->Windows 10 version 1809 (October 2018 Update) or later, 64-bit</Hardware>
+    <Hardware _locID="App_recHardware2"><!-- _locComment_text="{MaxLength=200} Recommended hardware 2" -->4 GB RAM</Hardware>
+    <Hardware _locID="App_recHardware3"><!-- _locComment_text="{MaxLength=200} Recommended hardware 3" -->Mechanical or membrane physical keyboard (touch-screen typing is supported but not the intended experience)</Hardware>
+    <Hardware _locID="App_recHardware4"><!-- _locComment_text="{MaxLength=200} Recommended hardware 4" -->Internet connection for cloud sync, PvP, the AI Coach, and the global leaderboard</Hardware>
   </RecommendedHardware>
   <MinimumHardware>
     <!-- Valid length: 200 character limit, up to 11 elements -->
+    <Hardware _locID="App_minHardware1"><!-- _locComment_text="{MaxLength=200} Minimum hardware 1" -->Windows 10 version 1607 or later</Hardware>
+    <Hardware _locID="App_minHardware2"><!-- _locComment_text="{MaxLength=200} Minimum hardware 2" -->2 GB RAM</Hardware>
+    <Hardware _locID="App_minHardware3"><!-- _locComment_text="{MaxLength=200} Minimum hardware 3" -->Standard keyboard input</Hardware>
   </MinimumHardware>
   <CopyrightAndTrademark _locID="App_CopyrightandTrademark">
-    <!-- _locComment_text="{MaxLength=200} Copyright and Trademark" -->Copyright 2022 Robert Koch</CopyrightAndTrademark>
+    <!-- _locComment_text="{MaxLength=200} Copyright and Trademark" -->Copyright 2022–2026 Robert Koch. All rights reserved.</CopyrightAndTrademark>
   <AdditionalLicenseTerms _locID="App_AdditionalLicenseTerms">
-    <!-- _locComment_text="{MaxLength=10000} Additional License Terms" -->
-  </AdditionalLicenseTerms>
+    <!-- _locComment_text="{MaxLength=10000} Additional License Terms" -->Full terms: https://touch-typer.kochie.io/terms</AdditionalLicenseTerms>
   <WebsiteURL _locID="App_WebsiteURL">
-    <!-- _locComment_text="{MaxLength=2048} WebsiteURL" -->
-  </WebsiteURL>
+    <!-- _locComment_text="{MaxLength=2048} WebsiteURL" -->https://touch-typer.kochie.io</WebsiteURL>
   <SupportContactInfo _locID="App_SupportContactInfo">
-    <!-- _locComment_text="{MaxLength=2048} Support Contact Info" -->
-  </SupportContactInfo>
+    <!-- _locComment_text="{MaxLength=2048} Support Contact Info" -->https://touch-typer.kochie.io</SupportContactInfo>
   <PrivacyPolicyURL _locID="App_PrivacyURL">
-    <!-- _locComment_text="{MaxLength=2048} Privacy Policy URL" -->
-  </PrivacyPolicyURL>
+    <!-- _locComment_text="{MaxLength=2048} Privacy Policy URL" -->https://touch-typer.kochie.io/privacy</PrivacyPolicyURL>
 </ProductDescription>
