@@ -110,15 +110,17 @@ jobs:
       - name: Rebuild native deps for Electron
         run: pnpm exec electron-builder install-app-deps
 
-      - name: Install Snapcraft + Multipass
-        # Pin to 7.x/stable + install multipass — see release_build.yml
-        # for the full rationale. Snapcraft probes for multipass before
-        # falling through to host builds; having it present satisfies
-        # the probe even on snapcraft 7.x.
+      - name: Install Snapcraft + LXD
+        # See release_build.yml for the full rationale. Short version:
+        # snapcraft 7.x pinned for electron-builder compat, LXD installed
+        # as the build backend, socket opened so the runner user can use
+        # it without group-membership re-login.
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo snap install snapcraft --channel=7.x/stable --classic
-          sudo snap install multipass
+          sudo snap install lxd
+          sudo lxd init --auto
+          sudo chmod 666 /var/snap/lxd/common/lxd/unix.socket
           snapcraft --version
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
@@ -166,10 +168,10 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
-          # Snapcraft 8+ defaults to building inside a multipass VM, which
-          # isn't installed on GitHub Actions runners. "host" puts it in
-          # destructive mode — builds run directly on the runner.
-          SNAPCRAFT_BUILD_ENVIRONMENT: ${{ startsWith(matrix.os, 'ubuntu') && 'host' || '' }}
+          # Use LXD as the snapcraft build backend on Ubuntu. host fails
+          # on libc mismatch, multipass needs nested-virt which arm64
+          # doesn't have. LXD uses Linux namespaces — works everywhere.
+          SNAPCRAFT_BUILD_ENVIRONMENT: ${{ startsWith(matrix.os, 'ubuntu') && 'lxd' || '' }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}

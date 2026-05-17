@@ -138,22 +138,36 @@ jobs:
       - name: Rebuild native deps for Electron
         run: pnpm exec electron-builder install-app-deps
 
-      - name: Install Snapcraft + Multipass
-        # Pin snapcraft to 7.x/stable: the latest/stable channel ships
-        # snapcraft 8 which only builds inside LXD or multipass and won't
-        # honour --destructive-mode through electron-builder's app-builder.
-        # 7.x builds on the host with no VM at all.
+      - name: Install Snapcraft + LXD
+        # Snapcraft on Ubuntu 24.04 needs a backend to build inside:
+        #   - host: fails because of libc/base library mismatch between
+        #          the host (24.04, libc 2.39+) and the snap's base
+        #          (typically core22, libc 2.35). Reported by multiple
+        #          maintainers on arm64.
+        #   - multipass: needs nested virtualization, unavailable on the
+        #          Graviton-hosted ubuntu-24.04-arm runner.
+        #   - lxd: uses Linux namespaces, no virtualization required.
+        #          Works on both x64 and arm64 GitHub-hosted runners.
         #
-        # Multipass is installed as a fallback in case snapcraft (any
-        # version) probes for it before checking other backends —
-        # snapcraft does this on first run and aborts with a multipass
-        # error even when it would have built on host. Having the binary
-        # present satisfies the probe; whether or not a VM ever launches
-        # is moot because 7.x builds on host anyway.
+        # Setup steps:
+        #   1. Install LXD via snap
+        #   2. `lxd init --auto` accepts defaults (zfs/dir storage, no
+        #      network bridge), enough for ephemeral CI builds.
+        #   3. Make the unix socket world-rw so snapcraft (running as the
+        #      runner user) can talk to lxd without sudo or group dance.
+        #      Re-logging the runner user into the lxd group would also
+        #      work but requires a new shell and is awkward in CI.
+        #   4. SNAPCRAFT_BUILD_ENVIRONMENT=lxd in the build step env
+        #      tells snapcraft to use this backend.
+        #
+        # Snapcraft pinned to 7.x/stable for electron-builder compat —
+        # the deprecated `snap` subcommand it calls works in 7.x.
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo snap install snapcraft --channel=7.x/stable --classic
-          sudo snap install multipass
+          sudo snap install lxd
+          sudo lxd init --auto
+          sudo chmod 666 /var/snap/lxd/common/lxd/unix.socket
           snapcraft --version
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
@@ -201,12 +215,11 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
-          # Snapcraft 8+ defaults to building inside a multipass VM, which
-          # isn't installed on GitHub Actions runners. "host" puts it in
-          # destructive mode — builds run directly on the runner. Harmless
-          # on older snapcraft (used by ubuntu-latest x64) and required on
-          # newer (ubuntu-24.04-arm).
-          SNAPCRAFT_BUILD_ENVIRONMENT: ${{ startsWith(matrix.os, 'ubuntu') && 'host' || '' }}
+          # Use LXD as the snapcraft build backend on Ubuntu. See the
+          # "Install Snapcraft + LXD" step above for the full rationale —
+          # short version: host fails on libc mismatch, multipass needs
+          # nested-virt which arm64 doesn't have, lxd just works.
+          SNAPCRAFT_BUILD_ENVIRONMENT: ${{ startsWith(matrix.os, 'ubuntu') && 'lxd' || '' }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
