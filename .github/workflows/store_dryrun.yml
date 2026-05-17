@@ -1,0 +1,168 @@
+name: Microsoft Store Dry Run
+
+# Validates the Windows appx build + StoreBroker packaging pipeline without
+# touching the Microsoft Store API and without cutting a GitHub release.
+#
+# Use this when you've changed:
+#   - build/store_broker/SBConfig.json
+#   - build/store_broker/en-us/PDP.xml
+#   - the appx target in electron-builder.ts
+#   - the "Upload to Windows Dev Center" step in release_build.yml
+#   - anything in build/store_broker/images/*
+# …and want to verify the result before committing to a real submission.
+#
+# What this DOES:
+#   1. Builds the renderer + electron-src.
+#   2. Runs electron-builder appx target (signed; --publish never).
+#   3. Runs New-SubmissionPackage to produce build/submission.{json,zip}.
+#   4. Inspects submission.zip and asserts an .appx is inside.
+#   5. Prints a summary of submission.json so PDP changes are visible.
+#   6. Uploads submission.zip + the produced appx as a workflow artifact.
+#
+# What this DOES NOT do:
+#   - Call Update-ApplicationSubmission (no Store-side state change).
+#   - Push a GitHub Release.
+#   - Touch the macOS or Linux toolchains.
+#
+# Trigger:  gh workflow run "Microsoft Store Dry Run" -f ref=main
+#           or use the "Run workflow" button on the Actions tab.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag, or SHA to dry-run against"
+        required: false
+        default: main
+        type: string
+
+jobs:
+  dryrun:
+    name: Build appx + assemble Store submission (no upload)
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository at the requested ref
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: latest
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: latest
+          cache: pnpm
+          cache-dependency-path: ./pnpm-lock.yaml
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+      - name: Rebuild native deps for Electron
+        run: pnpm exec electron-builder install-app-deps
+
+      - name: Build Electron renderer + main
+        run: pnpm run build
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.supabase_anon_key }}
+          NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
+          NEXT_PUBLIC_WEBSITE_URL: https://touch-typer.kochie.io
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.stripe_publishable_key }}
+
+      - name: Build Windows appx (electron-builder, no publish)
+        shell: bash
+        run: pnpm exec electron-builder --config electron-builder.ts --win appx --publish never
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+      - name: Assemble Store submission (no upload)
+        shell: pwsh
+        run: |
+          # Mirror the hardening that lives in release_build.yml's "Upload to
+          # Windows Dev Center" step so we exercise the exact same code paths
+          # — minus the Update-ApplicationSubmission call.
+          $ErrorActionPreference = "Stop"
+
+          $appxFiles = @(Get-ChildItem -Path "$env:GITHUB_WORKSPACE\dist" -Filter "*.appx" -File)
+          Write-Host "dist/ contents (.appx):"
+          $appxFiles | ForEach-Object { Write-Host "  $($_.Name) ($($_.Length) bytes)" }
+          if ($appxFiles.Count -eq 0) {
+            throw "No .appx found in dist/ — electron-builder appx target did not produce output"
+          }
+          $appx = $appxFiles[0].FullName
+          Write-Host "Selected appx: $appx"
+
+          Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
+          Install-Module -Name StoreBroker -Force
+
+          New-SubmissionPackage -ConfigPath build\store_broker\SBConfig.json -AppxPath $appx
+
+          if (-not (Test-Path "build/submission.zip")) {
+            throw "submission.zip was not produced by New-SubmissionPackage"
+          }
+
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zipPath = (Resolve-Path "build/submission.zip").Path
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+          try {
+            Write-Host ""
+            Write-Host "=== submission.zip ($($zip.Entries.Count) entries) ==="
+            $zip.Entries | Sort-Object FullName | ForEach-Object {
+              Write-Host ("  {0,12} bytes  {1}" -f $_.Length, $_.FullName)
+            }
+            $hasAppx = @($zip.Entries | Where-Object { $_.Name -like "*.appx" -or $_.Name -like "*.appxbundle" -or $_.Name -like "*.msixbundle" }).Count -gt 0
+            if (-not $hasAppx) {
+              throw "submission.zip has no .appx/.appxbundle/.msixbundle entry — a real upload would no-op on packages"
+            }
+          } finally {
+            $zip.Dispose()
+          }
+
+          Write-Host ""
+          Write-Host "=== submission.json summary ==="
+          $sub = Get-Content build/submission.json -Raw | ConvertFrom-Json
+          Write-Host "applicationCategory: $($sub.applicationCategory)"
+          Write-Host "pricing.priceId:     $($sub.pricing.priceId)"
+          Write-Host "visibility:          $($sub.visibility)"
+          Write-Host "packages count:      $($sub.applicationPackages.Count)"
+          foreach ($p in $sub.applicationPackages) {
+            Write-Host "  - file: $($p.fileName)  version: $($p.version)  arch: $($p.architecture)"
+          }
+          $listings = @($sub.listings.PSObject.Properties.Name)
+          foreach ($lang in $listings) {
+            $l = $sub.listings.$lang.baseListing
+            Write-Host "[$lang] title:                 $($l.title)"
+            Write-Host "[$lang] description:           $($l.description.Length) chars"
+            Write-Host "[$lang] releaseNotes:          $($l.releaseNotes.Length) chars"
+            Write-Host "[$lang] keywords:              $($l.keywords.Count)"
+            Write-Host "[$lang] features:              $($l.features.Count)"
+            Write-Host "[$lang] recommendedHardware:   $($l.recommendedHardware.Count)"
+            Write-Host "[$lang] minimumHardware:       $($l.minimumHardware.Count)"
+            Write-Host "[$lang] images:                $($l.images.Count)"
+            Write-Host "[$lang] trailers:              $(if ($sub.trailers) { $sub.trailers.Count } else { 0 })"
+          }
+
+          Write-Host ""
+          Write-Host "Dry run OK — submission.zip is well-formed and includes the appx."
+          Write-Host "No state was changed in Partner Center."
+
+      - name: Upload submission artifact for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-dryrun-${{ github.sha }}
+          path: |
+            build/submission.json
+            build/submission.zip
+            dist/*.appx
+          retention-days: 14
+          if-no-files-found: warn
