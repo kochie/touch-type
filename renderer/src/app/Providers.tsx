@@ -13,6 +13,7 @@ import {
   useModal,
 } from "@/lib/modal-provider";
 import Menu from "@/components/Menu";
+import PvPBanner from "@/components/PvP/PvPBanner";
 import { MasProvider } from "@/lib/mas_hook";
 import { PlanProvider } from "@/lib/plan_hook";
 import { PvPProvider } from "@/lib/pvp-provider";
@@ -88,6 +89,9 @@ function ModalSetup() {
         handleWhatsNew={() => setModal(ModalType.WHATS_NEW)}
         handlePracticeSettings={() => setModal(ModalType.PRACTICE_SETTINGS)}
       />
+      <div className="px-6 pt-2">
+        <PvPBanner />
+      </div>
       <ModalController />
     </>
   );

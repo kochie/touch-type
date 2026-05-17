@@ -16,8 +16,6 @@ import {
   faDungeon,
   faPercentage,
   faPersonRunning,
-  faSwords,
-  faFlag,
   faCode,
   faClock,
   faCircleCheck,
@@ -110,7 +108,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   const effectiveCodeMode = mode === "code";
   const { modal } = useModal();
   const router = useRouter();
-  const { currentRace, completeRound, exitRace } = usePvP();
+  const { currentRace, completeRound } = usePvP();
 
   const [words, setWords] = useState("");
   const [wordList] = useWords();
@@ -401,13 +399,6 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
     }
   };
 
-  const handleForfeit = () => {
-    // Local-only — leaves the in-progress race without forfeiting the match.
-    // Explicit match-forfeit lives on the challenge page (forfeitMatch RPC).
-    exitRace();
-    router.push("/pvp");
-  };
-
   const { results } = useResults();
 
   // Captured in a ref so checkCompletion can read the latest snapshot without
@@ -443,27 +434,8 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   const accuracyDisplayDiff = showTimeElapsed ? timeDiff : accuracyDiff;
   const accuracyDiffIsGood = showTimeElapsed ? timeDiff <= 0 : accuracyDiff >= 0;
 
-  // PvP banner content
-  const pvpBanner = currentRace ? (
-    <div
-      data-testid="pvp-mode-banner"
-      className="flex items-center justify-between gap-4 px-4 py-2 mb-3 mx-auto max-w-[760px] rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-100"
-    >
-      <div className="flex items-center gap-2">
-        <FontAwesomeIcon icon={faSwords} className="w-4 h-4 text-sky-400" />
-        <span className="font-semibold text-sm text-sky-300">PvP Battle</span>
-        <span className="text-xs text-sky-400/70">playing blind</span>
-      </div>
-      <button
-        data-testid="pvp-forfeit"
-        onClick={handleForfeit}
-        className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-400 text-xs font-semibold transition-colors duration-150"
-      >
-        <FontAwesomeIcon icon={faFlag} className="w-3 h-3" />
-        Forfeit
-      </button>
-    </div>
-  ) : null;
+  // PvP banner moved out of Tracker — rendered in app/Providers.tsx alongside
+  // the Menu so it never grows the centered race UI past viewport height.
 
   // Render the text display for non-code (word practice) mode
   const renderTextDisplay = () => (
@@ -704,8 +676,6 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
         currentRace && "ring-2 ring-sky-500/40 ring-offset-0 rounded-xl pb-2",
       )}
     >
-      {pvpBanner}
-
       {effectiveCodeMode && !currentRace ? (
         /* 3-column layout: stats | code box | controls — width-capped to keyboard visual bounds */
         <div className="flex items-stretch gap-3 max-w-5xl mx-auto px-4 pt-4">
