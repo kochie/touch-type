@@ -1,0 +1,141 @@
+name: Linux Snap Dry Run
+
+# Validates the Linux electron-builder snap pipeline on both x64 and arm64
+# runners WITHOUT producing a release, pushing to snap-store, or bumping a
+# version. Use this when iterating on:
+#   - snap backend selection (host / multipass / lxd)
+#   - electron-builder.ts linux/snap target config
+#   - .github/workflows/release_build.yml's Ubuntu steps
+#   - any apt/snap install changes affecting the build
+#
+# Up until v3.0.13 we burned a real release per iteration to see whether
+# arm64's snap step worked. This workflow saves the version numbers and
+# burns far fewer wall-clock minutes (no mac/windows/mas runners).
+#
+# What this DOES:
+#   1. Builds the renderer + electron-src.
+#   2. Sets up snapcraft + LXD per the release_build.yml hardening.
+#   3. Runs electron-builder for the Linux target with --publish never.
+#   4. Uploads the resulting .snap / .AppImage / .flatpak artifacts.
+#
+# What this DOES NOT do:
+#   - Push a GitHub Release.
+#   - Upload to snap-store (SNAPCRAFT_STORE_CREDENTIALS deliberately omitted).
+#   - Build Windows / macOS.
+#
+# Trigger:  gh workflow run "Linux Snap Dry Run" -f ref=main -f arch=both
+#           or use the "Run workflow" button on the Actions tab.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag, or SHA to dry-run against"
+        required: false
+        default: main
+        type: string
+      arch:
+        description: "Which arches to build (x64 / arm64 / both)"
+        required: false
+        default: both
+        type: choice
+        options:
+          - both
+          - x64
+          - arm64
+
+jobs:
+  dryrun:
+    name: Snap build (no publish) on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            include_for: x64
+          - os: ubuntu-24.04-arm
+            include_for: arm64
+    # Skip rows the user didn't ask for. `both` lets every row through.
+    if: ${{ github.event.inputs.arch == 'both' || matrix.include_for == github.event.inputs.arch }}
+    steps:
+      - name: Check out repository at the requested ref
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: latest
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: latest
+          cache: pnpm
+          cache-dependency-path: ./pnpm-lock.yaml
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+      - name: Rebuild native deps for Electron
+        run: pnpm exec electron-builder install-app-deps
+
+      - name: Install Snapcraft + LXD
+        # Mirror release_build.yml's setup so this dry-run is a true
+        # regression test for the real release flow.
+        run: |
+          sudo snap install snapcraft --channel=7.x/stable --classic
+          sudo snap install lxd
+          sudo lxd init --auto
+          sudo chmod 666 /var/snap/lxd/common/lxd/unix.socket
+          snapcraft --version
+          lxc version
+
+      - name: Install Flatpak (so the flatpak target doesn't break the run)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08 org.electronjs.Electron2.BaseApp//25.08
+
+      - name: Build Electron renderer + main
+        run: pnpm run build
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.supabase_anon_key }}
+          NEXT_PUBLIC_ACCOUNT_LINK: https://touch-typer.kochie.io/account
+          NEXT_PUBLIC_WEBSITE_URL: https://touch-typer.kochie.io
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.stripe_publishable_key }}
+
+      - name: Build Linux artifacts (electron-builder, no publish)
+        run: pnpm exec electron-builder --config electron-builder.ts -l --publish never
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+          # No SNAPCRAFT_STORE_CREDENTIALS — we explicitly do NOT want to
+          # push to the snap store from this workflow.
+          SNAPCRAFT_BUILD_ENVIRONMENT: lxd
+
+      - name: List produced artifacts
+        if: always()
+        run: |
+          echo "=== dist/ ==="
+          ls -lh dist/ || true
+
+      - name: Upload build artifacts for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-dryrun-${{ matrix.include_for }}-${{ github.sha }}
+          path: |
+            dist/*.snap
+            dist/*.AppImage
+            dist/*.flatpak
+          retention-days: 14
+          if-no-files-found: warn
