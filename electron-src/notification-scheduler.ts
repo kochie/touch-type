@@ -9,7 +9,7 @@
 
 import { Notification, ipcMain, BrowserWindow, app } from "electron";
 import { join } from "path";
-import { exec } from "child_process";
+import { exec, spawnSync } from "child_process";
 import { promisify } from "util";
 import { unlink } from "fs/promises";
 import log from "electron-log";
@@ -61,6 +61,10 @@ const getLaunchAgentPath = () =>
     `${LAUNCH_AGENT_LABEL}.plist`
   );
 
+// Windows Task Scheduler task name. Used by /TN to create, query, and delete
+// the scheduled reminder task. Same convention as the Linux crontab marker.
+const WINDOWS_TASK_NAME = "TouchTyperReminder";
+
 /**
  * Setup notification scheduler IPC handlers
  */
@@ -111,9 +115,9 @@ export function setupNotificationScheduler(window: BrowserWindow): void {
       try {
         const platform = process.platform;
 
-        // For macOS and Windows, push notifications are handled server-side
-        // We only need to ensure the device token is registered
-        if (platform === "darwin" || platform === "win32") {
+        // macOS uses APNS — register the device token, server-side cron
+        // dispatches the toast via the send-notifications edge function.
+        if (platform === "darwin") {
           if (config.enabled) {
             const result = await registerForPushNotifications();
             return {
@@ -123,13 +127,26 @@ export function setupNotificationScheduler(window: BrowserWindow): void {
               channelUri: result.channelUri,
               platform: result.platform,
             };
-          } else {
-            await unregisterFromPushNotifications();
-            return { success: true };
           }
+          await unregisterFromPushNotifications();
+          return { success: true };
         }
 
-        // Linux uses local scheduler
+        // Windows uses a local scheduled task via schtasks. The WNS path
+        // (server-side push) is dependent on a native npm package that's
+        // not installed (see wns-channel.ts) — local scheduling avoids
+        // that entire dependency chain and works on every Windows build
+        // regardless of MSIX/NSIS packaging or Store-vs-sideload install.
+        if (platform === "win32") {
+          if (config.enabled) {
+            await installWindowsScheduler(config);
+          } else {
+            await removeWindowsScheduler();
+          }
+          return { success: true, platform: "win32" };
+        }
+
+        // Linux uses local scheduler (crontab)
         if (platform === "linux") {
           if (config.enabled) {
             await installLinuxScheduler(config);
@@ -151,12 +168,15 @@ export function setupNotificationScheduler(window: BrowserWindow): void {
   ipcMain.handle("cancelNotification", async (): Promise<ScheduleResult> => {
     try {
       await unregisterFromPushNotifications();
-      
-      // Also remove Linux scheduler if present
+
+      // Also remove platform-local schedulers (only one will be relevant on
+      // any given OS, but they're cheap no-ops if not installed).
       if (process.platform === "linux") {
         await removeLinuxScheduler();
+      } else if (process.platform === "win32") {
+        await removeWindowsScheduler();
       }
-      
+
       return { success: true };
     } catch (error) {
       log.error("Failed to cancel notification:", error);
@@ -173,12 +193,17 @@ export function setupNotificationScheduler(window: BrowserWindow): void {
   ipcMain.handle("getNotificationStatus", async (): Promise<boolean> => {
     try {
       const platform = process.platform;
-      
+
       if (platform === "linux") {
         return await isLinuxSchedulerInstalled();
       }
-      
-      // For macOS/Windows, check if push is supported
+      if (platform === "win32") {
+        // Windows uses the local schtasks scheduler; reflect whether the
+        // task is actually registered, not whether WNS push is supported.
+        return await isWindowsSchedulerInstalled();
+      }
+
+      // macOS: check if push (APNS) is supported
       return isPushSupported();
     } catch {
       return false;
@@ -326,6 +351,107 @@ async function isLinuxSchedulerInstalled(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// ============ Windows Local Scheduler (schtasks.exe) ============
+//
+// Mirrors the Linux crontab path: register a scheduled task that launches
+// the app with a touchtyper:// deep-link arg at the configured time. The
+// existing single-instance + deep-link plumbing in deep-link.ts handles
+// the rest (focus existing window if running, or cold-start the app with
+// handleInitialDeepLink). No WNS, no toast XML, no native modules.
+//
+// We use spawnSync with an args array rather than execAsync + cmd-string
+// so day codes and time values flow as discrete argv elements — schtasks
+// /TR's value still needs internal quoting because *it* parses that string
+// into a process command, but the outer arg layer is shell-quoting free.
+
+async function installWindowsScheduler(config: NotificationConfig): Promise<void> {
+  const [hour, minute] = config.time.split(":");
+  if (!/^\d{1,2}$/.test(hour) || !/^\d{1,2}$/.test(minute)) {
+    throw new Error(`Invalid time format: ${config.time}`);
+  }
+  const hourNum = parseInt(hour, 10);
+  const minuteNum = parseInt(minute, 10);
+  if (hourNum < 0 || hourNum > 23 || minuteNum < 0 || minuteNum > 59) {
+    throw new Error(`Time out of range: ${config.time}`);
+  }
+  if (!Number.isInteger(config.duration) || config.duration < 0) {
+    throw new Error(`Invalid duration: ${config.duration}`);
+  }
+
+  // schtasks /D wants comma-separated uppercase 3-letter codes
+  const dayMap: Record<string, string> = {
+    sun: "SUN", mon: "MON", tue: "TUE", wed: "WED",
+    thu: "THU", fri: "FRI", sat: "SAT",
+  };
+  const days = config.days
+    .map((d) => dayMap[d])
+    .filter((d): d is string => Boolean(d))
+    .join(",");
+  if (!days) {
+    throw new Error("No valid days selected");
+  }
+
+  const appPath = app.getPath("exe");
+  const deepLink = `touchtyper://practice?duration=${config.duration}`;
+  const time = `${String(hourNum).padStart(2, "0")}:${String(minuteNum).padStart(2, "0")}`;
+
+  // /TR's value is later parsed by schtasks to extract the program path
+  // and arguments. Wrap the (potentially space-containing) appPath in
+  // escaped double-quotes; deepLink is a URL with no spaces and is left
+  // unquoted so it lands as argv[1] to the app.
+  const taskRun = `\\"${appPath}\\" ${deepLink}`;
+
+  // /F = force overwrite if the task already exists. Keeps the call
+  // idempotent — we don't need a separate "is this already there"
+  // check before install.
+  const result = spawnSync(
+    "schtasks",
+    [
+      "/create",
+      "/TN", WINDOWS_TASK_NAME,
+      "/TR", taskRun,
+      "/SC", "WEEKLY",
+      "/D", days,
+      "/ST", time,
+      "/F",
+    ],
+    { encoding: "utf8" },
+  );
+
+  if (result.status !== 0) {
+    const detail = (result.stderr || result.stdout || "").trim() || `exit ${result.status}`;
+    throw new Error(`schtasks /create failed: ${detail}`);
+  }
+  log.info(`Windows notification scheduler installed (${days} @ ${time})`);
+}
+
+async function removeWindowsScheduler(): Promise<void> {
+  const result = spawnSync(
+    "schtasks",
+    ["/delete", "/TN", WINDOWS_TASK_NAME, "/F"],
+    { encoding: "utf8" },
+  );
+  // schtasks returns 1 with "ERROR: The specified task name … does not
+  // exist" when nothing is registered — that's the desired post-state,
+  // so don't throw. We only care about other failures.
+  if (result.status !== 0 && !/does not exist/i.test(result.stderr || result.stdout || "")) {
+    log.warn(
+      `Windows scheduler removal returned non-zero: ${(result.stderr || result.stdout || "").trim()}`,
+    );
+  } else {
+    log.info("Windows notification scheduler removed");
+  }
+}
+
+async function isWindowsSchedulerInstalled(): Promise<boolean> {
+  const result = spawnSync(
+    "schtasks",
+    ["/query", "/TN", WINDOWS_TASK_NAME],
+    { encoding: "utf8" },
+  );
+  return result.status === 0;
 }
 
 /**

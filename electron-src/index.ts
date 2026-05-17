@@ -44,6 +44,16 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = "info";
 log.info("App starting...");
 
+// On Windows, toasts and Action Center entries inherit identity from the
+// AUMID (Application User Model ID). Without this call, NSIS-installed
+// builds appear as "Electron" in Action Center; MSIX builds usually
+// auto-detect from the manifest but it's worth being explicit so dev,
+// NSIS, and MSIX distributions all behave consistently. The value must
+// match the appx `identityName` (electron-builder.ts → appx.identityName).
+if (process.platform === "win32") {
+  app.setAppUserModelId("15825koch.ie.TouchTyper");
+}
+
 // Setup deep link handlers before app is ready
 // This returns false if another instance is running
 const shouldContinue = setupDeepLinkHandlers();
