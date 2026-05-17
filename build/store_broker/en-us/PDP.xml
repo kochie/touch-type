@@ -172,16 +172,16 @@ Under the hood
   </AppFeatures>
   <RecommendedHardware>
     <!-- Valid length: 200 character limit, up to 11 elements -->
-    <Hardware _locID="App_recHardware1"><!-- _locComment_text="{MaxLength=200} Recommended hardware 1" -->Windows 10 version 1809 (October 2018 Update) or later, 64-bit</Hardware>
-    <Hardware _locID="App_recHardware2"><!-- _locComment_text="{MaxLength=200} Recommended hardware 2" -->4 GB RAM</Hardware>
-    <Hardware _locID="App_recHardware3"><!-- _locComment_text="{MaxLength=200} Recommended hardware 3" -->Mechanical or membrane physical keyboard (touch-screen typing is supported but not the intended experience)</Hardware>
-    <Hardware _locID="App_recHardware4"><!-- _locComment_text="{MaxLength=200} Recommended hardware 4" -->Internet connection for cloud sync, PvP, the AI Coach, and the global leaderboard</Hardware>
+    <Recommendation _locID="App_recHardware1"><!-- _locComment_text="{MaxLength=200} Recommended hardware 1" -->Windows 10 version 1809 (October 2018 Update) or later, 64-bit</Recommendation>
+    <Recommendation _locID="App_recHardware2"><!-- _locComment_text="{MaxLength=200} Recommended hardware 2" -->4 GB RAM</Recommendation>
+    <Recommendation _locID="App_recHardware3"><!-- _locComment_text="{MaxLength=200} Recommended hardware 3" -->Mechanical or membrane physical keyboard (touch-screen typing is supported but not the intended experience)</Recommendation>
+    <Recommendation _locID="App_recHardware4"><!-- _locComment_text="{MaxLength=200} Recommended hardware 4" -->Internet connection for cloud sync, PvP, the AI Coach, and the global leaderboard</Recommendation>
   </RecommendedHardware>
   <MinimumHardware>
     <!-- Valid length: 200 character limit, up to 11 elements -->
-    <Hardware _locID="App_minHardware1"><!-- _locComment_text="{MaxLength=200} Minimum hardware 1" -->Windows 10 version 1607 or later</Hardware>
-    <Hardware _locID="App_minHardware2"><!-- _locComment_text="{MaxLength=200} Minimum hardware 2" -->2 GB RAM</Hardware>
-    <Hardware _locID="App_minHardware3"><!-- _locComment_text="{MaxLength=200} Minimum hardware 3" -->Standard keyboard input</Hardware>
+    <MinimumRequirement _locID="App_minHardware1"><!-- _locComment_text="{MaxLength=200} Minimum hardware 1" -->Windows 10 version 1607 or later</MinimumRequirement>
+    <MinimumRequirement _locID="App_minHardware2"><!-- _locComment_text="{MaxLength=200} Minimum hardware 2" -->2 GB RAM</MinimumRequirement>
+    <MinimumRequirement _locID="App_minHardware3"><!-- _locComment_text="{MaxLength=200} Minimum hardware 3" -->Standard keyboard input</MinimumRequirement>
   </MinimumHardware>
   <CopyrightAndTrademark _locID="App_CopyrightandTrademark">
     <!-- _locComment_text="{MaxLength=200} Copyright and Trademark" -->Copyright 2022–2026 Robert Koch. All rights reserved.</CopyrightAndTrademark>
