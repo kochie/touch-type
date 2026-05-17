@@ -159,6 +159,10 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ startsWith(matrix.os, 'ubuntu') && secrets.snapcraft_token || '' }}
+          # Snapcraft 8+ defaults to building inside a multipass VM, which
+          # isn't installed on GitHub Actions runners. "host" puts it in
+          # destructive mode — builds run directly on the runner.
+          SNAPCRAFT_BUILD_ENVIRONMENT: ${{ startsWith(matrix.os, 'ubuntu') && 'host' || '' }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.supabase_url }}
