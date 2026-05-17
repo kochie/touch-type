@@ -38,8 +38,24 @@ Learn touch typing, track your progress and continually improve your skills.</De
     <!-- Specify this value if you want to include a "Developed by" field in the listing. (The "Published by" field will list the publisher display name associated with your account, whether or not you provide a devStudio value.) -->
     <!-- _locComment_text="{MaxLength=255} App DevStudio" -->Robert Koch</DevStudio>
   <ReleaseNotes _locID="App_ReleaseNotes">
-    <!-- _locComment_text="{MaxLength=1500} App Release Note" -->
-  </ReleaseNotes>
+    <!-- _locComment_text="{MaxLength=1500} App Release Note" -->Touch Typer 3 is a major rewrite — faster, deeper, and a lot more fun.
+
+What's new
+
+- Arena (PvP): challenge a friend to a best-of-1/3/5/7 match. Both sides race blind, results revealed when you're done. Paste an invite link or 12-character code straight from the Arena to drop into a match.
+- Code Mode: practise typing real source code in your favourite language. Tracks accuracy and speed separately from prose so you can see exactly where syntax slows you down.
+- AI Coach: an insight engine analyses your sessions and recommends drills tailored to the keys, bigrams, and rhythms costing you the most.
+- Heatmap: see at a glance which keys are slowing you down. Filter by language, layout, level, and code mode.
+- Daily streaks: chain practice days together, with streak-freeze protection so a missed day doesn't reset you.
+- Unlockable avatars and hats earned through play.
+- Personal-best confetti, opt-in.
+- A redesigned stats page with deeper insights and shareable bests.
+
+Under the hood
+
+- Cross-platform: macOS, Windows, Linux from one shared codebase.
+- Many keyboard layouts and a dozen+ practice languages.
+- Faster cold start; rebuilt PvP backend; tighter typing feel.</ReleaseNotes>
   <ScreenshotCaptions>
     <!-- Valid length: 200 character limit, up to 9 elements per platform -->
     <!-- Valid attributes: any of DesktopImage, MobileImage, XboxImage, SurfaceHubImage, and HoloLensImage -->
