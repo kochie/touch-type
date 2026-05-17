@@ -132,7 +132,7 @@ Under the hood
   </AdditionalAssets>
   <Trailers>
     <!-- Maximum number of trailers permitted: 15 -->
-    <Trailer FileName="Touch Typer Preview.mp4">
+    <Trailer FileName="TouchTyperPreview.mp4">
       <Title _locID="App_trailerTitle1">
         <!-- _locComment_text="{MaxLength=255} Trailer title 1" -->Touch Typer Overview</Title>
       <Images>
@@ -142,7 +142,7 @@ Under the hood
         </Image>
       </Images>
     </Trailer>
-    <Trailer FileName="TouchTyperCodeMode Preview.mp4">
+    <Trailer FileName="TouchTyperCodeModePreview.mp4">
       <Title _locID="App_trailerTitle2">
         <!-- _locComment_text="{MaxLength=255} Trailer title 2" -->Code Mode in action</Title>
       <Images>
