@@ -62,6 +62,20 @@ export default function Step01({ onContinue }) {
             throw error;
           }
 
+          // Supabase anti-enumeration: when an email is already registered,
+          // /signup returns 200 with a synthetic user whose `identities` is
+          // an empty array — and no confirmation email is sent. Without this
+          // branch the user lands on "check your email" while no email is
+          // ever delivered, which especially hurts Cognito-migrated users
+          // whose placeholder password they don't know.
+          if (data.user && (data.user.identities?.length ?? 0) === 0) {
+            metrics.count("auth.signup_duplicate");
+            setFormErrors(
+              "If you already have an account, please sign in instead — or reset your password if you don't remember it.",
+            );
+            return;
+          }
+
           metrics.count("auth.signup_success");
           setSubmitting(false);
           setStatus("COMPLETE");
