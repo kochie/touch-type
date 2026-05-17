@@ -327,10 +327,26 @@ jobs:
       - name: Upload to Windows Dev Center
         if: startsWith(matrix.os, 'windows')
         run: |
-          $jsonContent = Get-Content -Path "$env:GITHUB_WORKSPACE\package.json" -Raw
-          $jsonObject = $jsonContent | ConvertFrom-Json
-          $version = $jsonObject.version
-          $appx = "./dist/Touch Typer $version.appx"
+          # Fail loudly on any cmdlet error. Without this, New-SubmissionPackage
+          # silently dropping the appx would leave submission.zip with only
+          # PDP metadata; Update-ApplicationSubmission -ReplacePackages would
+          # then no-op on packages (no new array to replace with), and the
+          # Store would keep certifying the previous appx version while we
+          # think we shipped a new one. That bug rode through v2.0.3 → v3.0.7
+          # before being caught.
+          $ErrorActionPreference = "Stop"
+
+          # Discover the appx via glob rather than matching an exact filename.
+          # electron-builder's appx artifact name is sensitive to productName
+          # and version interpolation; hardcoded strings drift silently.
+          $appxFiles = @(Get-ChildItem -Path "$env:GITHUB_WORKSPACE\dist" -Filter "*.appx" -File)
+          Write-Host "dist/ contents (.appx):"
+          $appxFiles | ForEach-Object { Write-Host "  $($_.Name) ($($_.Length) bytes)" }
+          if ($appxFiles.Count -eq 0) {
+            throw "No .appx found in dist/ — electron-builder appx target did not produce output"
+          }
+          $appx = $appxFiles[0].FullName
+          Write-Host "Selected appx: $appx"
 
           Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
           Install-Module -Name StoreBroker
@@ -340,6 +356,27 @@ jobs:
           Set-StoreBrokerAuthentication -TenantId $env:APPX_UPLOAD_TENANT_ID -Credential $credential
 
           New-SubmissionPackage -ConfigPath build\store_broker\SBConfig.json -AppxPath $appx
+
+          # Verify the appx actually made it into submission.zip before any
+          # upload attempt. If this trips, the upload would silently leave
+          # the previously-published package in place.
+          if (-not (Test-Path "build/submission.zip")) {
+            throw "submission.zip was not produced by New-SubmissionPackage"
+          }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zipPath = (Resolve-Path "build/submission.zip").Path
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+          try {
+            $entries = @($zip.Entries | ForEach-Object { $_.FullName })
+            Write-Host "submission.zip contains $($entries.Count) entries:"
+            $entries | ForEach-Object { Write-Host "  $_" }
+            $hasAppx = @($entries | Where-Object { $_ -like "*.appx" -or $_ -like "*.appxbundle" -or $_ -like "*.msixbundle" }).Count -gt 0
+            if (-not $hasAppx) {
+              throw "submission.zip has no .appx/.appxbundle/.msixbundle entry — Store would keep the previous package"
+            }
+          } finally {
+            $zip.Dispose()
+          }
 
           Update-ApplicationSubmission -AppId $env:APPX_UPLOAD_APP_ID -SubmissionDataPath "build/submission.json" -PackagePath "build/submission.zip" -Force -ReplacePackages -UpdatePublishModeAndVisibility
         env:
