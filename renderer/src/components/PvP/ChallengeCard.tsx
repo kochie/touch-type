@@ -1,6 +1,6 @@
 "use client";
 
-import { PvPGame, usePvP } from "@/lib/pvp-provider";
+import { usePvP, type PvPMatch } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import {
   faClock,
@@ -18,60 +18,60 @@ import { formatDistanceToNow } from "@/lib/relative-time";
 import { useRouter } from "next/navigation";
 
 interface ChallengeCardProps {
-  game: PvPGame;
+  match: PvPMatch;
   compact?: boolean;
 }
 
 export default function ChallengeCard({
-  game,
+  match,
   compact = false,
 }: ChallengeCardProps) {
   const { user } = useSupabase();
-  const { cancelGame, startRace } = usePvP();
+  const { cancelMatch, startRace } = usePvP();
   const router = useRouter();
 
   if (!user) return null;
 
-  const isCreator = game.creator_id === user.id;
-  const isJoiner = game.joiner_id === user.id;
+  const isCreator = match.creator_id === user.id;
+  const isJoiner = match.joiner_id === user.id;
   const isParticipant = isCreator || isJoiner;
 
-  const mySlotCompletedAt = isCreator
-    ? game.creator_completed_at
-    : isJoiner
-      ? game.joiner_completed_at
-      : null;
-  const partnerSlotCompletedAt = isCreator
-    ? game.joiner_completed_at
-    : isJoiner
-      ? game.creator_completed_at
-      : null;
+  const hasUnracedRound = match.rounds.some(
+    (r) =>
+      (isCreator ? r.creator_completed_at : r.joiner_completed_at) === null,
+  );
+  const opponentHasRacedAny = match.rounds.some(
+    (r) =>
+      (isCreator ? r.joiner_completed_at : r.creator_completed_at) !== null,
+  );
 
-  const creatorName =
-    game.creator_id === user.id
+  const creatorName = isCreator ? "You" : `Player ${match.creator_id.slice(0, 8)}`;
+  const joinerName = match.joiner_id
+    ? match.joiner_id === user.id
       ? "You"
-      : `Player ${game.creator_id.slice(0, 8)}`;
-  const joinerName = game.joiner_id
-    ? game.joiner_id === user.id
-      ? "You"
-      : `Player ${game.joiner_id.slice(0, 8)}`
+      : `Player ${match.joiner_id.slice(0, 8)}`
     : "Open";
-  // From the perspective of `user`, the OTHER side of the table.
   const opponentLabel = isCreator ? joinerName : creatorName;
-  const isWinner = game.winner_id === user.id;
+  const isWinner = match.winner_id === user.id;
 
-  const statusConfig: Record<
-    PvPGame["status"],
-    { color: string; icon: typeof faClock; label: string }
-  > = {
+  const statusKey = (match.status as
+    | "open"
+    | "in_progress"
+    | "completed"
+    | "expired"
+    | "cancelled");
+
+  const statusConfig = {
     open: {
       color:
         "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300",
       icon: faHourglass,
-      label:
-        mySlotCompletedAt === null
-          ? "Your turn"
-          : "Waiting for partner",
+      label: hasUnracedRound ? "Your turn" : "Waiting for partner",
+    },
+    in_progress: {
+      color: "bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300",
+      icon: faGamepad,
+      label: hasUnracedRound ? "Your turn" : "Waiting for partner",
     },
     completed: {
       color: isWinner
@@ -90,13 +90,16 @@ export default function ChallengeCard({
       icon: faTrash,
       label: "Cancelled",
     },
-  };
+  } as const;
 
-  const status = statusConfig[game.status];
+  const status = statusConfig[statusKey];
 
   const handleNavigate = () => {
-    router.push(`/pvp/challenge?id=${game.id}`);
+    router.push(`/pvp/challenge?id=${match.id}`);
   };
+
+  const seriesScore = `${match.creator_wins}-${match.joiner_wins}`;
+  const isMultiRound = match.best_of > 1;
 
   if (compact) {
     return (
@@ -120,10 +123,13 @@ export default function ChallengeCard({
           </div>
           <span className="text-sm font-medium text-gray-900 dark:text-white">
             vs {opponentLabel}
+            {isMultiRound && (
+              <span className="ml-2 text-xs text-gray-500">{seriesScore}</span>
+            )}
           </span>
         </div>
         <span className="text-xs text-gray-500">
-          {formatDistanceToNow(game.created_at)}
+          {formatDistanceToNow(match.created_at)}
         </span>
       </div>
     );
@@ -149,7 +155,7 @@ export default function ChallengeCard({
             <FontAwesomeIcon icon={status.icon} className="w-3 h-3 mr-1.5" />
             {status.label}
           </div>
-          {game.status === "completed" && isWinner && (
+          {match.status === "completed" && isWinner && (
             <FontAwesomeIcon
               icon={faCrown}
               className="w-5 h-5 text-yellow-500"
@@ -157,7 +163,7 @@ export default function ChallengeCard({
           )}
         </div>
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {formatDistanceToNow(game.created_at)}
+          {formatDistanceToNow(match.created_at)}
         </span>
       </div>
 
@@ -165,10 +171,15 @@ export default function ChallengeCard({
       <div className="mb-3">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           vs {opponentLabel}
+          {isMultiRound && (
+            <span className="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+              {seriesScore}
+            </span>
+          )}
         </h3>
-        {game.message && (
+        {match.message && (
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 italic">
-            &ldquo;{game.message}&rdquo;
+            &ldquo;{match.message}&rdquo;
           </p>
         )}
       </div>
@@ -176,92 +187,85 @@ export default function ChallengeCard({
       {/* Settings */}
       <div className="flex flex-wrap gap-2 mb-4 text-xs">
         <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300">
-          Level {game.level}
+          Level {match.level}
         </span>
         <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300">
-          {game.keyboard}
+          {match.keyboard}
         </span>
         <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300">
-          {game.language.toUpperCase()}
+          {match.language.toUpperCase()}
         </span>
-        {game.capital && (
+        {isMultiRound && (
+          <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 rounded-md text-amber-700 dark:text-amber-300">
+            Best of {match.best_of}
+          </span>
+        )}
+        {match.capital && (
           <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md text-blue-600 dark:text-blue-300">
             Capitals
           </span>
         )}
-        {game.punctuation && (
+        {match.punctuation && (
           <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md text-blue-600 dark:text-blue-300">
             Punctuation
           </span>
         )}
-        {game.numbers && (
+        {match.numbers && (
           <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md text-blue-600 dark:text-blue-300">
             Numbers
           </span>
         )}
       </div>
 
-      {/* Results (only when completed — both sides revealed at once) */}
-      {game.status === "completed" && (
-        <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
-          <div
-            className={clsx(
-              "text-center",
-              game.winner_id === game.creator_id &&
-                "ring-2 ring-green-500 rounded-lg p-2",
-            )}
-          >
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              {creatorName}
-            </p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">
-              {game.creator_cpm?.toFixed(0) ?? "—"} CPM
-            </p>
-            <p className="text-xs text-gray-500">
-              {game.creator_correct ?? 0}/
-              {(game.creator_correct || 0) + (game.creator_incorrect || 0)}{" "}
-              correct
-            </p>
-          </div>
-          <div
-            className={clsx(
-              "text-center",
-              game.winner_id === game.joiner_id &&
-                "ring-2 ring-green-500 rounded-lg p-2",
-            )}
-          >
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              {joinerName}
-            </p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">
-              {game.joiner_cpm?.toFixed(0) ?? "—"} CPM
-            </p>
-            <p className="text-xs text-gray-500">
-              {game.joiner_correct ?? 0}/
-              {(game.joiner_correct || 0) + (game.joiner_incorrect || 0)}{" "}
-              correct
-            </p>
-          </div>
+      {/* Per-round breakdown (only when completed — both sides revealed) */}
+      {match.status === "completed" && (
+        <div className="space-y-2 mb-4">
+          {match.rounds.map((r) => (
+            <div
+              key={r.id}
+              className="grid grid-cols-[auto_1fr_1fr] items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs"
+            >
+              <span className="text-gray-500 font-mono">R{r.round_number}</span>
+              <div
+                className={clsx(
+                  "text-center",
+                  r.winner_id === match.creator_id && "font-semibold text-green-600 dark:text-green-400",
+                )}
+              >
+                {creatorName}: {r.creator_cpm?.toFixed(0) ?? "—"} cpm
+              </div>
+              <div
+                className={clsx(
+                  "text-center",
+                  r.winner_id === match.joiner_id && "font-semibold text-green-600 dark:text-green-400",
+                )}
+              >
+                {joinerName}: {r.joiner_cpm?.toFixed(0) ?? "—"} cpm
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Actions */}
       <div className="flex gap-2">
-        {game.status === "open" && isParticipant && mySlotCompletedAt === null && (
-          <button
-            data-testid="pvp-card-play"
-            onClick={() => {
-              startRace(game);
-              router.push("/");
-            }}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-          >
-            <FontAwesomeIcon icon={faPlay} className="w-4 h-4" />
-            Play Now
-          </button>
-        )}
+        {!["completed", "cancelled", "expired"].includes(match.status) &&
+          isParticipant &&
+          hasUnracedRound && (
+            <button
+              data-testid="pvp-card-play"
+              onClick={() => {
+                startRace(match);
+                router.push("/");
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+            >
+              <FontAwesomeIcon icon={faPlay} className="w-4 h-4" />
+              {isMultiRound ? "Play Next Round" : "Play Now"}
+            </button>
+          )}
 
-        {game.status === "open" && isCreator && (
+        {match.status === "open" && isCreator && (
           <button
             data-testid="pvp-card-view-link"
             onClick={handleNavigate}
@@ -272,13 +276,13 @@ export default function ChallengeCard({
           </button>
         )}
 
-        {game.status === "open" &&
+        {!["completed", "cancelled", "expired"].includes(match.status) &&
           isCreator &&
-          partnerSlotCompletedAt === null && (
+          !opponentHasRacedAny && (
             <button
               data-testid="pvp-card-cancel"
               onClick={async () => {
-                await cancelGame(game.id);
+                await cancelMatch(match.id);
               }}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
             >
@@ -287,9 +291,9 @@ export default function ChallengeCard({
             </button>
           )}
 
-        {game.status === "open" &&
+        {!["completed", "cancelled", "expired"].includes(match.status) &&
           isParticipant &&
-          mySlotCompletedAt !== null && (
+          !hasUnracedRound && (
             <button
               data-testid="pvp-card-awaiting"
               onClick={handleNavigate}
@@ -301,7 +305,7 @@ export default function ChallengeCard({
             </button>
           )}
 
-        {game.status === "completed" && (
+        {match.status === "completed" && (
           <button
             data-testid="pvp-card-view-results"
             onClick={handleNavigate}
@@ -314,10 +318,9 @@ export default function ChallengeCard({
       </div>
 
       {/* Expiry warning */}
-      {game.status === "open" && (
+      {!["completed", "cancelled", "expired"].includes(match.status) && (
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-          Expires{" "}
-          {formatDistanceToNow(game.expires_at)}
+          Expires {formatDistanceToNow(match.expires_at)}
         </p>
       )}
     </div>

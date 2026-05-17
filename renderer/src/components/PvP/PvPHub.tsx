@@ -1,6 +1,6 @@
 "use client";
 
-import { usePvP, type PvPGame } from "@/lib/pvp-provider";
+import { usePvP, myBestCpmInMatch, type PvPMatch } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import {
   faHistory,
@@ -29,53 +29,58 @@ type TabId = "challenges" | "history" | "leaderboard";
 
 // ── Game row ─────────────────────────────────────────────────────────────────
 
-interface ArenaGameRowProps {
-  game: PvPGame;
+interface ArenaMatchRowProps {
+  match: PvPMatch;
   userId: string;
   usernameMap: Record<string, string>;
   avatarMap: Record<string, { face: string; hat: string | null }>;
 }
 
-function ArenaGameRow({ game, userId, usernameMap, avatarMap }: ArenaGameRowProps) {
+function ArenaMatchRow({ match, userId, usernameMap, avatarMap }: ArenaMatchRowProps) {
   const router = useRouter();
   const { startRace } = usePvP();
 
-  const isCreator = game.creator_id === userId;
-  const opponentId = isCreator ? (game.joiner_id ?? "") : game.creator_id;
+  const isCreator = match.creator_id === userId;
+  const opponentId = isCreator ? (match.joiner_id ?? "") : match.creator_id;
   const opponentName = usernameMap[opponentId] ?? (opponentId ? opponentId.slice(0, 8) : "Open");
   const opponentAvatar = avatarMap[opponentId] ?? { face: "classic", hat: null };
 
-  const myCompleted = isCreator ? game.creator_completed_at : game.joiner_completed_at;
-  const myCpm = isCreator ? game.creator_cpm : game.joiner_cpm;
-  const isWinner = game.winner_id === userId;
+  const myWins = isCreator ? match.creator_wins : match.joiner_wins;
+  const oppWins = isCreator ? match.joiner_wins : match.creator_wins;
+  const isWinner = match.winner_id === userId;
+  const myBest = myBestCpmInMatch(match, userId);
+  const hasUnracedRound = match.rounds.some(
+    (r) => (isCreator ? r.creator_completed_at : r.joiner_completed_at) === null,
+  );
 
-  // Determine display status for this user
   let statusLabel: string;
   let statusClass: string;
-  if (game.status === "completed") {
-    const cpmStr = myCpm != null ? ` · ${myCpm.toFixed(0)} CPM` : "";
-    statusLabel = isWinner ? `WON${cpmStr}` : `LOST${cpmStr}`;
+  if (match.status === "completed") {
+    const cpmStr = myBest != null ? ` · ${myBest.toFixed(0)} CPM` : "";
+    statusLabel = isWinner ? `WON ${myWins}-${oppWins}${cpmStr}` : `LOST ${myWins}-${oppWins}${cpmStr}`;
     statusClass = isWinner
       ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
       : "bg-slate-700/60 text-slate-400 border border-slate-600/40";
-  } else if (game.status === "open" && myCompleted === null) {
-    statusLabel = "IN PROGRESS";
+  } else if (hasUnracedRound) {
+    statusLabel = match.best_of > 1 ? `YOUR TURN · ${myWins}-${oppWins}` : "YOUR TURN";
     statusClass = "bg-sky-500/15 text-sky-400 border border-sky-500/25";
   } else {
-    statusLabel = "WAITING";
+    statusLabel = match.best_of > 1 ? `WAITING · ${myWins}-${oppWins}` : "WAITING";
     statusClass = "bg-amber-500/15 text-amber-400 border border-amber-500/25";
   }
 
-  const wordCount = game.word_set.length;
-  const langLabel = game.language.charAt(0).toUpperCase() + game.language.slice(1);
-  const levelLabel = `Level ${game.level}`;
+  const wordCount = match.rounds[0]?.word_set.length ?? 0;
+  const langLabel = match.language.charAt(0).toUpperCase() + match.language.slice(1);
+  const levelLabel = `Level ${match.level}`;
+  const formatLabel =
+    match.best_of === 1 ? "Single race" : `Best of ${match.best_of}`;
 
   const handleClick = () => {
-    if (game.status === "open" && myCompleted === null) {
-      startRace(game);
+    if (!isTerminalStatus(match.status) && hasUnracedRound) {
+      startRace(match);
       router.push("/");
     } else {
-      router.push(`/pvp/challenge?id=${game.id}`);
+      router.push(`/pvp/challenge?id=${match.id}`);
     }
   };
 
@@ -87,13 +92,17 @@ function ArenaGameRow({ game, userId, usernameMap, avatarMap }: ArenaGameRowProp
       <AvatarComposite face={opponentAvatar.face} hat={opponentAvatar.hat} size={40} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-slate-100 truncate">{opponentName}</p>
-        <p className="text-xs text-slate-500">{wordCount} words · {langLabel} · {levelLabel}</p>
+        <p className="text-xs text-slate-500">{wordCount} words · {langLabel} · {levelLabel} · {formatLabel}</p>
       </div>
       <span className={clsx("flex-shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full", statusClass)}>
         {statusLabel}
       </span>
     </button>
   );
+}
+
+function isTerminalStatus(status: string): boolean {
+  return status === "completed" || status === "cancelled" || status === "expired";
 }
 
 // ── Stat cards ────────────────────────────────────────────────────────────────
@@ -152,7 +161,7 @@ export default function PvPHub() {
   const [activeTab, setActiveTab] = useState<TabId>("challenges");
   const [showNewChallenge, setShowNewChallenge] = useState(false);
   const { user, isLoading: isUserLoading, supabase } = useSupabase();
-  const { myActiveGames, myAwaitingGames, myCompletedGames, isLoading } = usePvP();
+  const { myActiveMatches, myAwaitingMatches, myCompletedMatches, isLoading } = usePvP();
   const [usernameMap, setUsernameMap] = useState<Record<string, string>>({});
 
   const plan = usePlan();
@@ -166,9 +175,9 @@ export default function PvPHub() {
   const [editingUsername, setEditingUsername] = useState(false);
   const [draftUsername, setDraftUsername] = useState("");
 
-  const allGames = useMemo(() => [...myActiveGames, ...myAwaitingGames, ...myCompletedGames], [myActiveGames, myAwaitingGames, myCompletedGames]);
-  const challengeGames = useMemo(() => [...myActiveGames, ...myAwaitingGames], [myActiveGames, myAwaitingGames]);
-  const historyGames = useMemo(() => myCompletedGames, [myCompletedGames]);
+  const allMatches = useMemo(() => [...myActiveMatches, ...myAwaitingMatches, ...myCompletedMatches], [myActiveMatches, myAwaitingMatches, myCompletedMatches]);
+  const challengeMatches = useMemo(() => [...myActiveMatches, ...myAwaitingMatches], [myActiveMatches, myAwaitingMatches]);
+  const historyMatches = useMemo(() => myCompletedMatches, [myCompletedMatches]);
 
   // Fetch own avatar and username on mount
   useEffect(() => {
@@ -188,9 +197,9 @@ export default function PvPHub() {
 
   // Batch-fetch opponent usernames and avatars
   useEffect(() => {
-    if (!user || allGames.length === 0) return;
+    if (!user || allMatches.length === 0) return;
     const ids = [...new Set(
-      allGames.flatMap(g => [g.creator_id, g.joiner_id].filter((id): id is string => !!id && id !== user.id))
+      allMatches.flatMap(m => [m.creator_id, m.joiner_id].filter((id): id is string => !!id && id !== user.id))
     )];
     if (ids.length === 0) return;
     supabase
@@ -211,7 +220,7 @@ export default function PvPHub() {
         setUsernameMap(names);
         setAvatarMap(avatars);
       });
-  }, [allGames, user, supabase]);
+  }, [allMatches, user, supabase]);
 
   const saveAvatar = useCallback(
     async (face: string, hat: string | null) => {
@@ -263,32 +272,34 @@ export default function PvPHub() {
     setEditingUsername(false);
   }, [user, supabase, draftUsername, myUsername]);
 
-  // Stats from completed games
+  // Stats from completed matches
   const completedOnly = useMemo(
-    () => myCompletedGames.filter((g) => g.status === "completed"),
-    [myCompletedGames],
+    () => myCompletedMatches.filter((m) => m.status === "completed"),
+    [myCompletedMatches],
   );
-  const wins = user ? completedOnly.filter(g => g.winner_id === user.id).length : 0;
+  const wins = user ? completedOnly.filter(m => m.winner_id === user.id).length : 0;
 
-  const { bestCpm, bestCpmGame } = useMemo(() => {
-    if (!user) return { bestCpm: null, bestCpmGame: null };
+  // Best CPM is per-round (v4 model), so iterate every round of every
+  // completed match and pick this user's best.
+  const { bestCpm, bestCpmMatch } = useMemo(() => {
+    if (!user) return { bestCpm: null, bestCpmMatch: null };
     let best: number | null = null;
-    let bestGame: PvPGame | null = null;
-    for (const g of completedOnly) {
-      const myCpm = g.creator_id === user.id ? g.creator_cpm : g.joiner_cpm;
-      if (myCpm != null && (best === null || myCpm > best)) {
-        best = myCpm;
-        bestGame = g;
+    let bestMatch: PvPMatch | null = null;
+    for (const m of completedOnly) {
+      const local = myBestCpmInMatch(m, user.id);
+      if (local != null && (best === null || local > best)) {
+        best = local;
+        bestMatch = m;
       }
     }
-    return { bestCpm: best, bestCpmGame: bestGame };
+    return { bestCpm: best, bestCpmMatch: bestMatch };
   }, [completedOnly, user]);
 
   const bestCpmOpponent = useMemo(() => {
-    if (!bestCpmGame || !user) return null;
-    const opponentId = bestCpmGame.creator_id === user.id ? bestCpmGame.joiner_id : bestCpmGame.creator_id;
+    if (!bestCpmMatch || !user) return null;
+    const opponentId = bestCpmMatch.creator_id === user.id ? bestCpmMatch.joiner_id : bestCpmMatch.creator_id;
     return opponentId ? (usernameMap[opponentId] ?? opponentId.slice(0, 8)) : null;
-  }, [bestCpmGame, user, usernameMap]);
+  }, [bestCpmMatch, user, usernameMap]);
 
   if (!isUserLoading && !user) {
     return (
@@ -302,7 +313,7 @@ export default function PvPHub() {
   }
 
   const tabs: { id: TabId; label: string; badge?: number }[] = [
-    { id: "challenges", label: "Challenges", badge: myActiveGames.length },
+    { id: "challenges", label: "Challenges", badge: myActiveMatches.length },
     { id: "history", label: "History" },
     { id: "leaderboard", label: "Leaderboard" },
   ];
@@ -353,13 +364,13 @@ export default function PvPHub() {
           <div className="flex gap-5 items-start">
             {/* Left: game list */}
             <div className="flex flex-col gap-2 flex-1 min-w-0">
-              {challengeGames.length > 0 && (
+              {challengeMatches.length > 0 && (
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">Active</p>
               )}
-              {challengeGames.map(g => (
-                <ArenaGameRow key={g.id} game={g} userId={user!.id} usernameMap={usernameMap} avatarMap={avatarMap} />
+              {challengeMatches.map(m => (
+                <ArenaMatchRow key={m.id} match={m} userId={user!.id} usernameMap={usernameMap} avatarMap={avatarMap} />
               ))}
-              {challengeGames.length === 0 && (
+              {challengeMatches.length === 0 && (
                 <div className="py-8 text-center">
                   <FontAwesomeIcon icon={faSwords} className="w-8 h-8 text-slate-600 mb-3" />
                   <p className="text-sm text-slate-400">No active challenges</p>
@@ -446,21 +457,21 @@ export default function PvPHub() {
               <BestCpmCard
                 cpm={bestCpm}
                 opponentName={bestCpmOpponent}
-                at={bestCpmGame?.updated_at ?? null}
+                at={bestCpmMatch?.updated_at ?? null}
               />
             </div>
           </div>
         ) : activeTab === "history" ? (
           /* History tab — full width */
           <div className="flex flex-col gap-2">
-            {historyGames.length > 0 ? (
-              historyGames.map(g => (
-                <ArenaGameRow key={g.id} game={g} userId={user!.id} usernameMap={usernameMap} avatarMap={avatarMap} />
+            {historyMatches.length > 0 ? (
+              historyMatches.map(m => (
+                <ArenaMatchRow key={m.id} match={m} userId={user!.id} usernameMap={usernameMap} avatarMap={avatarMap} />
               ))
             ) : (
               <div className="py-12 text-center">
                 <FontAwesomeIcon icon={faHistory} className="w-8 h-8 text-slate-600 mb-3" />
-                <p className="text-sm text-slate-400">No completed games yet</p>
+                <p className="text-sm text-slate-400">No completed matches yet</p>
               </div>
             )}
           </div>

@@ -8,7 +8,7 @@ import {
   useSettings,
 } from "@/lib/settings_hook";
 import { useWords } from "@/lib/word-provider";
-import { usePvP, type ChallengeSettings } from "@/lib/pvp-provider";
+import { usePvP, type BestOf, type ChallengeSettings } from "@/lib/pvp-provider";
 import { keyboards } from "../KeyboardSelect";
 import { levels } from "../settings/settings";
 import { LANGUAGES as languages } from "@/lib/languages";
@@ -67,7 +67,7 @@ export default function NewChallengePrompt({ onDone, onClose }: { onDone?: () =>
   const router = useRouter();
   const settings = useSettings();
   const [wordList] = useWords();
-  const { createGame } = usePvP();
+  const { createMatch } = usePvP();
   const [creating, setCreating] = useState(false);
 
   // Local form state — defaults to the user's global settings but is editable
@@ -80,6 +80,7 @@ export default function NewChallengePrompt({ onDone, onClose }: { onDone?: () =>
   const [capital, setCapital] = useState(settings.capital);
   const [punctuation, setPunctuation] = useState(settings.punctuation);
   const [numbers, setNumbers] = useState(settings.numbers);
+  const [bestOf, setBestOf] = useState<BestOf>(1);
 
   const handleStart = async () => {
     if (wordList.length === 0) {
@@ -87,7 +88,7 @@ export default function NewChallengePrompt({ onDone, onClose }: { onDone?: () =>
       return;
     }
     setCreating(true);
-    const wordSet = generateWordSet(wordList);
+    const wordSets = Array.from({ length: bestOf }, () => generateWordSet(wordList));
     const challengeSettings: ChallengeSettings = {
       keyboard,
       level,
@@ -95,13 +96,14 @@ export default function NewChallengePrompt({ onDone, onClose }: { onDone?: () =>
       capital,
       punctuation,
       numbers,
-      word_set: wordSet,
+      best_of: bestOf,
+      word_sets: wordSets,
     };
-    const game = await createGame(challengeSettings);
+    const match = await createMatch(challengeSettings);
     setCreating(false);
-    if (game) {
+    if (match) {
       onDone?.();
-      router.push(`/pvp/challenge?id=${game.id}`);
+      router.push(`/pvp/challenge?id=${match.id}`);
     }
   };
 
@@ -183,6 +185,21 @@ export default function NewChallengePrompt({ onDone, onClose }: { onDone?: () =>
                 {l.label}
               </option>
             ))}
+          </Select>
+        </Field>
+
+        <Field as="div" className="flex items-center justify-between gap-3">
+          <Label className="text-sm text-gray-700 dark:text-gray-300">Format</Label>
+          <Select
+            data-testid="pvp-setting-best-of"
+            value={String(bestOf)}
+            onChange={(e) => setBestOf(Number(e.target.value) as BestOf)}
+            className={clsx(selectClass, "w-32")}
+          >
+            <option value="1">Single race</option>
+            <option value="3">Best of 3</option>
+            <option value="5">Best of 5</option>
+            <option value="7">Best of 7</option>
           </Select>
         </Field>
 

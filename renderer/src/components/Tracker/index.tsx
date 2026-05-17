@@ -110,7 +110,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   const effectiveCodeMode = mode === "code";
   const { modal } = useModal();
   const router = useRouter();
-  const { currentRace, completeRace, forfeitRace } = usePvP();
+  const { currentRace, completeRound, exitRace } = usePvP();
 
   const [words, setWords] = useState("");
   const [wordList] = useWords();
@@ -131,9 +131,9 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   const currentText = effectiveCodeMode ? currentSnippet : words;
 
   const resetWords = useCallback(async () => {
-    // PvP mode: word_set is locked at game creation; never re-sample.
+    // PvP mode: word_set is locked per-round at match creation; never re-sample.
     if (currentRace) {
-      setWords(currentRace.game.word_set.join(" "));
+      setWords(currentRace.round.word_set.join(" "));
       return;
     }
     if (effectiveCodeMode) {
@@ -201,7 +201,7 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   // accuracy must validate against THAT keyboard, not the user's current
   // global setting (the partner might have a different one).
   const activeKeyboardName: KeyboardLayoutNames = currentRace
-    ? (currentRace.game.keyboard as KeyboardLayoutNames)
+    ? (currentRace.match.keyboard as KeyboardLayoutNames)
     : settings.keyboardName;
   const keyboardLayout = lookupKeyboard(activeKeyboardName);
   const keyboard = new Keyboard(keyboardLayout);
@@ -329,20 +329,22 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
       const finalKeyPresses = [...immutableLetters];
 
       if (currentRace) {
-        // PvP mode: route the completed race to the provider, then navigate
-        // to the challenge detail page so the user sees the link (creating)
-        // or the result comparison (racing).
-        completeRace({
+        // PvP mode: submit the round; the provider auto-advances to the next
+        // un-raced round (if any) or clears currentRace once the match is
+        // decided. Either way we route to the challenge detail page for
+        // the round-by-round scoreboard.
+        const matchId = currentRace.match.id;
+        completeRound({
           cpm: finalCpm,
           correct,
           incorrect,
           time: isoTime,
           key_presses: finalKeyPresses,
-        }).then((completed) => {
-          if (completed) {
-            router.push(`/pvp/challenge?id=${completed.id}`);
+        }).then((updated) => {
+          if (updated) {
+            router.push(`/pvp/challenge?id=${updated.id}`);
           } else {
-            router.push("/pvp");
+            router.push(`/pvp/challenge?id=${matchId}`);
           }
         });
       } else {
@@ -400,7 +402,9 @@ export default function Tracker({ mode, rightPanel }: { mode?: "code"; rightPane
   };
 
   const handleForfeit = () => {
-    forfeitRace();
+    // Local-only — leaves the in-progress race without forfeiting the match.
+    // Explicit match-forfeit lives on the challenge page (forfeitMatch RPC).
+    exitRace();
     router.push("/pvp");
   };
 

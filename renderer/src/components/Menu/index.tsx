@@ -78,7 +78,7 @@ export default function Menu({
   const pathname = usePathname();
   const settings = useSettings();
   const { currentStreak, isAtRisk, isLoading: streakLoading } = useStreak();
-  const { myActiveGames } = usePvP();
+  const { myActiveMatches } = usePvP();
   const [, setWords, drillInfo] = useWords();
 
   const [hydratedSettings, setHydratedSettings] = useState(defaultSettings);
@@ -142,7 +142,7 @@ export default function Menu({
             icon={faSwords}
             label="Arena"
             isActive={pathname?.startsWith("/pvp") ?? false}
-            badge={myActiveGames.length}
+            badge={myActiveMatches.length}
           />
         </div>
 
