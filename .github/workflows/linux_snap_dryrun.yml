@@ -34,30 +34,22 @@ on:
         required: false
         default: main
         type: string
-      arch:
-        description: "Which arches to build (x64 / arm64 / both)"
-        required: false
-        default: both
-        type: choice
-        options:
-          - both
-          - x64
-          - arm64
 
 jobs:
   dryrun:
     name: Snap build (no publish) on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      # fail-fast:false → each arch runs to completion independently so a
+      # failure on one doesn't kill the other. ~7-8 min per row in parallel,
+      # ~10 min total wall time.
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            include_for: x64
+            arch: x64
           - os: ubuntu-24.04-arm
-            include_for: arm64
-    # Skip rows the user didn't ask for. `both` lets every row through.
-    if: ${{ github.event.inputs.arch == 'both' || matrix.include_for == github.event.inputs.arch }}
+            arch: arm64
     steps:
       - name: Check out repository at the requested ref
         uses: actions/checkout@v6
@@ -132,7 +124,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: linux-dryrun-${{ matrix.include_for }}-${{ github.sha }}
+          name: linux-dryrun-${{ matrix.arch }}-${{ github.sha }}
           path: |
             dist/*.snap
             dist/*.AppImage
