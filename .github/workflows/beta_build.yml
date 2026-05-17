@@ -111,8 +111,11 @@ jobs:
         run: pnpm exec electron-builder install-app-deps
 
       - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v1
+        # Pin to 7.x/stable — see release_build.yml for the full rationale.
+        # Latest snapcraft 8 requires LXD/multipass which the arm64 runner
+        # doesn't have; 7.x builds directly on the host.
         if: startsWith(matrix.os, 'ubuntu')
+        run: sudo snap install snapcraft --channel=7.x/stable --classic
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
 

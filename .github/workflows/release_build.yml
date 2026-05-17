@@ -139,8 +139,14 @@ jobs:
         run: pnpm exec electron-builder install-app-deps
 
       - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v1
+        # Pin to 7.x/stable explicitly. The latest/stable channel ships
+        # snapcraft 8, which only builds inside LXD or multipass — neither
+        # is available on the GitHub-hosted ubuntu-24.04-arm runner, and
+        # electron-builder's app-builder doesn't pass --destructive-mode.
+        # 7.x builds directly on the host with no special setup. Works on
+        # both x64 and arm64 Ubuntu runners.
         if: startsWith(matrix.os, 'ubuntu')
+        run: sudo snap install snapcraft --channel=7.x/stable --classic
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
 
