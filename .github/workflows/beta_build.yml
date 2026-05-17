@@ -110,12 +110,16 @@ jobs:
       - name: Rebuild native deps for Electron
         run: pnpm exec electron-builder install-app-deps
 
-      - name: Install Snapcraft
-        # Pin to 7.x/stable — see release_build.yml for the full rationale.
-        # Latest snapcraft 8 requires LXD/multipass which the arm64 runner
-        # doesn't have; 7.x builds directly on the host.
+      - name: Install Snapcraft + Multipass
+        # Pin to 7.x/stable + install multipass — see release_build.yml
+        # for the full rationale. Snapcraft probes for multipass before
+        # falling through to host builds; having it present satisfies
+        # the probe even on snapcraft 7.x.
         if: startsWith(matrix.os, 'ubuntu')
-        run: sudo snap install snapcraft --channel=7.x/stable --classic
+        run: |
+          sudo snap install snapcraft --channel=7.x/stable --classic
+          sudo snap install multipass
+          snapcraft --version
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
 
