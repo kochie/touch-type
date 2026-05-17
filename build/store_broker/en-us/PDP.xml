@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ProductDescription language="en-us" xmlns="http://schemas.microsoft.com/appx/2012/ProductDescription" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xml:lang="en-us" Release="v1.9.0">
+<ProductDescription language="en-us" xmlns="http://schemas.microsoft.com/appx/2012/ProductDescription" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xml:lang="en-us" Release="v3.0.7">
   <AppStoreName _locID="App_AppStoreName">
     <!-- This is optional.  AppStoreName is typically extracted from your package's AppxManifest DisplayName property. -->
     <!-- Uncomment (and localize) this Store name if your application package does not contain a localization for the DisplayName in this language. -->
@@ -43,32 +43,47 @@ Learn touch typing, track your progress and continually improve your skills.</De
   <ScreenshotCaptions>
     <!-- Valid length: 200 character limit, up to 9 elements per platform -->
     <!-- Valid attributes: any of DesktopImage, MobileImage, XboxImage, SurfaceHubImage, and HoloLensImage -->
-    <Caption DesktopImage="screenshot_1.png" _locID="App_caption1">
-      <!-- _locComment_text="{MaxLength=200} Screenshot caption 1" -->
-    </Caption>
-    <Caption DesktopImage="screenshot_2.png" _locID="App_caption2">
-      <!-- _locComment_text="{MaxLength=200} Screenshot caption 2" -->
-    </Caption>
-    <Caption DesktopImage="screenshot_3.png" _locID="App_caption3">
-      <!-- _locComment_text="{MaxLength=200} Screenshot caption 2" -->
-    </Caption>
+    <Caption DesktopImage="main_page.png" _locID="App_caption1">
+      <!-- _locComment_text="{MaxLength=200} Screenshot caption 1" -->Practice typing in a clean, focused interface.</Caption>
+    <Caption DesktopImage="code_mode.png" _locID="App_caption2">
+      <!-- _locComment_text="{MaxLength=200} Screenshot caption 2" -->Code Mode — drill real syntax in your favourite language.</Caption>
+    <Caption DesktopImage="pvp_mode.png" _locID="App_caption3">
+      <!-- _locComment_text="{MaxLength=200} Screenshot caption 3" -->Arena — race a friend head-to-head with shared word sets.</Caption>
+    <Caption DesktopImage="stats.png" _locID="App_caption4">
+      <!-- _locComment_text="{MaxLength=200} Screenshot caption 4" -->Deep stats track CPM, accuracy, and where your time goes.</Caption>
+    <Caption DesktopImage="heatmap.png" _locID="App_caption5">
+      <!-- _locComment_text="{MaxLength=200} Screenshot caption 5" -->Heatmap highlights the keys slowing you down.</Caption>
+    <Caption DesktopImage="ai_insights.png" _locID="App_caption6">
+      <!-- _locComment_text="{MaxLength=200} Screenshot caption 6" -->AI coach surfaces drills tailored to your weak spots.</Caption>
+    <Caption DesktopImage="streak_mode.png" _locID="App_caption7">
+      <!-- _locComment_text="{MaxLength=200} Screenshot caption 7" -->Daily streaks keep you practising consistently.</Caption>
   </ScreenshotCaptions>
   <AdditionalAssets>
     <!-- Valid elements: StoreLogo9x16, StoreLogoSquare, Icon (use this value for the 1:1 300x300 pixels logo), -->
     <!-- PromotionalArt16x9, PromotionalArtwork2400X1200, XboxBrandedKeyArt, XboxTitledHeroArt, XboxFeaturedPromotionalArt, -->
     <!-- SquareIcon358X358, BackgroundImage1000X800, PromotionalArtwork414X180 -->
     <!-- There is no content for any of these elements, just a single attribute called FileName. -->
-    <PromotionalArt16x9 FileName="screenshot_1.png" />
+    <!-- PromotionalArt16x9 intentionally omitted: current screenshots are 16:10 (2880x1800 MacBook captures). -->
+    <!-- Add a dedicated 16:9 promo image and re-enable when ready. -->
   </AdditionalAssets>
   <Trailers>
     <!-- Maximum number of trailers permitted: 15 -->
-    <Trailer FileName="trailer_1.mp4">
+    <Trailer FileName="Touch Typer Preview.mp4">
       <Title _locID="App_trailerTitle1">
-        <!-- _locComment_text="{MaxLength=255} Trailer title 1" -->Demo Trailer</Title>
+        <!-- _locComment_text="{MaxLength=255} Trailer title 1" -->Touch Typer Overview</Title>
       <Images>
         <!-- Current maximum of 1 image per trailer permitted. -->
-        <Image FileName="screenshot_1.png">
+        <Image FileName="main_page.png">
           <!-- _locComment_text="{Locked} Trailer screenshot 1 description" -->
+        </Image>
+      </Images>
+    </Trailer>
+    <Trailer FileName="TouchTyperCodeMode Preview.mp4">
+      <Title _locID="App_trailerTitle2">
+        <!-- _locComment_text="{MaxLength=255} Trailer title 2" -->Code Mode in action</Title>
+      <Images>
+        <Image FileName="code_mode.png">
+          <!-- _locComment_text="{Locked} Trailer screenshot 2 description" -->
         </Image>
       </Images>
     </Trailer>
