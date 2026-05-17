@@ -86,6 +86,13 @@ jobs:
           sudo snap install lxd
           sudo lxd init --auto
           sudo chmod 666 /var/snap/lxd/common/lxd/unix.socket
+          # Open the iptables FORWARD chain so containers on lxdbr0 can
+          # actually reach archive.ubuntu.com. GitHub-hosted runners
+          # default the policy to DROP, which means apt-get inside the
+          # LXD build container hits a network timeout and returns
+          # exit code 100. Setting it to ACCEPT for the runner's
+          # ephemeral lifetime is safe.
+          sudo iptables -P FORWARD ACCEPT
           snapcraft --version
           lxc version
 

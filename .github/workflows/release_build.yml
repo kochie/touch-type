@@ -168,6 +168,11 @@ jobs:
           sudo snap install lxd
           sudo lxd init --auto
           sudo chmod 666 /var/snap/lxd/common/lxd/unix.socket
+          # GitHub-hosted runners default iptables FORWARD chain to DROP,
+          # which blocks LXD containers on lxdbr0 from reaching the
+          # internet. Without this, snapcraft's `apt-get install` inside
+          # the build container fails with exit code 100.
+          sudo iptables -P FORWARD ACCEPT
           snapcraft --version
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
