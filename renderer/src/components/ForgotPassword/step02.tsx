@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Button from "../Button";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
+import { OtpInput } from "../OtpInput";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import Error from "../Errors";
@@ -11,7 +12,7 @@ import { useSupabaseClient } from "@/lib/supabase-provider";
 import { friendlyAuthError } from "@/lib/auth-errors";
 
 const Schema = Yup.object().shape({
-  code: Yup.string().length(6, "Code must be 6 digits").required("Required"),
+  code: Yup.string().length(8, "Code must be 8 digits").required("Required"),
   password: Yup.string().min(8, "Password must be at least 8 characters").required("Required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords must match")
@@ -59,7 +60,12 @@ export function Step02({ email, onContinue }: Step02Props) {
     setResending(true);
     setFormErrors("");
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      // Mirror Step01's redirectTo so the resend email lands on the website
+      // set-password page instead of the bare root if the user clicks rather
+      // than typing the OTP code.
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "https://touch-typer.kochie.io/auth/callback?next=/auth/set-password",
+      });
       if (error) throw error;
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -123,7 +129,7 @@ export function Step02({ email, onContinue }: Step02Props) {
         }
       }}
     >
-      {({ isSubmitting, errors, touched, status }) => (
+      {({ isSubmitting, errors, touched, status, values, setFieldValue, setFieldTouched }) => (
         <Form className="space-y-6">
           <Transition
             as="div"
@@ -140,28 +146,24 @@ export function Step02({ email, onContinue }: Step02Props) {
           </Transition>
 
           <p className="text-sm text-gray-500">
-            A 6-digit code was sent to <span className="font-medium text-gray-700">{email}</span>.
+            An 8-digit code was sent to <span className="font-medium text-gray-700">{email}</span>.
             Enter it below along with your new password.
           </p>
 
           <div>
-            <label htmlFor="code" className="block text-sm font-medium leading-6 text-gray-900">
+            <label className="block text-sm font-medium leading-6 text-gray-900 mb-3">
               Recovery Code
             </label>
-            <div className="mt-2">
-              <Field
-                id="code"
-                name="code"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="123456"
-                required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
+            <OtpInput
+              length={8}
+              value={values.code}
+              onChange={(val) => setFieldValue("code", val)}
+              onBlur={() => setFieldTouched("code", true)}
+              disabled={isSubmitting}
+              hasError={!!(errors.code && touched.code)}
+            />
             {errors.code && touched.code && (
-              <p className="mt-1 text-xs text-red-500">{errors.code}</p>
+              <p className="mt-2 text-xs text-red-500 text-center">{errors.code}</p>
             )}
             <button
               type="button"

@@ -66,10 +66,15 @@ export function Step01({ onContinue }: Step01Props) {
         }
 
         try {
-          // No redirectTo: Electron can't handle the magic-link callback.
-          // Supabase still sends the 6-digit OTP code in the same email,
-          // which is what Step02 uses.
-          const { error } = await supabase.auth.resetPasswordForEmail(values.email);
+          // The 8-digit OTP code in the email is the primary path for the
+          // desktop app (entered in Step02). The magic-link points at the
+          // website's set-password page so users who click the link instead
+          // of typing the code also reach a working flow. Without an explicit
+          // redirectTo Supabase falls back to Site URL (bare root), which
+          // strands the user.
+          const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+            redirectTo: "https://touch-typer.kochie.io/auth/callback?next=/auth/set-password",
+          });
 
           if (error) throw error;
 

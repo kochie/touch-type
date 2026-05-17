@@ -98,8 +98,10 @@ export function DebugSettings() {
 
   const sendPasswordReset = async () => {
     if (!email) throw new Error("No user email — sign in first");
+    // window.location.origin in Electron is the app:// scheme which Supabase
+    // rejects; point at the website's actual set-password route instead.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo: "https://touch-typer.kochie.io/auth/callback?next=/auth/set-password",
     });
     if (error) throw error;
   };
