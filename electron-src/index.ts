@@ -54,20 +54,21 @@ if (process.platform === "win32") {
   app.setAppUserModelId("15825koch.ie.TouchTyper");
 }
 
-// Snap-installed builds inherit Mesa DRI drivers + libdbus from the
-// gnome-platform content snap, which on arm64 (and some x64 systems) is
-// incomplete or version-mismatched:
+// The gnome-platform content snap that electron-builder's default snap
+// target depends on ships Mesa DRI drivers for amd64 but not aarch64.
+// Result on arm64 snap installs:
 //
-//   MESA-LOADER: failed to open swrast
+//   MESA-LOADER: failed to open swrast (search paths .../aarch64-linux-gnu/dri)
 //   ANGLE Display::initialize error 12289: Failed to get system egl display
-//   ... → GPU process crash → segfault
+//   ... → GPU process crash → segfault during BrowserWindow creation
 //
-// Skipping GPU acceleration entirely sidesteps that whole chain — software
-// rendering is plenty for a typing app (no WebGL, no heavy canvas). Other
-// distributions (macOS, Windows, AppImage, Flatpak) keep hardware
-// acceleration via their host GPU stacks.
-if (process.env.SNAP) {
-  log.info("Running from snap — disabling hardware acceleration");
+// Skipping GPU acceleration sidesteps the whole chain. Software rendering
+// is plenty for a typing app (no WebGL, light canvas). x64 snap installs
+// still get hardware acceleration because gnome-platform's amd64 build
+// has the drivers; other distributions (macOS, Windows, AppImage,
+// Flatpak) are unaffected.
+if (process.env.SNAP && (process.arch === "arm64" || process.arch === "arm")) {
+  log.info(`Running arm snap (arch=${process.arch}) — disabling hardware acceleration`);
   app.disableHardwareAcceleration();
 }
 
