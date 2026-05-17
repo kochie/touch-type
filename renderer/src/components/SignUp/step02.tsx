@@ -1,4 +1,5 @@
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik, Form } from "formik";
+import { OtpInput } from "../OtpInput";
 import * as Yup from "yup";
 import { Transition } from "@headlessui/react";
 import { useEffect, useState } from "react";
@@ -12,7 +13,7 @@ import { useSupabaseClient } from "@/lib/supabase-provider";
 const RESEND_COOLDOWN = 60;
 
 const SignupSchema = Yup.object().shape({
-  code: Yup.string().length(6, "Code must be 6 digits").required("Required"),
+  code: Yup.string().length(8, "Code must be 8 digits").required("Required"),
 });
 
 const Spinner = (
@@ -73,12 +74,12 @@ export default function Step02({ onContinue, email }) {
         setSubmitting(false);
       }}
     >
-      {({ isSubmitting, errors, touched, status }) => (
+      {({ isSubmitting, errors, touched, status, values, setFieldValue, setFieldTouched }) => (
         <Form className="space-y-6">
           <div className="flex items-start gap-3 rounded-lg bg-indigo-50 border border-indigo-100 px-4 py-3">
             <FontAwesomeIcon icon={faEnvelope} className="text-indigo-500 mt-0.5 shrink-0" />
             <p className="text-sm text-indigo-700">
-              We sent a 6-digit confirmation code to{" "}
+              We sent an 8-digit confirmation code to{" "}
               <span className="font-semibold">{email}</span>. Enter it below to
               activate your account.
             </p>
@@ -99,33 +100,20 @@ export default function Step02({ onContinue, email }) {
           </Transition>
 
           <div>
-            <label
-              htmlFor="code"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
+            <label className="block text-sm font-medium leading-6 text-gray-900 mb-3">
               Confirmation code
             </label>
-            <div className="mt-2">
-              <Field
-                id="code"
-                name="code"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="123456"
-                required
-                className="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 tracking-widest text-center"
-              />
-              {errors.code && touched.code && (
-                <ErrorMessage name="code">
-                  {(msg) => (
-                    <p className="mt-2 text-sm text-red-600" id="code-error">
-                      {msg}
-                    </p>
-                  )}
-                </ErrorMessage>
-              )}
-            </div>
+            <OtpInput
+              length={8}
+              value={values.code}
+              onChange={(val) => setFieldValue("code", val)}
+              onBlur={() => setFieldTouched("code", true)}
+              disabled={isSubmitting}
+              hasError={!!(errors.code && touched.code)}
+            />
+            {errors.code && touched.code && (
+              <p className="mt-2 text-sm text-red-600 text-center">{errors.code}</p>
+            )}
           </div>
 
           <div>
