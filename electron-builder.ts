@@ -238,6 +238,23 @@ const config: Configuration = {
     mimeTypes: ["x-scheme-handler/touchtyper"],
     target: ["snap", "AppImage", "flatpak"],
   },
+  snap: {
+    // The "default" entry retains electron-builder's stock stage-packages
+    // list (libnss3, libxss1, libgtk-3-0, etc.) — without it we'd replace
+    // the whole list and lose those.
+    //
+    // Mesa packages added because the gnome-platform content snap that
+    // electron-builder targets ships DRI drivers for amd64 but not
+    // aarch64; bundling them inline lets arm64 snap installs render with
+    // hardware acceleration. Adds ~30MB to the snap which is noise
+    // relative to its existing ~200MB Electron footprint.
+    stagePackages: [
+      "default",
+      "libgl1-mesa-dri",
+      "libegl1-mesa",
+      "libgles2-mesa",
+    ],
+  },
   flatpak: {
     runtimeVersion: "25.08",
     baseVersion: "25.08",
