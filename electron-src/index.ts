@@ -55,23 +55,29 @@ if (process.platform === "win32") {
 }
 
 // The gnome-platform content snap that electron-builder's default snap
-// target depends on ships Mesa DRI drivers for amd64 but not aarch64.
-// Result on arm64 snap installs:
+// target depends on is mismatched against modern Ubuntu hosts: Mesa DRI
+// drivers are missing at the search path on both aarch64 AND x86_64,
+// libdbus inside gnome-platform is older than the snap's bundled
+// dbus-send expects, and the resulting EGL init failure crashes the
+// renderer's BrowserWindow creation:
 //
-//   MESA-LOADER: failed to open swrast (search paths .../aarch64-linux-gnu/dri)
+//   MESA-LOADER: failed to open swrast (search paths .../gnome-platform/.../dri)
+//   libdbus-1.so.3: version `LIBDBUS_PRIVATE_1.12.16' not found
 //   ANGLE Display::initialize error 12289: Failed to get system egl display
 //   ... → GPU process crash → segfault during BrowserWindow creation
 //
-// Note: app.disableHardwareAcceleration() alone is insufficient. Mesa's
-// DRI driver loading happens in libGL.so's DT_INIT_ARRAY constructors —
-// which run before any JS executes. By the time we can call the disable,
-// Mesa has already failed. So we layer multiple defences:
-//   1. CLI switches that take effect at process start (Chromium parses
-//      argv before main()).
+// Confirmed broken on both arm64 (Pi-class) and x86_64 (VM) snap
+// installs. Until we fix the base/extension mismatch properly,
+// forcing software rendering avoids the crash chain on every snap.
+//
+// app.disableHardwareAcceleration() alone is insufficient because
+// Mesa's DRI driver loading happens in libGL.so's DT_INIT_ARRAY
+// constructors — which run before any JS executes. So we layer:
+//   1. CLI switches that take effect at process start.
 //   2. disableHardwareAcceleration() as a backup.
-// x64 snap and non-snap builds are unaffected.
-if (process.env.SNAP && (process.arch === "arm64" || process.arch === "arm")) {
-  log.info(`Running arm snap (arch=${process.arch}) — forcing software rendering`);
+// Non-snap builds (macOS, Windows, AppImage, Flatpak) are unaffected.
+if (process.env.SNAP) {
+  log.info(`Running snap (arch=${process.arch}) — forcing software rendering`);
   // disable-gpu: don't ever try to create a GPU process.
   // disable-gpu-compositing: render via CPU compositor in the renderer.
   // disable-software-rasterizer: don't even fall back to swrast (which
