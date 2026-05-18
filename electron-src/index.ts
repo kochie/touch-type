@@ -62,13 +62,29 @@ if (process.platform === "win32") {
 //   ANGLE Display::initialize error 12289: Failed to get system egl display
 //   ... → GPU process crash → segfault during BrowserWindow creation
 //
-// Skipping GPU acceleration sidesteps the whole chain. Software rendering
-// is plenty for a typing app (no WebGL, light canvas). x64 snap installs
-// still get hardware acceleration because gnome-platform's amd64 build
-// has the drivers; other distributions (macOS, Windows, AppImage,
-// Flatpak) are unaffected.
+// Note: app.disableHardwareAcceleration() alone is insufficient. Mesa's
+// DRI driver loading happens in libGL.so's DT_INIT_ARRAY constructors —
+// which run before any JS executes. By the time we can call the disable,
+// Mesa has already failed. So we layer multiple defences:
+//   1. CLI switches that take effect at process start (Chromium parses
+//      argv before main()).
+//   2. disableHardwareAcceleration() as a backup.
+// x64 snap and non-snap builds are unaffected.
 if (process.env.SNAP && (process.arch === "arm64" || process.arch === "arm")) {
-  log.info(`Running arm snap (arch=${process.arch}) — disabling hardware acceleration`);
+  log.info(`Running arm snap (arch=${process.arch}) — forcing software rendering`);
+  // disable-gpu: don't ever try to create a GPU process.
+  // disable-gpu-compositing: render via CPU compositor in the renderer.
+  // disable-software-rasterizer: don't even fall back to swrast (which
+  //   would also try to load Mesa and crash).
+  // use-gl=disabled: tell Chromium not to initialise any GL context at
+  //   all; Skia handles all drawing via CPU.
+  // in-process-gpu: if any GPU init does run, do it in main process so
+  //   a crash doesn't leave the renderer waiting on ptrace.
+  app.commandLine.appendSwitch("disable-gpu");
+  app.commandLine.appendSwitch("disable-gpu-compositing");
+  app.commandLine.appendSwitch("disable-software-rasterizer");
+  app.commandLine.appendSwitch("use-gl", "disabled");
+  app.commandLine.appendSwitch("in-process-gpu");
   app.disableHardwareAcceleration();
 }
 
