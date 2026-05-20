@@ -54,42 +54,36 @@ if (process.platform === "win32") {
   app.setAppUserModelId("15825koch.ie.TouchTyper");
 }
 
-// The gnome-platform content snap that electron-builder's default snap
-// target depends on is mismatched against modern Ubuntu hosts: Mesa DRI
-// drivers are missing at the search path on both aarch64 AND x86_64,
-// libdbus inside gnome-platform is older than the snap's bundled
-// dbus-send expects, and the resulting EGL init failure crashes the
-// renderer's BrowserWindow creation:
+// Snap builds depend on the gnome-platform content snap for Mesa/EGL, but that
+// content snap is mismatched against modern Ubuntu hosts on both aarch64 and
+// x86_64: DRI drivers are missing at the expected search path, libdbus inside
+// gnome-platform is version-mismatched, and the EGL init failure crashes the
+// renderer's BrowserWindow creation.
 //
-//   MESA-LOADER: failed to open swrast (search paths .../gnome-platform/.../dri)
-//   libdbus-1.so.3: version `LIBDBUS_PRIVATE_1.12.16' not found
-//   ANGLE Display::initialize error 12289: Failed to get system egl display
-//   ... → GPU process crash → segfault during BrowserWindow creation
-//
-// Confirmed broken on both arm64 (Pi-class) and x86_64 (VM) snap
-// installs. Until we fix the base/extension mismatch properly,
-// forcing software rendering avoids the crash chain on every snap.
-//
-// app.disableHardwareAcceleration() alone is insufficient because
-// Mesa's DRI driver loading happens in libGL.so's DT_INIT_ARRAY
-// constructors — which run before any JS executes. So we layer:
-//   1. CLI switches that take effect at process start.
-//   2. disableHardwareAcceleration() as a backup.
+// Fix: force ANGLE to use SwiftShader — Chromium's own bundled software
+// Vulkan→GL implementation.  SwiftShader is self-contained inside Electron's
+// binary distribution, never loads system Mesa or DRI drivers, and works
+// regardless of host Mesa version or gnome-platform installation state.
 // Non-snap builds (macOS, Windows, AppImage, Flatpak) are unaffected.
 if (process.env.SNAP) {
-  log.info(`Running snap (arch=${process.arch}) — forcing software rendering`);
-  // disable-gpu: don't ever try to create a GPU process.
-  // disable-gpu-compositing: render via CPU compositor in the renderer.
-  // disable-software-rasterizer: don't even fall back to swrast (which
-  //   would also try to load Mesa and crash).
-  // use-gl=disabled: tell Chromium not to initialise any GL context at
-  //   all; Skia handles all drawing via CPU.
-  // in-process-gpu: if any GPU init does run, do it in main process so
-  //   a crash doesn't leave the renderer waiting on ptrace.
-  app.commandLine.appendSwitch("disable-gpu");
-  app.commandLine.appendSwitch("disable-gpu-compositing");
-  app.commandLine.appendSwitch("disable-software-rasterizer");
-  app.commandLine.appendSwitch("use-gl", "disabled");
+  log.info(`Running snap (arch=${process.arch}) — forcing SwiftShader software rendering`);
+  // SwiftShader is Chromium's own software Vulkan→GL implementation, bundled
+  // inside Electron's binary distribution.  It does NOT load system Mesa, DRI
+  // drivers, or anything from the gnome-platform content snap, so it works
+  // regardless of the host Mesa version or whether gnome-platform is installed.
+  //
+  // Previous approach (disable-gpu + disable-software-rasterizer + use-gl=disabled)
+  // was self-defeating: disable-software-rasterizer blocks SwiftShader too, and
+  // use-gl=disabled is not a valid Chromium/Electron 42 flag — both left Electron
+  // with no rendering backend at all, crashing BrowserWindow creation.
+  //
+  // --use-angle=swiftshader   force ANGLE to use SwiftShader as its Vulkan backend
+  // --in-process-gpu          run GPU code in the browser process; avoids a
+  //                           separate GPU subprocess that strict snap confinement
+  //                           can block via ptrace/seccomp rules
+  // disableHardwareAcceleration() belt-and-suspenders: marks hardware acceleration
+  //                           as unavailable before the GPU backend is selected
+  app.commandLine.appendSwitch("use-angle", "swiftshader");
   app.commandLine.appendSwitch("in-process-gpu");
   app.disableHardwareAcceleration();
 }

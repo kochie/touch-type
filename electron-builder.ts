@@ -238,30 +238,6 @@ const config: Configuration = {
     mimeTypes: ["x-scheme-handler/touchtyper"],
     target: ["snap", "AppImage", "flatpak"],
   },
-  snap: {
-    // The "default" entry retains electron-builder's stock stage-packages
-    // list (libnss3, libxss1, libgtk-3-0, etc.) — without it we'd replace
-    // the whole list and lose those.
-    //
-    // Mesa packages added because the gnome-platform content snap is
-    // missing or incompatible across modern hosts. libtinfo5 is the
-    // legacy ncurses library that Mesa's DRI drivers link against — it
-    // was removed from Ubuntu's default install in 24.04, so without
-    // it explicitly staged the drivers fail to load even when they're
-    // present:
-    //
-    //   MESA-LOADER: failed to open swrast: libtinfo.so.5:
-    //     cannot open shared object file: No such file or directory
-    //
-    // Adds ~30MB total. Noise next to the ~200MB Electron snap.
-    stagePackages: [
-      "default",
-      "libgl1-mesa-dri",
-      "libegl1-mesa",
-      "libgles2-mesa",
-      "libtinfo5",
-    ],
-  },
   flatpak: {
     runtimeVersion: "25.08",
     baseVersion: "25.08",
