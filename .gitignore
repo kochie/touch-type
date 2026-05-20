@@ -56,3 +56,7 @@ private_keys/
 .serena/
 .superpowers/
 # (screenshots/ is tracked — canonical store/Flathub screenshots live there)
+# Generated offline-build dependency manifest — regenerate before Flathub PR:
+#   uvx --from "git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node" \
+#     flatpak-node-generator pnpm pnpm-lock.yaml -o flathub/generated-sources.json --electron-node-headers
+flathub/generated-sources.json

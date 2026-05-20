@@ -4,14 +4,55 @@
   <metadata_license>FSFAP</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>Touch Typer</name>
-  <summary>A cool little app to help your touch typing skills</summary>
+  <summary>Learn and practice touch typing with lessons, stats, and streaks</summary>
   <description>
-    <p>Touch Typer helps you learn and practice touch typing with lessons, tests, and progress tracking.</p>
+    <p>Touch Typer is a desktop app for improving your typing speed and accuracy.
+    Work through progressive lessons that build finger placement and muscle memory,
+    then track your performance with detailed per-key statistics, streak tracking,
+    and a heatmap that shows exactly which keys trip you up most.</p>
+    <p>Features:</p>
+    <ul>
+      <li>Structured lessons with real-time feedback on speed and accuracy</li>
+      <li>Code mode — practice typing actual code snippets in multiple languages</li>
+      <li>Key heatmap — see which keys cause the most errors at a glance</li>
+      <li>Stats dashboard — per-level speed and accuracy charts over time</li>
+      <li>Streak tracking — daily activity calendar and milestone badges</li>
+      <li>Arena — compete against friends or open challenges</li>
+    </ul>
   </description>
   <developer_name>Robert Koch</developer_name>
   <url type="homepage">https://github.com/kochie/touch-type</url>
   <url type="bugtracker">https://github.com/kochie/touch-type/issues</url>
+  <launchable type="desktop-id">io.kochie.touch-typer.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Typing practice with live speed and accuracy feedback</caption>
+      <image>https://raw.githubusercontent.com/kochie/touch-type/main/screenshots/01-practice.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Stats dashboard showing per-level speed and accuracy over time</caption>
+      <image>https://raw.githubusercontent.com/kochie/touch-type/main/screenshots/02-stats.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Streak tracker with daily activity calendar</caption>
+      <image>https://raw.githubusercontent.com/kochie/touch-type/main/screenshots/03-streak.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Key heatmap highlighting the keys that cause the most errors</caption>
+      <image>https://raw.githubusercontent.com/kochie/touch-type/main/screenshots/04-heatmap.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Streak page in dark mode with calendar and milestone badges</caption>
+      <image>https://raw.githubusercontent.com/kochie/touch-type/main/screenshots/05-streak-dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Practice page in dark mode with streak warning banner</caption>
+      <image>https://raw.githubusercontent.com/kochie/touch-type/main/screenshots/06-practice-dark.png</image>
+    </screenshot>
+  </screenshots>
   <releases>
-    <release version="2.1.0" date="2025-01-01"/>
+    <release version="3.0.16" date="2025-05-20"/>
+    <release version="3.0.15" date="2025-05-01"/>
   </releases>
+  <content_rating type="oars-1.1"/>
 </component>

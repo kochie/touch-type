@@ -11,9 +11,9 @@ This directory contains the Flatpak manifest and metadata for submitting **Touch
 
 Before opening a PR on [flathub/flathub](https://github.com/flathub/flathub):
 
-1. Generate `package-lock.json` in the repo root: `npm install --package-lock-only`
-2. Generate `generated-sources.json`:  
-   `flatpak-node-generator npm package-lock.json -o flathub/generated-sources.json --electron-node-headers`
-3. In `io.kochie.touch-typer.yml`, set the release archive URL to a **stable** tag and fill in `sha256` (e.g. from `curl -sL <url> | sha256sum`).
+1. Generate `generated-sources.json` from the pnpm lockfile:  
+   `flatpak-node-generator pnpm pnpm-lock.yaml -o flathub/generated-sources.json --electron-node-headers`
+2. In `io.kochie.touch-typer.yml`, set the release archive URL to a **stable** tag and fill in `sha256` (e.g. from `curl -sL <url> | sha256sum`).
+3. Update the `<releases>` section in `io.kochie.touch-typer.metainfo.xml` with the new version and date.
 
 Full steps: **[docs/FLATHUB.md](../docs/FLATHUB.md)**.

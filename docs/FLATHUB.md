@@ -9,30 +9,27 @@ Flathub does **not** accept pre-built `.flatpak` uploads. They build from source
 ## Prerequisites
 
 - [Flatpak](https://flatpak.org/setup/) and `flatpak-builder` installed
-- [flatpak-node-generator](https://github.com/flatpak/flatpak-builder-tools/tree/master/node) (for npm dependency manifest):
+- [flatpak-node-generator](https://github.com/flatpak/flatpak-builder-tools/tree/master/node) (for pnpm dependency manifest). Run it on demand with [uv](https://github.com/astral-sh/uv):
   ```bash
-  pipx install git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node
+  uvx --from "git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node" \
+    flatpak-node-generator pnpm pnpm-lock.yaml -o flathub/generated-sources.json --electron-node-headers
   ```
+  Or install permanently: `pipx install "git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node"`
 - A **stable release** of Touch Typer (Flathub only accepts stable; beta builds go to the beta repo and are not listed on the website)
 
 ## Step 1: Prepare dependency manifest (offline build)
 
-Flathub builds with **no network access**. All npm dependencies must be in a `generated-sources.json` file.
+Flathub builds with **no network access**. All pnpm dependencies must be in a `generated-sources.json` file.
 
-This project uses **pnpm**; Flathub’s tooling expects **npm** or yarn. Use npm only for the Flathub build:
+This project uses **pnpm**. `flatpak-node-generator` supports pnpm natively via its `pnpm` subcommand:
 
-1. Generate a `package-lock.json` without installing (keeps your pnpm layout unchanged):
+1. Run the Flatpak Node generator from the repo root (use `--electron-node-headers` so native deps match Electron):
    ```bash
-   npm install --package-lock-only
-   ```
-   Commit `package-lock.json` so the release tarball (e.g. from a git tag) includes it.
-
-2. Run the Flatpak Node generator (use `--electron-node-headers` so native deps match Electron):
-   ```bash
-   flatpak-node-generator npm package-lock.json -o flathub/generated-sources.json --electron-node-headers
+   uvx --from "git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node" \
+     flatpak-node-generator pnpm pnpm-lock.yaml -o flathub/generated-sources.json --electron-node-headers
    ```
 
-3. You will add `flathub/generated-sources.json` only in the **Flathub PR** (do not commit it to the app repo if you prefer). In the PR, place it next to the manifest so the path in the manifest (e.g. `generated-sources.json`) is correct.
+2. `flathub/generated-sources.json` is gitignored in this repo. You will add it **only in the Flathub PR**. Place it next to the manifest so the path in the manifest (`generated-sources.json`) is correct.
 
 ## Step 2: AppStream (Metainfo) and desktop file
 
