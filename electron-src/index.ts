@@ -55,34 +55,36 @@ if (process.platform === "win32") {
 }
 
 // Snap builds depend on the gnome-platform content snap for Mesa/EGL, but that
-// content snap is mismatched against modern Ubuntu hosts on both aarch64 and
-// x86_64: DRI drivers are missing at the expected search path, libdbus inside
-// gnome-platform is version-mismatched, and the EGL init failure crashes the
-// renderer's BrowserWindow creation.
+// content snap is mismatched against modern Ubuntu hosts: DRI drivers are absent,
+// libdbus is version-mismatched, and the system's /usr/share/vulkan/icd.d/
+// contains ICDs (virtio, gfxstream, intel, nouveau …) that crash when the
+// bundled Vulkan loader probes them inside a VM with no matching hardware.
 //
-// Fix: force ANGLE to use SwiftShader — Chromium's own bundled software
-// Vulkan→GL implementation.  SwiftShader is self-contained inside Electron's
-// binary distribution, never loads system Mesa or DRI drivers, and works
-// regardless of host Mesa version or gnome-platform installation state.
+// Fix: point the Vulkan loader exclusively at Electron's bundled SwiftShader ICD
+// so it never touches system ICDs, then tell ANGLE to use SwiftShader as its
+// Vulkan back-end.  SwiftShader is self-contained inside the snap, requires no
+// Mesa/DRI/gnome-platform, and works regardless of host GPU or Mesa version.
 // Non-snap builds (macOS, Windows, AppImage, Flatpak) are unaffected.
 if (process.env.SNAP) {
-  log.info(`Running snap (arch=${process.arch}) — forcing SwiftShader software rendering`);
-  // SwiftShader is Chromium's own software Vulkan→GL implementation, bundled
-  // inside Electron's binary distribution.  It does NOT load system Mesa, DRI
-  // drivers, or anything from the gnome-platform content snap, so it works
-  // regardless of the host Mesa version or whether gnome-platform is installed.
-  //
-  // Previous approach (disable-gpu + disable-software-rasterizer + use-gl=disabled)
-  // was self-defeating: disable-software-rasterizer blocks SwiftShader too, and
-  // use-gl=disabled is not a valid Chromium/Electron 42 flag — both left Electron
-  // with no rendering backend at all, crashing BrowserWindow creation.
-  //
-  // --use-angle=swiftshader   force ANGLE to use SwiftShader as its Vulkan backend
+  // VK_ICD_FILENAMES must be set before the Vulkan loader initialises (i.e.
+  // before the first BrowserWindow is created).  Setting process.env here calls
+  // setenv() at the C level, so the value is visible to libvulkan.so.1 when it
+  // runs.  We restrict it to the bundled vk_swiftshader_icd.json so the loader
+  // never attempts to open system ICDs like virtio or gfxstream that are present
+  // on Ubuntu 26.04 VMs and can SIGSEGV on load.
+  process.env.VK_ICD_FILENAMES = `${process.env.SNAP}/vk_swiftshader_icd.json`;
+
+  log.info(
+    `Running snap (arch=${process.arch}) — SwiftShader-only rendering ` +
+    `(VK_ICD_FILENAMES=${process.env.VK_ICD_FILENAMES})`
+  );
+
+  // --use-angle=swiftshader   tell ANGLE to use SwiftShader as its Vulkan backend
   // --in-process-gpu          run GPU code in the browser process; avoids a
-  //                           separate GPU subprocess that strict snap confinement
-  //                           can block via ptrace/seccomp rules
-  // disableHardwareAcceleration() belt-and-suspenders: marks hardware acceleration
-  //                           as unavailable before the GPU backend is selected
+  //                           separate GPU subprocess that snap seccomp/ptrace
+  //                           rules can block
+  // disableHardwareAcceleration() belt-and-suspenders: marks hardware GPU as
+  //                           unavailable before the backend is selected
   app.commandLine.appendSwitch("use-angle", "swiftshader");
   app.commandLine.appendSwitch("in-process-gpu");
   app.disableHardwareAcceleration();
