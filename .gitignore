@@ -55,5 +55,4 @@ private_keys/
 # local agent tool state
 .serena/
 .superpowers/
-# Local working dir for resizing App Store screenshots — never source-of-truth.
-screenshots/
+# (screenshots/ is tracked — canonical store/Flathub screenshots live there)
