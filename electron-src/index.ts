@@ -7,6 +7,7 @@ import {
   dialog,
   ipcMain,
   IpcMainInvokeEvent,
+  Menu,
   MessageBoxOptions,
   nativeTheme,
   shell,
@@ -183,6 +184,91 @@ function detectMasDev(): boolean {
   } catch {
     return false;
   }
+}
+
+// Sets the native macOS menu bar (and a minimal one on other platforms)
+// with a Window submenu so reviewers — and users — can always bring the
+// main window back after closing it. Apple guideline 4 requires this.
+function setupApplicationMenu(mainWindow: BrowserWindow): void {
+  const isMac = process.platform === "darwin";
+
+  const template: Electron.MenuItemConstructorOptions[] = [
+    // App menu — macOS only; first item is always the app name menu
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              { role: "about" as const },
+              { type: "separator" as const },
+              { role: "services" as const },
+              { type: "separator" as const },
+              { role: "hide" as const },
+              { role: "hideOthers" as const },
+              { role: "unhide" as const },
+              { type: "separator" as const },
+              { role: "quit" as const },
+            ],
+          },
+        ]
+      : []),
+    // Edit menu — gives the web renderer standard text-editing shortcuts
+    {
+      label: "Edit",
+      submenu: [
+        { role: "undo" as const },
+        { role: "redo" as const },
+        { type: "separator" as const },
+        { role: "cut" as const },
+        { role: "copy" as const },
+        { role: "paste" as const },
+        { role: "selectAll" as const },
+      ],
+    },
+    // Window menu — the required entry that lets users re-open the window
+    {
+      label: "Window",
+      submenu: [
+        {
+          label: "Show Touch Typer",
+          accelerator: isMac ? "Cmd+Shift+0" : "Ctrl+Shift+0",
+          click: () => {
+            mainWindow.show();
+            mainWindow.focus();
+          },
+        },
+        { type: "separator" as const },
+        { role: "minimize" as const },
+        { role: "zoom" as const },
+        ...(isMac
+          ? [
+              { type: "separator" as const },
+              { role: "front" as const },
+            ]
+          : [{ role: "close" as const }]),
+      ],
+    },
+    // Help menu
+    {
+      label: "Help",
+      submenu: [
+        {
+          label: "Touch Typer Website",
+          click: () => shell.openExternal("https://touch-typer.kochie.io"),
+        },
+        {
+          label: "Privacy Policy",
+          click: () => shell.openExternal("https://touch-typer.kochie.io/privacy"),
+        },
+        {
+          label: "Terms of Use",
+          click: () => shell.openExternal("https://touch-typer.kochie.io/terms"),
+        },
+      ],
+    },
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 app.on("ready", async () => {
@@ -423,6 +509,11 @@ app.on("ready", async () => {
 
   // Setup system tray
   setupTray(mainWindow);
+
+  // Set native application menu (macOS menu bar + Window submenu)
+  // Must run after mainWindow is created so the "Show Touch Typer" click
+  // handler can reference it. Required for App Store guideline 4.
+  setupApplicationMenu(mainWindow);
 
   // Setup notification scheduler IPC handlers
   setupNotificationScheduler(mainWindow);
