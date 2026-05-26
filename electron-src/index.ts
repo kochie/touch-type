@@ -38,6 +38,19 @@ import { setupStartupHandlers, shouldStartMinimized } from "./startup";
 
 init({
   dsn: "https://b91033c73a0f46a287bfaa7959809d12@o157203.ingest.sentry.io/6633710",
+  beforeSend(event) {
+    // Drop net::ERR_* rejections originating from Electron's browser_init
+    // internals (i.e. electron-updater's background update checks). These
+    // fire every poll cycle when a user is offline and generate enormous
+    // quota noise with zero actionable signal — the error event listener
+    // already handles them via console.error.
+    const culprit = event.culprit ?? "";
+    const message = event.exception?.values?.[0]?.value ?? "";
+    if (culprit.includes("browser_init") && /^net::ERR_/.test(message)) {
+      return null;
+    }
+    return event;
+  },
 });
 
 autoUpdater.logger = log;
@@ -436,9 +449,14 @@ app.on("ready", async () => {
       autoUpdater.channel = "beta";
     } else if (appVersion.includes("-alpha")) {
       autoUpdater.channel = "alpha";
+    } else {
+      autoUpdater.channel = "stable";
     }
 
-    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.checkForUpdatesAndNotify().catch(() => {
+      // Network errors are already handled by the autoUpdater "error" event listener.
+      // This .catch() prevents the rejected promise from becoming an unhandled rejection.
+    });
   }
 
   // Check if we should start minimized (hidden in tray)
@@ -558,8 +576,11 @@ app.on("ready", async () => {
 // the initial checkForUpdatesAndNotify() call above for full context.
 if (!process.mas) {
   setInterval(() => {
-    autoUpdater.checkForUpdates();
-  }, 60000);
+    autoUpdater.checkForUpdates().catch(() => {
+      // Network errors are already handled by the autoUpdater "error" event listener.
+      // This .catch() prevents the rejected promise from becoming an unhandled rejection.
+    });
+  }, 600000);
 }
 
 autoUpdater.on("update-downloaded", (event) => {
