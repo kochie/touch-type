@@ -1,6 +1,11 @@
 // Native
 import { join } from "node:path";
 
+// Suppress EPIPE errors when Electron's stdout/stderr pipe breaks (e.g. when
+// launched via an npm script whose parent process has already exited).
+process.stdout.on("error", (err: NodeJS.ErrnoException) => { if (err.code !== "EPIPE") throw err; });
+process.stderr.on("error", (err: NodeJS.ErrnoException) => { if (err.code !== "EPIPE") throw err; });
+
 import {
   app,
   BrowserWindow,
@@ -102,6 +107,11 @@ if (process.env.SNAP) {
   app.commandLine.appendSwitch("use-angle", "swiftshader");
   app.commandLine.appendSwitch("in-process-gpu");
   app.disableHardwareAcceleration();
+  // Snap's seccomp profile blocks ptrace, which crashpad uses to attach its
+  // crash handler. When ptrace fails, crashpad's fallback path segfaults on
+  // newer kernels. Disabling the crash reporter avoids the ptrace attempt
+  // entirely so GPU/Vulkan init can proceed cleanly.
+  app.commandLine.appendSwitch("disable-crash-reporter");
 }
 
 // Setup deep link handlers before app is ready
