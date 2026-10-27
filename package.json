@@ -63,7 +63,7 @@
     "@next/mdx": "^16.2.6",
     "@playwright/test": "^1.59.1",
     "@sentry/core": "^10.52.0",
-    "@sentry/nextjs": "^10.52.0",
+    "@sentry/nextjs": "^10.75.2",
     "@stripe/react-stripe-js": "^6.3.0",
     "@stripe/stripe-js": "^9.4.0",
     "@supabase/ssr": "^0.10.3",
