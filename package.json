@@ -103,7 +103,7 @@
     "lodash.sample": "^4.2.1",
     "lodash.samplesize": "^4.2.0",
     "naughty-words": "^1.2.0",
-    "next": "16.2.6",
+    "next": "16.4.1",
     "pg": "^8.20.0",
     "postcss": "^8.5.14",
     "prettier": "^3.8.3",
