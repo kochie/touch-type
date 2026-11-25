@@ -134,7 +134,7 @@ export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboar
           {keyboards.map((keyboard) => (
             <ListboxOption
               key={keyboard.name}
-              className="group flex cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-35 data-[disabled]:hover:bg-transparent"
+              className="group relative flex cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-35 data-[disabled]:hover:bg-transparent"
               value={keyboard.layout}
               disabled={enabledLayouts ? !enabledLayouts.has(keyboard.layout) : false}
               title={enabledLayouts && !enabledLayouts.has(keyboard.layout) ? "No data for this layout yet" : undefined}
