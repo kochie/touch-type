@@ -1,14 +1,11 @@
 "use client";
 
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
+  Area,
+  AreaChart,
   ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
@@ -24,27 +21,43 @@ interface Props {
 }
 
 const BUCKET = 5;
-const CAP = 100; // everything at or above this is shown as one "100+" bar
+const CAP = 100; // buckets at or above this are folded into one cluster just past 100
+const MAX_X = CAP + BUCKET * 2;
+const STEP = 1; // curve resolution in WPM
+const BANDWIDTH = 8; // Gaussian width in WPM: larger = smoother
 
-function labelFor(from: number) {
-  return from >= CAP ? `${CAP}+` : `${from}`;
-}
-
-/** Fill gaps with zero-height buckets and fold the long tail into one bar. */
-function toBars(d: NonNullable<Distribution["population"]>) {
-  const counts = new Map<number, number>();
+/**
+ * Kernel density estimate. Each histogram bucket is a cluster of users at its
+ * midpoint; the curve is the sum of Gaussians centred on them, sampled every
+ * STEP wpm. Exact counts are deliberately not shown: the cohort is small, so
+ * the shape matters more than the numbers.
+ */
+function toCurve(d: NonNullable<Distribution["population"]>) {
+  const clusters = new Map<number, number>();
   for (const b of d.buckets) {
     const from = Math.min(b.from, CAP);
-    counts.set(from, (counts.get(from) ?? 0) + b.users);
+    clusters.set(from, (clusters.get(from) ?? 0) + b.users);
   }
-  const bars: { from: number; label: string; users: number }[] = [];
-  for (let from = 0; from <= CAP; from += BUCKET) {
-    bars.push({ from, label: labelFor(from), users: counts.get(from) ?? 0 });
+  const points: { at: number; users: number }[] = [];
+  for (const [from, users] of clusters) {
+    const at = from + BUCKET / 2;
+    points.push({ at, users });
+    points.push({ at: -at, users }); // mirror so the curve isn't cut off at 0
   }
-  return bars;
+
+  const curve: { wpm: number; density: number }[] = [];
+  for (let wpm = 0; wpm <= MAX_X; wpm += STEP) {
+    let density = 0;
+    for (const p of points) {
+      const z = (wpm - p.at) / BANDWIDTH;
+      density += p.users * Math.exp(-0.5 * z * z);
+    }
+    curve.push({ wpm, density });
+  }
+  return curve;
 }
 
-const bucketOf = (wpm: number) => Math.min(Math.floor(wpm / BUCKET) * BUCKET, CAP);
+const clampX = (wpm: number) => Math.min(Math.max(wpm, 0), MAX_X);
 
 export default function SpeedDistribution({ days }: Props) {
   const state = useStatsQuery(() => getSpeedDistribution(days), [days]);
@@ -55,7 +68,7 @@ export default function SpeedDistribution({ days }: Props) {
         How your speed compares
       </h2>
       <p className="text-xs text-slate-500 mb-4">
-        Everyone&apos;s average speed (WPM), with you marked
+        How typing speeds (WPM) are spread out, with you marked
       </p>
 
       {state.status === "loading" && <ChartMessage text="Loading…" />}
@@ -76,11 +89,11 @@ function Body({ data }: { data: Distribution }) {
   }
 
   const { you, population } = data;
-  const bars = toBars(population);
+  const curve = toCurve(population);
   const lowSigma = Math.max(0, population.mean_wpm - population.std_wpm);
   const highSigma = population.mean_wpm + population.std_wpm;
-  const youBar = labelFor(bucketOf(you.avg_wpm));
-  const meanBar = labelFor(bucketOf(population.mean_wpm));
+  const youX = clampX(you.avg_wpm);
+  const meanX = clampX(population.mean_wpm);
 
   return (
     <>
@@ -101,45 +114,57 @@ function Body({ data }: { data: Distribution }) {
           <span>
             Faster than{" "}
             <b className="text-slate-800 dark:text-slate-100">{Math.round(you.percentile)}%</b>{" "}
-            of {population.users} typists
+            of typists
           </span>
         )}
       </div>
 
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={bars} margin={{ top: 16, right: 8, bottom: 0, left: 0 }} barCategoryGap={2}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.2)" />
+          <AreaChart data={curve} margin={{ top: 16, right: 8, bottom: 0, left: 8 }}>
+            <defs>
+              <linearGradient id="speed-curve" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.45} />
+                <stop offset="100%" stopColor="#38bdf8" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
             <ReferenceArea
-              x1={labelFor(bucketOf(lowSigma))}
-              x2={labelFor(bucketOf(highSigma))}
-              fill="rgba(56,189,248,0.10)"
+              x1={clampX(lowSigma)}
+              x2={clampX(highSigma)}
+              fill="rgba(148,163,184,0.12)"
               ifOverflow="extendDomain"
             />
-            <XAxis dataKey="label" tickLine={false} stroke="#94a3b8" fontSize={12} interval={1} />
-            <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} allowDecimals={false} width={32} />
-            <Tooltip
-              cursor={{ fill: "rgba(148,163,184,0.12)" }}
-              content={({ active, payload }) => {
-                const row = active && payload?.[0]?.payload;
-                if (!row) return null;
-                const range = row.from >= CAP ? `${CAP}+ WPM` : `${row.from}–${row.from + BUCKET} WPM`;
-                return (
-                  <div className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-slate-200 shadow-lg">
-                    <p className="font-bold text-slate-100 mb-1">{range}</p>
-                    <p><span className="font-semibold">{row.users}</span> typists</p>
-                  </div>
-                );
-              }}
+            <XAxis
+              dataKey="wpm"
+              type="number"
+              domain={[0, MAX_X]}
+              ticks={[0, 20, 40, 60, 80, 100]}
+              tickLine={false}
+              stroke="#94a3b8"
+              fontSize={12}
             />
-            <ReferenceLine x={meanBar} stroke="#94a3b8" strokeDasharray="4 4" label={{ value: "avg", position: "top", fill: "#94a3b8", fontSize: 11 }} />
-            <ReferenceLine x={youBar} stroke="#38bdf8" strokeWidth={2} label={{ value: "you", position: "top", fill: "#38bdf8", fontSize: 11 }} />
-            <Bar dataKey="users" radius={[3, 3, 0, 0]}>
-              {bars.map((b) => (
-                <Cell key={b.from} fill={labelFor(b.from) === youBar ? "#38bdf8" : "#64748b"} />
-              ))}
-            </Bar>
-          </BarChart>
+            <YAxis hide domain={[0, "dataMax"]} />
+            <Area
+              type="monotone"
+              dataKey="density"
+              stroke="#38bdf8"
+              strokeWidth={2}
+              fill="url(#speed-curve)"
+              isAnimationActive={false}
+            />
+            <ReferenceLine
+              x={meanX}
+              stroke="#94a3b8"
+              strokeDasharray="4 4"
+              label={{ value: "avg", position: "top", fill: "#94a3b8", fontSize: 11 }}
+            />
+            <ReferenceLine
+              x={youX}
+              stroke="#f8fafc"
+              strokeWidth={2}
+              label={{ value: "you", position: "top", fill: "#f8fafc", fontSize: 11 }}
+            />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </>

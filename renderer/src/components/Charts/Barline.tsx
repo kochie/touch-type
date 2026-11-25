@@ -1,35 +1,30 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+
+import { useMemo, useState } from "react";
+import clsx from "clsx";
 import {
-  axisBottom,
-  axisLeft,
-  axisRight,
-  InternSet,
-  interpolateBlues,
-  interpolateCool,
-  interpolateGreens,
-  interpolateGreys,
-  interpolateOranges,
-  interpolatePurples,
-  interpolateReds,
-  interpolateWarm,
-  map,
-  max,
-  scaleBand,
-  scaleLinear,
-  scaleSequential,
-  select,
-} from "d3";
-import { range } from "lodash";
-
-import styles from "@/styles/stats.module.css";
-import { Result, useResults } from "@/lib/result-provider";
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { useResults } from "@/lib/result-provider";
 import { Levels } from "@/lib/settings_hook";
+import { colorForLevel } from "@/lib/level-colors";
+import { ChartMessage } from "./KeyTimingBars";
 
-const marginTop = 20; // the top margin, in pixels
-const marginRight = 40; // the right margin, in pixels
-const marginBottom = 100; // the bottom margin, in pixels
-const marginLeft = 40;
+const MAX_SESSIONS = 75;
+// Height of the typo area below the line, as a fraction of the speed range.
+const TYPO_SHARE = 0.35;
+
+const TYPO_COLOR = "#c98585";
+const PILL_LEVELS = [Levels.LEVEL_1, Levels.LEVEL_2, Levels.LEVEL_3, Levels.LEVEL_4, Levels.LEVEL_5, Levels.LEVEL_6];
+const PILL_LEVELS_WITH_0 = [Levels.LEVEL_0, ...PILL_LEVELS];
 
 interface BarlineProps {
   keyboard: string;
@@ -37,198 +32,185 @@ interface BarlineProps {
 
 export default function Barline({ keyboard }: BarlineProps) {
   const { results } = useResults();
-  const [computedResults, setComputedResults] = useState<Result[]>([]);
 
-  const [{ width, height }, setSize] = useState({ width: 0, height: 0 });
+  const allData = useMemo(() => {
+    const rows = results
+      .filter((r) => r.keyboard === keyboard)
+      .sort((a, b) => Date.parse(a.datetime) - Date.parse(b.datetime))
+      .slice(-MAX_SESSIONS);
 
-  const svgRef = useRef<SVGSVGElement>(null);
+    // Typos live on their own scale: the worst session fills the area below
+    // the line, whatever its absolute count. Real counts stay in `incorrect`.
+    const maxCpm = Math.max(1, ...rows.map((r) => r.cpm));
+    const maxTypos = Math.max(1, ...rows.map((r) => r.incorrect));
+    const typoRoom = maxCpm * TYPO_SHARE;
 
-  useEffect(() => {
-    const resize = () => {
-      setSize({
-        width: window.innerWidth * 0.8,
-        height: window.innerHeight * 0.5,
-      });
-    };
-    window.addEventListener("resize", resize);
-    resize();
-
-    const computed = results
-      .filter((res) => res.keyboard === keyboard)
-      .sort((a, b) => Date.parse(a.datetime) - Date.parse(b.datetime));
-
-    setComputedResults(computed);
-
-    return () => {
-      window.removeEventListener("resize", resize);
-    };
+    return rows.map((r, i) => ({
+      i,
+      cpm: Math.round(r.cpm),
+      typos: -(r.incorrect / maxTypos) * typoRoom,
+      incorrect: r.incorrect,
+      level: r.level,
+      datetime: r.datetime,
+    }));
   }, [results, keyboard]);
 
-  useEffect(() => {
-    if (!svgRef.current) return;
+  const [hiddenLevels, setHiddenLevels] = useState<ReadonlySet<Levels>>(new Set());
+  const [showTypos, setShowTypos] = useState(true);
 
-    // const width = window.innerWidth * 0.8;
-    // const height = window.innerHeight * 0.5;
-
-    const svg = select(svgRef.current);
-
-    const CHART_SIZE = 75;
-
-    const dummyData = Array(
-      CHART_SIZE - Math.min(computedResults.length, CHART_SIZE),
-    )
-      .fill(null)
-      .map(() => ({
-        correct: 10,
-        incorrect: 0,
-        cpm: Math.random() * 200,
-        level: Levels.LEVEL_0,
-      }));
-
-    const data = [
-      ...dummyData,
-      ...computedResults.slice(
-        Math.max(computedResults.length - CHART_SIZE, 0),
-        computedResults.length,
-      ),
-    ];
-
-    const X = map(data, (x, i) => i);
-    const Y = map(data, (y) => y.cpm);
-    const Y2 = map(data, (y) => y.incorrect);
-    const LEVEL = map(data, (y) => y.level ?? Levels.LEVEL_3);
-
-    const xDomain = new InternSet(X);
-    const yDomain = new InternSet([0, max(Y)!]);
-    const yDomain2 = new InternSet([0, max(Y2)!]);
-
-    const xRange = [marginLeft, width - marginRight];
-    const yRange = [height - marginBottom, marginTop];
-    const yRange2 = [height - marginBottom, height];
-
-    const xPadding = 0;
-    const yFormat = "0f";
-    const yLabel = "";
-    const color = "steelblue";
-
-    const xScale = scaleBand(xDomain, xRange).padding(xPadding);
-    const yScale = scaleLinear(yDomain, yRange);
-    const yScale2 = scaleLinear(yDomain2, yRange2);
-
-    const xAxis = axisBottom(xScale).tickSizeOuter(0);
-    const yAxis = axisRight(yScale).ticks(height / 100, yFormat);
-    const yAxis2 = axisLeft(yScale2).ticks(height / 40, yFormat);
-
-    const I = range(X.length).filter((i) => {
-      return xDomain.has(X[i]);
+  const toggleLevel = (level: Levels) =>
+    setHiddenLevels((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(level)) next.add(level);
+      return next;
     });
 
-    const reds = scaleSequential(yDomain2, interpolateReds);
+  const sessionsPerLevel = useMemo(() => {
+    const counts = new Map<Levels, number>();
+    for (const d of allData) counts.set(d.level, (counts.get(d.level) ?? 0) + 1);
+    return counts;
+  }, [allData]);
 
-    const levelColors = {
-      [Levels.LEVEL_0]: scaleSequential(yDomain, interpolateGreys),
-      [Levels.LEVEL_1]: scaleSequential(yDomain, interpolateBlues),
-      [Levels.LEVEL_2]: scaleSequential(yDomain, interpolateGreens),
-      [Levels.LEVEL_3]: scaleSequential(yDomain, interpolateOranges),
-      [Levels.LEVEL_4]: scaleSequential(yDomain, interpolatePurples),
-      [Levels.LEVEL_5]: scaleSequential(yDomain, interpolateCool),
-      [Levels.LEVEL_6]: scaleSequential(yDomain, interpolateWarm),
-    };
+  // Level 0 is only worth a pill if the user actually has such sessions.
+  const pillLevels = useMemo(
+    () => (sessionsPerLevel.has(Levels.LEVEL_0) ? PILL_LEVELS_WITH_0 : PILL_LEVELS),
+    [sessionsPerLevel],
+  );
 
-    svg
-      .attr("width", width)
-      .attr("height", height)
-      .attr("viewBox", [0, 0, width, height]);
+  // Hidden levels are removed, not blanked, so the remaining bars close up.
+  const data = useMemo(
+    () =>
+      allData
+        .filter((d) => !hiddenLevels.has(d.level))
+        .map((d, i) => ({ ...d, i })),
+    [allData, hiddenLevels],
+  );
 
-    svg
-      .append("g")
-      .attr("transform", `translate(${width - marginRight},0)`)
-      .call(yAxis)
-      .call((g) => g.select(".domain").remove())
-      .call((g) =>
-        g
-          .selectAll(".tick line")
-          .clone()
-          .attr("x2", -width + marginLeft + marginRight)
-          .attr("stroke-dasharray", "5,5"),
-      );
+  return (
+    <section className="rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] p-5">
+      <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+        Recent sessions
+      </h2>
+      <p className="text-xs text-slate-500 mb-4">
+        Speed (CPM) above the line, typos below on their own scale, for your last {MAX_SESSIONS} sessions
+      </p>
 
-    const div = select("body")
-      .append("div")
-      .attr("class", styles.tooltip)
-      .style("opacity", 0);
+      <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Filter sessions by level">
+        {pillLevels.map((level) => (
+          <Pill
+            key={level}
+            label={`Level ${level}`}
+            color={colorForLevel(level)}
+            active={!hiddenLevels.has(level)}
+            dim={!sessionsPerLevel.has(level)}
+            onClick={() => toggleLevel(level)}
+          />
+        ))}
+        <Pill
+          label="Typos"
+          color={TYPO_COLOR}
+          active={showTypos}
+          onClick={() => setShowTypos((v) => !v)}
+        />
+      </div>
 
-    const bar = svg
-      .append("g")
-      .attr("stroke", "white")
-      .attr("stroke-width", 2)
-      .selectAll("rect")
-      .data(I)
-      .join("rect")
-      .attr("fill", (i: number) => {
-        const color = levelColors[LEVEL[i]];
-        return color(Y[i]);
-      })
-      .attr("x", (i: number) => xScale(X[i]) ?? 0)
-      .attr("y", (i: number) => {
-        return isNaN(yScale(Y[i])) ? 0 : yScale(Y[i]);
-      })
-      .attr("height", (i: number) => {
-        const h = yScale(0) - yScale(Y[i]);
-        return isNaN(Math.max(h, 0)) ? 0 : Math.max(h, 0);
-      })
-      .attr("width", xScale.bandwidth())
-      .on("mouseover", function (d, i: number) {
-        if (LEVEL[i] === Levels.LEVEL_0) return;
-        select(this).transition().duration(50).attr("opacity", ".50");
-        div.transition().duration(50).style("opacity", 1);
-        div
-          .html(
-            Y[i].toFixed(0) + "cpm on Level: " + (LEVEL[i] ? LEVEL[i] : "3"),
-          )
-          .style("left", d.pageX + 10 + "px")
-          .style("top", d.pageY - 15 + "px");
-      })
-      .on("mouseout", function (d, i) {
-        select(this).transition().duration(50).attr("opacity", "1");
-        div.transition().duration(50).style("opacity", 0);
-      });
+      {data.length === 0 ? (
+        <ChartMessage
+          text={
+            allData.length === 0
+              ? "No sessions on this keyboard layout yet."
+              : "Every level is hidden. Turn one back on above."
+          }
+        />
+      ) : (
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              stackOffset="sign"
+              margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+              barCategoryGap={1}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.2)" />
+              <XAxis dataKey="i" hide />
+              <YAxis
+                stroke="#94a3b8"
+                fontSize={12}
+                tickLine={false}
+                width={40}
+                allowDecimals={false}
+                tickFormatter={(v: number) => (v < 0 ? "" : String(v))}
+              />
+              <ReferenceLine y={0} stroke="rgba(148,163,184,0.5)" />
+              <Tooltip
+                cursor={{ fill: "rgba(148,163,184,0.12)" }}
+                content={({ active, payload }) => {
+                  const row = active && payload?.[0]?.payload;
+                  if (!row) return null;
+                  return (
+                    <div className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-slate-200 shadow-lg">
+                      <p className="font-bold text-slate-100 mb-1">
+                        {new Date(row.datetime).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                        {row.level ? ` · Level ${row.level}` : ""}
+                      </p>
+                      <p>Speed: <span className="font-semibold">{row.cpm} CPM</span></p>
+                      <p>Typos: <span className="font-semibold">{row.incorrect}</span></p>
+                    </div>
+                  );
+                }}
+              />
+              <Bar dataKey="cpm" stackId="s" radius={[3, 3, 0, 0]}>
+                {data.map((d) => (
+                  <Cell key={d.i} fill={colorForLevel(d.level)} />
+                ))}
+              </Bar>
+              {showTypos && (
+                <Bar dataKey="typos" stackId="s" fill={TYPO_COLOR} radius={[3, 3, 0, 0]} />
+              )}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </section>
+  );
+}
 
-    const bar1 = svg
-      .append("g")
-      .attr("stroke", "white")
-      .attr("stroke-width", 2)
-      .selectAll("rect")
-      .data(I)
-      .join("rect")
-      .attr("fill", (i: number) => reds(Y2[i]))
-      .attr("x", (i: number) => xScale(X[i]) ?? 0)
-      .attr("y", (i) => {
-        return isNaN(yScale2(0)) ? 0 : yScale2(0);
-      })
-      .attr("height", (i: number) => {
-        const h = yScale2(0) - yScale2(Y2[i]);
-        return isNaN(Math.max(-h, 0)) ? 0 : Math.max(-h, 0);
-      })
-      .attr("width", xScale.bandwidth())
-      .on("mouseover", function (d, i: number) {
-        select(this).transition().duration(50).attr("opacity", ".50");
-        div.transition().duration(50).style("opacity", 1);
-        div
-          .html(Y2[i].toFixed(0) + " typos")
-          .style("left", d.pageX + 10 + "px")
-          .style("top", d.pageY - 15 + "px");
-      })
-      .on("mouseout", function (d, i) {
-        select(this).transition().duration(50).attr("opacity", "1");
-        div.transition().duration(50).style("opacity", 0);
-      });
-
-    return () => {
-      svg.selectAll("*").remove();
-      div.remove();
-    };
-  }, [width, height, computedResults]);
-
-  return <svg ref={svgRef} className="mx-auto" />;
+function Pill({
+  label,
+  color,
+  active,
+  dim,
+  onClick,
+}: {
+  label: string;
+  color: string;
+  active: boolean;
+  /** Nothing to show for this pill (e.g. no sessions at that level). */
+  dim?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      style={active ? { borderColor: `${color}80`, backgroundColor: `${color}26` } : undefined}
+      className={clsx(
+        "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-150",
+        active
+          ? "text-slate-700 dark:text-slate-200"
+          : "border-transparent bg-slate-200/60 dark:bg-white/[0.04] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300",
+        dim && "opacity-50",
+      )}
+    >
+      <span
+        className="inline-block h-2 w-2 rounded-full"
+        style={{ backgroundColor: active ? color : "#64748b" }}
+      />
+      {label}
+    </button>
+  );
 }
