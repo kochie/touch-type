@@ -121,7 +121,7 @@ export default function NewChallengePrompt({ onDone, onClose }: { onDone?: () =>
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute right-0 top-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+            className="absolute right-0 top-0 w-7 h-7 flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-slate-800 transition-colors"
           >
             <FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5" />
           </button>

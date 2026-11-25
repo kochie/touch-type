@@ -10,7 +10,6 @@ import { getSupabaseClient } from "@/lib/supabase-client";
 import { AssistantChat } from "@/components/AiAssistant/AssistantChat";
 import { InsightCard } from "@/components/AiAssistant/InsightCard";
 import { InsightSummary } from "@/components/AiAssistant/InsightSummary";
-import { InsightHeatmap } from "@/components/AiAssistant/InsightHeatmap";
 import { getAiInsights } from "@/transactions/getAiInsights";
 import { refreshAiInsights } from "@/transactions/refreshAiInsights";
 import { Skeleton } from "@/components/Skeleton";
@@ -29,7 +28,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 const features = [
   {
     icon: faBoltLightning,
-    iconColor: "text-yellow-400",
+    iconColor: "text-yellow-700 dark:text-yellow-400",
     iconBg: "bg-yellow-400/10",
     title: "Speed Coaching",
     description:
@@ -37,7 +36,7 @@ const features = [
   },
   {
     icon: faBullseye,
-    iconColor: "text-red-400",
+    iconColor: "text-red-700 dark:text-red-400",
     iconBg: "bg-red-400/10",
     title: "Accuracy Analysis",
     description:
@@ -45,7 +44,7 @@ const features = [
   },
   {
     icon: faCoffee,
-    iconColor: "text-orange-400",
+    iconColor: "text-orange-700 dark:text-orange-400",
     iconBg: "bg-orange-400/10",
     title: "Ergonomic Insights",
     description:
@@ -53,7 +52,7 @@ const features = [
   },
   {
     icon: faKeyboard,
-    iconColor: "text-blue-400",
+    iconColor: "text-blue-700 dark:text-blue-400",
     iconBg: "bg-blue-400/10",
     title: "Practice Plans",
     description:
@@ -61,7 +60,7 @@ const features = [
   },
   {
     icon: faMusicNote,
-    iconColor: "text-violet-400",
+    iconColor: "text-violet-700 dark:text-violet-400",
     iconBg: "bg-violet-400/10",
     title: "Rhythm Training",
     description:
@@ -72,7 +71,7 @@ const features = [
 function LoadingSpinner() {
   return (
     <div className="w-full flex justify-center h-full">
-      <div className="text-3xl font-semibold my-20 text-slate-300">
+      <div className="text-3xl font-semibold my-20 text-fg-muted">
         <FontAwesomeIcon icon={faSpinnerThird} spin className="mx-5" />
       </div>
     </div>
@@ -88,14 +87,14 @@ function UnauthenticatedView() {
         title="AI Assistant"
         subtitle="Personalized coaching based on your sessions"
         iconBg="bg-violet-400/10"
-        iconColor="text-violet-400"
+        iconColor="text-violet-700 dark:text-violet-400"
       />
       <div className="px-6 pb-6 flex flex-col gap-8">
         <div className="rounded-2xl bg-violet-500/10 border border-violet-500/20 px-6 py-5">
-          <p className="text-base font-semibold text-slate-100 mb-1">
+          <p className="text-base font-semibold text-fg mb-1">
             Your personal typing coach, powered by AI
           </p>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-fg-muted">
             Sign in to unlock personalised feedback across speed, accuracy,
             ergonomics, practice, and rhythm — tailored to your actual sessions.
           </p>
@@ -104,7 +103,7 @@ function UnauthenticatedView() {
           {features.map((f) => (
             <div
               key={f.title}
-              className="rounded-xl bg-slate-800/50 border border-slate-700/50 p-4 flex gap-4 items-start"
+              className="rounded-xl bg-surface border border-line p-4 flex gap-4 items-start"
             >
               <div
                 className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${f.iconBg}`}
@@ -115,10 +114,10 @@ function UnauthenticatedView() {
                 />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-100 mb-0.5">
+                <p className="text-sm font-semibold text-fg mb-0.5">
                   {f.title}
                 </p>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-xs text-fg-muted leading-relaxed">
                   {f.description}
                 </p>
               </div>
@@ -126,7 +125,7 @@ function UnauthenticatedView() {
           ))}
         </div>
         <div className="flex flex-col items-center gap-3">
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-fg-muted">
             Free to get started — premium unlocks the full assistant.
           </p>
           <div className="flex gap-4 w-72">
@@ -153,7 +152,7 @@ function EmptyState({
         title="AI Assistant"
         subtitle="Personalized coaching based on your sessions"
         iconBg="bg-violet-400/10"
-        iconColor="text-violet-400"
+        iconColor="text-violet-700 dark:text-violet-400"
       />
       <div className="px-6 py-8 flex flex-col items-center gap-4 text-center">
         {refreshing ? (
@@ -161,9 +160,9 @@ function EmptyState({
             <FontAwesomeIcon
               icon={faSpinnerThird}
               spin
-              className="w-8 h-8 text-violet-400"
+              className="w-8 h-8 text-violet-700 dark:text-violet-400"
             />
-            <p className="text-sm text-slate-400">Analysing your sessions…</p>
+            <p className="text-sm text-fg-muted">Analysing your sessions…</p>
             <div className="w-full max-w-md flex flex-col gap-2">
               <Skeleton className="h-24 w-full rounded-xl" />
               <Skeleton className="h-24 w-full rounded-xl" />
@@ -172,14 +171,14 @@ function EmptyState({
           </>
         ) : (
           <>
-            <p className="text-slate-300 font-semibold">No analysis yet</p>
-            <p className="text-sm text-slate-500 max-w-xs">
+            <p className="text-fg-muted font-semibold">No analysis yet</p>
+            <p className="text-sm text-fg-subtle max-w-xs">
               Your first analysis will run tonight, or tap Refresh to generate
               it now.
             </p>
             <button
               onClick={onRefresh}
-              className="flex items-center gap-2 text-sm font-semibold text-violet-400 hover:text-violet-300 transition-colors"
+              className="flex items-center gap-2 text-sm font-semibold text-violet-700 dark:text-violet-400 hover:text-violet-900 dark:hover:text-violet-300 transition-colors"
             >
               <FontAwesomeIcon icon={faArrowsRotate} className="w-4 h-4" />
               Refresh now
@@ -209,12 +208,12 @@ function InsightsDashboard({
         title="AI Assistant"
         subtitle="Personalized coaching based on your sessions"
         iconBg="bg-violet-400/10"
-        iconColor="text-violet-400"
+        iconColor="text-violet-700 dark:text-violet-400"
         headerRight={
           <button
             onClick={onRefresh}
             disabled={refreshing}
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 disabled:opacity-50 transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-700/50"
+            className="flex items-center gap-2 text-sm text-fg-muted hover:text-fg disabled:opacity-50 transition-colors px-3 py-1.5 rounded-lg hover:bg-inset"
           >
             <FontAwesomeIcon
               icon={faArrowsRotate}
@@ -241,20 +240,11 @@ function InsightsDashboard({
           />
         )}
 
-        {insight.heatmap_data.length > 0 && (
-          <div className="rounded-xl bg-slate-800/30 border border-slate-700/40 px-5 py-6">
-            <p className="text-sm font-semibold text-slate-300 mb-4">
-              Key timing heatmap
-            </p>
-            <InsightHeatmap heatmapData={insight.heatmap_data} />
-          </div>
-        )}
-
         {/* Live AI coaching chat */}
-        <div className="rounded-xl bg-slate-800/30 border border-slate-700/40 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-700/40">
-            <p className="text-sm font-semibold text-slate-300">Ask your coach</p>
-            <p className="text-xs text-slate-500 mt-0.5">
+        <div className="rounded-xl bg-surface-soft border border-line overflow-hidden">
+          <div className="px-5 py-4 border-b border-line">
+            <p className="text-sm font-semibold text-fg-muted">Ask your coach</p>
+            <p className="text-xs text-fg-subtle mt-0.5">
               AI-powered responses based on your session data
             </p>
           </div>
@@ -354,14 +344,14 @@ export function ClientAssistant() {
           title="AI Assistant"
           subtitle="Personalized coaching based on your sessions"
           iconBg="bg-violet-400/10"
-          iconColor="text-violet-400"
+          iconColor="text-violet-700 dark:text-violet-400"
         />
         <div className="px-6 pb-6 flex flex-col gap-8">
           <div className="rounded-2xl bg-gradient-to-br from-violet-500/15 to-purple-500/10 border border-violet-500/25 px-6 py-5">
-            <p className="text-base font-semibold text-slate-100 mb-1">
+            <p className="text-base font-semibold text-fg mb-1">
               Unlock your personal AI typing coach
             </p>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-fg-muted">
               Premium members get weekly AI-generated insights tailored to their
               actual sessions — speed coaching, accuracy analysis, practice
               plans, and more.
@@ -371,7 +361,7 @@ export function ClientAssistant() {
             {features.map((f) => (
               <div
                 key={f.title}
-                className="rounded-xl bg-slate-800/50 border border-slate-700/50 p-4 flex gap-4 items-start"
+                className="rounded-xl bg-surface border border-line p-4 flex gap-4 items-start"
               >
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${f.iconBg}`}
@@ -382,10 +372,10 @@ export function ClientAssistant() {
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-100 mb-0.5">
+                  <p className="text-sm font-semibold text-fg mb-0.5">
                     {f.title}
                   </p>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className="text-xs text-fg-muted leading-relaxed">
                     {f.description}
                   </p>
                 </div>

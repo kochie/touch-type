@@ -124,11 +124,11 @@ export default function ChallengeCard({
           <span className="text-sm font-medium text-gray-900 dark:text-white">
             vs {opponentLabel}
             {isMultiRound && (
-              <span className="ml-2 text-xs text-gray-500">{seriesScore}</span>
+              <span className="ml-2 text-xs text-fg-subtle">{seriesScore}</span>
             )}
           </span>
         </div>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-fg-subtle">
           {formatDistanceToNow(match.created_at)}
         </span>
       </div>
@@ -225,7 +225,7 @@ export default function ChallengeCard({
               key={r.id}
               className="grid grid-cols-[auto_1fr_1fr] items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs"
             >
-              <span className="text-gray-500 font-mono">R{r.round_number}</span>
+              <span className="text-fg-subtle font-mono">R{r.round_number}</span>
               <div
                 className={clsx(
                   "text-center",

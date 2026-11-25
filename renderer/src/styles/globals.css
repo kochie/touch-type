@@ -10,11 +10,37 @@
   /* Background opacity controlled by --bg-opacity CSS var (set by settings_hook).
      0 = fully transparent (native vibrancy/Mica shows through), 1 = solid. */
   body {
-    background-color: rgb(250 250 250 / var(--bg-opacity, 0));
+    background-color: rgb(228 228 231 / var(--bg-opacity, 0));
   }
   .dark body {
     background-color: rgb(24 24 27 / var(--bg-opacity, 0));
   }
+}
+
+/* LEGACY BRIDGE for files still using raw palette classes; new and migrated
+   code uses the tokens above and should not need this. Light theme, toned down. Pure whites glare, so the light surfaces are remapped
+   to a soft grey ramp. Light mode only (:not(.dark)); dark mode is untouched.
+   Backgrounds and borders only: the same palette shades are also used as text
+   colours in dark mode, so the palette itself is not redefined. Unlayered, so
+   it wins over Tailwind's layered utilities. To undo, delete this block and set
+   the body colour above back to rgb(250 250 250). Page ~ #e1e1e4 on screen.
+   Layers, darkest to lightest: border < page < slate-200 < gray/slate-100 < white. */
+html:not(.dark) .bg-white {
+  background-color: #eeeef0;
+}
+html:not(.dark) .bg-slate-50,
+html:not(.dark) .bg-gray-50 {
+  background-color: #e8e8eb;
+}
+html:not(.dark) .bg-slate-100,
+html:not(.dark) .bg-gray-100 {
+  background-color: #e9e9ec;
+}
+html:not(.dark) .bg-slate-200 {
+  background-color: #d9dade;
+}
+html:not(.dark) .border-slate-200 {
+  border-color: #cdd0d7;
 }
 
 @utility button-gradient {
@@ -36,6 +62,62 @@
   92%  { transform: rotate(-10deg) scale(1.1); }
   95%  { transform: rotate(6deg) scale(1.05); }
   98%  { transform: rotate(0deg) scale(1); }
+}
+
+/* Theme tokens. Colour roles are defined once per theme here, then used as
+   bg-surface, text-fg-muted, border-line, etc. Components should not pair
+   light and dark palette classes by hand (text-slate-900 dark:text-slate-100):
+   use a role, and a new theme or a contrast fix is a one-line change below.
+
+   surface       cards and panels
+   surface-soft  large, quieter containers (summary, chat)
+   inset         chips, inputs, hover fills sitting on a surface
+   inset-strong  a step stronger than inset (selected, user bubbles, code)
+   line          borders and dividers
+   fg            primary text      fg-muted  body text      fg-subtle  captions
+   bar           solid fill for the nav bar and sticky title bar; it is the
+                 on-screen page colour (body at 85% over vibrancy), measured. */
+:root {
+  --surface: rgb(255 255 255 / 0.6);
+  --surface-soft: rgb(255 255 255 / 0.5);
+  --inset: #e4e4e8;
+  --inset-strong: rgb(203 205 212 / 0.7);
+  --line: rgb(203 208 215 / 0.8);
+  --fg: #18181b;
+  --fg-muted: #52525b;
+  --fg-subtle: #71717a;
+  --bar: #e1e1e4;
+}
+.dark {
+  --surface: rgb(30 41 59 / 0.5);
+  --surface-soft: rgb(30 41 59 / 0.3);
+  --inset: rgb(51 65 85 / 0.6);
+  --inset-strong: rgb(71 85 105 / 0.5);
+  --line: rgb(51 65 85 / 0.5);
+  --fg: #f1f5f9;
+  --fg-muted: #94a3b8;
+  --fg-subtle: #64748b;
+  --bar: #1c1c1f;
+}
+
+/* Plain class, not a Tailwind utility, on purpose: the nav bar and sticky title
+   bar must never lose their fill (content scrolls under them), and a utility is
+   only emitted once Tailwind has scanned a file using it. */
+.bar-surface {
+  background-color: var(--bar);
+}
+
+/* inline: utilities read the variable at use time, so they follow .dark. */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-inset: var(--inset);
+  --color-inset-strong: var(--inset-strong);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-bar: var(--bar);
 }
 
 @theme {

@@ -22,7 +22,14 @@ export function makeKey(
   scale: number = 1,
   hideSecondary: boolean = false,
 ) {
-  const textColor = letter.isInert ? "gray" : "white";
+  // Keys are a translucent dark fill, so in light mode they sit on a mid-grey
+  // and a plain "gray" label disappears into them.
+  const isDark = document.documentElement.classList.contains("dark");
+  const textColor = letter.isInert
+    ? isDark
+      ? "gray"
+      : "rgba(255, 255, 255, 0.85)"
+    : "white";
 
   const X = x;
   const Y = y + 20;

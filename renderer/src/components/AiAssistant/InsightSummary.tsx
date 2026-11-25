@@ -40,14 +40,14 @@ export function InsightSummary({
   });
 
   return (
-    <div className="rounded-xl bg-slate-800/30 border border-slate-700/40 px-5 py-4">
-      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+    <div className="rounded-xl bg-surface-soft border border-line px-5 py-4">
+      <p className="text-sm text-fg-muted leading-relaxed whitespace-pre-wrap">
         {displayed}
         {animate && displayed.length < summary.length && (
-          <span className="animate-pulse text-violet-400">|</span>
+          <span className="animate-pulse text-violet-700 dark:text-violet-400">|</span>
         )}
       </p>
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-fg-subtle">
         Your analysis · Week of {weekLabel}
       </p>
     </div>

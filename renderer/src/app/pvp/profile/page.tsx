@@ -109,7 +109,7 @@ function ProfileContent() {
 
   if (!profile) {
     return (
-      <p className="text-sm text-slate-500 text-center py-16">
+      <p className="text-sm text-fg-subtle text-center py-16">
         Profile not found.
       </p>
     );
@@ -123,7 +123,7 @@ function ProfileContent() {
   return (
     <div className="flex flex-col items-center gap-6 py-12 px-6 max-w-sm mx-auto">
       <AvatarComposite face={profile.face} hat={profile.hat} size={96} />
-      <h1 className="text-2xl font-bold text-slate-100">{profile.displayName}</h1>
+      <h1 className="text-2xl font-bold text-fg">{profile.displayName}</h1>
 
       <div className="w-full grid grid-cols-3 gap-3">
         {[
@@ -133,12 +133,12 @@ function ProfileContent() {
         ].map(({ label, value }) => (
           <div
             key={label}
-            className="flex flex-col items-center gap-1 bg-slate-800/60 border border-slate-700/50 rounded-xl py-3"
+            className="flex flex-col items-center gap-1 bg-surface border border-line rounded-xl py-3"
           >
-            <p className="text-lg font-bold text-sky-400 tabular-nums">
+            <p className="text-lg font-bold text-sky-700 dark:text-sky-400 tabular-nums">
               {value}
             </p>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">
               {label}
             </p>
           </div>
@@ -146,11 +146,11 @@ function ProfileContent() {
       </div>
 
       {profile.bestCpm != null && (
-        <div className="w-full flex flex-col items-center gap-1 bg-slate-800/60 border border-slate-700/50 rounded-xl py-4">
-          <p className="text-3xl font-bold text-amber-400 tabular-nums">
+        <div className="w-full flex flex-col items-center gap-1 bg-surface border border-line rounded-xl py-4">
+          <p className="text-3xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
             {profile.bestCpm.toFixed(0)}
           </p>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">
             Best CPM in Arena
           </p>
         </div>
@@ -158,7 +158,7 @@ function ProfileContent() {
 
       <Link
         href="/pvp"
-        className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+        className="flex items-center gap-2 text-sm text-fg-muted hover:text-fg transition-colors"
       >
         <FontAwesomeIcon icon={faArrowLeft} className="w-3.5 h-3.5" />
         Back to Arena

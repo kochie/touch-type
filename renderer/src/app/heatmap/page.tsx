@@ -1,43 +1,70 @@
 "use client";
 
+import TimeRangeSwitch from "@/components/TimeRangeSwitch";
 import { HeatmapCanvas } from "@/components/HeatmapCanvas";
+import KeyConfusionHeatmap from "@/components/KeyConfusionHeatmap";
+import KeyConsistencyHeatmap from "@/components/KeyConsistencyHeatmap";
+import KeyFingerHeatmap from "@/components/KeyFingerHeatmap";
+import KeyFrequencyHeatmap from "@/components/KeyFrequencyHeatmap";
+import KeyImprovementHeatmap from "@/components/KeyImprovementHeatmap";
+import KeyTimingHeatmap from "@/components/KeyTimingHeatmap";
+import KeyMapSelect from "@/components/KeyMapSelect";
+import PremiumUpsell from "@/components/PremiumUpsell";
+import { isPremiumPlan, usePlan } from "@/lib/plan_hook";
 import KeyboardSelect from "@/components/KeyboardHeatmapSelect";
 import { KeyboardLayoutNames } from "@/keyboards";
 import PageHeader from "@/components/PageHeader";
 import { faChartRadar } from "@fortawesome/pro-regular-svg-icons";
 import { useState } from "react";
-import clsx from "clsx";
 
-type TimeRange = "7d" | "30d" | "all";
-
-const TIME_RANGES: { value: TimeRange; label: string }[] = [
-  { value: "7d", label: "7 days" },
-  { value: "30d", label: "30 days" },
-  { value: "all", label: "All time" },
-];
+import { KEY_MAPS, type KeyMapId } from "@/lib/key-maps";
+import { RANGE_DAYS, type TimeRange } from "@/lib/time-range";
 
 export default function HeatmapPage() {
   const [keyboard, setKeyboard] = useState(KeyboardLayoutNames.MACOS_US_QWERTY);
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
+  const [mapId, setMapId] = useState<KeyMapId>("missed");
+  const plan = usePlan();
+  const isPremium = plan ? isPremiumPlan(plan) : false;
 
   const timeRangeButtons = (
-    <div className="flex gap-1.5">
-      {TIME_RANGES.map((range) => (
-        <button
-          key={range.value}
-          onClick={() => setTimeRange(range.value)}
-          className={clsx(
-            "h-9 px-3 rounded-lg text-xs font-semibold transition-colors duration-150",
-            timeRange === range.value
-              ? "bg-rose-400/10 text-rose-400 border border-rose-400/30"
-              : "bg-slate-100 dark:bg-white/[0.04] text-slate-500 dark:text-slate-400 border border-transparent hover:text-slate-700 dark:hover:text-slate-200"
-          )}
-        >
-          {range.label}
-        </button>
-      ))}
-    </div>
+    <TimeRangeSwitch value={timeRange} onChange={setTimeRange} accent="rose" />
   );
+
+  const renderMap = () => {
+    const info = KEY_MAPS.find((m) => m.id === mapId) ?? KEY_MAPS[0];
+
+    if (info.premium) {
+      // No plan yet means still loading or signed out: show nothing rather than a teaser.
+      if (!plan) return null;
+      if (!isPremium) {
+        return (
+          <PremiumUpsell
+            source="key-map"
+            title={`${info.label} map with Premium`}
+            body={info.upsell ?? "Unlock this map with Premium."}
+          />
+        );
+      }
+    }
+
+    switch (info.id) {
+      case "missed":
+        return <HeatmapCanvas keyboardName={keyboard} timeRange={timeRange} />;
+      case "frequency":
+        return <KeyFrequencyHeatmap keyboardName={keyboard} timeRange={timeRange} />;
+      case "timing":
+        return <KeyTimingHeatmap days={RANGE_DAYS[timeRange]} keyboardName={keyboard} />;
+      case "improvement":
+        return <KeyImprovementHeatmap keyboardName={keyboard} timeRange={timeRange} />;
+      case "consistency":
+        return <KeyConsistencyHeatmap keyboardName={keyboard} timeRange={timeRange} />;
+      case "fingers":
+        return <KeyFingerHeatmap keyboardName={keyboard} timeRange={timeRange} />;
+      case "confusion":
+        return <KeyConfusionHeatmap keyboardName={keyboard} timeRange={timeRange} />;
+    }
+  };
 
   return (
     <div>
@@ -46,9 +73,12 @@ export default function HeatmapPage() {
         title="Key Map"
         subtitle="See which keys you miss most"
         iconBg="bg-rose-400/10"
-        iconColor="text-rose-400"
+        iconColor="text-rose-700 dark:text-rose-400"
         headerRight={
           <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="w-44">
+              <KeyMapSelect value={mapId} onChange={setMapId} isPremium={isPremium} />
+            </div>
             <div className="w-48">
               <KeyboardSelect
                 selectedKeyboardName={keyboard}
@@ -62,9 +92,7 @@ export default function HeatmapPage() {
         }
       />
 
-      <div className="px-6">
-        <HeatmapCanvas keyboardName={keyboard} timeRange={timeRange} />
-      </div>
+      <div className="px-6 pb-6">{renderMap()}</div>
     </div>
   );
 }

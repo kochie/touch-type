@@ -160,9 +160,9 @@ function Body({ data }: { data: Distribution }) {
             />
             <ReferenceLine
               x={youX}
-              stroke="#f8fafc"
+              stroke="var(--fg)"
               strokeWidth={2}
-              label={{ value: "you", position: "top", fill: "#f8fafc", fontSize: 11 }}
+              label={{ value: "you", position: "top", fill: "var(--fg)", fontSize: 11 }}
             />
           </AreaChart>
         </ResponsiveContainer>

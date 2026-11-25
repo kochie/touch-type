@@ -65,7 +65,7 @@ function ChallengePageInner() {
       <div className="flex items-center justify-center min-h-[50vh]">
         <FontAwesomeIcon
           icon={faSpinner}
-          className="w-8 h-8 text-gray-400 animate-spin"
+          className="w-8 h-8 text-fg-muted animate-spin"
         />
       </div>
     );
@@ -185,7 +185,7 @@ function ChallengePageInner() {
                 key={r.id}
                 className="grid grid-cols-[auto_1fr_1fr] items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl"
               >
-                <span className="text-sm font-mono text-gray-500">
+                <span className="text-sm font-mono text-fg-subtle">
                   R{r.round_number}
                 </span>
                 <div
@@ -199,9 +199,9 @@ function ChallengePageInner() {
                   </p>
                   <p className="text-xl font-bold">
                     {r.creator_cpm !== null ? Math.round(r.creator_cpm) : "—"}{" "}
-                    <span className="text-xs font-normal text-gray-500">CPM</span>
+                    <span className="text-xs font-normal text-fg-subtle">CPM</span>
                   </p>
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-[10px] text-fg-subtle">
                     {r.creator_correct ?? 0}/
                     {(r.creator_correct ?? 0) + (r.creator_incorrect ?? 0)} correct
                   </p>
@@ -217,9 +217,9 @@ function ChallengePageInner() {
                   </p>
                   <p className="text-xl font-bold">
                     {r.joiner_cpm !== null ? Math.round(r.joiner_cpm) : "—"}{" "}
-                    <span className="text-xs font-normal text-gray-500">CPM</span>
+                    <span className="text-xs font-normal text-fg-subtle">CPM</span>
                   </p>
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-[10px] text-fg-subtle">
                     {r.joiner_correct ?? 0}/
                     {(r.joiner_correct ?? 0) + (r.joiner_incorrect ?? 0)} correct
                   </p>
@@ -284,7 +284,7 @@ function ChallengePageInner() {
                 key={r.id}
                 className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-900/50 text-xs"
               >
-                <span className="font-mono text-gray-500">
+                <span className="font-mono text-fg-subtle">
                   Round {r.round_number}
                 </span>
                 <span className="text-gray-600 dark:text-gray-400">
@@ -390,7 +390,7 @@ export default function ChallengePage() {
         <div className="flex items-center justify-center min-h-[50vh]">
           <FontAwesomeIcon
             icon={faSpinner}
-            className="w-8 h-8 text-gray-400 animate-spin"
+            className="w-8 h-8 text-fg-muted animate-spin"
           />
         </div>
       }

@@ -88,14 +88,14 @@ function ArenaMatchRow({ match, userId, usernameMap, avatarMap }: ArenaMatchRowP
     const cpmStr = myBest != null ? ` · ${myBest.toFixed(0)} CPM` : "";
     statusLabel = isWinner ? `WON ${myWins}-${oppWins}${cpmStr}` : `LOST ${myWins}-${oppWins}${cpmStr}`;
     statusClass = isWinner
-      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
-      : "bg-slate-700/60 text-slate-400 border border-slate-600/40";
+      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25"
+      : "bg-inset text-fg-muted border border-slate-600/40";
   } else if (hasUnracedRound) {
     statusLabel = match.best_of > 1 ? `YOUR TURN · ${myWins}-${oppWins}` : "YOUR TURN";
-    statusClass = "bg-sky-500/15 text-sky-400 border border-sky-500/25";
+    statusClass = "bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/25";
   } else {
     statusLabel = match.best_of > 1 ? `WAITING · ${myWins}-${oppWins}` : "WAITING";
-    statusClass = "bg-amber-500/15 text-amber-400 border border-amber-500/25";
+    statusClass = "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/25";
   }
 
   const wordCount = match.rounds[0]?.word_set.length ?? 0;
@@ -116,12 +116,12 @@ function ArenaMatchRow({ match, userId, usernameMap, avatarMap }: ArenaMatchRowP
   return (
     <button
       onClick={handleClick}
-      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:bg-slate-700/50 hover:border-slate-600/50 transition-all duration-150 text-left"
+      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-surface border border-line hover:bg-inset hover:border-slate-600/50 transition-all duration-150 text-left"
     >
       <AvatarComposite face={opponentAvatar.face} hat={opponentAvatar.hat} size={40} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-100 truncate">{opponentName}</p>
-        <p className="text-xs text-slate-500">{wordCount} words · {langLabel} · {levelLabel} · {formatLabel}</p>
+        <p className="text-sm font-semibold text-fg truncate">{opponentName}</p>
+        <p className="text-xs text-fg-subtle">{wordCount} words · {langLabel} · {levelLabel} · {formatLabel}</p>
       </div>
       <span className={clsx("flex-shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full", statusClass)}>
         {statusLabel}
@@ -171,19 +171,19 @@ function JoinByCodeInput() {
           autoCorrect="off"
           autoCapitalize="characters"
           spellCheck={false}
-          className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-800/40 border border-slate-700/60 text-sm text-slate-200 placeholder:text-slate-500 font-mono focus:outline-none focus:border-sky-500/60"
+          className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-800/40 border border-line text-sm text-fg placeholder:text-slate-500 font-mono focus:outline-none focus:border-sky-500/60"
         />
         <button
           type="submit"
           disabled={!canSubmit}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/15 border border-sky-500/40 text-sm font-semibold text-sky-300 hover:bg-sky-500/25 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/15 border border-sky-500/40 text-sm font-semibold text-sky-700 dark:text-sky-300 hover:bg-sky-500/25 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <FontAwesomeIcon icon={faRightToBracket} className="w-3.5 h-3.5" />
           Join
         </button>
       </div>
       {error && (
-        <p className="text-xs text-red-400 px-1">{error}</p>
+        <p className="text-xs text-red-700 dark:text-red-400 px-1">{error}</p>
       )}
     </form>
   );
@@ -199,17 +199,17 @@ interface RecordCardProps {
 function RecordCard({ wins, played }: RecordCardProps) {
   const rate = played > 0 ? wins / played : 0;
   return (
-    <div className="rounded-xl bg-slate-800/50 border border-slate-700/50 px-5 py-4 flex flex-col gap-2">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Your Record</p>
-      <p className="text-4xl font-bold text-sky-400 tabular-nums">{wins}</p>
-      <p className="text-sm text-slate-400">wins / {played} played</p>
-      <div className="w-full h-1.5 rounded-full bg-slate-700 overflow-hidden">
+    <div className="rounded-xl bg-surface border border-line px-5 py-4 flex flex-col gap-2">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">Your Record</p>
+      <p className="text-4xl font-bold text-sky-700 dark:text-sky-400 tabular-nums">{wins}</p>
+      <p className="text-sm text-fg-muted">wins / {played} played</p>
+      <div className="w-full h-1.5 rounded-full bg-inset overflow-hidden">
         <div
           className="h-full bg-sky-400 rounded-full transition-all duration-500"
           style={{ width: `${rate * 100}%` }}
         />
       </div>
-      <p className="text-xs text-slate-500">{played > 0 ? `${(rate * 100).toFixed(0)}% win rate` : "No games yet"}</p>
+      <p className="text-xs text-fg-subtle">{played > 0 ? `${(rate * 100).toFixed(0)}% win rate` : "No games yet"}</p>
     </div>
   );
 }
@@ -222,18 +222,18 @@ interface BestCpmCardProps {
 
 function BestCpmCard({ cpm, opponentName, at }: BestCpmCardProps) {
   return (
-    <div className="rounded-xl bg-slate-800/50 border border-slate-700/50 px-5 py-4 flex flex-col gap-2">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Best CPM in Arena</p>
+    <div className="rounded-xl bg-surface border border-line px-5 py-4 flex flex-col gap-2">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">Best CPM in Arena</p>
       {cpm != null ? (
         <>
-          <p className="text-4xl font-bold text-amber-400 tabular-nums">{cpm.toFixed(0)}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-4xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">{cpm.toFixed(0)}</p>
+          <p className="text-xs text-fg-subtle">
             {opponentName ? `vs ${opponentName}` : ""}
             {at ? ` · ${formatDistanceToNow(at)}` : ""}
           </p>
         </>
       ) : (
-        <p className="text-sm text-slate-500">Complete a game to set a record</p>
+        <p className="text-sm text-fg-subtle">Complete a game to set a record</p>
       )}
     </div>
   );
@@ -388,10 +388,10 @@ export default function PvPHub() {
   if (!isUserLoading && !user) {
     return (
       <div className="flex flex-col h-full items-center justify-center gap-4 text-center py-20">
-        <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center">
-          <FontAwesomeIcon icon={faUserSlash} className="w-8 h-8 text-slate-500" />
+        <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center">
+          <FontAwesomeIcon icon={faUserSlash} className="w-8 h-8 text-fg-subtle" />
         </div>
-        <p className="text-lg font-semibold text-slate-300">Sign in to play Arena</p>
+        <p className="text-lg font-semibold text-fg-muted">Sign in to play Arena</p>
       </div>
     );
   }
@@ -409,7 +409,7 @@ export default function PvPHub() {
         title="Arena"
         subtitle="Challenge friends and climb the leaderboard"
         iconBg="bg-amber-400/10"
-        iconColor="text-amber-400"
+        iconColor="text-amber-700 dark:text-amber-400"
       />
 
       <div className="px-6 pb-8">
@@ -426,8 +426,8 @@ export default function PvPHub() {
               className={clsx(
                 "flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-150",
                 activeTab === tab.id
-                  ? "bg-sky-500/15 border border-sky-500/40 text-sky-400"
-                  : "border border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600/60",
+                  ? "bg-sky-500/15 border border-sky-500/40 text-sky-700 dark:text-sky-400"
+                  : "border border-line text-fg-muted hover:text-fg hover:border-slate-600/60",
               )}
             >
               {tab.label}
@@ -442,14 +442,14 @@ export default function PvPHub() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <FontAwesomeIcon icon={faSpinnerThird} spin className="w-8 h-8 text-slate-500" />
+            <FontAwesomeIcon icon={faSpinnerThird} spin className="w-8 h-8 text-fg-subtle" />
           </div>
         ) : activeTab === "challenges" ? (
           <div className="flex gap-5 items-start">
             {/* Left: game list */}
             <div className="flex flex-col gap-2 flex-1 min-w-0">
               {challengeMatches.length > 0 && (
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">Active</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle mb-1">Active</p>
               )}
               {challengeMatches.map(m => (
                 <ArenaMatchRow key={m.id} match={m} userId={user!.id} usernameMap={usernameMap} avatarMap={avatarMap} />
@@ -457,13 +457,13 @@ export default function PvPHub() {
               {challengeMatches.length === 0 && (
                 <div className="py-8 text-center">
                   <FontAwesomeIcon icon={faSwords} className="w-8 h-8 text-slate-600 mb-3" />
-                  <p className="text-sm text-slate-400">No active challenges</p>
+                  <p className="text-sm text-fg-muted">No active challenges</p>
                   <p className="text-xs text-slate-600 mt-1">Create one to get started</p>
                 </div>
               )}
               <button
                 onClick={() => setShowNewChallenge(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 mt-2 rounded-xl border border-dashed border-slate-700/60 text-sm text-slate-500 hover:text-slate-300 hover:border-slate-600 transition-colors duration-150 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 mt-2 rounded-xl border border-dashed border-line text-sm text-fg-subtle hover:text-fg hover:border-slate-600 transition-colors duration-150 cursor-pointer"
               >
                 <FontAwesomeIcon icon={faPlus} className="w-3.5 h-3.5" />
                 New Challenge
@@ -475,7 +475,7 @@ export default function PvPHub() {
             {/* Right: avatar + stat cards */}
             <div className="w-64 flex-shrink-0 flex flex-col gap-3">
               {user && (
-                <div className="rounded-xl bg-slate-800/60 border border-slate-700/60 overflow-hidden">
+                <div className="rounded-xl bg-surface border border-line overflow-hidden">
                   {/* Avatar row */}
                   <button
                     onClick={() => setPickerOpen((o) => !o)}
@@ -483,20 +483,20 @@ export default function PvPHub() {
                   >
                     <AvatarComposite face={myFace} hat={myHat} size={44} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-slate-400">Your avatar</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Tap to customise</p>
+                      <p className="text-xs text-fg-muted">Your avatar</p>
+                      <p className="text-[11px] text-fg-subtle mt-0.5">Tap to customise</p>
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400 bg-slate-700/60 border border-slate-600/60 rounded-full px-2 py-0.5 flex items-center gap-1 flex-shrink-0">
+                    <span className="text-[10px] font-semibold text-fg-muted bg-inset border border-slate-600/60 rounded-full px-2 py-0.5 flex items-center gap-1 flex-shrink-0">
                       <FontAwesomeIcon icon={faPencil} className="w-2 h-2" /> Edit
                     </span>
                   </button>
 
                   {/* Divider */}
-                  <div className="h-px bg-slate-700/60 mx-4" />
+                  <div className="h-px bg-inset mx-4" />
 
                   {/* Username row — always visible */}
                   <div className="px-4 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1.5">Username</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle mb-1.5">Username</p>
                     {editingUsername ? (
                       <div className="flex items-center gap-2">
                         <input
@@ -508,21 +508,21 @@ export default function PvPHub() {
                             if (e.key === "Escape") setEditingUsername(false);
                           }}
                           maxLength={32}
-                          className="flex-1 min-w-0 bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                          className="flex-1 min-w-0 bg-slate-900 border border-line rounded-lg px-2.5 py-1.5 text-sm text-fg placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
                           placeholder="Enter username…"
                         />
-                        <button onClick={handleUsernameSave} className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 px-2 py-1 rounded transition-colors">Save</button>
-                        <button onClick={() => setEditingUsername(false)} className="text-xs text-slate-500 hover:text-slate-300 px-1 py-1 rounded transition-colors">✕</button>
+                        <button onClick={handleUsernameSave} className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 px-2 py-1 rounded transition-colors">Save</button>
+                        <button onClick={() => setEditingUsername(false)} className="text-xs text-fg-subtle hover:text-fg px-1 py-1 rounded transition-colors">✕</button>
                       </div>
                     ) : (
                       <button
                         onClick={() => { setDraftUsername(myUsername); setEditingUsername(true); }}
                         className="w-full flex items-center justify-between gap-2 group"
                       >
-                        <span className="text-sm font-semibold text-slate-200 truncate">
-                          {myUsername || <span className="text-slate-500 font-normal italic">No username set</span>}
+                        <span className="text-sm font-semibold text-fg truncate">
+                          {myUsername || <span className="text-fg-subtle font-normal italic">No username set</span>}
                         </span>
-                        <span className="text-[10px] font-semibold text-violet-400 bg-violet-500/15 border border-violet-500/25 rounded-full px-2 py-0.5 flex items-center gap-1 flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
+                        <span className="text-[10px] font-semibold text-violet-700 dark:text-violet-400 bg-violet-500/15 border border-violet-500/25 rounded-full px-2 py-0.5 flex items-center gap-1 flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
                           <FontAwesomeIcon icon={faPencil} className="w-2 h-2" /> Change
                         </span>
                       </button>
@@ -530,10 +530,10 @@ export default function PvPHub() {
                   </div>
 
                   {/* View profile link */}
-                  <div className="h-px bg-slate-700/60 mx-4" />
+                  <div className="h-px bg-inset mx-4" />
                   <Link
                     href="/pvp/profile"
-                    className="flex items-center justify-center px-4 py-2 text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+                    className="flex items-center justify-center px-4 py-2 text-[11px] text-fg-subtle hover:text-fg transition-colors"
                   >
                     View full profile →
                   </Link>
@@ -557,7 +557,7 @@ export default function PvPHub() {
             ) : (
               <div className="py-12 text-center">
                 <FontAwesomeIcon icon={faHistory} className="w-8 h-8 text-slate-600 mb-3" />
-                <p className="text-sm text-slate-400">No completed matches yet</p>
+                <p className="text-sm text-fg-muted">No completed matches yet</p>
               </div>
             )}
           </div>
@@ -572,7 +572,7 @@ export default function PvPHub() {
       <Modal
         open={showNewChallenge}
         onClose={() => setShowNewChallenge(false)}
-        panelClassName="relative transform rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl transition-all my-8"
+        panelClassName="relative transform rounded-2xl bg-slate-900 border border-line shadow-2xl transition-all my-8"
       >
         <NewChallengePrompt
           onDone={() => setShowNewChallenge(false)}
@@ -584,7 +584,7 @@ export default function PvPHub() {
       <Modal
         open={pickerOpen && !!user}
         onClose={() => setPickerOpen(false)}
-        panelClassName="relative transform rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl transition-all my-8 overflow-y-auto max-h-[90vh]"
+        panelClassName="relative transform rounded-2xl bg-slate-950 border border-line shadow-2xl transition-all my-8 overflow-y-auto max-h-[90vh]"
       >
         {user && (
           <AvatarPicker

@@ -52,8 +52,8 @@ function NavItem({ href, icon, label, isActive, badge, hidden }: NavItemProps) {
         className={clsx(
           "relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors duration-150",
           isActive
-            ? "text-sky-400 bg-sky-400/10"
-            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
+            ? "text-sky-700 dark:text-sky-400 bg-sky-500/15 dark:bg-sky-400/10"
+            : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
         )}
       >
         <FontAwesomeIcon icon={icon} className="w-4 h-4" />
@@ -145,10 +145,10 @@ export default function Menu({
               className={clsx(
                 "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold tabular-nums transition-colors duration-150",
                 currentStreak === 0
-                  ? "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                  ? "text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
                   : isAtRisk
-                  ? "text-orange-500 hover:bg-orange-500/10"
-                  : "text-orange-400 hover:bg-orange-400/10"
+                  ? "text-orange-600 dark:text-orange-500 hover:bg-orange-500/10"
+                  : "text-orange-600 dark:text-orange-400 hover:bg-orange-400/10"
               )}
             >
               <FontAwesomeIcon
@@ -182,7 +182,7 @@ export default function Menu({
           <button
             onClick={handleWhatsNew}
             title="What's New"
-            className="flex items-center px-2.5 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150"
+            className="flex items-center px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150"
           >
             <FontAwesomeIcon icon={faSparkles} className="w-4 h-4" />
           </button>
@@ -192,8 +192,8 @@ export default function Menu({
               className={clsx(
                 "flex items-center px-2.5 py-1.5 rounded-lg transition-colors duration-150",
                 pathname === "/settings"
-                  ? "text-sky-400 bg-sky-400/10"
-                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
+                  ? "text-sky-700 dark:text-sky-400 bg-sky-500/15 dark:bg-sky-400/10"
+                  : "text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5"
               )}
             >
               <FontAwesomeIcon icon={faGear} className="w-4 h-4" />
@@ -207,9 +207,9 @@ export default function Menu({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {drillInfo ? (
             <div className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 select-none">
-              <FontAwesomeIcon icon={faDumbbell} className="w-3 h-3 text-violet-400" />
-              <span className="text-xs font-semibold text-violet-300">AI Drill</span>
-              <span className="opacity-40 text-violet-400">•</span>
+              <FontAwesomeIcon icon={faDumbbell} className="w-3 h-3 text-violet-700 dark:text-violet-400" />
+              <span className="text-xs font-semibold text-violet-700 dark:text-violet-300">AI Drill</span>
+              <span className="opacity-40 text-violet-700 dark:text-violet-400">•</span>
               <span className="text-xs text-violet-300/80">
                 Focusing on{" "}
                 {drillInfo.focus_keys.map(k => k.toUpperCase()).join(", ")}
@@ -217,7 +217,7 @@ export default function Menu({
               <button
                 onClick={() => setWords(null)}
                 title="Exit drill"
-                className="ml-1 flex items-center justify-center w-4 h-4 rounded-full text-violet-400/60 hover:text-violet-300 hover:bg-violet-400/10 transition-colors duration-150 cursor-pointer"
+                className="ml-1 flex items-center justify-center w-4 h-4 rounded-full text-violet-400/60 hover:text-violet-900 dark:hover:text-violet-300 hover:bg-violet-400/10 transition-colors duration-150 cursor-pointer"
               >
                 <FontAwesomeIcon icon={faXmark} className="w-2.5 h-2.5" />
               </button>
@@ -225,7 +225,7 @@ export default function Menu({
           ) : (
             <button
               onClick={handlePracticeSettings}
-              className="pointer-events-auto flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/[0.05] transition-colors duration-150 select-none"
+              className="pointer-events-auto flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/[0.05] transition-colors duration-150 select-none"
             >
               <span>Level {hydratedSettings.levelName}</span>
               <span className="opacity-40">•</span>

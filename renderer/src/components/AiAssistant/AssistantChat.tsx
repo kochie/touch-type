@@ -32,9 +32,9 @@ const STATIC_SUGGESTIONS = [
 ];
 
 function keyBadgeColor(errorRate: number) {
-  if (errorRate > 0.15) return "bg-red-800/60 text-red-300 border border-red-700/50";
-  if (errorRate > 0.08) return "bg-amber-800/60 text-amber-300 border border-amber-700/50";
-  return "bg-slate-700/60 text-slate-300 border border-slate-600/50";
+  if (errorRate > 0.15) return "bg-red-100 text-red-800 border border-red-300 dark:bg-red-800/60 dark:text-red-300 dark:border-red-700/50";
+  if (errorRate > 0.08) return "bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-800/60 dark:text-amber-300 dark:border-amber-700/50";
+  return "bg-inset text-fg-muted border border-line";
 }
 
 function buildContext(insight: AiInsight) {
@@ -141,24 +141,24 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
         <div ref={scrollRef} className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1">
           {messages.map((msg, i) => (
             <div key={i} className={`flex flex-col gap-0.5 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mx-1">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle mx-1">
                 {msg.role === "assistant" ? "Assistant" : "You"}
               </span>
               <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                 msg.role === "assistant"
-                  ? "bg-slate-700/60 border border-slate-600/40 text-slate-200"
-                  : "bg-slate-600/50 border border-slate-500/30 text-slate-100"
+                  ? "bg-inset border border-line text-fg"
+                  : "bg-inset-strong border border-line text-fg"
               }`}>
                 {msg.role === "assistant" ? (
                   <ReactMarkdown
                     components={{
                       p: ({ children }) => <p className="mb-1.5 last:mb-0">{children}</p>,
-                      strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                      em: ({ children }) => <em className="italic text-slate-300">{children}</em>,
-                      code: ({ children }) => <code className="font-mono text-xs bg-slate-600/60 rounded px-1 py-0.5 text-violet-300">{children}</code>,
+                      strong: ({ children }) => <strong className="font-semibold text-fg">{children}</strong>,
+                      em: ({ children }) => <em className="italic text-fg-muted">{children}</em>,
+                      code: ({ children }) => <code className="font-mono text-xs bg-inset-strong rounded px-1 py-0.5 text-violet-700 dark:text-violet-300">{children}</code>,
                       ul: ({ children }) => <ul className="list-disc list-inside mb-1.5 space-y-0.5">{children}</ul>,
                       ol: ({ children }) => <ol className="list-decimal list-inside mb-1.5 space-y-0.5">{children}</ol>,
-                      li: ({ children }) => <li className="text-slate-200">{children}</li>,
+                      li: ({ children }) => <li className="text-fg">{children}</li>,
                     }}
                   >
                     {msg.content}
@@ -172,8 +172,8 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
 
           {loading && (
             <div className="flex items-start gap-2">
-              <div className="rounded-2xl px-4 py-2.5 bg-slate-700/60 border border-slate-600/40">
-                <FontAwesomeIcon icon={faSpinnerThird} spin className="w-3.5 h-3.5 text-violet-400" />
+              <div className="rounded-2xl px-4 py-2.5 bg-inset border border-line">
+                <FontAwesomeIcon icon={faSpinnerThird} spin className="w-3.5 h-3.5 text-violet-700 dark:text-violet-400" />
               </div>
             </div>
           )}
@@ -186,7 +186,7 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
               <button
                 key={s}
                 onClick={() => handleSuggestion(s)}
-                className="text-left text-xs text-sky-300 bg-sky-400/5 border border-sky-400/20 rounded-lg px-3 py-1.5 hover:bg-sky-400/10 hover:border-sky-400/40 transition-all duration-150 cursor-pointer"
+                className="text-left text-xs text-sky-700 dark:text-sky-300 bg-sky-400/5 border border-sky-600/30 dark:border-sky-400/20 rounded-lg px-3 py-1.5 hover:bg-sky-400/10 hover:border-sky-400/40 transition-all duration-150 cursor-pointer"
               >
                 {s}
               </button>
@@ -196,10 +196,10 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
 
         {error && (
           <div className="flex items-center justify-between">
-            <p className="text-xs text-red-400">{error}</p>
+            <p className="text-xs text-red-700 dark:text-red-400">{error}</p>
             <button
               onClick={() => callChat(messages)}
-              className="text-xs text-violet-400 hover:text-violet-300 cursor-pointer"
+              className="text-xs text-violet-700 dark:text-violet-400 hover:text-violet-900 dark:hover:text-violet-300 cursor-pointer"
             >
               Retry
             </button>
@@ -207,11 +207,11 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
         )}
 
         {/* Custom drill section */}
-        <div className="border-t border-slate-700/40 pt-3">
+        <div className="border-t border-line pt-3">
           {!drill && !drillLoading && (
             <button
               onClick={generateDrill}
-              className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-violet-300 bg-violet-400/5 border border-violet-400/20 rounded-xl px-4 py-2.5 hover:bg-violet-400/10 hover:border-violet-400/40 transition-all duration-150 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-violet-700 dark:text-violet-300 bg-violet-400/5 border border-violet-400/20 rounded-xl px-4 py-2.5 hover:bg-violet-400/10 hover:border-violet-400/40 transition-all duration-150 cursor-pointer"
             >
               <FontAwesomeIcon icon={faDumbbell} className="w-3.5 h-3.5" />
               Generate practice drill
@@ -219,31 +219,31 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
           )}
 
           {drillLoading && (
-            <div className="flex items-center justify-center gap-2 py-2 text-sm text-slate-400">
-              <FontAwesomeIcon icon={faSpinnerThird} spin className="w-3.5 h-3.5 text-violet-400" />
+            <div className="flex items-center justify-center gap-2 py-2 text-sm text-fg-muted">
+              <FontAwesomeIcon icon={faSpinnerThird} spin className="w-3.5 h-3.5 text-violet-700 dark:text-violet-400" />
               Analysing your keystrokes…
             </div>
           )}
 
           {drillError && (
             <div className="flex items-center justify-between">
-              <p className="text-xs text-red-400">{drillError}</p>
-              <button onClick={generateDrill} className="text-xs text-violet-400 hover:text-violet-300 cursor-pointer">Retry</button>
+              <p className="text-xs text-red-700 dark:text-red-400">{drillError}</p>
+              <button onClick={generateDrill} className="text-xs text-violet-700 dark:text-violet-400 hover:text-violet-900 dark:hover:text-violet-300 cursor-pointer">Retry</button>
             </div>
           )}
 
           {drill && (
             <div className="flex flex-col gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Your drill is ready</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">Your drill is ready</p>
               <div className="flex gap-1.5 flex-wrap">
                 {drill.focus_keys.map(k => (
-                  <span key={k} className="px-2 py-0.5 rounded-lg text-xs font-bold bg-violet-800/50 text-violet-300 border border-violet-700/40">
+                  <span key={k} className="px-2 py-0.5 rounded-lg text-xs font-bold bg-violet-800/50 text-violet-700 dark:text-violet-300 border border-violet-700/40">
                     {k.toUpperCase()}
                   </span>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">{drill.rationale}</p>
-              <p className="text-[11px] text-slate-500">{drill.words.length} words generated</p>
+              <p className="text-[11px] text-fg-muted leading-relaxed">{drill.rationale}</p>
+              <p className="text-[11px] text-fg-subtle">{drill.words.length} words generated</p>
               <button
                 onClick={startDrill}
                 className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-900 bg-violet-400 hover:bg-violet-300 rounded-xl px-4 py-2 transition-all duration-150 cursor-pointer"
@@ -253,7 +253,7 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
               </button>
               <button
                 onClick={() => setDrill(null)}
-                className="text-xs text-slate-500 hover:text-slate-400 text-center cursor-pointer"
+                className="text-xs text-fg-subtle hover:text-fg text-center cursor-pointer"
               >
                 Regenerate
               </button>
@@ -263,15 +263,15 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
       </div>
 
       {/* Right sidebar */}
-      <div className="w-48 flex-shrink-0 border-l border-slate-700/40 p-4 flex flex-col gap-3">
+      <div className="w-48 flex-shrink-0 border-l border-line p-4 flex flex-col gap-3">
         {bestCard && (
           <div className="flex flex-col gap-1">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">This Week</p>
-            <p className="text-xl font-bold text-slate-100">{bestCard.metric}</p>
-            <p className="text-[11px] text-slate-400">{bestCard.title.toLowerCase()}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">This Week</p>
+            <p className="text-xl font-bold text-fg">{bestCard.metric}</p>
+            <p className="text-[11px] text-fg-muted">{bestCard.title.toLowerCase()}</p>
             {bestCard.delta && (
               <span className={`mt-0.5 text-[11px] font-semibold self-start px-1.5 py-0.5 rounded-full ${
-                bestCard.delta.startsWith("+") ? "bg-green-400/10 text-green-400" : "bg-red-400/10 text-red-400"
+                bestCard.delta.startsWith("+") ? "bg-green-400/10 text-green-700 dark:text-green-400" : "bg-red-400/10 text-red-700 dark:text-red-400"
               }`}>
                 {bestCard.delta}
               </span>
@@ -281,7 +281,7 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
 
         {focusKeys.length > 0 && (
           <div className="flex flex-col gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Focus Keys</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">Focus Keys</p>
             <div className="flex gap-1.5 flex-wrap">
               {focusKeys.map(k => (
                 <span
@@ -292,18 +292,18 @@ export function AssistantChat({ insight }: { insight: AiInsight }) {
                 </span>
               ))}
             </div>
-            <p className="text-[11px] text-slate-500">High error rate</p>
+            <p className="text-[11px] text-fg-subtle">High error rate</p>
           </div>
         )}
 
         {recommendations.length > 0 && (
           <div className="flex flex-col gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Recommendations</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">Recommendations</p>
             <div className="flex flex-col gap-2">
               {recommendations.map((r, i) => (
                 <div key={i} className="flex items-start gap-1.5">
                   <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${r.color}`} />
-                  <p className="text-[11px] text-slate-300 leading-relaxed">{r.text}</p>
+                  <p className="text-[11px] text-fg-muted leading-relaxed">{r.text}</p>
                 </div>
               ))}
             </div>

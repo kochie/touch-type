@@ -102,7 +102,7 @@ function KeyTimingChart({
 
 export function ChartMessage({ text }: { text: string }) {
   return (
-    <div className="h-64 flex items-center justify-center text-sm text-slate-500">
+    <div className="h-64 flex items-center justify-center text-sm text-fg-subtle">
       {text}
     </div>
   );

@@ -92,7 +92,7 @@ function InvitePageInner() {
       <div className="flex items-center justify-center min-h-[50vh]">
         <FontAwesomeIcon
           icon={faSpinner}
-          className="w-8 h-8 text-gray-400 animate-spin"
+          className="w-8 h-8 text-fg-muted animate-spin"
         />
       </div>
     );
@@ -167,7 +167,7 @@ function InvitePageInner() {
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           <FontAwesomeIcon
             icon={faExclamationTriangle}
-            className="w-8 h-8 text-gray-500"
+            className="w-8 h-8 text-fg-subtle"
           />
         </div>
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -194,7 +194,7 @@ function InvitePageInner() {
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           <FontAwesomeIcon
             icon={faExclamationTriangle}
-            className="w-8 h-8 text-gray-500"
+            className="w-8 h-8 text-fg-subtle"
           />
         </div>
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -322,7 +322,7 @@ export default function InvitePage() {
         <div className="flex items-center justify-center min-h-[50vh]">
           <FontAwesomeIcon
             icon={faSpinner}
-            className="w-8 h-8 text-gray-400 animate-spin"
+            className="w-8 h-8 text-fg-muted animate-spin"
           />
         </div>
       }

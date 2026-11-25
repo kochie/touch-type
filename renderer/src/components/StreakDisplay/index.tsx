@@ -88,10 +88,10 @@ export default function StreakDisplay({
             sizes.icon,
             "transition-colors duration-300",
             currentStreak === 0
-              ? "text-gray-400 dark:text-gray-500"
+              ? "text-gray-600 dark:text-gray-500"
               : isAtRisk
-              ? "text-orange-400 dark:text-orange-500"
-              : "text-orange-500 dark:text-orange-400"
+              ? "text-orange-600 dark:text-orange-500"
+              : "text-orange-600 dark:text-orange-400"
           )}
         />
         {/* Glow effect for active streak */}
@@ -111,10 +111,10 @@ export default function StreakDisplay({
           sizes.text,
           "font-semibold transition-colors duration-300",
           currentStreak === 0
-            ? "text-gray-500 dark:text-gray-400"
+            ? "text-gray-700 dark:text-gray-400"
             : isAtRisk
             ? "text-orange-600 dark:text-orange-400"
-            : "text-orange-500 dark:text-orange-400"
+            : "text-orange-600 dark:text-orange-400"
         )}
       >
         {currentStreak}
@@ -122,7 +122,7 @@ export default function StreakDisplay({
 
       {/* Days label for larger sizes */}
       {size === "lg" && (
-        <span className="text-gray-500 dark:text-gray-400 text-base font-normal">
+        <span className="text-gray-700 dark:text-gray-400 text-base font-normal">
           {currentStreak === 1 ? "day" : "days"}
         </span>
       )}
@@ -143,14 +143,14 @@ export default function StreakDisplay({
       {/* Streak freeze indicator */}
       {freezesAvailable > 0 && size !== "sm" && (
         <div className="flex items-center gap-1 ml-2">
-          <FontAwesomeIcon icon={faSnowflake} className="w-4 h-4 text-blue-400" />
-          <span className="text-xs text-blue-400">{freezesAvailable}</span>
+          <FontAwesomeIcon icon={faSnowflake} className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+          <span className="text-xs text-blue-700 dark:text-blue-400">{freezesAvailable}</span>
         </div>
       )}
 
       {/* Extended details */}
       {showDetails && (
-        <div className="flex flex-col ml-4 text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col ml-4 text-sm text-gray-700 dark:text-gray-400">
           <span>Best: {longestStreak} days</span>
           {showMilestone && nextMilestone && (
             <span className="text-xs">
@@ -186,7 +186,7 @@ export function StreakBadge({ className }: { className?: string }) {
           ? "bg-gray-100 dark:bg-gray-800 text-gray-500"
           : isAtRisk
           ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
-          : "bg-orange-100 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400",
+          : "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400",
         className
       )}
     >

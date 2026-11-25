@@ -44,14 +44,14 @@ interface UserRankRow {
 }
 
 const rankColor = (rank: number) => {
-  if (rank === 1) return "text-amber-400";
-  if (rank === 2) return "text-slate-300";
+  if (rank === 1) return "text-amber-700 dark:text-amber-400";
+  if (rank === 2) return "text-fg-muted";
   if (rank === 3) return "text-amber-700";
   return "text-slate-600";
 };
 
 const selectClass =
-  "appearance-none bg-none bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 pr-7 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer *:text-black";
+  "appearance-none bg-none bg-surface border border-line rounded-lg px-3 py-1.5 text-sm text-fg pr-7 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer *:text-black";
 
 const COLS = "grid-cols-[2rem_2.25rem_1fr_5rem_5rem_5rem_9rem]";
 
@@ -81,7 +81,7 @@ function ScoreRow({
   return (
     <div
       className={clsx(
-        `grid ${COLS} gap-2 px-4 py-3 items-center border-b border-slate-700/30 last:border-0`,
+        `grid ${COLS} gap-2 px-4 py-3 items-center border-b border-line last:border-0`,
         highlight
           ? "bg-sky-500/10 border-l-2 border-l-sky-500"
           : rank <= 3
@@ -91,18 +91,18 @@ function ScoreRow({
     >
       <span className={clsx("text-sm font-bold tabular-nums", rankColor(rank))}>{rank}</span>
       <AvatarComposite face={score.equipped_face ?? "classic"} hat={score.equipped_hat} size={28} />
-      <span className={clsx("text-sm font-medium truncate", highlight ? "text-sky-300" : "text-slate-200")}>
+      <span className={clsx("text-sm font-medium truncate", highlight ? "text-sky-700 dark:text-sky-300" : "text-fg")}>
         {score.username}
         {highlight && <span className="ml-1.5 text-[10px] text-sky-500 font-semibold uppercase tracking-wide">you</span>}
       </span>
-      <span className="text-sm font-bold tabular-nums text-sky-400 text-right">
+      <span className="text-sm font-bold tabular-nums text-sky-700 dark:text-sky-400 text-right">
         {Number.isFinite(cpm) ? cpm.toFixed(0) : "—"}
       </span>
-      <span className="text-sm tabular-nums text-slate-300 text-right">{accuracy.toFixed(1)}%</span>
-      <span className="text-xs tabular-nums text-slate-400 text-right font-mono">
+      <span className="text-sm tabular-nums text-fg-muted text-right">{accuracy.toFixed(1)}%</span>
+      <span className="text-xs tabular-nums text-fg-muted text-right font-mono">
         {formatDuration(duration, score.time >= 60_000 ? "m:ss" : "s.S")}s
       </span>
-      <span className="text-[11px] text-slate-500 text-right truncate">
+      <span className="text-[11px] text-fg-subtle text-right truncate">
         {formatDistanceToNow(score.datetime)}
       </span>
     </div>
@@ -117,8 +117,8 @@ function ModifierToggle({ label, active, onClick }: { label: string; active: boo
       className={clsx(
         "text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors cursor-pointer",
         active
-          ? "bg-sky-500/15 border-sky-500/50 text-sky-300"
-          : "bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200",
+          ? "bg-sky-500/15 border-sky-500/50 text-sky-700 dark:text-sky-300"
+          : "bg-surface border-line text-fg-muted hover:text-fg",
       )}
     >
       {label}
@@ -202,8 +202,8 @@ export default function LeaderboardTab() {
   return (
     <div className="flex flex-col gap-4">
       {/* Scoring explainer */}
-      <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 px-4 py-3 text-xs text-slate-400 leading-relaxed">
-        Ranked by <span className="text-sky-300 font-semibold">net CPM</span> — correct characters per minute.
+      <div className="rounded-lg border border-line bg-slate-800/30 px-4 py-3 text-xs text-fg-muted leading-relaxed">
+        Ranked by <span className="text-sky-700 dark:text-sky-300 font-semibold">net CPM</span> — correct characters per minute.
         Typos don&apos;t count toward speed, so accuracy is built into the rank.
         Each difficulty combination (level, keyboard, language, caps/punct/nums) has its own board;
         a higher score on the selected combination replaces your previous best.
@@ -211,27 +211,27 @@ export default function LeaderboardTab() {
 
       {/* Filters */}
       <div className="flex gap-2 items-center">
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 mr-1">Filter</span>
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-fg-subtle mr-1">Filter</span>
 
         <div className="relative">
           <select value={level} onChange={(e) => setLevel(e.target.value as Levels)} className={selectClass}>
             {levels.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
           </select>
-          <FontAwesomeIcon icon={faChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
+          <FontAwesomeIcon icon={faChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-fg-muted pointer-events-none" />
         </div>
 
         <div className="relative">
           <select value={keyboard} onChange={(e) => setKeyboard(e.target.value as KeyboardLayoutNames)} className={selectClass}>
             {keyboards.map((kb) => <option key={kb.layout} value={kb.layout}>{kb.country} {kb.name}</option>)}
           </select>
-          <FontAwesomeIcon icon={faChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
+          <FontAwesomeIcon icon={faChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-fg-muted pointer-events-none" />
         </div>
 
         <div className="relative">
           <select value={language} onChange={(e) => setLanguage(e.target.value as Languages)} className={selectClass}>
             {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
           </select>
-          <FontAwesomeIcon icon={faChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
+          <FontAwesomeIcon icon={faChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-fg-muted pointer-events-none" />
         </div>
 
         <ModifierToggle label="Caps"  active={capital}     onClick={() => setCapital(v => !v)} />
@@ -242,27 +242,27 @@ export default function LeaderboardTab() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <FontAwesomeIcon icon={faSpinnerThird} spin className="w-7 h-7 text-slate-500" />
+          <FontAwesomeIcon icon={faSpinnerThird} spin className="w-7 h-7 text-fg-subtle" />
         </div>
       ) : error ? (
-        <p className="text-sm text-red-400 py-6 text-center">{error}</p>
+        <p className="text-sm text-red-700 dark:text-red-400 py-6 text-center">{error}</p>
       ) : scores.length === 0 && !userRank ? (
         <div className="py-12 text-center">
           <FontAwesomeIcon icon={faTrophy} className="w-8 h-8 text-slate-600 mb-3" />
-          <p className="text-sm text-slate-400">No scores for these settings yet</p>
+          <p className="text-sm text-fg-muted">No scores for these settings yet</p>
           <p className="text-xs text-slate-600 mt-1">Be the first to set a record</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-700/50 overflow-hidden">
+        <div className="rounded-xl border border-line overflow-hidden">
           {/* Header */}
-          <div className={`grid ${COLS} gap-2 px-4 py-2 bg-slate-800/60 border-b border-slate-700/50`}>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">#</span>
+          <div className={`grid ${COLS} gap-2 px-4 py-2 bg-surface border-b border-line`}>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">#</span>
             <span />
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Player</span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Net CPM</span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Accuracy</span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Time</span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">When</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">Player</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle text-right">Net CPM</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle text-right">Accuracy</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle text-right">Time</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-subtle text-right">When</span>
           </div>
 
           {/* Top 50 rows */}
@@ -278,12 +278,12 @@ export default function LeaderboardTab() {
           {/* User outside top 50 */}
           {userRank && (
             <>
-              <div className="flex items-center gap-3 px-4 py-1.5 bg-slate-900/60 border-b border-slate-700/30">
-                <div className="flex-1 border-t border-dashed border-slate-700/60" />
+              <div className="flex items-center gap-3 px-4 py-1.5 bg-slate-900/60 border-b border-line">
+                <div className="flex-1 border-t border-dashed border-line" />
                 <span className="text-[10px] text-slate-600 font-semibold uppercase tracking-widest flex-shrink-0">
                   your best
                 </span>
-                <div className="flex-1 border-t border-dashed border-slate-700/60" />
+                <div className="flex-1 border-t border-dashed border-line" />
               </div>
               <ScoreRow rank={userRank.rank} score={userRank} highlight />
             </>

@@ -29,8 +29,8 @@ export default function PvPBanner() {
       className="flex items-center justify-between gap-4 px-4 py-2 mx-auto w-full max-w-[760px] rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-100"
     >
       <div className="flex items-center gap-2 min-w-0">
-        <FontAwesomeIcon icon={faSwords} className="w-4 h-4 text-sky-400 flex-shrink-0" />
-        <span className="font-semibold text-sm text-sky-300">PvP Battle</span>
+        <FontAwesomeIcon icon={faSwords} className="w-4 h-4 text-sky-700 dark:text-sky-400 flex-shrink-0" />
+        <span className="font-semibold text-sm text-sky-700 dark:text-sky-300">PvP Battle</span>
         <span className="text-xs text-sky-400/70 truncate">
           {isMultiRound
             ? `Round ${round.round_number} of ${match.best_of} · playing blind`
@@ -40,7 +40,7 @@ export default function PvPBanner() {
       <button
         data-testid="pvp-forfeit"
         onClick={handleForfeit}
-        className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-400 text-xs font-semibold transition-colors duration-150 flex-shrink-0"
+        className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-700 dark:text-red-400 text-xs font-semibold transition-colors duration-150 flex-shrink-0"
       >
         <FontAwesomeIcon icon={faFlag} className="w-3 h-3" />
         Exit Race

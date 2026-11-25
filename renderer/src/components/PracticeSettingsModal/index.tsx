@@ -19,8 +19,8 @@ const LEVELS: { value: Levels; label: string }[] = [
   { value: Levels.LEVEL_6, label: "Level 6" },
 ];
 
-const activeBtn = "bg-sky-50 text-sky-600 border border-sky-300 dark:bg-sky-400/10 dark:text-sky-400 dark:border-sky-400/30";
-const inactiveBtn = "bg-slate-100 text-slate-600 border border-transparent hover:text-slate-900 hover:bg-slate-200 dark:bg-white/[0.04] dark:text-slate-400 dark:border-transparent dark:hover:text-slate-200 dark:hover:bg-white/[0.07]";
+const activeBtn = "bg-sky-100 text-sky-800 border border-sky-500 dark:bg-sky-400/10 dark:text-sky-400 dark:border-sky-400/30";
+const inactiveBtn = "bg-slate-200 text-slate-700 border border-transparent hover:text-slate-900 hover:bg-slate-300 dark:bg-white/[0.04] dark:text-slate-400 dark:border-transparent dark:hover:text-slate-200 dark:hover:bg-white/[0.07]";
 
 interface PracticeSettingsModalProps {
   onClose: () => void;
@@ -42,7 +42,7 @@ export default function PracticeSettingsModal({ onClose }: PracticeSettingsModal
         <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Practice Settings</h2>
         <button
           onClick={onClose}
-          className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-white/[0.06] transition-colors"
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200 dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-white/[0.06] transition-colors"
         >
           <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
         </button>
@@ -53,7 +53,7 @@ export default function PracticeSettingsModal({ onClose }: PracticeSettingsModal
         <div className="flex gap-6">
           {/* Level */}
           <div className="flex-1">
-            <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3 block">
+            <label className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500 mb-3 block">
               Level
             </label>
             <div className="grid grid-cols-3 gap-1.5">
@@ -74,7 +74,7 @@ export default function PracticeSettingsModal({ onClose }: PracticeSettingsModal
 
           {/* Language */}
           <div className="flex-1">
-            <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3 block">
+            <label className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500 mb-3 block">
               Language
             </label>
             <div className="grid grid-cols-2 gap-1.5">
@@ -96,7 +96,7 @@ export default function PracticeSettingsModal({ onClose }: PracticeSettingsModal
 
         {/* Content Filters */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3 block">
+          <label className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500 mb-3 block">
             Content
           </label>
           <div className="grid grid-cols-3 gap-1.5">
@@ -124,7 +124,7 @@ export default function PracticeSettingsModal({ onClose }: PracticeSettingsModal
 
         {/* Keyboard Layout — full width, 4 columns */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3 block">
+          <label className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-500 mb-3 block">
             Keyboard Layout
           </label>
           <div className="grid grid-cols-4 gap-1.5">
@@ -148,7 +148,7 @@ export default function PracticeSettingsModal({ onClose }: PracticeSettingsModal
       <div className="px-6 pb-5">
         <button
           onClick={onClose}
-          className="w-full py-2 rounded-lg bg-sky-50 text-sky-600 border border-sky-300 text-sm font-semibold hover:bg-sky-100 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/20 dark:hover:bg-sky-500/20 transition-colors duration-150"
+          className="w-full py-2 rounded-lg bg-sky-100 text-sky-800 border border-sky-500 text-sm font-semibold hover:bg-sky-200 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/20 dark:hover:bg-sky-500/20 transition-colors duration-150"
         >
           Done
         </button>
