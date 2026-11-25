@@ -48,7 +48,6 @@
     "react-markdown": "^10.1.0"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^8.0.1",
     "@electron/notarize": "^3.1.2",
     "@electron/osx-sign": "^2.7.2",
     "@fortawesome/fontawesome-svg-core": "^7.3.1",
@@ -92,7 +91,6 @@
     "electron-log": "^5.4.3",
     "electron-next": "^3.1.5",
     "electron-serve": "^3.0.1",
-    "electron-vite": "^6.0.0",
     "esbuild": "^0.28.2",
     "eslint": "10.15.0",
     "eslint-config-next": "16.4.6",
