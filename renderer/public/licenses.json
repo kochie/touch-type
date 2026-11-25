@@ -386,7 +386,7 @@
     },
     {
       "name": "browserslist",
-      "version": "4.28.2",
+      "version": "4.29.6",
       "homepage": "https://github.com/browserslist/browserslist#readme",
       "author": "Andrey Sitnik"
     },
@@ -536,8 +536,8 @@
     },
     {
       "name": "enhanced-resolve",
-      "version": "5.21.3",
-      "homepage": "http://github.com/webpack/enhanced-resolve",
+      "version": "5.27.0",
+      "homepage": "https://github.com/webpack/enhanced-resolve#readme",
       "author": "Tobias Koppers @sokra"
     },
     {
@@ -956,7 +956,7 @@
     },
     {
       "name": "node-releases",
-      "version": "2.0.44",
+      "version": "2.0.65",
       "homepage": "https://github.com/chicoxyzzy/node-releases#readme",
       "author": "Sergey Rubanov"
     },
@@ -1178,7 +1178,7 @@
     },
     {
       "name": "update-browserslist-db",
-      "version": "1.2.3",
+      "version": "1.4.0",
       "homepage": "https://github.com/browserslist/update-db#readme",
       "author": "Andrey Sitnik"
     },
@@ -1252,7 +1252,7 @@
     },
     {
       "name": "electron-to-chromium",
-      "version": "1.5.357",
+      "version": "1.5.493",
       "homepage": "https://github.com/Kilian/electron-to-chromium#readme",
       "author": "Kilian Valkhof"
     },
@@ -1296,7 +1296,7 @@
     },
     {
       "name": "baseline-browser-mapping",
-      "version": "2.10.29",
+      "version": "2.11.39",
       "homepage": "https://github.com/web-platform-dx/baseline-browser-mapping#readme",
       "author": ""
     },
@@ -1356,7 +1356,7 @@
   "CC-BY-4.0": [
     {
       "name": "caniuse-lite",
-      "version": "1.0.30001792",
+      "version": "1.0.30001827",
       "homepage": "https://github.com/browserslist/caniuse-lite#readme",
       "author": "Ben Briggs"
     }

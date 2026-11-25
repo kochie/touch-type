@@ -42,7 +42,6 @@ export interface PushNotificationPayload {
 
 export interface LoginItemSettings {
   openAtLogin: boolean;
-  openAsHidden: boolean;
   startMinimized: boolean;
 }
 

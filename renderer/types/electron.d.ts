@@ -65,7 +65,6 @@ export interface DebugInfo {
 
 export interface LoginItemSettings {
   openAtLogin: boolean;
-  openAsHidden: boolean;
   startMinimized: boolean;
 }
 

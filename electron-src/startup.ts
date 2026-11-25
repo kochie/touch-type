@@ -73,7 +73,6 @@ export function setupStartupHandlers(): void {
     const settings = loadSettings();
     return {
       openAtLogin: loginSettings.openAtLogin,
-      openAsHidden: loginSettings.openAsHidden,
       startMinimized: settings.startMinimized,
     };
   });
@@ -85,8 +84,7 @@ export function setupStartupHandlers(): void {
       
       app.setLoginItemSettings({
         openAtLogin: enabled,
-        openAsHidden: settings.startMinimized,
-        // On macOS, pass additional args for hidden launch
+        // Hidden launch is signalled by the --hidden arg (read back in shouldStartMinimized)
         args: settings.startMinimized ? ["--hidden"] : [],
       });
       
@@ -110,7 +108,6 @@ export function setupStartupHandlers(): void {
       if (settings.launchAtStartup) {
         app.setLoginItemSettings({
           openAtLogin: true,
-          openAsHidden: enabled,
           args: enabled ? ["--hidden"] : [],
         });
       }
