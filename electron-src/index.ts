@@ -30,25 +30,29 @@ import { setupDeepLinkHandlers, setMainWindow, handleInitialDeepLink, launchedWi
 import { setupNotificationScheduler } from "./notification-scheduler";
 import { setupTray, setIsQuitting } from "./tray";
 import { setupStartupHandlers, shouldStartMinimized } from "./startup";
+import { offlineErrorCode } from "./network-errors";
 
 // import { fileURLToPath } from "node:url";
 
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = dirname(__filename);
 
+let offlineReported = false;
+
 init({
   dsn: "https://b91033c73a0f46a287bfaa7959809d12@o157203.ingest.sentry.io/6633710",
   beforeSend(event) {
-    // Drop net::ERR_* rejections originating from Electron's browser_init
-    // internals (i.e. electron-updater's background update checks). These
-    // fire every poll cycle when a user is offline and generate enormous
-    // quota noise with zero actionable signal — the error event listener
-    // already handles them via console.error.
-    const culprit = event.culprit ?? "";
-    const message = event.exception?.values?.[0]?.value ?? "";
-    if (culprit.includes("browser_init") && /^net::ERR_/.test(message)) {
-      return null;
-    }
+    // Being offline isn't a bug, so don't let it show up as an unhandled
+    // error. Report it once per session at info level, grouped into a single
+    // issue, so we can still see it happens without the quota flood the
+    // update poll used to cause.
+    const offline = offlineErrorCode(event);
+    if (!offline) return event;
+    if (offlineReported) return null;
+    offlineReported = true;
+    event.level = "info";
+    event.fingerprint = ["network-offline", offline];
+    event.tags = { ...event.tags, "network.offline": "true" };
     return event;
   },
 });
