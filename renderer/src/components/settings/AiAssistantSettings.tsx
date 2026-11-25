@@ -44,6 +44,43 @@ export function AiAssistantSettings() {
           />
         </Switch>
       </Field>
+
+      <Field as="div" className="flex items-center justify-between">
+        <span className="flex flex-grow flex-col">
+          <Label
+            as="span"
+            className="text-sm font-medium leading-6 text-slate-900 dark:text-white"
+            passive
+          >
+            Daily analysis notification
+          </Label>
+          <Description as="span" className="text-sm text-gray-500">
+            Your AI analysis refreshes daily when you've practised. Get a push
+            notification in the evening when a new one is ready. Requires
+            notifications to be turned on in Notification settings.
+          </Description>
+        </span>
+        <Switch
+          checked={settings.aiInsightsPush}
+          onChange={(enabled) =>
+            dispatch({ type: "SET_AI_INSIGHTS_PUSH", aiInsightsPush: enabled })
+          }
+          className={clsx(
+            settings.aiInsightsPush
+              ? "bg-sky-500"
+              : "bg-slate-200 dark:bg-slate-700",
+            "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:ring-offset-2 focus:ring-offset-transparent",
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className={clsx(
+              settings.aiInsightsPush ? "translate-x-5" : "translate-x-0",
+              "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+            )}
+          />
+        </Switch>
+      </Field>
     </div>
   );
 }

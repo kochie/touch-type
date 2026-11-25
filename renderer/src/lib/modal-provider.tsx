@@ -33,8 +33,10 @@ export enum ModalType {
 
 const ModalContext = createContext({
   modal: ModalType.NONE,
+  source: undefined as string | undefined,
   closeModal: () => {},
-  setModal: (modal: ModalType) => {},
+  // `source` records where a purchase modal was opened from, for metrics.
+  setModal: (modal: ModalType, source?: string) => {},
 });
 
 function Loading() {
@@ -54,7 +56,7 @@ function Loading() {
 }
 
 export function ModalController() {
-  const { modal, closeModal, setModal } = useModal();
+  const { modal, closeModal, setModal, source } = useModal();
 
   return (
     <>
@@ -109,23 +111,28 @@ export function ModalController() {
       </Modal>
 
       <Modal open={modal === ModalType.STREAK_FREEZE_PURCHASE} onClose={closeModal} panelClassName="relative transform rounded-2xl bg-slate-900 border border-white/10 shadow-2xl transition-all my-8 w-full max-w-md mx-4">
-        <StreakFreezePurchaseModal onClose={closeModal} />
+        <StreakFreezePurchaseModal onClose={closeModal} source={source} />
       </Modal>
 
       <Modal open={modal === ModalType.PREMIUM_PURCHASE} onClose={closeModal} panelClassName="relative transform rounded-2xl bg-slate-900 border border-white/10 shadow-2xl transition-all my-8 w-full max-w-md mx-4">
-        <PremiumPurchaseModal onClose={closeModal} />
+        <PremiumPurchaseModal onClose={closeModal} source={source} />
       </Modal>
     </>
   );
 }
 
 export function ModalProvider({ children }) {
-  const [modal, setModal] = useState<ModalType>(ModalType.NONE);
+  const [modal, setModalState] = useState<ModalType>(ModalType.NONE);
+  const [source, setSource] = useState<string | undefined>(undefined);
 
-  const closeModal = () => setModal(ModalType.NONE);
+  const setModal = (next: ModalType, nextSource?: string) => {
+    setSource(nextSource);
+    setModalState(next);
+  };
+  const closeModal = () => setModalState(ModalType.NONE);
 
   return (
-    <ModalContext.Provider value={{ modal, closeModal, setModal }}>
+    <ModalContext.Provider value={{ modal, source, closeModal, setModal }}>
       {children}
     </ModalContext.Provider>
   );

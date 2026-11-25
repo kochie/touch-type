@@ -282,7 +282,7 @@ export function AccountSettings() {
                 </a>
               ) : (
                 <button
-                  onClick={() => setModal(ModalType.PREMIUM_PURCHASE)}
+                  onClick={() => setModal(ModalType.PREMIUM_PURCHASE, "settings")}
                   className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors cursor-pointer"
                 >
                   {isPremium ? "Manage plan" : "Upgrade to Premium →"}

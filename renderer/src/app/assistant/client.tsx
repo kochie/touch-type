@@ -5,7 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import Button from "@/components/Button";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { useSupabase } from "@/lib/supabase-provider";
-import { usePlan } from "@/lib/plan_hook";
+import { isPremiumPlan, usePlan } from "@/lib/plan_hook";
 import { getSupabaseClient } from "@/lib/supabase-client";
 import { AssistantChat } from "@/components/AiAssistant/AssistantChat";
 import { InsightCard } from "@/components/AiAssistant/InsightCard";
@@ -276,7 +276,7 @@ export function ClientAssistant() {
   const [animateSummary, setAnimateSummary] = useState(false);
 
   useEffect(() => {
-    if (!user || !plan || plan.billing_plan === "free") return;
+    if (!user || !isPremiumPlan(plan)) return;
 
     let cancelled = false;
 
@@ -346,7 +346,7 @@ export function ClientAssistant() {
 
   if (!plan) return <LoadingSpinner />;
 
-  if (plan.billing_plan === "free") {
+  if (!isPremiumPlan(plan)) {
     return (
       <div className="flex flex-col h-full overflow-y-auto">
         <PageHeader
@@ -394,7 +394,7 @@ export function ClientAssistant() {
           </div>
           <div className="flex flex-col items-center gap-3">
             <div className="flex gap-4 w-72">
-              <Button onClick={() => setModal(ModalType.PREMIUM_PURCHASE)}>
+              <Button onClick={() => setModal(ModalType.PREMIUM_PURCHASE, "assistant")}>
                 Upgrade to Premium
               </Button>
             </div>

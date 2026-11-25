@@ -2,10 +2,10 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useSupabase } from "./supabase-provider";
-import { usePlan } from "./plan_hook";
+import { isPremiumPlan, usePlan } from "./plan_hook";
 import { useResults } from "./result-provider";
 import { useProfileTimezone } from "./profile-timezone";
-import { metrics } from "./metrics";
+import { metrics, setMetricsContext } from "./metrics";
 
 export interface StreakData {
   currentStreak: number;
@@ -164,7 +164,7 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
   const { results } = useResults();
   const tz = useProfileTimezone();
 
-  const isPremium = plan?.billing_plan !== "free" && plan?.status === "active";
+  const isPremium = isPremiumPlan(plan);
 
   // Calculate streak from local results as fallback
   const calculateFromResults = useCallback(() => {
@@ -339,6 +339,7 @@ export const StreakProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Update isPremium when plan changes
   useEffect(() => {
+    setMetricsContext({ is_premium: isPremium });
     setStreak((prev) => ({
       ...prev,
       isPremium,

@@ -24,7 +24,6 @@ export default function StreakDisplay({
     longestStreak,
     isAtRisk,
     freezesAvailable,
-    isPremium,
     isLoading,
   } = useStreak();
 
@@ -142,7 +141,7 @@ export default function StreakDisplay({
       )}
 
       {/* Streak freeze indicator */}
-      {isPremium && freezesAvailable > 0 && size !== "sm" && (
+      {freezesAvailable > 0 && size !== "sm" && (
         <div className="flex items-center gap-1 ml-2">
           <FontAwesomeIcon icon={faSnowflake} className="w-4 h-4 text-blue-400" />
           <span className="text-xs text-blue-400">{freezesAvailable}</span>

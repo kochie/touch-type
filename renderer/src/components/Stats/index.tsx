@@ -43,7 +43,6 @@ export default function TopStats({ keyboard }: TopStatsProps) {
     longestStreak, 
     isAtRisk, 
     freezesAvailable, 
-    isPremium,
     isLoading: streakLoading 
   } = useStreak();
 
@@ -85,7 +84,6 @@ export default function TopStats({ keyboard }: TopStatsProps) {
           longestStreak={longestStreak}
           isAtRisk={isAtRisk}
           freezesAvailable={freezesAvailable}
-          isPremium={isPremium}
           isLoading={streakLoading}
           nextMilestone={nextMilestone}
         />
@@ -183,7 +181,6 @@ interface StreakCardProps {
   longestStreak: number;
   isAtRisk: boolean;
   freezesAvailable: number;
-  isPremium: boolean;
   isLoading: boolean;
   nextMilestone: number | null;
 }
@@ -193,7 +190,6 @@ const StreakCard = ({
   longestStreak, 
   isAtRisk, 
   freezesAvailable, 
-  isPremium,
   isLoading,
   nextMilestone 
 }: StreakCardProps) => {
@@ -215,7 +211,7 @@ const StreakCard = ({
     <div className="px-4 py-5 sm:p-6">
       <dt className="text-base font-normal text-gray-900 dark:text-gray-100 flex items-center gap-2">
         Current Streak
-        {isPremium && freezesAvailable > 0 && (
+        {freezesAvailable > 0 && (
           <span className="inline-flex items-center gap-1 text-xs text-blue-500">
             <FontAwesomeIcon icon={faSnowflake} className="w-3 h-3" />
             {freezesAvailable}

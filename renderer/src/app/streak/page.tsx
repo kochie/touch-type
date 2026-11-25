@@ -121,7 +121,7 @@ function StreakPageInner() {
           </div>
 
           <button
-            onClick={() => setModal(ModalType.STREAK_FREEZE_PURCHASE)}
+            onClick={() => setModal(ModalType.STREAK_FREEZE_PURCHASE, "streak_page")}
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-sky-400/10 border border-sky-400/30 text-xs font-semibold text-sky-400 hover:bg-sky-400/20 hover:border-sky-400/50 transition-colors duration-150 cursor-pointer"
           >
             <span>+</span>

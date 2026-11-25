@@ -533,6 +533,7 @@ export type Database = {
       }
       settings: {
         Row: {
+          ai_insights_push: boolean
           ai_weekly_email: boolean
           analytics: boolean | null
           app_language: string
@@ -565,6 +566,7 @@ export type Database = {
           whats_new_on_startup: boolean | null
         }
         Insert: {
+          ai_insights_push?: boolean
           ai_weekly_email?: boolean
           analytics?: boolean | null
           app_language?: string
@@ -597,6 +599,7 @@ export type Database = {
           whats_new_on_startup?: boolean | null
         }
         Update: {
+          ai_insights_push?: boolean
           ai_weekly_email?: boolean
           analytics?: boolean | null
           app_language?: string

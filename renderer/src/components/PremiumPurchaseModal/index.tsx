@@ -129,10 +129,9 @@ function SubscriptionCheckoutForm({
         const body = await (fnError as any).context?.json?.().catch(() => null);
         throw new Error(body?.error ?? "Subscription could not be activated. Contact support.");
       }
-      metrics.count("checkout.completed", 1, { plan: plan.id });
       onSuccess();
     } catch (err: any) {
-      metrics.count("checkout.failed", 1, { plan: plan.id });
+      metrics.count("checkout.failed", 1, { plan: plan.id, surface: "stripe" });
       onError(err?.message ?? "Payment failed. Please try again.");
     } finally {
       setLoading(false);
@@ -175,7 +174,7 @@ function SubscriptionCheckoutForm({
 
 type Phase = "loading" | "pick" | "checkout" | "mas-purchasing" | "switching" | "switch_success" | "success" | "error";
 
-export default function PremiumPurchaseModal({ onClose }: { onClose: () => void }) {
+export default function PremiumPurchaseModal({ onClose, source }: { onClose: () => void; source?: string }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -193,7 +192,11 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
   useEffect(() => {
     const fetchSub = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setPhase("pick"); return; }
+      if (!user) {
+        metrics.count("paywall.viewed", 1, { source: source ?? "unknown" });
+        setPhase("pick");
+        return;
+      }
       setUserEmail(user.email ?? "");
       const { data } = await supabase
         .from("subscriptions")
@@ -206,6 +209,7 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
           : null;
         setCurrentPlanId(id);
       }
+      metrics.count("paywall.viewed", 1, { source: source ?? "unknown" });
       setPhase("pick");
     };
     fetchSub();
@@ -230,6 +234,18 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
     window.addEventListener("touchtyper:iap-subscription-purchased", onIap);
     return () => window.removeEventListener("touchtyper:iap-subscription-purchased", onIap);
   }, []);
+
+  // Single source for checkout.completed: the Stripe form, the 3DS fallback
+  // and the MAS listener all end in phase "success". selectedPlan is only set
+  // by an initiated checkout, so a StoreKit restore replay (no selection)
+  // isn't counted as a purchase.
+  useEffect(() => {
+    if (phase !== "success" || !selectedPlan) return;
+    metrics.count("checkout.completed", 1, {
+      plan: selectedPlan.id,
+      surface: isMas ? "mas" : "stripe",
+    });
+  }, [phase]);
 
   const isPremium = currentPlanId !== null;
 
@@ -284,7 +300,7 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
           throw new Error(result?.error ?? "Purchase could not be initiated.");
         }
         setSelectedPlan(plan);
-        metrics.count("checkout.initiated", 1, { plan: plan.id, surface: "mas" });
+        metrics.count("checkout.initiated", 1, { plan: plan.id, surface: "mas", source: source ?? "unknown" });
         setPhase("mas-purchasing");
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
@@ -312,7 +328,7 @@ export default function PremiumPurchaseModal({ onClose }: { onClose: () => void 
       setClientSecret(data.clientSecret);
       setSessionId(data.sessionId);
       setSelectedPlan(plan);
-      metrics.count("checkout.initiated", 1, { plan: plan.id, surface: "stripe" });
+      metrics.count("checkout.initiated", 1, { plan: plan.id, surface: "stripe", source: source ?? "unknown" });
       setPhase("checkout");
     } catch (err: any) {
       const msg = err?.message ?? "Something went wrong. Please try again.";

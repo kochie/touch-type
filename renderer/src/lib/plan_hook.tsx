@@ -20,49 +20,94 @@ export const PlanProvider = ({ children }) => {
   const [plan, setPlan] = useState<PlanContextProps>(null);
   const { supabase, user } = useSupabase();
 
-  const fetchPlan = async () => {
+  useEffect(() => {
     if (!user) {
       setPlan(null);
       return;
     }
 
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+    let cancelled = false;
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching subscription:', error);
-      return;
-    }
+    const fetchPlan = async () => {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
-    if (data) {
-      setPlan({
-        billing_plan: data.billing_plan,
-        billing_period: data.billing_period,
-        next_billing_date: data.next_billing_date,
-        auto_renew: data.auto_renew,
-        status: data.status,
-      });
-    } else {
-      // User doesn't have a subscription yet, set default free plan
-      setPlan({
-        billing_plan: 'free',
-        billing_period: null,
-        next_billing_date: null,
-        auto_renew: false,
-        status: 'active',
-      });
-    }
-  };
+      if (cancelled) return;
 
-  useEffect(() => {
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching subscription:', error);
+        return;
+      }
+
+      if (data) {
+        setPlan({
+          billing_plan: data.billing_plan,
+          billing_period: data.billing_period,
+          next_billing_date: data.next_billing_date,
+          auto_renew: data.auto_renew,
+          status: data.status,
+        });
+      } else {
+        // User doesn't have a subscription yet, set default free plan
+        setPlan({
+          billing_plan: 'free',
+          billing_period: null,
+          next_billing_date: null,
+          auto_renew: false,
+          status: 'active',
+        });
+      }
+    };
+
     fetchPlan();
-  }, [user]);
-  
+
+    // Live updates: webhooks, purchases and manual changes write to this row
+    // server-side, so re-read it whenever it changes instead of trusting the
+    // value fetched at sign-in. Refetching (rather than using payload.new)
+    // also covers DELETE events, whose payload has no new row.
+    const channel = supabase
+      .channel(`subscriptions:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscriptions',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchPlan();
+        },
+      )
+      .subscribe();
+
+    // Fallback if the realtime socket was dropped while the app was in the
+    // background.
+    const onFocus = () => {
+      fetchPlan();
+    };
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', onFocus);
+      channel.unsubscribe();
+    };
+  }, [user, supabase]);
+
   return <PlanContext.Provider value={plan}>{children}</PlanContext.Provider>;
 };
+
+// Mirrors checkPremium() in the edge functions' _shared/premium.ts so the UI
+// and the server agree on who is premium (active or trialing premium plan).
+export function isPremiumPlan(plan: Plan | null): boolean {
+  if (!plan || plan.billing_plan !== 'premium') return false;
+  const status = plan.status?.toLowerCase();
+  return status === 'active' || status === 'trialing';
+}
 
 export function usePlan() {
   return useContext(PlanContext);

@@ -21,7 +21,7 @@ import LeaderboardTab from "./LeaderboardTab";
 import { formatDistanceToNow } from "@/lib/relative-time";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { usePlan } from "@/lib/plan_hook";
+import { isPremiumPlan, usePlan } from "@/lib/plan_hook";
 import { AvatarComposite } from "@/components/avatars/AvatarComposite";
 import { AvatarPicker } from "@/components/avatars/AvatarPicker";
 import Link from "next/link";
@@ -249,7 +249,7 @@ export default function PvPHub() {
   const [usernameMap, setUsernameMap] = useState<Record<string, string>>({});
 
   const plan = usePlan();
-  const isPremium = plan?.billing_plan === "premium";
+  const isPremium = isPremiumPlan(plan);
 
   const [avatarMap, setAvatarMap] = useState<Record<string, { face: string; hat: string | null }>>({});
   const [pickerOpen, setPickerOpen] = useState(false);

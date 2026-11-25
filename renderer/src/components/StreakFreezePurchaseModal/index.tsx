@@ -19,6 +19,7 @@ import type { Appearance } from "@stripe/stripe-js";
 import clsx from "clsx";
 import { useMas } from "@/lib/mas_hook";
 import { useSupabaseClient } from "@/lib/supabase-provider";
+import { metrics } from "@/lib/metrics";
 import { stripePromise } from "@/components/Payment";
 
 interface FreezePackage {
@@ -155,7 +156,7 @@ function CheckoutForm({
 
 type Phase = "pick" | "checkout" | "mas-purchasing" | "success" | "error";
 
-export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => void }) {
+export default function StreakFreezePurchaseModal({ onClose, source }: { onClose: () => void; source?: string }) {
   const [phase, setPhase] = useState<Phase>("pick");
   const [loadingQty, setLoadingQty] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -163,6 +164,19 @@ export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => 
   const [selectedPkg, setSelectedPkg] = useState<FreezePackage | null>(null);
   const isMas = useMas();
   const supabase = useSupabaseClient();
+
+  useEffect(() => {
+    metrics.count("streak_freeze.viewed", 1, { source: source ?? "unknown" });
+  }, []);
+
+  // Covers every success path (Stripe, 3DS fallback, MAS) in one place.
+  useEffect(() => {
+    if (phase !== "success") return;
+    metrics.count("streak_freeze.purchased", 1, {
+      quantity: selectedPkg?.quantity ?? 0,
+      surface: isMas ? "mas" : "stripe",
+    });
+  }, [phase]);
 
   // 3DS fallback: Electron intercepts the Stripe redirect and notifies us
   // here. Without the cleanup the same listener stacks on every mount,
@@ -193,6 +207,8 @@ export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => 
         if (!result?.queued) {
           throw new Error(result?.error ?? "Purchase could not be initiated.");
         }
+        setSelectedPkg(pkg);
+        metrics.count("streak_freeze.checkout_initiated", 1, { quantity: pkg.quantity, surface: "mas", source: source ?? "unknown" });
         setPhase("mas-purchasing");
       } else {
         const { data, error } = await supabase.functions.invoke(
@@ -205,10 +221,12 @@ export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => 
         }
         setClientSecret(data.clientSecret);
         setSelectedPkg(pkg);
+        metrics.count("streak_freeze.checkout_initiated", 1, { quantity: pkg.quantity, surface: "stripe", source: source ?? "unknown" });
         setPhase("checkout");
       }
     } catch (err: any) {
       const msg = err?.message ?? "Something went wrong. Please try again.";
+      metrics.count("streak_freeze.checkout_failed", 1, { quantity: pkg.quantity, surface: isMas ? "mas" : "stripe" });
       setErrorMsg(msg);
       toast.error(msg);
       setPhase("error");
@@ -320,7 +338,12 @@ export default function StreakFreezePurchaseModal({ onClose }: { onClose: () => 
               clientSecret={clientSecret}
               price={selectedPkg.price}
               onSuccess={() => setPhase("success")}
-              onError={(msg) => { setErrorMsg(msg); toast.error(msg); setPhase("error"); }}
+              onError={(msg) => {
+                metrics.count("streak_freeze.checkout_failed", 1, { quantity: selectedPkg.quantity, surface: "stripe" });
+                setErrorMsg(msg);
+                toast.error(msg);
+                setPhase("error");
+              }}
             />
           </Elements>
         </div>

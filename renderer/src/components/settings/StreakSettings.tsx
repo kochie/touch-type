@@ -106,54 +106,42 @@ export function StreakSettings() {
         <div className="flex items-center gap-2">
           <FontAwesomeIcon icon={faSnowflake} className="w-5 h-5 text-blue-400" />
           <h4 className="text-sm font-medium text-white">Streak Freeze</h4>
-          {!isPremium && (
-            <span className="text-xs bg-indigo-600/20 text-indigo-400 px-2 py-0.5 rounded-full">
-              Premium
-            </span>
-          )}
         </div>
 
-        {isPremium ? (
-          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-white">
-                  Freezes Available:{" "}
-                  <span className="font-semibold">{freezesAvailable}</span>
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Streak freezes let you skip one day without breaking your streak.
-                  You earn 1 freeze per week as a premium member.
-                </p>
-              </div>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.max(freezesAvailable, 0) }).map((_, i) => (
-                  <FontAwesomeIcon
-                    icon={faSnowflake}
-                    key={i}
-                    className="w-6 h-6 text-blue-400"
-                  />
-                ))}
-                {freezesAvailable === 0 && (
-                  <FontAwesomeIcon
-                  icon={faSnowflake} className="w-6 h-6 text-gray-600" />
-                )}
-              </div>
-            </div>
-            {freezesAvailable === 0 && (
-              <p className="text-xs text-blue-300 mt-2">
-                You'll receive a new freeze next week.
+        <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-white">
+                Freezes Available:{" "}
+                <span className="font-semibold">{freezesAvailable}</span>
               </p>
-            )}
+              <p className="text-xs text-gray-400 mt-1">
+                Streak freezes let you skip one day without breaking your streak.
+                {isPremium
+                  ? " You earn 1 freeze per week as a premium member."
+                  : " Buy extra freezes from the Streak page, or upgrade to Premium to earn a free one every week."}
+              </p>
+            </div>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.max(freezesAvailable, 0) }).map((_, i) => (
+                <FontAwesomeIcon
+                  icon={faSnowflake}
+                  key={i}
+                  className="w-6 h-6 text-blue-400"
+                />
+              ))}
+              {freezesAvailable === 0 && (
+                <FontAwesomeIcon
+                icon={faSnowflake} className="w-6 h-6 text-gray-600" />
+              )}
+            </div>
           </div>
-        ) : (
-          <div className="p-3 bg-white/5 border border-white/10 rounded-lg">
-            <p className="text-sm text-gray-400">
-              Upgrade to Premium to get weekly streak freezes. Miss a day? Your
-              streak freeze will automatically save your progress.
+          {isPremium && freezesAvailable === 0 && (
+            <p className="text-xs text-blue-300 mt-2">
+              You'll receive a new freeze next week.
             </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Milestone Progress */}

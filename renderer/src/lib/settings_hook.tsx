@@ -102,6 +102,7 @@ const SettingsContext = createContext({
   appLanguage: Languages.ENGLISH,
   autoDetectAppLanguage: true,
   aiWeeklyEmail: false,
+  aiInsightsPush: true,
   backgroundOpacity: 0.85,
   confettiOnPersonalBest: true,
 });
@@ -138,6 +139,7 @@ export const defaultSettings = {
   appLanguage: Languages.ENGLISH,
   autoDetectAppLanguage: true,
   aiWeeklyEmail: false,
+  aiInsightsPush: true,
   backgroundOpacity: 0.85,
   confettiOnPersonalBest: true,
 };
@@ -262,6 +264,10 @@ type ChangeSettingsAction =
   | {
       type: "SET_AI_WEEKLY_EMAIL";
       aiWeeklyEmail: boolean;
+    }
+  | {
+      type: "SET_AI_INSIGHTS_PUSH";
+      aiInsightsPush: boolean;
     }
   | {
       type: "SET_BACKGROUND_OPACITY";
@@ -454,6 +460,9 @@ const reducer = (
     case "SET_AI_WEEKLY_EMAIL":
       return { ...state, aiWeeklyEmail: action.aiWeeklyEmail };
 
+    case "SET_AI_INSIGHTS_PUSH":
+      return { ...state, aiInsightsPush: action.aiInsightsPush };
+
     case "SET_BACKGROUND_OPACITY":
       return { ...state, backgroundOpacity: Math.max(0, Math.min(1, action.opacity)) };
 
@@ -549,6 +558,7 @@ export const SettingsProvider = ({ children }) => {
           appLanguage: (data.app_language as Languages) ?? Languages.ENGLISH,
           // autoDetectAppLanguage is NOT fetched from DB — machine-specific (localStorage only)
           aiWeeklyEmail: data.ai_weekly_email ?? false,
+          aiInsightsPush: data.ai_insights_push ?? true,
           backgroundOpacity: (data as any).background_opacity ?? 0.85,
           confettiOnPersonalBest: (data as any).confetti_on_personal_best ?? true,
         };
@@ -600,6 +610,7 @@ export const SettingsProvider = ({ children }) => {
         // auto_detect_app_language is NOT saved to DB — machine-specific, same treatment as launchAtStartup
         // background_opacity is NOT saved to DB — device-specific; stored in localStorage only
         ai_weekly_email: safeSettings.aiWeeklyEmail,
+        ai_insights_push: safeSettings.aiInsightsPush,
         confetti_on_personal_best: safeSettings.confettiOnPersonalBest,
       };
 
