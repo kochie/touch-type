@@ -16,6 +16,12 @@ if (!stripeKey) throw new Error("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set")
 
 export const stripePromise = loadStripe(stripeKey);
 
+// loadStripe() runs at import, so an offline launch or a blocked CDN rejects
+// before anything awaits it and surfaces as an unhandled rejection. Attaching a
+// handler silences that; <Elements> still receives the rejection and reports
+// it where the checkout is actually shown.
+stripePromise.catch(() => {});
+
 export function StripeCheckout() {
   const supabase = useSupabaseClient();
 
