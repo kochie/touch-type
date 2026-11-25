@@ -269,6 +269,13 @@ const config: Configuration = {
     // 42 has native BigInt. Pure-JS arch divergences (postgres-array etc.)
     // are handled by singleArchFiles above.
     "!**/node_modules/pg-int8/**",
+    // oxc-parser (with its per-platform native bindings) arrives via
+    // @sentry/electron -> @sentry/node -> @sentry/bundler-plugins. It is only
+    // used by the Sentry bundler-plugin entry points, which the app never
+    // imports. The arm64 binding lands in both slices of a universal build and
+    // fails the merge as an identical Mach-O.
+    "!**/node_modules/oxc-parser/**",
+    "!**/node_modules/@oxc-parser/**",
   ],
   // Mac and Windows use this; Linux uses linux.publish (GitHub + snapStore + flatpak build only)
   publish: [
