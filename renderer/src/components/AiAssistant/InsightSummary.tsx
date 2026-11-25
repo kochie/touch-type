@@ -48,7 +48,7 @@ export function InsightSummary({
         )}
       </p>
       <p className="mt-3 text-xs text-slate-500">
-        Analysis by Claude · Week of {weekLabel}
+        Your analysis · Week of {weekLabel}
       </p>
     </div>
   );
