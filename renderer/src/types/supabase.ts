@@ -852,6 +852,19 @@ export type Database = {
       }
     }
     Functions: {
+      stats_key_timing: {
+        Args: { p_days?: number; p_keyboard?: string }
+        Returns: {
+          avg_ms: number
+          error_rate: number
+          key: string
+          presses: number
+        }[]
+      }
+      stats_speed_distribution: {
+        Args: { p_days?: number }
+        Returns: Json
+      }
       cancel_match: {
         Args: { _match_id: string }
         Returns: {
