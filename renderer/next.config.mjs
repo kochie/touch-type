@@ -1,5 +1,5 @@
 import MDX from "@next/mdx";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);

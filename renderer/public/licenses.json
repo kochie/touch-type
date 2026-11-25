@@ -1,82 +1,130 @@
 {
   "MIT": [
     {
-      "name": "@babel/runtime",
-      "version": "7.29.2",
-      "homepage": "https://babel.dev/docs/en/next/babel-runtime",
-      "author": "The Babel Team"
+      "name": "@jridgewell/gen-mapping",
+      "version": "0.3.13",
+      "homepage": "https://github.com/jridgewell/sourcemaps/tree/main/packages/gen-mapping",
+      "author": "Justin Ridgewell"
     },
     {
-      "name": "@fastify/otel",
-      "version": "0.18.0",
-      "homepage": "https://github.com/fastify/otel#readme",
-      "author": "Carlos Fuentes - @metcoder95"
+      "name": "@jridgewell/resolve-uri",
+      "version": "3.1.2",
+      "homepage": "https://github.com/jridgewell/resolve-uri#readme",
+      "author": "Justin Ridgewell"
     },
     {
-      "name": "@sentry-internal/browser-utils",
-      "version": "10.50.0",
-      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/browser-utils",
-      "author": "Sentry"
+      "name": "@jridgewell/source-map",
+      "version": "0.3.11",
+      "homepage": "https://github.com/jridgewell/sourcemaps/tree/main/packages/source-map",
+      "author": "Justin Ridgewell"
     },
     {
-      "name": "@sentry-internal/feedback",
-      "version": "10.50.0",
-      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/feedback",
-      "author": "Sentry"
+      "name": "@jridgewell/sourcemap-codec",
+      "version": "1.5.5",
+      "homepage": "https://github.com/jridgewell/sourcemaps/tree/main/packages/sourcemap-codec",
+      "author": "Justin Ridgewell"
     },
     {
-      "name": "@sentry-internal/replay",
-      "version": "10.50.0",
-      "homepage": "https://docs.sentry.io/platforms/javascript/session-replay/",
-      "author": "Sentry"
+      "name": "@jridgewell/trace-mapping",
+      "version": "0.3.31",
+      "homepage": "https://github.com/jridgewell/sourcemaps/tree/main/packages/trace-mapping",
+      "author": "Justin Ridgewell"
     },
     {
-      "name": "@sentry-internal/replay-canvas",
-      "version": "10.50.0",
-      "homepage": "https://docs.sentry.io/platforms/javascript/session-replay/",
-      "author": "Sentry"
+      "name": "@oxc-parser/binding-darwin-arm64",
+      "version": "0.152.0",
+      "homepage": "https://oxc.rs/docs/guide/usage/parser",
+      "author": "Boshen and oxc contributors"
+    },
+    {
+      "name": "@oxc-project/types",
+      "version": "0.152.0",
+      "homepage": "https://oxc.rs",
+      "author": "Boshen and oxc contributors"
+    },
+    {
+      "name": "@rollup/rollup-darwin-arm64",
+      "version": "4.60.4",
+      "homepage": "https://rollupjs.org/",
+      "author": "Lukas Taegert-Atkinson"
     },
     {
       "name": "@sentry/browser",
-      "version": "10.50.0",
+      "version": "11.10.0",
       "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/browser",
       "author": "Sentry"
     },
     {
+      "name": "@sentry/browser-utils",
+      "version": "11.10.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/browser-utils",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/bundler-plugins",
+      "version": "11.10.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/main/packages/bundler-plugins",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/conventions",
+      "version": "0.29.0",
+      "homepage": "https://github.com/getsentry/sentry-conventions#readme",
+      "author": ""
+    },
+    {
       "name": "@sentry/core",
-      "version": "10.50.0",
+      "version": "11.10.0",
       "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/core",
       "author": "Sentry"
     },
     {
       "name": "@sentry/electron",
-      "version": "7.13.0",
+      "version": "8.4.0",
       "homepage": "https://github.com/getsentry/sentry-electron#readme",
       "author": "Sentry"
     },
     {
+      "name": "@sentry/feedback",
+      "version": "11.10.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/feedback",
+      "author": "Sentry"
+    },
+    {
       "name": "@sentry/node",
-      "version": "10.50.0",
+      "version": "11.10.0",
       "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/node",
       "author": "Sentry"
     },
     {
-      "name": "@sentry/node-core",
-      "version": "10.50.0",
-      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/node-core",
-      "author": "Sentry"
-    },
-    {
       "name": "@sentry/opentelemetry",
-      "version": "10.50.0",
+      "version": "11.10.0",
       "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/opentelemetry",
       "author": "Sentry"
     },
     {
-      "name": "@types/connect",
-      "version": "3.4.38",
-      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/connect",
-      "author": ""
+      "name": "@sentry/replay",
+      "version": "11.10.0",
+      "homepage": "https://docs.sentry.io/platforms/javascript/session-replay/",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/replay-canvas",
+      "version": "11.10.0",
+      "homepage": "https://docs.sentry.io/platforms/javascript/session-replay/",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/server-runtime-injection",
+      "version": "11.10.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/server-runtime-injection",
+      "author": "Sentry"
+    },
+    {
+      "name": "@sentry/server-utils",
+      "version": "11.10.0",
+      "homepage": "https://github.com/getsentry/sentry-javascript/tree/master/packages/server-utils",
+      "author": "Sentry"
     },
     {
       "name": "@types/debug",
@@ -85,8 +133,20 @@
       "author": ""
     },
     {
+      "name": "@types/eslint",
+      "version": "9.6.1",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/eslint",
+      "author": ""
+    },
+    {
+      "name": "@types/eslint-scope",
+      "version": "3.7.7",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/eslint-scope",
+      "author": ""
+    },
+    {
       "name": "@types/estree",
-      "version": "1.0.9",
+      "version": "1.0.8",
       "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/estree",
       "author": ""
     },
@@ -103,6 +163,12 @@
       "author": ""
     },
     {
+      "name": "@types/json-schema",
+      "version": "7.0.15",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/json-schema",
+      "author": ""
+    },
+    {
       "name": "@types/mdast",
       "version": "4.0.4",
       "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/mdast",
@@ -115,27 +181,9 @@
       "author": ""
     },
     {
-      "name": "@types/mysql",
-      "version": "2.15.27",
-      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/mysql",
-      "author": ""
-    },
-    {
       "name": "@types/node",
-      "version": "25.8.0",
+      "version": "26.6.6",
       "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node",
-      "author": ""
-    },
-    {
-      "name": "@types/pg",
-      "version": "8.15.6",
-      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/pg",
-      "author": ""
-    },
-    {
-      "name": "@types/pg-pool",
-      "version": "2.0.7",
-      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/pg-pool",
       "author": ""
     },
     {
@@ -151,12 +199,6 @@
       "author": ""
     },
     {
-      "name": "@types/tedious",
-      "version": "4.0.14",
-      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/tedious",
-      "author": ""
-    },
-    {
       "name": "@types/unist",
       "version": "2.0.11",
       "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/unist",
@@ -167,6 +209,90 @@
       "version": "1.10.11",
       "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/verror",
       "author": ""
+    },
+    {
+      "name": "@webassemblyjs/ast",
+      "version": "1.14.1",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/floating-point-hex-parser",
+      "version": "1.13.2",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Mauro Bringolf"
+    },
+    {
+      "name": "@webassemblyjs/helper-api-error",
+      "version": "1.13.2",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/helper-buffer",
+      "version": "1.14.1",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/helper-numbers",
+      "version": "1.13.2",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/helper-wasm-bytecode",
+      "version": "1.13.2",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/helper-wasm-section",
+      "version": "1.14.1",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/ieee754",
+      "version": "1.13.2",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": ""
+    },
+    {
+      "name": "@webassemblyjs/utf8",
+      "version": "1.13.2",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/wasm-edit",
+      "version": "1.14.1",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/wasm-gen",
+      "version": "1.14.1",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/wasm-opt",
+      "version": "1.14.1",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/wasm-parser",
+      "version": "1.14.1",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
+    },
+    {
+      "name": "@webassemblyjs/wast-printer",
+      "version": "1.14.1",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
+      "author": "Sven Sauleau"
     },
     {
       "name": "@xmldom/xmldom",
@@ -181,15 +307,27 @@
       "author": ""
     },
     {
-      "name": "acorn-import-attributes",
-      "version": "1.9.5",
-      "homepage": "https://github.com/xtuc/acorn-import-attributes#readme",
-      "author": "Sven Sauleau"
+      "name": "acorn-import-phases",
+      "version": "1.0.4",
+      "homepage": "https://github.com/nicolo-ribaudo/acorn-import-phases#readme",
+      "author": "Nicolò Ribaudo"
     },
     {
       "name": "ajv",
       "version": "6.15.0",
-      "homepage": "https://github.com/ajv-validator/ajv",
+      "homepage": "https://ajv.js.org",
+      "author": "Evgeny Poberezkin"
+    },
+    {
+      "name": "ajv-formats",
+      "version": "2.1.1",
+      "homepage": "https://github.com/ajv-validator/ajv-formats#readme",
+      "author": "Evgeny Poberezkin"
+    },
+    {
+      "name": "ajv-keywords",
+      "version": "5.1.0",
+      "homepage": "https://github.com/epoberezkin/ajv-keywords#readme",
       "author": "Evgeny Poberezkin"
     },
     {
@@ -247,10 +385,22 @@
       "author": ""
     },
     {
+      "name": "browserslist",
+      "version": "4.28.2",
+      "homepage": "https://github.com/browserslist/browserslist#readme",
+      "author": "Andrey Sitnik"
+    },
+    {
       "name": "buffer",
       "version": "5.7.1",
       "homepage": "https://github.com/feross/buffer",
       "author": "Feross Aboukhadijeh"
+    },
+    {
+      "name": "buffer-from",
+      "version": "1.1.2",
+      "homepage": "https://github.com/LinusU/buffer-from#readme",
+      "author": ""
     },
     {
       "name": "builder-util-runtime",
@@ -289,10 +439,10 @@
       "author": "Titus Wormer"
     },
     {
-      "name": "cjs-module-lexer",
-      "version": "2.2.0",
-      "homepage": "https://github.com/nodejs/cjs-module-lexer#readme",
-      "author": "Guy Bedford"
+      "name": "chrome-trace-event",
+      "version": "1.0.4",
+      "homepage": "https://github.com/samccone/chrome-trace-event#readme",
+      "author": "Trent Mick, Sam Saccone"
     },
     {
       "name": "cli-truncate",
@@ -317,6 +467,12 @@
       "version": "2.0.3",
       "homepage": "https://github.com/wooorm/comma-separated-tokens#readme",
       "author": "Titus Wormer"
+    },
+    {
+      "name": "commander",
+      "version": "2.20.3",
+      "homepage": "https://github.com/tj/commander.js#readme",
+      "author": "TJ Holowaychuk"
     },
     {
       "name": "core-util-is",
@@ -379,10 +535,34 @@
       "author": "Mathias Bynens"
     },
     {
+      "name": "enhanced-resolve",
+      "version": "5.21.3",
+      "homepage": "http://github.com/webpack/enhanced-resolve",
+      "author": "Tobias Koppers @sokra"
+    },
+    {
+      "name": "es-module-lexer",
+      "version": "2.1.0",
+      "homepage": "https://github.com/guybedford/es-module-lexer#readme",
+      "author": "Guy Bedford"
+    },
+    {
+      "name": "escalade",
+      "version": "3.2.0",
+      "homepage": "https://github.com/lukeed/escalade#readme",
+      "author": "Luke Edwards"
+    },
+    {
       "name": "estree-util-is-identifier-name",
       "version": "3.0.0",
       "homepage": "https://github.com/syntax-tree/estree-util-is-identifier-name#readme",
       "author": "Titus Wormer"
+    },
+    {
+      "name": "events",
+      "version": "3.3.0",
+      "homepage": "https://github.com/Gozala/events#readme",
+      "author": "Irakli Gozalishvili"
     },
     {
       "name": "extend",
@@ -409,16 +589,16 @@
       "author": "James Halliday"
     },
     {
-      "name": "forwarded-parse",
-      "version": "2.1.2",
-      "homepage": "https://github.com/lpinca/forwarded-parse",
-      "author": "Luigi Pinca"
-    },
-    {
       "name": "fs-extra",
       "version": "10.1.0",
       "homepage": "https://github.com/jprichardson/node-fs-extra",
       "author": "JP Richardson"
+    },
+    {
+      "name": "fsevents",
+      "version": "2.3.3",
+      "homepage": "https://github.com/fsevents/fsevents",
+      "author": ""
     },
     {
       "name": "has-flag",
@@ -440,8 +620,8 @@
     },
     {
       "name": "html-parse-stringify",
-      "version": "3.0.1",
-      "homepage": "https://github.com/henrikjoreteg/html-parse-stringify",
+      "version": "4.0.1",
+      "homepage": "https://github.com/i18next/html-parse-stringify",
       "author": "Henrik Joreteg"
     },
     {
@@ -452,7 +632,7 @@
     },
     {
       "name": "i18next",
-      "version": "26.2.0",
+      "version": "27.2.6",
       "homepage": "https://www.i18next.com",
       "author": "Jan Mühlemann"
     },
@@ -505,6 +685,12 @@
       "author": "Sindre Sorhus"
     },
     {
+      "name": "jest-worker",
+      "version": "27.5.1",
+      "homepage": "https://github.com/facebook/jest#readme",
+      "author": ""
+    },
+    {
       "name": "js-yaml",
       "version": "4.1.1",
       "homepage": "https://github.com/nodeca/js-yaml#readme",
@@ -529,6 +715,12 @@
       "author": "Vladimir Krivosheev"
     },
     {
+      "name": "loader-runner",
+      "version": "4.3.2",
+      "homepage": "https://github.com/webpack/loader-runner#readme",
+      "author": "Tobias Koppers @sokra"
+    },
+    {
       "name": "lodash.escaperegexp",
       "version": "4.1.2",
       "homepage": "https://lodash.com/",
@@ -545,6 +737,12 @@
       "version": "3.1.0",
       "homepage": "https://github.com/wooorm/longest-streak#readme",
       "author": "Titus Wormer"
+    },
+    {
+      "name": "magic-string",
+      "version": "1.4.5",
+      "homepage": "https://github.com/Rich-Harris/magic-string#readme",
+      "author": "Rich Harris"
     },
     {
       "name": "mdast-util-from-markdown",
@@ -593,6 +791,12 @@
       "version": "4.0.0",
       "homepage": "https://github.com/syntax-tree/mdast-util-to-string#readme",
       "author": "Titus Wormer"
+    },
+    {
+      "name": "merge-stream",
+      "version": "2.0.0",
+      "homepage": "https://github.com/grncdr/merge-stream#readme",
+      "author": "Stephen Sugden"
     },
     {
       "name": "micromark",
@@ -721,6 +925,12 @@
       "author": "Titus Wormer"
     },
     {
+      "name": "mime-db",
+      "version": "1.54.0",
+      "homepage": "https://github.com/jshttp/mime-db#readme",
+      "author": ""
+    },
+    {
       "name": "module-details-from-path",
       "version": "1.0.4",
       "homepage": "https://github.com/watson/module-details-from-path#readme",
@@ -733,10 +943,28 @@
       "author": ""
     },
     {
+      "name": "neo-async",
+      "version": "2.6.2",
+      "homepage": "https://github.com/suguru03/neo-async",
+      "author": ""
+    },
+    {
       "name": "node-addon-api",
       "version": "1.7.2",
       "homepage": "https://github.com/nodejs/node-addon-api",
       "author": ""
+    },
+    {
+      "name": "node-releases",
+      "version": "2.0.44",
+      "homepage": "https://github.com/chicoxyzzy/node-releases#readme",
+      "author": "Sergey Rubanov"
+    },
+    {
+      "name": "oxc-parser",
+      "version": "0.152.0",
+      "homepage": "https://oxc.rs/docs/guide/usage/parser",
+      "author": "Boshen and oxc contributors"
     },
     {
       "name": "parse-entities",
@@ -745,46 +973,10 @@
       "author": "Titus Wormer"
     },
     {
-      "name": "pg-protocol",
-      "version": "1.13.0",
-      "homepage": "https://github.com/brianc/node-postgres#readme",
-      "author": ""
-    },
-    {
-      "name": "pg-types",
-      "version": "2.2.0",
-      "homepage": "https://github.com/brianc/node-pg-types",
-      "author": "Brian M. Carlson"
-    },
-    {
       "name": "plist",
       "version": "3.1.1",
       "homepage": "https://github.com/TooTallNate/node-plist#readme",
       "author": "Nathan Rajlich"
-    },
-    {
-      "name": "postgres-array",
-      "version": "2.0.0",
-      "homepage": "https://github.com/bendrucker/postgres-array#readme",
-      "author": "Ben Drucker"
-    },
-    {
-      "name": "postgres-bytea",
-      "version": "1.0.1",
-      "homepage": "https://github.com/bendrucker/postgres-bytea#readme",
-      "author": "Ben Drucker"
-    },
-    {
-      "name": "postgres-date",
-      "version": "1.0.7",
-      "homepage": "https://github.com/bendrucker/postgres-date#readme",
-      "author": "Ben Drucker"
-    },
-    {
-      "name": "postgres-interval",
-      "version": "1.2.0",
-      "homepage": "https://github.com/bendrucker/postgres-interval#readme",
-      "author": "Ben Drucker"
     },
     {
       "name": "property-information",
@@ -806,7 +998,7 @@
     },
     {
       "name": "react-i18next",
-      "version": "17.0.8",
+      "version": "18.0.3",
       "homepage": "https://github.com/i18next/react-i18next",
       "author": "Jan Mühlemann"
     },
@@ -829,10 +1021,22 @@
       "author": "Titus Wormer"
     },
     {
-      "name": "require-in-the-middle",
-      "version": "8.0.1",
-      "homepage": "https://github.com/nodejs/require-in-the-middle#readme",
-      "author": "Thomas Watson Steen"
+      "name": "require-from-string",
+      "version": "2.0.2",
+      "homepage": "https://github.com/floatdrop/require-from-string#readme",
+      "author": "Vsevolod Strukchinsky"
+    },
+    {
+      "name": "rollup",
+      "version": "4.60.4",
+      "homepage": "https://rollupjs.org/",
+      "author": "Rich Harris"
+    },
+    {
+      "name": "schema-utils",
+      "version": "4.3.3",
+      "homepage": "https://github.com/webpack/schema-utils",
+      "author": "webpack Contrib"
     },
     {
       "name": "slice-ansi",
@@ -845,6 +1049,12 @@
       "version": "4.2.0",
       "homepage": "https://github.com/JoshGlazebrook/smart-buffer/",
       "author": "Josh Glazebrook"
+    },
+    {
+      "name": "source-map-support",
+      "version": "0.5.21",
+      "homepage": "https://github.com/evanw/node-source-map-support#readme",
+      "author": ""
     },
     {
       "name": "space-separated-tokens",
@@ -889,6 +1099,18 @@
       "author": "Sindre Sorhus"
     },
     {
+      "name": "tapable",
+      "version": "2.3.3",
+      "homepage": "https://github.com/webpack/tapable",
+      "author": "Tobias Koppers @sokra"
+    },
+    {
+      "name": "terser-webpack-plugin",
+      "version": "5.6.0",
+      "homepage": "https://github.com/webpack/minimizer-webpack-plugin",
+      "author": "webpack Contrib Team"
+    },
+    {
       "name": "tiny-typed-emitter",
       "version": "2.1.0",
       "homepage": "https://github.com/binier/tiny-typed-emitter#readme",
@@ -908,7 +1130,7 @@
     },
     {
       "name": "undici-types",
-      "version": "7.24.6",
+      "version": "8.9.0",
       "homepage": "https://undici.nodejs.org",
       "author": ""
     },
@@ -955,10 +1177,10 @@
       "author": "Ryan Zimmerman"
     },
     {
-      "name": "use-sync-external-store",
-      "version": "1.6.0",
-      "homepage": "https://github.com/facebook/react#readme",
-      "author": ""
+      "name": "update-browserslist-db",
+      "version": "1.2.3",
+      "homepage": "https://github.com/browserslist/update-db#readme",
+      "author": "Andrey Sitnik"
     },
     {
       "name": "verror",
@@ -979,22 +1201,28 @@
       "author": "Titus Wormer"
     },
     {
-      "name": "void-elements",
-      "version": "3.1.0",
-      "homepage": "https://github.com/jadejs/void-elements",
-      "author": "hemanth.hm"
+      "name": "watchpack",
+      "version": "2.5.1",
+      "homepage": "https://github.com/webpack/watchpack",
+      "author": "Tobias Koppers @sokra"
+    },
+    {
+      "name": "webpack",
+      "version": "5.106.2",
+      "homepage": "https://github.com/webpack/webpack",
+      "author": "Tobias Koppers @sokra"
+    },
+    {
+      "name": "webpack-sources",
+      "version": "3.4.1",
+      "homepage": "https://github.com/webpack/webpack-sources#readme",
+      "author": "Tobias Koppers @sokra"
     },
     {
       "name": "xmlbuilder",
       "version": "15.1.1",
       "homepage": "http://github.com/oozcitak/xmlbuilder-js",
       "author": "Ozgur Ozcitak"
-    },
-    {
-      "name": "xtend",
-      "version": "4.0.2",
-      "homepage": "https://github.com/Raynos/xtend",
-      "author": "Raynos"
     },
     {
       "name": "zwitch",
@@ -1023,16 +1251,22 @@
       "author": "Kiril Vatev"
     },
     {
+      "name": "electron-to-chromium",
+      "version": "1.5.357",
+      "homepage": "https://github.com/Kilian/electron-to-chromium#readme",
+      "author": "Kilian Valkhof"
+    },
+    {
       "name": "graceful-fs",
       "version": "4.2.11",
       "homepage": "https://github.com/isaacs/node-graceful-fs#readme",
       "author": ""
     },
     {
-      "name": "pg-int8",
-      "version": "1.0.1",
-      "homepage": "https://github.com/charmander/pg-int8#readme",
-      "author": ""
+      "name": "picocolors",
+      "version": "1.1.1",
+      "homepage": "https://github.com/alexeyraspopov/picocolors#readme",
+      "author": "Alexey Raspopov"
     },
     {
       "name": "semver",
@@ -1049,190 +1283,66 @@
       "author": "OpenTelemetry Authors"
     },
     {
-      "name": "@opentelemetry/api-logs",
-      "version": "0.207.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/api-logs",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/core",
-      "version": "2.6.1",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-core",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation",
-      "version": "0.207.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-amqplib",
-      "version": "0.61.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-amqplib#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-connect",
-      "version": "0.57.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-connect#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-dataloader",
-      "version": "0.31.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-dataloader#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-fs",
-      "version": "0.33.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-fs#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-generic-pool",
-      "version": "0.57.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-generic-pool#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-graphql",
-      "version": "0.62.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-graphql#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-hapi",
-      "version": "0.60.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-hapi#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-http",
-      "version": "0.214.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation-http",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-ioredis",
-      "version": "0.62.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-ioredis#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-kafkajs",
-      "version": "0.23.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-kafkajs#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-knex",
-      "version": "0.58.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-knex#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-koa",
-      "version": "0.62.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-koa#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-lru-memoizer",
-      "version": "0.58.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-lru-memoizer#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-mongodb",
-      "version": "0.67.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-mongodb#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-mongoose",
-      "version": "0.60.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-mongoose#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-mysql",
-      "version": "0.60.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-mysql#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-mysql2",
-      "version": "0.60.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-mysql2#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-pg",
-      "version": "0.66.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-pg#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-redis",
-      "version": "0.62.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-redis#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/instrumentation-tedious",
-      "version": "0.33.0",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/instrumentation-tedious#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/redis-common",
-      "version": "0.38.3",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/redis-common#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/resources",
-      "version": "2.7.1",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-resources",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/sdk-trace-base",
-      "version": "2.7.1",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-base",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/semantic-conventions",
-      "version": "1.41.1",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js/tree/main/semantic-conventions",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@opentelemetry/sql-common",
-      "version": "0.41.2",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/packages/sql-common#readme",
-      "author": "OpenTelemetry Authors"
-    },
-    {
-      "name": "@prisma/instrumentation",
-      "version": "7.6.0",
-      "homepage": "https://www.prisma.io",
+      "name": "@webassemblyjs/leb128",
+      "version": "1.13.2",
+      "homepage": "https://github.com/xtuc/webassemblyjs#readme",
       "author": ""
     },
     {
-      "name": "import-in-the-middle",
-      "version": "2.0.6",
-      "homepage": "https://github.com/nodejs/import-in-the-middle#readme",
-      "author": "Bryan English"
+      "name": "@xtuc/long",
+      "version": "4.2.2",
+      "homepage": "https://github.com/dcodeIO/long.js#readme",
+      "author": "Daniel Wirtz"
+    },
+    {
+      "name": "baseline-browser-mapping",
+      "version": "2.10.29",
+      "homepage": "https://github.com/web-platform-dx/baseline-browser-mapping#readme",
+      "author": ""
+    },
+    {
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "homepage": "https://github.com/lovell/detect-libc#readme",
+      "author": "Lovell Fuller"
     },
     {
       "name": "jsbi",
       "version": "4.3.2",
       "homepage": "https://github.com/GoogleChromeLabs/jsbi#readme",
       "author": ""
+    },
+    {
+      "name": "web-vitals",
+      "version": "6.2.3",
+      "homepage": "https://github.com/GoogleChrome/web-vitals#readme",
+      "author": "Philip Walton"
+    }
+  ],
+  "BSD-3-Clause": [
+    {
+      "name": "@xtuc/ieee754",
+      "version": "1.2.0",
+      "homepage": "https://github.com/feross/ieee754#readme",
+      "author": "Feross Aboukhadijeh"
+    },
+    {
+      "name": "fast-uri",
+      "version": "3.1.2",
+      "homepage": "https://github.com/fastify/fast-uri",
+      "author": "Vincent Le Goff"
+    },
+    {
+      "name": "ieee754",
+      "version": "1.2.1",
+      "homepage": "https://github.com/feross/ieee754#readme",
+      "author": "Feross Aboukhadijeh"
+    },
+    {
+      "name": "source-map",
+      "version": "0.6.1",
+      "homepage": "https://github.com/mozilla/source-map",
+      "author": "Nick Fitzgerald"
     }
   ],
   "Python-2.0": [
@@ -1243,19 +1353,87 @@
       "author": ""
     }
   ],
-  "BSD-3-Clause": [
+  "CC-BY-4.0": [
     {
-      "name": "ieee754",
-      "version": "1.2.1",
-      "homepage": "https://github.com/feross/ieee754#readme",
-      "author": "Feross Aboukhadijeh"
+      "name": "caniuse-lite",
+      "version": "1.0.30001792",
+      "homepage": "https://github.com/browserslist/caniuse-lite#readme",
+      "author": "Ben Briggs"
+    }
+  ],
+  "BSD-2-Clause": [
+    {
+      "name": "dotenv",
+      "version": "17.4.2",
+      "homepage": "https://github.com/motdotla/dotenv#readme",
+      "author": ""
+    },
+    {
+      "name": "eslint-scope",
+      "version": "5.1.1",
+      "homepage": "http://github.com/eslint/eslint-scope",
+      "author": ""
+    },
+    {
+      "name": "esrecurse",
+      "version": "4.3.0",
+      "homepage": "https://github.com/estools/esrecurse",
+      "author": ""
+    },
+    {
+      "name": "estraverse",
+      "version": "4.3.0",
+      "homepage": "https://github.com/estools/estraverse",
+      "author": ""
+    },
+    {
+      "name": "glob-to-regexp",
+      "version": "0.4.1",
+      "homepage": "https://github.com/fitzgen/glob-to-regexp#readme",
+      "author": "Nick Fitzgerald"
+    },
+    {
+      "name": "terser",
+      "version": "5.47.1",
+      "homepage": "https://terser.org",
+      "author": "Mihai Bazon"
+    },
+    {
+      "name": "uri-js",
+      "version": "4.4.1",
+      "homepage": "https://github.com/garycourt/uri-js",
+      "author": "Gary Court"
     }
   ],
   "BlueOak-1.0.0": [
     {
+      "name": "glob",
+      "version": "13.0.6",
+      "homepage": "https://github.com/isaacs/node-glob#readme",
+      "author": "Isaac Z. Schlueter"
+    },
+    {
+      "name": "lru-cache",
+      "version": "11.3.6",
+      "homepage": "https://github.com/isaacs/node-lru-cache#readme",
+      "author": "Isaac Z. Schlueter"
+    },
+    {
       "name": "minimatch",
       "version": "10.2.5",
       "homepage": "https://github.com/isaacs/minimatch#readme",
+      "author": "Isaac Z. Schlueter"
+    },
+    {
+      "name": "minipass",
+      "version": "7.1.3",
+      "homepage": "https://github.com/isaacs/minipass#readme",
+      "author": "Isaac Z. Schlueter"
+    },
+    {
+      "name": "path-scurry",
+      "version": "2.0.2",
+      "homepage": "https://github.com/isaacs/path-scurry#readme",
       "author": "Isaac Z. Schlueter"
     },
     {
@@ -1265,12 +1443,26 @@
       "author": "Isaac Z. Schlueter"
     }
   ],
-  "BSD-2-Clause": [
+  "MPL-2.0": [
     {
-      "name": "uri-js",
-      "version": "4.4.1",
-      "homepage": "https://github.com/garycourt/uri-js",
-      "author": "Gary Court"
+      "name": "lightningcss",
+      "version": "1.33.0",
+      "homepage": "https://github.com/parcel-bundler/lightningcss#readme",
+      "author": ""
+    },
+    {
+      "name": "lightningcss-darwin-arm64",
+      "version": "1.33.0",
+      "homepage": "https://github.com/parcel-bundler/lightningcss#readme",
+      "author": ""
+    }
+  ],
+  "FSL-1.1-Apache-2.0": [
+    {
+      "name": "sentry",
+      "version": "0.45.0",
+      "homepage": "https://github.com/getsentry/cli#readme",
+      "author": ""
     }
   ]
 }
