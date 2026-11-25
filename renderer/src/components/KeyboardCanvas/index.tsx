@@ -50,12 +50,18 @@ export interface KeyboardCanvasProps {
    */
   colorMap: Map<string, string>;
   onKeyClick?: (key: string) => void;
+  /** Called as the pointer moves over keys; `null` when it leaves them. */
+  onKeyHover?: (hover: { key: string; x: number; y: number } | null) => void;
+  /** Size the canvas to the keyboard instead of the window height. */
+  fitToKeyboard?: boolean;
 }
 
 export function KeyboardCanvas({
   keyboardName,
   colorMap,
   onKeyClick,
+  onKeyHover,
+  fitToKeyboard,
 }: KeyboardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fontLoaded, setFontLoaded] = useState(false);
@@ -67,6 +73,10 @@ export function KeyboardCanvas({
 
   const keyboardLayout = lookupKeyboard(keyboardName);
   const keyboard = new Keyboard(keyboardLayout, 0.9);
+  // Rows are 80px tall plus the gap, scaled, with 20px padding top and bottom.
+  const canvasHeight = fitToKeyboard
+    ? Math.ceil(keyboard.rows.length * (80 + keyboard.gap) * 0.9 + 40)
+    : height;
 
   useLayoutEffect(() => {
     if (!fontLoaded) {
@@ -109,9 +119,9 @@ export function KeyboardCanvas({
     if (!ctx) return;
 
     canvasRef.current.style.width = `${width}px`;
-    canvasRef.current.style.height = `${height}px`;
+    canvasRef.current.style.height = `${canvasHeight}px`;
     canvasRef.current.width = width * pr;
-    canvasRef.current.height = height * pr;
+    canvasRef.current.height = canvasHeight * pr;
 
     keyboard.drawKeyboard(ctx);
 
@@ -123,17 +133,16 @@ export function KeyboardCanvas({
     });
 
     return () => {
-      ctx.clearRect(0, 0, width * pr, height * pr);
+      ctx.clearRect(0, 0, width * pr, canvasHeight * pr);
     };
-  }, [width, height, pr, fontLoaded, keyboardName, colorMap]);
+  }, [width, canvasHeight, pr, fontLoaded, keyboardName, colorMap]);
 
-  // Click hit-testing: mirrors the coordinate math in Keyboard.drawKey
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!onKeyClick) return;
+  // Hit-testing: mirrors the coordinate math in Keyboard.drawKey
+  const hitTest = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>): string | null => {
       const rect = e.currentTarget.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+      const pointX = e.clientX - rect.left;
+      const pointY = e.clientY - rect.top;
 
       const scale = 0.9;
       const keyboardLength = keyboard.getRowWidth(0);
@@ -146,32 +155,41 @@ export function KeyboardCanvas({
         // keyboard.gap is already scaled (4.5), so: i * (80 + 4.5) * 0.9 + 20
         const keyTop = i * (80 + keyboard.gap) * scale + 20;
         const keyBottom = keyTop + 80 * scale;
-        if (clickY < keyTop || clickY > keyBottom) continue;
+        if (pointY < keyTop || pointY > keyBottom) continue;
 
         // Mirrors drawKey's x accumulation: raw widths + scaled gaps
-        // drawKey: for q < j: x += key.width (raw) + this.gap (scaled = 4.5)
-        // then key is drawn at (x + offset) * scale in CSS pixels
         let xRaw = 0;
         for (let j = 0; j < row.length; j++) {
           const cell = row[j];
           const key = Array.isArray(cell) ? cell[0] : cell;
           const kw = (key.width || 80) * scale;
-          // drawKey positions the key at CSS coord (xRaw + baseOffset) * scale
-          // where baseOffset = (window.innerWidth - rowWidth) / 2
-          // The canvas element starts at rect.left in the viewport.
-          // makeKey renders at that CSS coord relative to the canvas origin,
-          // so the key's left edge in CSS pixels within the canvas is that value.
           const keyLeftInCanvas = (xRaw + baseOffset) * scale;
-          if (clickX >= keyLeftInCanvas && clickX < keyLeftInCanvas + kw) {
-            onKeyClick(key.key);
-            return;
+          if (pointX >= keyLeftInCanvas && pointX < keyLeftInCanvas + kw) {
+            return key.key;
           }
           xRaw += key.width || 80;
           xRaw += keyboard.gap; // gap already scaled (= 5 * 0.9 = 4.5)
         }
       }
+      return null;
     },
-    [onKeyClick, keyboard],
+    [keyboard],
+  );
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const key = hitTest(e);
+      if (key !== null) onKeyClick?.(key);
+    },
+    [onKeyClick, hitTest],
+  );
+
+  const handleMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const key = hitTest(e);
+      onKeyHover?.(key === null ? null : { key, x: e.clientX, y: e.clientY });
+    },
+    [onKeyHover, hitTest],
   );
 
   return (
@@ -179,6 +197,8 @@ export function KeyboardCanvas({
       ref={canvasRef}
       className="mx-auto"
       onClick={onKeyClick ? handleClick : undefined}
+      onMouseMove={onKeyHover ? handleMove : undefined}
+      onMouseLeave={onKeyHover ? () => onKeyHover(null) : undefined}
       style={onKeyClick ? { cursor: "pointer" } : undefined}
     />
   );
