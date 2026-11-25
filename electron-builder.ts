@@ -254,6 +254,14 @@ const config: Configuration = {
     ],
   },
 
+  // electron-builder defaults to the core20 base, whose Ubuntu 20.04 build
+  // container cannot start snapd on the arm64 runner (AppArmor profiles fail to
+  // load against the runner's newer kernel), so the arm64 snap build failed.
+  // core22 builds on both architectures; core20 is also past end of life.
+  snap: {
+    base: "core22",
+  },
+
   nsis: {
     oneClick: false,
   },
