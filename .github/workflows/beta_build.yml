@@ -30,9 +30,46 @@ jobs:
     secrets:
       REPO_VARIABLES_PAT: ${{ secrets.GH_TOKEN_FOR_VARIABLES }}
 
+  seed-pnpm-store:
+    name: Seed pnpm store (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, ubuntu-latest, ubuntu-24.04-arm, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: latest
+          run_install: false
+
+      - name: Get pnpm store path
+        id: store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Restore pnpm store cache
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.store.outputs.path }}
+          key: ${{ runner.os }}-${{ runner.arch }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-pnpm-store-
+
+      - name: Fetch packages into store
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm fetch
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
   build:
     name: Build and Upload
-    needs: reserve_build_number
+    needs: [reserve_build_number, seed-pnpm-store]
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -84,10 +121,19 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: latest
-          cache: pnpm
-          cache-dependency-path: ./pnpm-lock.yaml
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+      - name: Get pnpm store path
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Restore pnpm store cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-${{ runner.arch }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-pnpm-store-
 
       - uses: actions/cache@v5
         name: Setup cache for next.js
@@ -108,8 +154,7 @@ jobs:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
       - name: Install dependencies
-        run: |
-          pnpm install
+        run: pnpm install --prefer-offline
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
           APPLE_API_KEY: ${{ startsWith(matrix.os, 'macos') && format('private_keys/AuthKey_{0}.p8', secrets.api_key_id) || '' }}

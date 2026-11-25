@@ -7,13 +7,9 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     env:
       FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
-
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
 
     steps:
       - name: Check out Git repository
@@ -29,6 +25,7 @@ jobs:
         with:
           node-version: latest
           cache: pnpm
+          cache-dependency-path: ./pnpm-lock.yaml
 
       # pnpm ignores registry tokens in a repository .npmrc (they could be sent
       # to a registry the repo controls), so the token goes in pnpm's own
