@@ -82,7 +82,7 @@ function LoadingSpinner() {
 function UnauthenticatedView() {
   const { setModal } = useModal();
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-full">
       <PageHeader
         icon={faMicrochipAi}
         title="AI Assistant"
@@ -147,7 +147,7 @@ function EmptyState({
   refreshing: boolean;
 }) {
   return (
-    <div className="flex flex-col overflow-y-auto">
+    <div className="flex flex-col">
       <PageHeader
         icon={faMicrochipAi}
         title="AI Assistant"
@@ -203,7 +203,7 @@ function InsightsDashboard({
   animateSummary: boolean;
 }) {
   return (
-    <div className="flex flex-col overflow-y-auto">
+    <div className="flex flex-col">
       <PageHeader
         icon={faMicrochipAi}
         title="AI Assistant"
@@ -348,7 +348,7 @@ export function ClientAssistant() {
 
   if (!isPremiumPlan(plan)) {
     return (
-      <div className="flex flex-col h-full overflow-y-auto">
+      <div className="flex flex-col h-full">
         <PageHeader
           icon={faMicrochipAi}
           title="AI Assistant"

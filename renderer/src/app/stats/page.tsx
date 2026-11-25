@@ -60,10 +60,10 @@ function PremiumCharts({ days, keyboard }: { days: number | null; keyboard: stri
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+    <>
       <KeyTimingBars days={days} keyboard={keyboard} />
       <SpeedDistribution days={days} />
-    </div>
+    </>
   );
 }
 
@@ -78,7 +78,7 @@ const StatsPage = () => {
           key={range.value}
           onClick={() => setTimeRange(range.value)}
           className={clsx(
-            "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-150",
+            "h-9 px-3 rounded-lg text-xs font-semibold transition-colors duration-150",
             timeRange === range.value
               ? "bg-sky-400/10 text-sky-400 border border-sky-400/30"
               : "bg-slate-100 dark:bg-white/[0.04] text-slate-500 dark:text-slate-400 border border-transparent hover:text-slate-700 dark:hover:text-slate-200"
@@ -98,26 +98,25 @@ const StatsPage = () => {
         subtitle="Your typing performance over time"
         iconBg="bg-sky-400/10"
         iconColor="text-sky-400"
-        headerRight={timeRangeButtons}
-      >
-        <div className="flex justify-center">
-          <div className="w-1/2">
-            <KeyboardSelect
-              selectedKeyboardName={keyboard}
-              setSelectedKeyboard={setKeyboard}
-              label="Keyboard Layout"
-              description="Show statistics for a specific keyboard layout"
-            />
+        headerRight={
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="w-48">
+              <KeyboardSelect
+                selectedKeyboardName={keyboard}
+                setSelectedKeyboard={setKeyboard}
+                label="Keyboard Layout"
+                hideLabel
+              />
+            </div>
+            {timeRangeButtons}
           </div>
-        </div>
-      </PageHeader>
+        }
+      />
 
       <div className="px-6">
-        <div className="py-6">
+        <div className="mx-auto flex w-full flex-col gap-6 pb-6 pt-2 lg:w-[80%]">
           <BestForEachLevel keyboard={keyboard} />
-        </div>
-        <Barline keyboard={keyboard} />
-        <div className="py-6">
+          <Barline keyboard={keyboard} />
           <PremiumCharts days={RANGE_DAYS[timeRange]} keyboard={keyboard} />
         </div>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { BAR_SURFACE } from "@/lib/bar-surface";
 import User from "@/components/User";
 import {
   faChartColumn,
@@ -86,23 +87,8 @@ export default function Menu({
     setHydratedSettings((prev) => ({ ...prev, ...settings }));
   }, [settings]);
 
-  const [isScrolled, setIsScrolled] = useState(false);
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 0);
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
-    <div
-      className={clsx(
-        "top-0 sticky relative w-full z-50 transition-all duration-300 ease-in-out",
-        isScrolled
-          ? "bg-white/90 dark:bg-[#0d0f14]/95 backdrop-blur-md shadow-sm shadow-black/10 dark:shadow-black/30 border-b border-slate-200/60 dark:border-white/[0.06]"
-          : "bg-transparent"
-      )}
-    >
+    <div className={clsx("top-0 sticky relative w-full z-50", BAR_SURFACE)}>
       <div className="flex items-center justify-between px-6 py-2">
         {/* Primary navigation */}
         <div className="flex items-center gap-1">

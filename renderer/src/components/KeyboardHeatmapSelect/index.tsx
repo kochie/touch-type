@@ -78,12 +78,15 @@ interface KeyboardSelectProps {
   selectedKeyboardName: KeyboardLayoutNames;
   setSelectedKeyboard: (keyboard: KeyboardLayoutNames) => void;
   label: string
-  description: string
+  /** Hidden when omitted. */
+  description?: string
+  /** Keep the label for screen readers but don't show it (e.g. inside a title bar). */
+  hideLabel?: boolean
   /** When given, layouts not in this set are greyed out and can't be picked. */
   enabledLayouts?: ReadonlySet<KeyboardLayoutNames>;
 }
 
-export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboard, label, description, enabledLayouts}: KeyboardSelectProps) {
+export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboard, label, description, hideLabel, enabledLayouts}: KeyboardSelectProps) {
   const handleChange = (value: KeyboardLayoutNames) => {
     const keyboard = keyboards.find((keyboard) => keyboard.layout === value);
     if (!keyboard) return 
@@ -92,17 +95,19 @@ export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboar
 
   return (
     <Field>
-      <Label className="block text-sm font-medium leading-6">
+      <Label className={hideLabel ? "sr-only" : "block text-sm font-medium leading-6"}>
         {label}
       </Label>
-      <Description as="span" className="text-sm text-gray-500">
-        {description}
-      </Description>
+      {description && (
+        <Description as="span" className="text-sm text-gray-500">
+          {description}
+        </Description>
+      )}
       <Listbox value={selectedKeyboardName} onChange={handleChange}>
         <ListboxButton
           className={clsx(
-            "relative block w-full rounded-lg bg-white/5 py-1.5 pr-8 pl-3 text-left text-sm/6 text-white",
-            "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
+            "relative flex h-9 w-full items-center rounded-lg bg-slate-200/70 dark:bg-white/5 pr-8 pl-3 text-left text-sm/6 text-slate-900 dark:text-white",
+            "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-slate-400/50 dark:data-[focus]:outline-white/25",
           )}
         >
           <span className="flex items-center">
@@ -126,7 +131,8 @@ export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboar
           transition
           className={clsx(
             // "m-y-10",
-            "w-[var(--button-width)] rounded-xl border border-white/5 bg-black p-1 focus:outline-none",
+            // Above the sticky title bar (z-20) the picker now lives in.
+            "z-50 w-[var(--button-width)] rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-white/5 dark:bg-black dark:shadow-none focus:outline-none",
             "transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0",
             // "backdrop-blur-md",
           )}
@@ -134,7 +140,7 @@ export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboar
           {keyboards.map((keyboard) => (
             <ListboxOption
               key={keyboard.name}
-              className="group relative flex cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-35 data-[disabled]:hover:bg-transparent"
+              className="group relative flex cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-slate-100 dark:data-[focus]:bg-white/10 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-35 data-[disabled]:hover:bg-transparent"
               value={keyboard.layout}
               disabled={enabledLayouts ? !enabledLayouts.has(keyboard.layout) : false}
               title={enabledLayouts && !enabledLayouts.has(keyboard.layout) ? "No data for this layout yet" : undefined}
@@ -149,7 +155,7 @@ export default function KeyboardSelect({selectedKeyboardName, setSelectedKeyboar
                     <span
                       className={clsx(
                         selected ? "font-semibold" : "font-normal",
-                        "ml-3 text-sm/6 text-white",
+                        "ml-3 text-sm/6 text-slate-900 dark:text-white",
                       )}
                     >
                       {keyboard.name}

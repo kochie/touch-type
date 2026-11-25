@@ -27,7 +27,7 @@ export default function HeatmapPage() {
           key={range.value}
           onClick={() => setTimeRange(range.value)}
           className={clsx(
-            "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-150",
+            "h-9 px-3 rounded-lg text-xs font-semibold transition-colors duration-150",
             timeRange === range.value
               ? "bg-rose-400/10 text-rose-400 border border-rose-400/30"
               : "bg-slate-100 dark:bg-white/[0.04] text-slate-500 dark:text-slate-400 border border-transparent hover:text-slate-700 dark:hover:text-slate-200"
@@ -47,19 +47,20 @@ export default function HeatmapPage() {
         subtitle="See which keys you miss most"
         iconBg="bg-rose-400/10"
         iconColor="text-rose-400"
-        headerRight={timeRangeButtons}
-      >
-        <div className="flex justify-center">
-          <div className="w-1/2">
-            <KeyboardSelect
-              selectedKeyboardName={keyboard}
-              setSelectedKeyboard={setKeyboard}
-              label="Keyboard Layout"
-              description="Select a keyboard layout to display the heatmap of incorrect key taps."
-            />
+        headerRight={
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="w-48">
+              <KeyboardSelect
+                selectedKeyboardName={keyboard}
+                setSelectedKeyboard={setKeyboard}
+                label="Keyboard Layout"
+                hideLabel
+              />
+            </div>
+            {timeRangeButtons}
           </div>
-        </div>
-      </PageHeader>
+        }
+      />
 
       <div className="px-6">
         <HeatmapCanvas keyboardName={keyboard} timeRange={timeRange} />

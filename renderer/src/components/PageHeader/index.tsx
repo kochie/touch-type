@@ -1,6 +1,7 @@
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
+import { BAR_SURFACE } from "@/lib/bar-surface";
 
 interface PageHeaderProps {
   icon: IconDefinition;
@@ -22,31 +23,38 @@ export default function PageHeader({
   children,
 }: PageHeaderProps) {
   return (
-    <div className="px-6 pt-6 pb-4">
-      <div className="flex items-start gap-4 mb-4">
-        <div
-          className={clsx(
-            "w-13 h-13 rounded-2xl flex items-center justify-center flex-shrink-0",
-            iconBg
-          )}
-        >
-          <FontAwesomeIcon icon={icon} className={clsx("w-6 h-6", iconColor)} />
-        </div>
-        <div className="flex-1 flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
-              {title}
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              {subtitle}
-            </p>
+    <>
+      {/* Only the title row sticks; `children` (filters, pickers) scroll away. */}
+      <div className={clsx("sticky top-0 z-20 px-6 pt-6 pb-4", BAR_SURFACE)}>
+        <div className="flex items-start gap-4">
+          <div
+            className={clsx(
+              "w-13 h-13 rounded-2xl flex items-center justify-center flex-shrink-0",
+              iconBg
+            )}
+          >
+            <FontAwesomeIcon icon={icon} className={clsx("w-6 h-6", iconColor)} />
           </div>
-          {headerRight && (
-            <div className="flex items-center">{headerRight}</div>
-          )}
+          <div className="flex-1 flex items-start justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                {title}
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                {subtitle}
+              </p>
+            </div>
+            {headerRight && (
+              <div className="flex items-center">{headerRight}</div>
+            )}
+          </div>
         </div>
       </div>
-      {children}
-    </div>
+      {children ? (
+        <div className="px-6 pb-4">{children}</div>
+      ) : (
+        <div className="h-4" aria-hidden />
+      )}
+    </>
   );
 }

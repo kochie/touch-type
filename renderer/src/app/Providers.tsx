@@ -104,7 +104,7 @@ function ModalSetup() {
         handleWhatsNew={() => setModal(ModalType.WHATS_NEW)}
         handlePracticeSettings={() => setModal(ModalType.PRACTICE_SETTINGS)}
       />
-      <div className="px-6 pt-2">
+      <div className="px-6 pt-2 empty:hidden">
         <PvPBanner />
       </div>
       <ModalController />

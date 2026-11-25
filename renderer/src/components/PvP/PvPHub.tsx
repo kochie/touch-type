@@ -403,7 +403,7 @@ export default function PvPHub() {
   ];
 
   return (
-    <div className="flex flex-col overflow-y-auto">
+    <div className="flex flex-col">
       <PageHeader
         icon={faSwords}
         title="Arena"
