@@ -60,6 +60,15 @@ jobs:
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
+      # pnpm 12 ignores registry tokens that a repository .npmrc takes from an
+      # environment variable, so the FontAwesome Pro install fails with 401.
+      # A user-level ~/.npmrc is still honoured.
+      - name: Authenticate to the FontAwesome registry
+        shell: bash
+        run: echo "//npm.fontawesome.com/:_authToken=${FONTAWESOME_NPM_AUTH_TOKEN}" >> ~/.npmrc
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
       - name: Install dependencies
         run: pnpm install
         env:
