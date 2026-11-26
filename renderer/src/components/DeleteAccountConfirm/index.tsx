@@ -38,7 +38,7 @@ export default function DeleteAccountConfirm({
 
   return (
     <Transition show={open} as="div">
-      <Dialog as="div" className="relative z-50" onClose={close}>
+      <Dialog as="div" className="relative z-[70]" onClose={close}>
         <TransitionChild
           as="div"
           enter="ease-out duration-200"

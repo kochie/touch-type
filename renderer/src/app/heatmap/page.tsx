@@ -10,7 +10,7 @@ import KeyImprovementHeatmap from "@/components/KeyImprovementHeatmap";
 import KeyTimingHeatmap from "@/components/KeyTimingHeatmap";
 import KeyMapSelect from "@/components/KeyMapSelect";
 import PremiumUpsell from "@/components/PremiumUpsell";
-import { isPremiumPlan, usePlan } from "@/lib/plan_hook";
+import { usePremiumAccess } from "@/lib/plan_hook";
 import KeyboardSelect from "@/components/KeyboardHeatmapSelect";
 import { KeyboardLayoutNames } from "@/keyboards";
 import PageHeader from "@/components/PageHeader";
@@ -24,8 +24,8 @@ export default function HeatmapPage() {
   const [keyboard, setKeyboard] = useState(KeyboardLayoutNames.MACOS_US_QWERTY);
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [mapId, setMapId] = useState<KeyMapId>("missed");
-  const plan = usePlan();
-  const isPremium = plan ? isPremiumPlan(plan) : false;
+  const access = usePremiumAccess();
+  const isPremium = access === "premium";
 
   const timeRangeButtons = (
     <TimeRangeSwitch value={timeRange} onChange={setTimeRange} accent="rose" />
@@ -35,11 +35,12 @@ export default function HeatmapPage() {
     const info = KEY_MAPS.find((m) => m.id === mapId) ?? KEY_MAPS[0];
 
     if (info.premium) {
-      // No plan yet means still loading or signed out: show nothing rather than a teaser.
-      if (!plan) return null;
+      // Still working out who is viewing: show nothing rather than flash a teaser.
+      if (access === "loading") return null;
       if (!isPremium) {
         return (
           <PremiumUpsell
+            layout="empty"
             source="key-map"
             title={`${info.label} map with Premium`}
             body={info.upsell ?? "Unlock this map with Premium."}

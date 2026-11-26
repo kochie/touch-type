@@ -92,7 +92,7 @@ export function ModalController() {
         />
       </Modal>
 
-      <Modal open={modal === ModalType.ACCOUNT} onClose={closeModal}>
+      <Modal open={modal === ModalType.ACCOUNT} onClose={closeModal} panelClassName="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all my-8 w-[44rem] max-w-[calc(100vw-2rem)]">
         <Suspense fallback={<Loading />}>
           <Account
             onChangePassword={() => setModal(ModalType.CHANGE_PASSWORD)}

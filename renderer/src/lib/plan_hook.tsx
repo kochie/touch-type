@@ -112,3 +112,34 @@ export function isPremiumPlan(plan: Plan | null): boolean {
 export function usePlan() {
   return useContext(PlanContext);
 }
+
+export type PremiumAccess = "loading" | "signed-out" | "free" | "premium";
+
+// A stored session that can't be refreshed (offline, server down) keeps
+// auth's isLoading true while it retries. Past this, treat the viewer as
+// signed out instead of leaving a locked page blank.
+const AUTH_GRACE_MS = 1500;
+
+function useAuthSettled(isLoading: boolean): boolean {
+  const [gaveUp, setGaveUp] = useState(false);
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setTimeout(() => setGaveUp(true), AUTH_GRACE_MS);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+  return !isLoading || gaveUp;
+}
+
+/**
+ * Where the viewer stands for premium content. `plan` alone can't say: it is
+ * null both while loading and when signed out, which left locked pages blank.
+ */
+export function usePremiumAccess(): PremiumAccess {
+  const { user, isLoading } = useSupabase();
+  const plan = usePlan();
+  const authSettled = useAuthSettled(isLoading);
+  if (!authSettled) return "loading";
+  if (!user) return "signed-out";
+  if (!plan) return "loading";
+  return isPremiumPlan(plan) ? "premium" : "free";
+}

@@ -3,7 +3,7 @@ import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/re
 export default function Modal({ open, onClose, children, panelClassName }: { open: boolean; onClose: () => void; children: React.ReactNode; panelClassName?: string }) {
   return (
     <Transition show={open} as='div'>
-      <Dialog as="div" className="relative z-10" onClose={onClose}>
+      <Dialog as="div" className="relative z-[60]" onClose={onClose}>
         <TransitionChild
           as='div'
           enter="ease-out duration-300"

@@ -19,10 +19,62 @@ enum PlanType {
   PREMIUM = "premium",
 }
 
-const features = {
-  [PlanType.FREE]: ["Settings Sync", "Cloud Saves", "Leaderboard Access"],
-  [PlanType.PREMIUM]: ["AI Tutor", "Progress Reports"],
-};
+interface Feature {
+  name: string;
+  description: string;
+}
+
+const FREE_FEATURES: Feature[] = [
+  { name: "Settings Sync", description: "Your settings follow you to every device you sign in on." },
+  { name: "Cloud Saves", description: "Every typing session is backed up, so your history is never lost." },
+  { name: "Leaderboard Access", description: "Compete with other typists and see where your speed ranks." },
+];
+
+const PREMIUM_FEATURES: Feature[] = [
+  { name: "AI Tutor", description: "Personalised coaching built from your recent sessions, refreshed nightly." },
+  { name: "Progress Reports", description: "Regular summaries of how your speed and accuracy are trending." },
+  { name: "Key Timing Map", description: "A keyboard heatmap of how long each key takes you, so slow keys stand out." },
+  { name: "Improvement Map", description: "See which keys you are getting faster at, and which are slipping." },
+  { name: "Consistency Map", description: "Shows how steady your timing is on each key, not just how fast." },
+  { name: "Finger Map", description: "Compare speed and accuracy finger by finger to spot a weak one." },
+  { name: "Confusion Map", description: "Shows which keys you mix up, and what you type instead." },
+  { name: "Slowest Letters", description: "Ranks your slowest letters so you know exactly what to drill." },
+  { name: "Letter Pair Trouble Spots", description: "Finds the two-letter combinations that slow you down the most." },
+  { name: "Rhythm Consistency", description: "Scores how even your keystroke rhythm is across each session." },
+  { name: "Speed Comparison", description: "See how your speed compares with everyone else's." },
+];
+
+const TOOLTIP_WIDTH = 224;
+
+function FeaturePill({ feature, className }: { feature: Feature; className: string }) {
+  const [alignRight, setAlignRight] = useState(false);
+
+  // Flip to right-aligned when a left-aligned tooltip would run past the modal.
+  const measure = (el: HTMLElement) => {
+    const bounds = el.closest("[data-tooltip-bounds]")?.getBoundingClientRect();
+    if (!bounds) return;
+    setAlignRight(el.getBoundingClientRect().left + TOOLTIP_WIDTH > bounds.right - 16);
+  };
+
+  return (
+    <span
+      className="group relative inline-flex cursor-default select-none"
+      tabIndex={0}
+      onMouseEnter={(e) => measure(e.currentTarget)}
+      onFocus={(e) => measure(e.currentTarget)}
+    >
+      <span className={clsx("inline-flex items-center rounded-md px-2 py-1 text-xs font-medium transition-colors duration-150", className)}>
+        {feature.name}
+      </span>
+      <span
+        role="tooltip"
+        className={clsx("pointer-events-none absolute top-full z-10 mt-1 w-56 rounded-lg bg-gray-900 px-3 py-2 text-xs font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100", alignRight ? "right-0" : "left-0")}
+      >
+        {feature.description}
+      </span>
+    </span>
+  );
+}
 
 export default function Account({ onError, onCancel, onChangePassword }) {
   const [submitting, setSubmitting] = useState(false);
@@ -169,8 +221,8 @@ export default function Account({ onError, onCancel, onChangePassword }) {
   return (
     <>
     <div className="h-full">
-      <div className="flex min-h-full max-h-[80vh] max-w-7xl">
-        <div className="flex flex-1 flex-col justify-center mx-8 my-12">
+      <div data-tooltip-bounds className="flex max-h-[80vh] max-w-7xl overflow-y-auto py-12">
+        <div className="flex flex-1 flex-col mx-8">
           <div className="mx-auto w-full">
             <div>
               <h2 className="text-2xl font-bold leading-9 tracking-tight text-gray-900">
@@ -415,7 +467,7 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                 ) : (
                   <>
                     {subscription.billing_plan === "premium" && (
-                      <div className="mt-3 w-full rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col gap-1.5 text-sm">
+                      <div className="mt-3 mx-auto w-[70%] rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col gap-1.5 text-sm">
                         {subscription.billing_period && (
                           <div className="flex justify-between">
                             <span className="text-gray-500">Billing period</span>
@@ -470,12 +522,25 @@ export default function Account({ onError, onCancel, onChangePassword }) {
                         )}
                       </div>
                     )}
-                    <div className="flex gap-1 mt-3">
-                      {features[subscription.billing_plan as PlanType]?.map((feature) => (
-                        <span key={feature} className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                          {feature}
-                        </span>
-                      ))}
+                    <div className="mt-3 flex flex-col gap-1.5">
+                      <div className="flex flex-wrap gap-1">
+                        {FREE_FEATURES.map((feature) => (
+                          <FeaturePill key={feature.name} feature={feature} className="bg-gray-100 text-gray-600 group-hover:bg-gray-200 group-hover:text-gray-900 group-focus:bg-gray-200 group-focus:text-gray-900" />
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {PREMIUM_FEATURES.map((feature) => (
+                          <FeaturePill
+                            key={feature.name}
+                            feature={feature}
+                            className={
+                              subscription.billing_plan === "premium"
+                                ? "bg-purple-100 text-purple-700 group-hover:bg-purple-200 group-hover:text-purple-900 group-focus:bg-purple-200 group-focus:text-purple-900"
+                                : "bg-purple-50 text-purple-400 group-hover:bg-purple-100 group-hover:text-purple-600 group-focus:bg-purple-100 group-focus:text-purple-600"
+                            }
+                          />
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}
@@ -483,21 +548,21 @@ export default function Account({ onError, onCancel, onChangePassword }) {
 
               <div className="border-b border-gray-900/10 my-6" />
 
-              <div>
+              <div className="pb-12">
                 <h2 className="text-base font-semibold leading-7 text-gray-900">
                   Danger Zone
                 </h2>
 
-                <div className="flex gap-12">
-                  <p className="mt-1 text-sm leading-6 text-gray-600">
-                    Permanently delete your acccount and all information
+                <div className="mt-1 flex items-center justify-between gap-6">
+                  <p className="text-sm leading-6 text-gray-600">
+                    Permanently delete your account and all information
                     associated with it.
                   </p>
                   <button
                     onClick={() => setConfirmingDelete(true)}
                     type="button"
                     disabled={deleteSubmitting}
-                    className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                    className="shrink-0 whitespace-nowrap rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                   >
                     {!deleteSubmitting ? (
                       "Delete Account"

@@ -19,7 +19,7 @@ interface Props {
 }
 
 // Same blue -> red scale as the key heatmap.
-function colorFor(t: number) {
+export function colorFor(t: number) {
   const r = Math.round(59 + t * (239 - 59));
   const g = Math.round(130 + t * (68 - 130));
   const b = Math.round(246 + t * (68 - 246));
