@@ -23,6 +23,7 @@ import { StreakProvider } from "@/lib/streak_hook";
 import { ProfileTimezoneProvider } from "@/lib/profile-timezone";
 import { IapBridge } from "@/lib/iap-bridge";
 import { PushBridge } from "@/lib/push-bridge";
+import { UnlockCelebration } from "@/components/avatars/UnlockCelebration";
 
 export default function Providers({ children }) {
   return (
@@ -40,6 +41,7 @@ export default function Providers({ children }) {
                     <CodeProvider>
                       <ModalProvider>
                         <Toaster richColors position="top-center" />
+                        <UnlockCelebration />
                         <ModalSetup />
                         <div className="flex-1 min-h-0 overflow-y-auto">
                           {children}

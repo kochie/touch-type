@@ -475,11 +475,11 @@ export default function PvPHub() {
             {/* Right: avatar + stat cards */}
             <div className="w-64 flex-shrink-0 flex flex-col gap-3">
               {user && (
-                <div className="rounded-xl bg-surface border border-line overflow-hidden">
+                <div className="rounded-xl bg-surface border border-line">
                   {/* Avatar row */}
                   <button
                     onClick={() => setPickerOpen((o) => !o)}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700/40 transition-colors duration-150 text-left"
+                    className="w-full flex items-center gap-3 rounded-t-xl px-4 pb-3 pt-5 hover:bg-slate-700/40 transition-colors duration-150 text-left"
                   >
                     <AvatarComposite face={myFace} hat={myHat} size={44} />
                     <div className="flex-1 min-w-0">
@@ -584,7 +584,7 @@ export default function PvPHub() {
       <Modal
         open={pickerOpen && !!user}
         onClose={() => setPickerOpen(false)}
-        panelClassName="relative transform rounded-2xl bg-slate-950 border border-line shadow-2xl transition-all my-8 overflow-y-auto max-h-[90vh]"
+        panelClassName="relative transform rounded-2xl bg-slate-950 border border-line shadow-2xl transition-all my-8 w-[46rem] max-w-[calc(100vw-2rem)] overflow-y-auto overflow-x-hidden max-h-[90vh]"
       >
         {user && (
           <AvatarPicker

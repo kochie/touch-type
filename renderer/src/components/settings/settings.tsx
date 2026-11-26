@@ -163,6 +163,15 @@ function AppearanceSettings() {
       />
 
       <SettingsSwitch
+        enabled={settings.reduceMotion}
+        setEnabled={(enabled: boolean) =>
+          dispatchSettings({ type: "SET_REDUCE_MOTION", reduceMotion: enabled })
+        }
+        label="Reduce motion"
+        description="Stops avatar animations, victory effects, confetti and interface transitions. Also applied automatically when your system asks for reduced motion. Saved on this device only."
+      />
+
+      <SettingsSwitch
         enabled={settings.blinker}
         setEnabled={(enabled: boolean) =>
           dispatchSettings({ type: "SET_BLINKER", blinker: enabled })

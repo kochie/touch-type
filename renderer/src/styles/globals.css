@@ -179,3 +179,26 @@ html:not(.dark) .border-slate-200 {
     }
   }
 }
+
+/* ---- Avatar sparkle (face frames live in sprite-frames.ts) ------------- */
+@keyframes av-twinkle { 0%,100% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; transform: scale(1); } }
+.av-spark { transform-box: fill-box; transform-origin: center; opacity: 0; animation: av-twinkle 2.4s steps(4) infinite; }
+@media (prefers-reduced-motion: reduce) { .av-spark { animation: none !important; } }
+
+@keyframes confetti-fall {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  15% { transform: translate(calc(var(--dx) * .5), -18vh) rotate(calc(var(--spin) * .3)); opacity: 1; }
+  100% { transform: translate(var(--dx), 70vh) rotate(var(--spin)); opacity: 0; }
+}
+@keyframes av-new-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,.55); } 50% { box-shadow: 0 0 0 4px rgba(251,191,36,0); } }
+
+/* Reduce motion: the in-app setting behaves like the OS preference. */
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-reduce-motion="true"] .av-spark { animation: none !important; opacity: 0; }

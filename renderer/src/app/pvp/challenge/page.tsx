@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { type PvPMatch, usePvP } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
+import { AvatarComposite } from "@/components/avatars/AvatarComposite";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSpinner,
@@ -21,13 +22,30 @@ import clsx from "clsx";
 function ChallengePageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, isLoading: isUserLoading } = useSupabase();
+  const { user, supabase, isLoading: isUserLoading } = useSupabase();
   const { fetchById, cancelMatch, forfeitMatch, startRace } = usePvP();
 
   const id = searchParams.get("id");
   const [match, setMatch] = useState<PvPMatch | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [myAvatar, setMyAvatar] = useState<{ face: string; hat: string | null } | null>(null);
+  const [cheering, setCheering] = useState(false);
+
+  const iWon = match?.status === "completed" && !!user && match.winner_id === user.id;
+  useEffect(() => {
+    if (!iWon || !user) return;
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.from("profiles").select("equipped_face, equipped_hat").eq("id", user.id).single();
+      if (cancelled || !data) return;
+      setMyAvatar({ face: data.equipped_face ?? "classic", hat: data.equipped_hat ?? null });
+      setCheering(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [iWon, user, supabase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -154,10 +172,27 @@ function ChallengePageInner() {
     return (
       <div className="max-w-2xl mx-auto py-12 space-y-6">
         <div className="text-center">
-          <FontAwesomeIcon
-            icon={faTrophy}
-            className="w-12 h-12 text-yellow-500 mb-3"
-          />
+          {iWon && myAvatar ? (
+            <button
+              type="button"
+              onClick={() => setCheering(true)}
+              title="Celebrate again"
+              className="mx-auto mb-3 block rounded-2xl p-2"
+            >
+              <AvatarComposite
+                face={myAvatar.face}
+                hat={myAvatar.hat}
+                size={128}
+                victory={cheering}
+                onVictoryEnd={() => setCheering(false)}
+              />
+            </button>
+          ) : (
+            <FontAwesomeIcon
+              icon={faTrophy}
+              className="w-12 h-12 text-yellow-500 mb-3"
+            />
+          )}
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             {winnerLabel}
           </h2>

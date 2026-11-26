@@ -105,6 +105,8 @@ const SettingsContext = createContext({
   aiInsightsPush: true,
   backgroundOpacity: 0.85,
   confettiOnPersonalBest: true,
+  // Accessibility. Per-device (localStorage only), like the startup settings.
+  reduceMotion: false,
 });
 
 export const defaultSettings = {
@@ -142,6 +144,8 @@ export const defaultSettings = {
   aiInsightsPush: true,
   backgroundOpacity: 0.85,
   confettiOnPersonalBest: true,
+  // Accessibility. Per-device (localStorage only), like the startup settings.
+  reduceMotion: false,
 };
 
 type ChangeSettingsAction =
@@ -276,6 +280,10 @@ type ChangeSettingsAction =
   | {
       type: "SET_CONFETTI_ON_PERSONAL_BEST";
       confettiOnPersonalBest: boolean;
+    }
+  | {
+      type: "SET_REDUCE_MOTION";
+      reduceMotion: boolean;
     };
 
 
@@ -469,6 +477,9 @@ const reducer = (
     case "SET_CONFETTI_ON_PERSONAL_BEST":
       return { ...state, confettiOnPersonalBest: action.confettiOnPersonalBest };
 
+    case "SET_REDUCE_MOTION":
+      return { ...state, reduceMotion: action.reduceMotion };
+
     default:
       return { ...state };
   }
@@ -648,6 +659,12 @@ export const SettingsProvider = ({ children }) => {
     // ColorScheme values map 1:1 to nativeTheme.themeSource.
     window.electronAPI?.setThemeSource?.(settings.theme);
   }, [settings.theme]);
+
+  // Mirrors the setting onto <html> so CSS and non-React code can honour it.
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    document.documentElement.dataset.reduceMotion = settings.reduceMotion ? "true" : "false";
+  }, [settings.reduceMotion]);
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
