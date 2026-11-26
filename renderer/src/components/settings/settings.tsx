@@ -1,6 +1,7 @@
 "use client";
 
 import * as Fathom from "fathom-client";
+import { metrics } from "@/lib/metrics";
 
 import {
   ColorScheme,
@@ -164,9 +165,10 @@ function AppearanceSettings() {
 
       <SettingsSwitch
         enabled={settings.reduceMotion}
-        setEnabled={(enabled: boolean) =>
-          dispatchSettings({ type: "SET_REDUCE_MOTION", reduceMotion: enabled })
-        }
+        setEnabled={(enabled: boolean) => {
+          metrics.count("settings.reduce_motion_toggled", 1, { enabled });
+          dispatchSettings({ type: "SET_REDUCE_MOTION", reduceMotion: enabled });
+        }}
         label="Reduce motion"
         description="Stops avatar animations, victory effects, confetti and interface transitions. Also applied automatically when your system asks for reduced motion. Saved on this device only."
       />

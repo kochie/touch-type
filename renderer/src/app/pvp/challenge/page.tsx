@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { metrics } from "@/lib/metrics";
 import { useSearchParams, useRouter } from "next/navigation";
 import { type PvPMatch, usePvP } from "@/lib/pvp-provider";
 import { useSupabase } from "@/lib/supabase-provider";
@@ -40,6 +41,7 @@ function ChallengePageInner() {
       const { data } = await supabase.from("profiles").select("equipped_face, equipped_hat").eq("id", user.id).single();
       if (cancelled || !data) return;
       setMyAvatar({ face: data.equipped_face ?? "classic", hat: data.equipped_hat ?? null });
+      metrics.count("pvp.victory_shown");
       setCheering(true);
     })();
     return () => {
@@ -175,7 +177,10 @@ function ChallengePageInner() {
           {iWon && myAvatar ? (
             <button
               type="button"
-              onClick={() => setCheering(true)}
+              onClick={() => {
+                metrics.count("pvp.victory_replayed");
+                setCheering(true);
+              }}
               title="Celebrate again"
               className="mx-auto mb-3 block rounded-2xl p-2"
             >

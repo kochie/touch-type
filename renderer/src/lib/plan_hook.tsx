@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSupabase } from "./supabase-provider";
+import { metrics } from "./metrics";
 
 // Backwards compatible Plan type
 export interface Plan {
@@ -124,7 +125,10 @@ function useAuthSettled(isLoading: boolean): boolean {
   const [gaveUp, setGaveUp] = useState(false);
   useEffect(() => {
     if (!isLoading) return;
-    const timer = setTimeout(() => setGaveUp(true), AUTH_GRACE_MS);
+    const timer = setTimeout(() => {
+      metrics.count("auth.settle_timeout");
+      setGaveUp(true);
+    }, AUTH_GRACE_MS);
     return () => clearTimeout(timer);
   }, [isLoading]);
   return !isLoading || gaveUp;

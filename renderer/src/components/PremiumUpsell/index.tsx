@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Button from "@/components/Button";
+import { metrics } from "@/lib/metrics";
 import { ModalType, useModal } from "@/lib/modal-provider";
 import { useSupabase } from "@/lib/supabase-provider";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,11 +26,27 @@ export default function PremiumUpsell({ title, body, source, layout = "banner" }
   const { user } = useSupabase();
   const empty = layout === "empty";
 
+  useEffect(() => {
+    metrics.count("upsell.viewed", 1, { source, layout, signed_in: !!user });
+  }, [source, layout, !!user]);
+
   // Checkout needs an account, so signed-out viewers are sent to sign in first.
   // The sign-in modal links on to sign-up.
   const action = user
-    ? { label: "Upgrade to Premium", run: () => setModal(ModalType.PREMIUM_PURCHASE, source) }
-    : { label: "Sign in to unlock", run: () => setModal(ModalType.SIGN_IN) };
+    ? {
+        label: "Upgrade to Premium",
+        run: () => {
+          metrics.count("upsell.clicked", 1, { source, action: "upgrade" });
+          setModal(ModalType.PREMIUM_PURCHASE, source);
+        },
+      }
+    : {
+        label: "Sign in to unlock",
+        run: () => {
+          metrics.count("upsell.clicked", 1, { source, action: "sign_in" });
+          setModal(ModalType.SIGN_IN);
+        },
+      };
 
   return (
     <div

@@ -9,6 +9,7 @@ import { useStreak } from "@/lib/streak_hook";
 import { useSettings } from "@/lib/settings_hook";
 import { FACES, HATS, PERFECT_MIN_CORRECT, type AvatarStats } from "@/lib/avatars";
 import { diffUnlocks, premiumJustActivated, unlockedIds } from "@/lib/avatar-unlocks";
+import { metrics } from "@/lib/metrics";
 
 const COLORS = ["#fbbf24", "#a78bfa", "#34d399", "#60a5fa", "#f87171", "#f9a8d4"];
 
@@ -108,6 +109,7 @@ export function UnlockCelebration() {
     const fresh = diffUnlocks(userId, unlockedIds(stats, isPremium));
     const premiumNow = premiumJustActivated(userId, isPremium);
     if (premiumNow) {
+      metrics.count("avatar.premium_welcome");
       if (!reduceMotion) setBurst((n) => n + 1);
       toast.success("Welcome to Premium", {
         description: "Premium hats are unlocked. Open the avatar picker to try them on.",
@@ -116,6 +118,10 @@ export function UnlockCelebration() {
     }
     const earned = fresh.filter((id) => !(premiumNow && HATS.find((h) => `hat:${h.slug}` === id)?.tier === "premium"));
     if (earned.length) {
+      for (const id of earned) {
+        const [kind, item] = id.split(":");
+        metrics.count("avatar.unlocked", 1, { kind, item });
+      }
       if (!reduceMotion) setBurst((n) => n + 1);
       toast.success(earned.length === 1 ? "New avatar item unlocked" : `${earned.length} new avatar items unlocked`, {
         description: earned.map(nameOf).join(", "),

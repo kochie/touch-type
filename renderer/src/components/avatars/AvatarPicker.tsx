@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { metrics } from "@/lib/metrics";
 import {
   FACES,
   HATS,
@@ -125,9 +126,11 @@ export function AvatarPicker({
         onClick={() => {
           const value = hat.slug === "none" ? null : hat.slug;
           if (unlocked) {
+            metrics.count("avatar.equipped", 1, { kind: "hat", item: hat.slug });
             onHatChange(value);
             setPreview((p) => ({ ...p, hat: undefined }));
           } else {
+            metrics.count("avatar.locked_previewed", 1, { kind: "hat", item: hat.slug });
             setPreview((p) => ({ ...p, hat: value }));
           }
         }}
@@ -220,9 +223,11 @@ export function AvatarPicker({
                 onMouseEnter={() => dismissNew(unlockId("face", face.slug))}
                 onClick={() => {
                   if (unlocked) {
+                    metrics.count("avatar.equipped", 1, { kind: "face", item: face.slug });
                     onFaceChange(face.slug);
                     setPreview((p) => ({ ...p, face: undefined }));
                   } else {
+                    metrics.count("avatar.locked_previewed", 1, { kind: "face", item: face.slug });
                     setPreview((p) => ({ ...p, face: face.slug }));
                   }
                 }}

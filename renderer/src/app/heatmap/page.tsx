@@ -16,6 +16,7 @@ import { KeyboardLayoutNames } from "@/keyboards";
 import PageHeader from "@/components/PageHeader";
 import { faChartRadar } from "@fortawesome/pro-regular-svg-icons";
 import { useState } from "react";
+import { metrics } from "@/lib/metrics";
 
 import { KEY_MAPS, type KeyMapId } from "@/lib/key-maps";
 import { RANGE_DAYS, type TimeRange } from "@/lib/time-range";
@@ -78,7 +79,14 @@ export default function HeatmapPage() {
         headerRight={
           <div className="flex flex-wrap items-center justify-end gap-3">
             <div className="w-44">
-              <KeyMapSelect value={mapId} onChange={setMapId} isPremium={isPremium} />
+              <KeyMapSelect
+                value={mapId}
+                onChange={(id) => {
+                  setMapId(id);
+                  metrics.count("keymap.map_selected", 1, { map: id });
+                }}
+                isPremium={isPremium}
+              />
             </div>
             <div className="w-48">
               <KeyboardSelect
